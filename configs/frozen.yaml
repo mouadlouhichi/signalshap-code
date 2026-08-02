@@ -1,0 +1,18 @@
+n_max:
+  ml_1m: 80
+  lastfm_2k: 100
+  amazon_book: 120
+ridge_lambda: 1.0
+v0_seed: 42
+seeds:
+- 42
+- 43
+- 44
+- 45
+- 46
+recall_gate: 0.6
+max_growth_iters: 10
+k_ndcg: 10
+_note: "PRE-REGISTERED, spec \xA72.2/\xA72.4/\xA72.5. Frozen end of Week 1. lambda\
+  \ is NEVER tuned per coalition; n_max changes after E1 begins must be recorded in\
+  \ the artefact with date and reason."

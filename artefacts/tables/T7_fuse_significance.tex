@@ -1,0 +1,19 @@
+\begin{table}
+\caption{T7 — SignalShap-Fuse vs baselines. Holm–Bonferroni family size $m=3$, composition = {uniform, global, popularity_reference}. Declaring the COMPOSITION and not merely the size prevents the family looking chosen after the fact.}
+\label{tab:T7_fuse_significance}
+\begin{tabular}{lllllll}
+\toprule
+Dataset & Baseline & Mean ΔNDCG@10 & Wilcoxon $W$ & raw $p$ & Holm $p$ & Cohen's $d_z$ \\
+\midrule
+ml_1m & uniform & +0.05829 & 6290.5 & 0.0000 & 0.0000 & +0.278 \\
+ml_1m & global & -0.00335 & 986.0 & 0.0304 & 0.0304 & -0.068 \\
+ml_1m & popularity_reference & +0.05244 & 1091.0 & 0.0000 & 0.0000 & +0.435 \\
+lastfm_2k & uniform & +0.00724 & 1047.5 & 0.1858 & 0.3715 & +0.048 \\
+lastfm_2k & global & -0.00196 & 485.0 & 0.7136 & 0.7136 & -0.041 \\
+lastfm_2k & popularity_reference & +0.01017 & 553.0 & 0.0018 & 0.0054 & +0.105 \\
+amazon_book & uniform & +0.01918 & 513.0 & 0.0000 & 0.0000 & +0.148 \\
+amazon_book & global & -0.00082 & 223.0 & 0.2016 & 0.4031 & -0.038 \\
+amazon_book & popularity_reference & -0.00190 & 732.5 & 0.3407 & 0.4031 & -0.038 \\
+\bottomrule
+\end{tabular}
+\end{table}

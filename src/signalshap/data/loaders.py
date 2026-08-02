@@ -1,0 +1,285 @@
+"""Dataset loading, temporal split, and as-used statistics.
+
+Spec §5 (datasets), §6.1 (density computed, never quoted).
+
+Real loaders read the raw files. A deterministic synthetic generator is
+provided so the whole pipeline is runnable end-to-end before any download --
+it is clearly labelled and never mistaken for real data (every artefact
+records `synthetic: true`).
+"""
+
+from __future__ import annotations
+
+import hashlib
+from dataclasses import dataclass
+from datetime import datetime, timezone
+from pathlib import Path
+
+import numpy as np
+import pandas as pd
+
+from ..config import PROCESSED, ROOT
+
+RAW = ROOT / "data" / "raw"
+
+#: Columns every loader must produce, in this order.
+SCHEMA = ["user", "item", "timestamp", "original_record_index"]
+
+
+@dataclass
+class Dataset:
+    """A loaded, split dataset with contiguous integer user/item ids."""
+
+    name: str
+    train: pd.DataFrame
+    valid: pd.DataFrame
+    test: pd.DataFrame
+    n_users: int
+    n_items: int
+    item_meta: pd.DataFrame  # item -> 'tags' string, for the ct scorer
+    synthetic: bool = False
+
+    @property
+    def n_interactions(self) -> int:
+        return len(self.train) + len(self.valid) + len(self.test)
+
+    def density(self) -> float:
+        """As-used density (spec §6.1) -- computed, never quoted."""
+        return self.n_interactions / (self.n_users * self.n_items)
+
+    def stats(self) -> dict:
+        return {
+            "users": int(self.n_users),
+            "items": int(self.n_items),
+            "interactions": int(self.n_interactions),
+            "density": float(self.density()),
+            "train": int(len(self.train)),
+            "valid": int(len(self.valid)),
+            "test": int(len(self.test)),
+            "synthetic": bool(self.synthetic),
+        }
+
+
+# --------------------------------------------------------------------------- #
+# Temporal split (spec §5)
+# --------------------------------------------------------------------------- #
+
+
+def leave_last_out_split(df: pd.DataFrame) -> tuple[pd.DataFrame, ...]:
+    """Last interaction -> test, second-to-last -> validation, rest -> train.
+
+    Ties resolved deterministically by (timestamp, original_record_index), per
+    spec §5. Users with < 3 interactions cannot furnish all three folds and are
+    dropped; the count is reported.
+    """
+    df = df.sort_values(["user", "timestamp", "original_record_index"], kind="mergesort")
+    rank_from_end = df.groupby("user").cumcount(ascending=False)
+    keep = df["user"].map(df["user"].value_counts()) >= 3
+    df, rank_from_end = df[keep], rank_from_end[keep]
+    return (
+        df[rank_from_end >= 2].reset_index(drop=True),
+        df[rank_from_end == 1].reset_index(drop=True),
+        df[rank_from_end == 0].reset_index(drop=True),
+    )
+
+
+def _reindex(df: pd.DataFrame) -> tuple[pd.DataFrame, int, int]:
+    """Map users/items to contiguous ints; keeps score matrices dense."""
+    users = {u: i for i, u in enumerate(sorted(df["user"].unique()))}
+    items = {v: i for i, v in enumerate(sorted(df["item"].unique()))}
+    df = df.assign(user=df["user"].map(users), item=df["item"].map(items))
+    return df, len(users), len(items)
+
+
+def _finalise(df: pd.DataFrame, name: str, meta: pd.DataFrame | None, synthetic: bool) -> Dataset:
+    df = df.copy()
+    if "original_record_index" not in df:
+        df["original_record_index"] = np.arange(len(df))
+    df = df[SCHEMA]
+    df, n_users, n_items = _reindex(df)
+    train, valid, test = leave_last_out_split(df)
+    if meta is None:
+        meta = pd.DataFrame({"item": np.arange(n_items), "tags": ""})
+    return Dataset(name, train, valid, test, n_users, n_items, meta, synthetic)
+
+
+# --------------------------------------------------------------------------- #
+# Real loaders (spec §5)
+# --------------------------------------------------------------------------- #
+
+
+def load_ml_1m(path: Path | None = None) -> Dataset:
+    """MovieLens-1M. Expects ml-1m/ratings.dat and movies.dat."""
+    base = Path(path or RAW / "ml-1m")
+    r = pd.read_csv(
+        base / "ratings.dat", sep="::", engine="python", header=None,
+        names=["user", "item", "rating", "timestamp"], encoding="latin-1",
+    )
+    r = r[r["rating"] >= 4].drop(columns=["rating"])  # implicit feedback
+    m = pd.read_csv(
+        base / "movies.dat", sep="::", engine="python", header=None,
+        names=["item", "title", "genres"], encoding="latin-1",
+    )
+    meta = pd.DataFrame({
+        "item": m["item"],
+        "tags": (m["title"].fillna("") + " " + m["genres"].fillna("").str.replace("|", " ", regex=False)),
+    })
+    return _finalise(r, "ml_1m", meta, synthetic=False)
+
+
+def load_lastfm_2k(path: Path | None = None) -> Dataset:
+    """LastFM-2K (HetRec 2011). Expects user_taggedartists-timestamps.dat."""
+    base = Path(path or RAW / "hetrec2011-lastfm-2k")
+    r = pd.read_csv(base / "user_taggedartists-timestamps.dat", sep="\t")
+    r = r.rename(columns={"userID": "user", "artistID": "item"})[["user", "item", "timestamp"]]
+    tags = pd.read_csv(base / "tags.dat", sep="\t", encoding="latin-1")
+    ut = pd.read_csv(base / "user_taggedartists-timestamps.dat", sep="\t")
+    meta = (
+        ut.merge(tags, on="tagID", how="left")
+        .groupby("artistID")["tagValue"].apply(lambda s: " ".join(s.dropna().astype(str)[:40]))
+        .reset_index().rename(columns={"artistID": "item", "tagValue": "tags"})
+    )
+    return _finalise(r, "lastfm_2k", meta, synthetic=False)
+
+
+def load_amazon_book(path: Path | None = None, n_users: int = 50_000, seed: int = 42) -> Dataset:
+    """Amazon-Book 2018, subsampled to n_users (spec §5, seeded + manifested)."""
+    base = Path(path or RAW / "amazon_book")
+    r = pd.read_csv(base / "ratings_Books.csv", header=None,
+                    names=["user", "item", "rating", "timestamp"])
+    r = r[r["rating"] >= 4.0].drop(columns=["rating"])
+    uniq = np.sort(r["user"].unique())
+    if len(uniq) > n_users:
+        rng = np.random.default_rng(seed)
+        keep = set(rng.choice(uniq, size=n_users, replace=False).tolist())
+        r = r[r["user"].isin(keep)]
+    return _finalise(r, "amazon_book", None, synthetic=False)
+
+
+# --------------------------------------------------------------------------- #
+# Synthetic corpora -- runnable pipeline before any download
+# --------------------------------------------------------------------------- #
+
+
+def make_synthetic(
+    name: str, n_users: int, n_items: int, target_density: float, seed: int = 42,
+) -> Dataset:
+    """Deterministic synthetic corpus with planted structure.
+
+    Plants exactly the structure the experiments look for, so the pipeline can
+    be validated before real data arrives:
+
+    * popularity skew (Zipf) -- makes `pop` informative and, because ALS on
+      implicit feedback chases popularity, induces the pop-cf redundancy that
+      spec §4 pre-registers;
+    * latent user/item factors -- makes `cf` informative;
+    * item content clusters aligned to those factors -- makes `ct` informative
+      and induces the rec-ct overlap, also pre-registered;
+    * temporal drift over clusters -- makes `rec` and `seq` informative.
+    """
+    rng = np.random.default_rng(seed)
+    target = int(round(target_density * n_users * n_items))
+
+    n_clusters = max(4, n_items // 200)
+    item_cluster = rng.integers(0, n_clusters, size=n_items)
+    pop_w = 1.0 / np.power(np.arange(1, n_items + 1), 0.9)
+    pop_w = pop_w[rng.permutation(n_items)]
+    pop_w /= pop_w.sum()
+
+    n_factors = 8
+    user_f = rng.normal(size=(n_users, n_factors))
+    clus_f = rng.normal(size=(n_clusters, n_factors))
+    item_f = clus_f[item_cluster] + 0.3 * rng.normal(size=(n_items, n_factors))
+
+    per_user = max(3, target // n_users)
+    rows = []
+    idx = 0
+    for u in range(n_users):
+        k = max(3, int(rng.poisson(per_user)))
+        aff = user_f[u] @ item_f.T
+        p = 0.6 * pop_w + 0.4 * _softmax(aff)
+        p /= p.sum()
+        k = min(k, n_items)
+        picked = rng.choice(n_items, size=k, replace=False, p=p)
+        # temporal drift: the user's taste walks across clusters over time
+        order = np.argsort(item_cluster[picked] + rng.normal(0, 0.5, size=k))
+        for t, i in enumerate(picked[order]):
+            rows.append((u, int(i), 1_500_000_000 + idx * 60 + t, idx))
+            idx += 1
+
+    df = pd.DataFrame(rows, columns=SCHEMA)
+    words = [f"tag{c}_{w}" for c in range(n_clusters) for w in range(6)]
+    meta = pd.DataFrame({
+        "item": np.arange(n_items),
+        "tags": [
+            " ".join(words[item_cluster[i] * 6 : item_cluster[i] * 6 + 6])
+            + f" genre{item_cluster[i] % 5}"
+            for i in range(n_items)
+        ],
+    })
+    return _finalise(df, name, meta, synthetic=True)
+
+
+def _softmax(x: np.ndarray) -> np.ndarray:
+    e = np.exp(x - x.max())
+    return e / e.sum()
+
+
+#: Synthetic stand-ins whose densities preserve the C3 ordering (spec §6.2).
+SYNTHETIC_SPECS = {
+    "ml_1m": dict(n_users=900, n_items=700, target_density=0.045),
+    "lastfm_2k": dict(n_users=700, n_items=1600, target_density=0.010),
+    "amazon_book": dict(n_users=1200, n_items=3000, target_density=0.003),
+}
+
+LOADERS = {"ml_1m": load_ml_1m, "lastfm_2k": load_lastfm_2k, "amazon_book": load_amazon_book}
+
+
+def load_dataset(name: str, synthetic: bool = False, seed: int = 42) -> Dataset:
+    """Load `name`, falling back to synthetic when raw files are absent."""
+    if not synthetic:
+        try:
+            return LOADERS[name]()
+        except (FileNotFoundError, OSError):
+            synthetic = True
+    return make_synthetic(name, seed=seed, **SYNTHETIC_SPECS[name])
+
+
+# --------------------------------------------------------------------------- #
+# As-used statistics with provenance (spec §6.1, §6.2 rule (b))
+# --------------------------------------------------------------------------- #
+
+
+def corpus_hash(ds: Dataset) -> str:
+    h = hashlib.sha256()
+    for part in (ds.train, ds.valid, ds.test):
+        h.update(pd.util.hash_pandas_object(part[["user", "item"]], index=False).values.tobytes())
+    return h.hexdigest()[:16]
+
+
+def build_dataset_stats(datasets: dict[str, Dataset]) -> dict:
+    """Write artefacts/dataset_stats.json with measured provenance.
+
+    The `source: "measured"` field is required by
+    tests/test_density_ordering.py -- the ordering invariant validates whatever
+    densities it is handed and cannot tell a measurement from an estimate.
+    """
+    blob = {name: ds.stats() for name, ds in datasets.items()}
+    blob["_meta"] = {
+        "source": "measured",
+        "measured_at": datetime.now(timezone.utc).isoformat(),
+        "corpus_hash": hashlib.sha256(
+            "|".join(f"{n}:{corpus_hash(d)}" for n, d in sorted(datasets.items())).encode()
+        ).hexdigest()[:16],
+        "synthetic": any(d.synthetic for d in datasets.values()),
+    }
+    return blob
+
+
+def save_processed(ds: Dataset) -> Path:
+    out = PROCESSED / ds.name
+    out.mkdir(parents=True, exist_ok=True)
+    for fold in ("train", "valid", "test"):
+        getattr(ds, fold).to_parquet(out / f"{fold}.parquet", index=False)
+    ds.item_meta.to_parquet(out / "item_meta.parquet", index=False)
+    return out

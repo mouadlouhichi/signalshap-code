@@ -1,0 +1,908 @@
+{
+  "dataset": "lastfm_2k",
+  "seed": 42,
+  "synthetic": true,
+  "dataset_stats": {
+    "users": 700,
+    "items": 1568,
+    "interactions": 11364,
+    "density": 0.010353498542274053,
+    "train": 9964,
+    "valid": 700,
+    "test": 700,
+    "synthetic": true
+  },
+  "timings_sec": {
+    "load": 0.10130476951599121,
+    "scorers": 2.509505033493042,
+    "candidates": 0.2390303611755371,
+    "game_32_coalitions": 0.5200376510620117
+  },
+  "e0a_candidates": {
+    "dataset": "lastfm_2k",
+    "n_max": 100,
+    "candidate_recall": 0.22142857142857142,
+    "recall_gate": 0.6,
+    "gate_passes": false,
+    "abs_size_mean": 100.0,
+    "abs_size_std": 0.0,
+    "abs_size_min": 100,
+    "abs_size_max": 100,
+    "n_eval_users": 700,
+    "note": "Candidate recall is the CEILING on every ranking metric: a test item outside C_u contributes zero to NDCG@10 by construction."
+  },
+  "e0b_monotonicity": {
+    "pairs_checked": 80,
+    "violations": 24,
+    "max_magnitude": 0.009732236285201784,
+    "sources_involved": [
+      "cf",
+      "ct",
+      "rec",
+      "seq"
+    ],
+    "detail": [
+      {
+        "S": [],
+        "g": "ct",
+        "delta": -0.0023703256614080927
+      },
+      {
+        "S": [],
+        "g": "rec",
+        "delta": -0.000727303751126398
+      },
+      {
+        "S": [
+          "cf"
+        ],
+        "g": "ct",
+        "delta": -0.004561740022547833
+      },
+      {
+        "S": [
+          "cf"
+        ],
+        "g": "rec",
+        "delta": -0.0016906529373797996
+      },
+      {
+        "S": [
+          "cf"
+        ],
+        "g": "seq",
+        "delta": -0.009732236285201784
+      },
+      {
+        "S": [
+          "rec"
+        ],
+        "g": "seq",
+        "delta": -4.324006352119563e-06
+      },
+      {
+        "S": [
+          "seq"
+        ],
+        "g": "ct",
+        "delta": -0.001042756820249451
+      },
+      {
+        "S": [
+          "seq"
+        ],
+        "g": "rec",
+        "delta": -0.0026708515420397717
+      },
+      {
+        "S": [
+          "cf",
+          "ct"
+        ],
+        "g": "seq",
+        "delta": -0.007070302368747484
+      },
+      {
+        "S": [
+          "cf",
+          "pop"
+        ],
+        "g": "ct",
+        "delta": -0.00016140384229543746
+      },
+      {
+        "S": [
+          "cf",
+          "rec"
+        ],
+        "g": "ct",
+        "delta": -0.0009460604304397484
+      },
+      {
+        "S": [
+          "cf",
+          "rec"
+        ],
+        "g": "seq",
+        "delta": -0.007372506444664445
+      },
+      {
+        "S": [
+          "cf",
+          "seq"
+        ],
+        "g": "ct",
+        "delta": -0.001899806106093532
+      },
+      {
+        "S": [
+          "ct",
+          "rec"
+        ],
+        "g": "seq",
+        "delta": -0.0005885423200529418
+      },
+      {
+        "S": [
+          "ct",
+          "seq"
+        ],
+        "g": "cf",
+        "delta": -0.000431159150519002
+      },
+      {
+        "S": [
+          "ct",
+          "seq"
+        ],
+        "g": "rec",
+        "delta": -0.0012704735248569143
+      },
+      {
+        "S": [
+          "pop",
+          "seq"
+        ],
+        "g": "cf",
+        "delta": -0.0008287025173721006
+      },
+      {
+        "S": [
+          "pop",
+          "seq"
+        ],
+        "g": "rec",
+        "delta": -0.001195198169445199
+      },
+      {
+        "S": [
+          "cf",
+          "ct",
+          "rec"
+        ],
+        "g": "seq",
+        "delta": -0.007394036244522855
+      },
+      {
+        "S": [
+          "cf",
+          "pop",
+          "seq"
+        ],
+        "g": "rec",
+        "delta": -0.0003090111556648886
+      }
+    ],
+    "property2_applicable": false,
+    "dataset": "lastfm_2k",
+    "note": "Property 2 and Lemma 1(ii) apply only where this passes. Where it fails, negative phi_g are SUBSTANTIVE findings, not numerical error. The coalition-conditional ridge refit (spec \u00a72.4) is the likely cause."
+  },
+  "gate_warning": "CANDIDATE RECALL GATE FAILED (0.221 < 0.6). Spec \u00a72.2 requires the four-rung fallback ladder: raise N_max -> report ceiling -> k-core under the density invariant -> substitute Gowalla. Downstream numbers are reported but must not be interpreted as final.",
+  "e1_source_share": {
+    "dataset": "lastfm_2k",
+    "shapley": {
+      "cf": 0.004104317294206547,
+      "ct": 3.0882594618823886e-05,
+      "pop": 0.013621949861989016,
+      "rec": 0.00019401352189643204,
+      "seq": 0.002032374006450263
+    },
+    "efficiency": {
+      "sum_phi": 0.019983537279161082,
+      "v_grand": 0.019983537279161082,
+      "abs_error": 0.0,
+      "passes": true
+    },
+    "v_grand": 0.019983537279161082,
+    "v0": 0.01145308822432309,
+    "n_coalitions": 32,
+    "note": "EXACT GIVEN THE FITTED v: the 32-coalition aggregation has no sampling error, but v(S) is estimated, so phi carries estimation error -- see seed CIs. Efficiency holds exactly regardless of fit noise because it is structural."
+  },
+  "e2_loo_vs_shapley": {
+    "dataset": "lastfm_2k",
+    "shapley": {
+      "cf": 0.004104317294206547,
+      "ct": 3.0882594618823886e-05,
+      "pop": 0.013621949861989016,
+      "rec": 0.00019401352189643204,
+      "seq": 0.002032374006450263
+    },
+    "loo": {
+      "cf": -0.003505855331022493,
+      "ct": 0.0009619183908672856,
+      "pop": 0.017916936686415367,
+      "rec": -0.00031356172622139244,
+      "seq": 0.0023669735100154445
+    },
+    "gap": {
+      "cf": 0.00761017262522904,
+      "ct": -0.0009310357962484617,
+      "pop": -0.004294986824426351,
+      "rec": 0.0005075752481178245,
+      "seq": -0.0003345995035651814
+    },
+    "forward": {
+      "cf": 0.012097350205088118,
+      "pop": 0.002135699737147962,
+      "seq": 0.005097580101722605,
+      "ct": 0.0009664689614237894,
+      "rec": -0.00031356172622139244
+    },
+    "permutation_importance": {
+      "cf": 0.004277128801652812,
+      "ct": 5.330632907092197e-05,
+      "pop": 0.014370642907784328,
+      "rec": 1.4460241521126273e-05,
+      "seq": 0.0012679989991318929
+    },
+    "mc_shapley_50": {
+      "cf": 0.005202049902147285,
+      "ct": -0.00017034304782762453,
+      "pop": 0.013487852074843855,
+      "rec": 7.417640241436756e-05,
+      "seq": 0.0013898019475831935
+    },
+    "kendall_tau": {
+      "cf|ct": -0.16560615460853992,
+      "cf|pop": 0.11219352197353509,
+      "cf|rec": -0.18711139470357543,
+      "cf|seq": 0.14784136857585,
+      "ct|pop": -0.22321869740984301,
+      "ct|rec": 0.34655755099616403,
+      "ct|seq": -0.22717108608611591,
+      "pop|rec": -0.23703931790562288,
+      "pop|seq": 0.1411322614845416,
+      "rec|seq": -0.23573502309706512
+    },
+    "pair_gap": {
+      "cf|ct": 0.008541208421477502,
+      "cf|pop": 0.011905159449655391,
+      "cf|rec": 0.008117747873346863,
+      "cf|seq": 0.007944772128794221,
+      "ct|pop": 0.005226022620674812,
+      "ct|rec": 0.001438611044366286,
+      "ct|seq": 0.001265635299813643,
+      "pop|rec": 0.004802562072544175,
+      "pop|seq": 0.004629586327991532,
+      "rec|seq": 0.0008421747516830059
+    },
+    "redundancy_gap_correlation": 0.11600360719020796,
+    "permutation_tests": {
+      "cf": {
+        "observed": 0.007610172625229038,
+        "p_value": 0.0012998700129987,
+        "n_shuffles": 10000
+      },
+      "ct": {
+        "observed": -0.0009310357962484627,
+        "p_value": 0.29247075292470753,
+        "n_shuffles": 10000
+      },
+      "pop": {
+        "observed": -0.004294986824426348,
+        "p_value": 0.20017998200179982,
+        "n_shuffles": 10000
+      },
+      "rec": {
+        "observed": 0.0005075752481178224,
+        "p_value": 0.6564343565643436,
+        "n_shuffles": 10000
+      },
+      "seq": {
+        "observed": -0.0003345995035651834,
+        "p_value": 0.894010598940106,
+        "n_shuffles": 10000
+      }
+    },
+    "preregistered_pairs": [
+      "pop|cf",
+      "rec|ct"
+    ],
+    "note": "pop-cf and rec-ct overlap is PRE-REGISTERED (spec \u00a74), not discovered: ALS on implicit feedback chases popularity, and rec is defined over content clusters. RQ2 tests whether Shapley recovers known structure."
+  },
+  "e3_segments": {
+    "dataset": "lastfm_2k",
+    "profiles": {
+      "cold_stable": {
+        "cf": 0.006555969630954738,
+        "ct": 0.0036388319942308746,
+        "pop": 0.015111142731027616,
+        "rec": 0.0018218219484589483,
+        "seq": 0.0014385833021072897,
+        "n_users": 177
+      },
+      "cold_recency": {
+        "cf": 0.0035335611097761397,
+        "ct": -0.0020412157019038986,
+        "pop": 0.009833089821292478,
+        "rec": -0.0014035731761523132,
+        "seq": -0.007409057081979004,
+        "n_users": 199
+      },
+      "heavy_stable": {
+        "cf": -0.0026994806808602508,
+        "ct": 0.00048324723350176015,
+        "pop": 0.015369249169529357,
+        "rec": -0.0016224159621477615,
+        "seq": 0.013421885305242645,
+        "n_users": 179
+      },
+      "heavy_recency": {
+        "cf": 0.010294095602028461,
+        "ct": -0.0020879639783698434,
+        "pop": 0.014846980442879071,
+        "rec": 0.0026418655153726033,
+        "seq": 0.001654603101500564,
+        "n_users": 145
+      }
+    },
+    "segment_sizes": {
+      "cold_stable": 177,
+      "cold_recency": 199,
+      "heavy_stable": 179,
+      "heavy_recency": 145
+    },
+    "permutation_tests": {
+      "cf:cold_stable_vs_cold_recency": {
+        "observed": 0.0030224085211785984,
+        "p_value": 0.6171382861713829,
+        "n_shuffles": 10000
+      },
+      "cf:cold_stable_vs_heavy_stable": {
+        "observed": 0.009255450311814989,
+        "p_value": 0.11798820117988201,
+        "n_shuffles": 10000
+      },
+      "cf:cold_stable_vs_heavy_recency": {
+        "observed": -0.0037381259710737233,
+        "p_value": 0.597040295970403,
+        "n_shuffles": 10000
+      },
+      "cf:cold_recency_vs_heavy_stable": {
+        "observed": 0.0062330417906363905,
+        "p_value": 0.3404659534046595,
+        "n_shuffles": 10000
+      },
+      "cf:cold_recency_vs_heavy_recency": {
+        "observed": -0.006760534492252322,
+        "p_value": 0.37566243375662434,
+        "n_shuffles": 10000
+      },
+      "cf:heavy_stable_vs_heavy_recency": {
+        "observed": -0.012993576282888712,
+        "p_value": 0.08439156084391561,
+        "n_shuffles": 10000
+      },
+      "ct:cold_stable_vs_cold_recency": {
+        "observed": 0.005680047696134774,
+        "p_value": 0.009799020097990201,
+        "n_shuffles": 10000
+      },
+      "ct:cold_stable_vs_heavy_stable": {
+        "observed": 0.0031555847607291146,
+        "p_value": 0.15058494150584942,
+        "n_shuffles": 10000
+      },
+      "ct:cold_stable_vs_heavy_recency": {
+        "observed": 0.0057267959726007185,
+        "p_value": 0.023797620237976203,
+        "n_shuffles": 10000
+      },
+      "ct:cold_recency_vs_heavy_stable": {
+        "observed": -0.0025244629354056586,
+        "p_value": 0.2999700029997,
+        "n_shuffles": 10000
+      },
+      "ct:cold_recency_vs_heavy_recency": {
+        "observed": 4.674827646594486e-05,
+        "p_value": 0.9854014598540146,
+        "n_shuffles": 10000
+      },
+      "ct:heavy_stable_vs_heavy_recency": {
+        "observed": 0.0025712112118716035,
+        "p_value": 0.32836716328367166,
+        "n_shuffles": 10000
+      },
+      "pop:cold_stable_vs_cold_recency": {
+        "observed": 0.005278052909735138,
+        "p_value": 0.5931406859314069,
+        "n_shuffles": 10000
+      },
+      "pop:cold_stable_vs_heavy_stable": {
+        "observed": -0.00025810643850174113,
+        "p_value": 0.9798020197980202,
+        "n_shuffles": 10000
+      },
+      "pop:cold_stable_vs_heavy_recency": {
+        "observed": 0.00026416228814854503,
+        "p_value": 0.984001599840016,
+        "n_shuffles": 10000
+      },
+      "pop:cold_recency_vs_heavy_stable": {
+        "observed": -0.005536159348236879,
+        "p_value": 0.49085091490850913,
+        "n_shuffles": 10000
+      },
+      "pop:cold_recency_vs_heavy_recency": {
+        "observed": -0.005013890621586593,
+        "p_value": 0.5998400159984002,
+        "n_shuffles": 10000
+      },
+      "pop:heavy_stable_vs_heavy_recency": {
+        "observed": 0.0005222687266502862,
+        "p_value": 0.9536046395360464,
+        "n_shuffles": 10000
+      },
+      "rec:cold_stable_vs_cold_recency": {
+        "observed": 0.0032253951246112612,
+        "p_value": 0.2196780321967803,
+        "n_shuffles": 10000
+      },
+      "rec:cold_stable_vs_heavy_stable": {
+        "observed": 0.00344423791060671,
+        "p_value": 0.17278272172782722,
+        "n_shuffles": 10000
+      },
+      "rec:cold_stable_vs_heavy_recency": {
+        "observed": -0.000820043566913655,
+        "p_value": 0.8407159284071593,
+        "n_shuffles": 10000
+      },
+      "rec:cold_recency_vs_heavy_stable": {
+        "observed": 0.00021884278599544832,
+        "p_value": 0.93000699930007,
+        "n_shuffles": 10000
+      },
+      "rec:cold_recency_vs_heavy_recency": {
+        "observed": -0.0040454386915249165,
+        "p_value": 0.29927007299270075,
+        "n_shuffles": 10000
+      },
+      "rec:heavy_stable_vs_heavy_recency": {
+        "observed": -0.004264281477520365,
+        "p_value": 0.27587241275872415,
+        "n_shuffles": 10000
+      },
+      "seq:cold_stable_vs_cold_recency": {
+        "observed": 0.008847640384086293,
+        "p_value": 0.15328467153284672,
+        "n_shuffles": 10000
+      },
+      "seq:cold_stable_vs_heavy_stable": {
+        "observed": -0.011983302003135356,
+        "p_value": 0.053894610538946106,
+        "n_shuffles": 10000
+      },
+      "seq:cold_stable_vs_heavy_recency": {
+        "observed": -0.00021601979939327425,
+        "p_value": 0.978002199780022,
+        "n_shuffles": 10000
+      },
+      "seq:cold_recency_vs_heavy_stable": {
+        "observed": -0.02083094238722165,
+        "p_value": 0.0004999500049995,
+        "n_shuffles": 10000
+      },
+      "seq:cold_recency_vs_heavy_recency": {
+        "observed": -0.009063660183479568,
+        "p_value": 0.22107789221077892,
+        "n_shuffles": 10000
+      },
+      "seq:heavy_stable_vs_heavy_recency": {
+        "observed": 0.011767282203742081,
+        "p_value": 0.10798920107989202,
+        "n_shuffles": 10000
+      }
+    }
+  },
+  "e4_signalshap_fuse": {
+    "dataset": "lastfm_2k",
+    "candidate_set_ndcg": {
+      "uniform": 0.022683661517726567,
+      "global": 0.031436625503484174,
+      "signalshap_fuse": 0.03124020618698647
+    },
+    "full_catalog": {
+      "signalshap_fuse": {
+        "ndcg_at_10": 0.03006580738794143,
+        "recall_at_20": 0.14857142857142858,
+        "mrr_at_10": 0.017236961451247167,
+        "n_users": 700
+      },
+      "global": {
+        "ndcg_at_10": 0.032030214855278315,
+        "recall_at_20": 0.14857142857142858,
+        "mrr_at_10": 0.017940476190476187,
+        "n_users": 700
+      },
+      "uniform": {
+        "ndcg_at_10": 0.022830357975774408,
+        "recall_at_20": 0.07,
+        "mrr_at_10": 0.01727097505668934,
+        "n_users": 700
+      },
+      "popularity_reference": {
+        "ndcg_at_10": 0.019895076794708085,
+        "recall_at_20": 0.15,
+        "mrr_at_10": 0.00988265306122449,
+        "n_users": 700
+      }
+    },
+    "weights": {
+      "uniform": [
+        0.2,
+        0.2,
+        0.2,
+        0.2,
+        0.2
+      ],
+      "global": [
+        -0.0008231048300430339,
+        0.00034496409759512855,
+        0.0021779892827341525,
+        -0.0001335913948487768,
+        0.0011721616655098591
+      ],
+      "segment_cold_stable": [
+        -0.0011358580612441781,
+        -0.00024403852804406648,
+        0.0018095076077117426,
+        0.00038438467068406334,
+        0.0010986264205715068
+      ],
+      "segment_cold_recency": [
+        -0.0003081908592039236,
+        0.0015004643192930655,
+        0.0027444058435008895,
+        -0.0007930753708520002,
+        0.001038466071135061
+      ],
+      "segment_heavy_stable": [
+        -0.0009282243801405337,
+        0.00013320098795966648,
+        0.002101712294981984,
+        8.762504836782465e-06,
+        0.001139669394287303
+      ],
+      "segment_heavy_recency": [
+        -0.0009775444940897657,
+        -0.00014073088820755258,
+        0.0020257509604643775,
+        -0.0001888541502961441,
+        0.0014526316597559268
+      ]
+    },
+    "wilcoxon": {
+      "uniform": {
+        "statistic": 1047.5,
+        "p_value": 0.185767891319788,
+        "d_z": 0.04847957006643657,
+        "n": 700,
+        "n_ties": 629,
+        "mean_diff": 0.007235449412167023
+      },
+      "global": {
+        "statistic": 485.0,
+        "p_value": 0.7135772931919524,
+        "d_z": -0.04086980774469002,
+        "n": 700,
+        "n_ties": 655,
+        "mean_diff": -0.0019644074673368836
+      },
+      "popularity_reference": {
+        "statistic": 553.0,
+        "p_value": 0.0017878757645459987,
+        "d_z": 0.10530785279999653,
+        "n": 700,
+        "n_ties": 637,
+        "mean_diff": 0.010170730593233345
+      }
+    },
+    "holm_bonferroni": {
+      "corrected": {
+        "popularity_reference": 0.005363627293637996,
+        "uniform": 0.371535782639576,
+        "global": 0.7135772931919524
+      },
+      "family_size": 3,
+      "family_composition": [
+        "uniform",
+        "global",
+        "popularity_reference"
+      ],
+      "raw": {
+        "uniform": 0.185767891319788,
+        "global": 0.7135772931919524,
+        "popularity_reference": 0.0017878757645459987
+      }
+    },
+    "note": "T5 is FULL-CATALOG for every method; SignalShap-Fuse scores items outside C_u as -inf so its recall ceiling is visible. v(S) itself remains fixed-candidate by definition of the game."
+  },
+  "e5_robustness": {
+    "dataset": "lastfm_2k",
+    "candidate_size": {
+      "n_max_50": {
+        "n_max": 50,
+        "candidate_recall": 0.13857142857142857,
+        "shapley": {
+          "cf": 0.003960805498056001,
+          "ct": 0.0007777378813187581,
+          "pop": 0.013334375041468408,
+          "rec": 0.00038363059124905523,
+          "seq": 0.001265809173274131
+        },
+        "v_grand": 0.01972235818536635
+      },
+      "n_max_100": {
+        "n_max": 100,
+        "candidate_recall": 0.22142857142857142,
+        "shapley": {
+          "cf": 0.004104317294206547,
+          "ct": 3.0882594618823886e-05,
+          "pop": 0.013621949861989016,
+          "rec": 0.00019401352189643204,
+          "seq": 0.002032374006450263
+        },
+        "v_grand": 0.019983537279161082
+      },
+      "n_max_200": {
+        "n_max": 200,
+        "candidate_recall": 0.3457142857142857,
+        "shapley": {
+          "cf": 0.004346293966195753,
+          "ct": 8.938805790308525e-05,
+          "pop": 0.0140804460465641,
+          "rec": 0.0008813605385064164,
+          "seq": 0.004937095362266086
+        },
+        "v_grand": 0.02433458397143544
+      }
+    },
+    "candidate_size_note": "Recall is reported PER CELL because changing |C_u| moves the ceiling and hence the level of v; without it the cells are not comparable.",
+    "lambda_sensitivity": {
+      "lambda_0.1": {
+        "cf": 0.004104317294206547,
+        "ct": 3.0882594618823886e-05,
+        "pop": 0.013621949861989016,
+        "rec": 0.00019401352189643204,
+        "seq": 0.002032374006450263
+      },
+      "lambda_1.0": {
+        "cf": 0.004104317294206547,
+        "ct": 3.0882594618823886e-05,
+        "pop": 0.013621949861989016,
+        "rec": 0.00019401352189643204,
+        "seq": 0.002032374006450263
+      },
+      "lambda_10.0": {
+        "cf": 0.004104317294206547,
+        "ct": 3.0882594618823886e-05,
+        "pop": 0.013621949861989016,
+        "rec": 0.00019401352189643204,
+        "seq": 0.002032374006450263
+      }
+    },
+    "lambda_note": "SENSITIVITY ONLY, never selection. lambda is frozen (spec \u00a72.4); per-coalition tuning would be optimistic bias growing with |S|.",
+    "monotone_rescaling": {
+      "identity": {
+        "cf": 0.004104317294206547,
+        "ct": 3.0882594618823886e-05,
+        "pop": 0.013621949861989016,
+        "rec": 0.00019401352189643204,
+        "seq": 0.002032374006450263
+      },
+      "log1p": {
+        "cf": 0.0007905691207372553,
+        "ct": 0.00027113115842224795,
+        "pop": 0.016996010057426875,
+        "rec": 0.0007865778566330816,
+        "seq": 0.0026223210540457617
+      },
+      "rank": {
+        "cf": 0.006954843572965221,
+        "ct": 0.0010250466403761717,
+        "pop": 0.011008492783211227,
+        "rec": 0.004063701552336254,
+        "seq": 0.003413313004600226
+      }
+    },
+    "rescaling_note": "Remark 1: invariance is AFFINE only. log1p/rank are nonlinear, so drift here is expected and is the empirical content of the remark.",
+    "noise_injection": {
+      "sigma_0.0": {
+        "cf": 0.004104317294206547,
+        "ct": 3.0882594618823886e-05,
+        "pop": 0.013621949861989016,
+        "rec": 0.00019401352189643204,
+        "seq": 0.002032374006450263
+      },
+      "sigma_0.1": {
+        "cf": 0.002475265410397587,
+        "ct": 0.0009719692590996594,
+        "pop": 0.014230270943073095,
+        "rec": -0.00017243295545114022,
+        "seq": 0.0014447349540360399
+      },
+      "sigma_0.5": {
+        "cf": 0.00244437297269409,
+        "ct": 0.0008541095715917732,
+        "pop": 0.014848662194700029,
+        "rec": -0.0007601453829667607,
+        "seq": 0.001502129357104951
+      }
+    }
+  },
+  "e6_ablation": {
+    "dataset": "lastfm_2k",
+    "full": {
+      "cf": 0.004104317294206547,
+      "ct": 3.0882594618823886e-05,
+      "pop": 0.013621949861989016,
+      "rec": 0.00019401352189643204,
+      "seq": 0.002032374006450263
+    },
+    "dropped": {
+      "cf": {
+        "ct": 0.0013574660701426112,
+        "pop": 0.015989337532866563,
+        "rec": 0.0002292053573333332,
+        "seq": 0.005913383649841066
+      },
+      "ct": {
+        "cf": 0.005430900769730334,
+        "pop": 0.012160679738463385,
+        "rec": -0.0004474496079015264,
+        "seq": 0.0018774879880016032
+      },
+      "pop": {
+        "cf": 0.006471704965084094,
+        "ct": -0.001430387528906807,
+        "rec": 0.00018074617150040098,
+        "seq": -0.003155463014931973
+      },
+      "rec": {
+        "cf": 0.0041395091296434474,
+        "ct": -0.0006105805351791348,
+        "pop": 0.013608682511592987,
+        "seq": 0.003159487899325176
+      },
+      "seq": {
+        "cf": 0.00798532693759735,
+        "ct": -0.00012400342382983665,
+        "pop": 0.00843411284060678,
+        "rec": 0.0013211274147713447
+      }
+    }
+  },
+  "e7_actionability": {
+    "dataset": "lastfm_2k",
+    "lowest_shapley_source": "ct",
+    "shapley_value": 3.0882594618823886e-05,
+    "v_full": 0.019983537279161082,
+    "v_without": 0.019021618888293797,
+    "delta": 0.0009619183908672856,
+    "wilcoxon": {
+      "statistic": 308.5,
+      "p_value": 0.2551447405860684,
+      "d_z": 0.026602507131112296,
+      "n": 700,
+      "n_ties": 661,
+      "mean_diff": 0.0009619183908672849
+    },
+    "interpretation": "Disabling 'ct' saves one scorer at deployment; the NDCG delta is 0.00096 (p=0.2551)."
+  },
+  "e8_appendix_b": {
+    "dataset": "lastfm_2k",
+    "union_candidates": {
+      "shapley": {
+        "cf": 0.004104317294206547,
+        "ct": 3.0882594618823886e-05,
+        "pop": 0.013621949861989016,
+        "rec": 0.00019401352189643204,
+        "seq": 0.002032374006450263
+      },
+      "v_grand": 0.019983537279161082,
+      "recall": 0.22142857142857142
+    },
+    "regenerated_candidates": {
+      "shapley": {
+        "cf": 0.007557537812442253,
+        "ct": 0.00010129884095385597,
+        "pop": 0.015934499748046515,
+        "rec": 0.0006547874526358808,
+        "seq": 0.00071886739983727
+      },
+      "v_grand": 0.024966991253915775,
+      "recall": 0.20142857142857143
+    },
+    "v_grand_inflation": 0.004983453974754692,
+    "note": "E8-a quantifies the bias avoided by \u00a72.1. The rejected v1.0 design draws candidates from the grand-coalition scorer, inflating v(G) relative to every v(S) for proper subsets S."
+  },
+  "multi_seed": {
+    "dataset": "lastfm_2k",
+    "seeds": [
+      42,
+      43,
+      44
+    ],
+    "per_seed": {
+      "42": {
+        "cf": 0.004104317294206547,
+        "ct": 3.0882594618823886e-05,
+        "pop": 0.013621949861989016,
+        "rec": 0.00019401352189643204,
+        "seq": 0.002032374006450263
+      },
+      "43": {
+        "cf": 0.007126728960998648,
+        "ct": -0.0017737603977226635,
+        "pop": 0.07806112350450409,
+        "rec": -0.0015867585717213935,
+        "seq": 0.0011632291439254462
+      },
+      "44": {
+        "cf": -0.005503836643907994,
+        "ct": 0.0009344005375739959,
+        "pop": 0.06936213183939842,
+        "rec": -0.00043322862333542757,
+        "seq": 0.008706243279648024
+      }
+    },
+    "ci": {
+      "cf": {
+        "mean": 0.0019090698704324002,
+        "std": 0.006595235425187865,
+        "lo": -0.005554141587845892,
+        "hi": 0.009372281328710692,
+        "n_seeds": 3
+      },
+      "ct": {
+        "mean": -0.00026949242184328125,
+        "std": 0.0013788410988046,
+        "lo": -0.0018297980097898095,
+        "hi": 0.0012908131661032469,
+        "n_seeds": 3
+      },
+      "pop": {
+        "mean": 0.053681735068630505,
+        "std": 0.03496438054791024,
+        "lo": 0.0141158138067169,
+        "hi": 0.0932476563305441,
+        "n_seeds": 3
+      },
+      "rec": {
+        "mean": -0.000608657891053463,
+        "std": 0.0009032546060392208,
+        "lo": -0.0016307866993427495,
+        "hi": 0.0004134709172358234,
+        "n_seeds": 3
+      },
+      "seq": {
+        "mean": 0.003967282143341244,
+        "std": 0.004127004687007618,
+        "lo": -0.0007028632999605197,
+        "hi": 0.008637427586643008,
+        "n_seeds": 3
+      }
+    }
+  }
+}

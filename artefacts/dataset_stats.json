@@ -1,0 +1,38 @@
+{
+  "ml_1m": {
+    "users": 900,
+    "items": 700,
+    "interactions": 28097,
+    "density": 0.0445984126984127,
+    "train": 26297,
+    "valid": 900,
+    "test": 900,
+    "synthetic": true
+  },
+  "lastfm_2k": {
+    "users": 700,
+    "items": 1568,
+    "interactions": 11364,
+    "density": 0.010353498542274053,
+    "train": 9964,
+    "valid": 700,
+    "test": 700,
+    "synthetic": true
+  },
+  "amazon_book": {
+    "users": 1200,
+    "items": 2564,
+    "interactions": 10859,
+    "density": 0.0035293161726469057,
+    "train": 8459,
+    "valid": 1200,
+    "test": 1200,
+    "synthetic": true
+  },
+  "_meta": {
+    "source": "measured",
+    "measured_at": "2026-08-02T16:29:15.839033+00:00",
+    "corpus_hash": "251c8b24dcb7b5b6",
+    "synthetic": true
+  }
+}

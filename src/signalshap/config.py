@@ -1,0 +1,90 @@
+"""Frozen configuration. Spec §2.2 (N_max), §2.4 (lambda), §2.5 (v_0 seed).
+
+Everything here is pre-registered in Week 1 and must not be tuned afterwards.
+Loaded from configs/frozen.yaml so the values live in one place and the
+manuscript can cite the file.
+"""
+
+from __future__ import annotations
+
+import json
+from dataclasses import dataclass, field, asdict
+from pathlib import Path
+
+import yaml
+
+ROOT = Path(__file__).resolve().parents[2]
+CONFIGS = ROOT / "configs"
+ARTEFACTS = ROOT / "artefacts"
+PROCESSED = ROOT / "data" / "processed"
+
+#: The five players. Order is fixed and used for deterministic tie-breaking.
+SOURCES: tuple[str, ...] = ("cf", "ct", "pop", "rec", "seq")
+
+#: Spec §11: all figures/tables report mean +/- std across these seeds.
+SEEDS: tuple[int, ...] = (42, 43, 44, 45, 46)
+
+#: Spec §2.5: the frozen v_0 permutation is drawn once under this seed.
+V0_SEED = 42
+
+#: Spec §2.2: candidate recall gate.
+RECALL_GATE = 0.60
+
+#: Spec §6.2: strict density ordering required by C3, sparsest first.
+DENSITY_ORDER = ("amazon_book", "lastfm_2k", "ml_1m")
+DENSITY_MARGIN = 1.5
+
+
+@dataclass(frozen=True)
+class FrozenConfig:
+    """Pre-registered values. Frozen at end of Week 1 (spec §15)."""
+
+    #: Spec §2.2 -- pre-registered per dataset, never a single global constant.
+    n_max: dict[str, int] = field(
+        default_factory=lambda: {"ml_1m": 200, "lastfm_2k": 500, "amazon_book": 1000}
+    )
+    #: Spec §2.4 -- chosen once on an ML-1M pilot, then frozen. NEVER per-coalition.
+    ridge_lambda: float = 1.0
+    v0_seed: int = V0_SEED
+    seeds: tuple[int, ...] = SEEDS
+    recall_gate: float = RECALL_GATE
+    #: Growth loop (spec §2.3).
+    max_growth_iters: int = 10
+    #: NDCG cutoff -- this is the characteristic function (spec §2.5).
+    k_ndcg: int = 10
+
+    @classmethod
+    def load(cls, path: Path | None = None) -> "FrozenConfig":
+        path = path or CONFIGS / "frozen.yaml"
+        if not path.exists():
+            return cls()
+        raw = yaml.safe_load(path.read_text()) or {}
+        raw.pop("_note", None)
+        if "seeds" in raw:
+            raw["seeds"] = tuple(raw["seeds"])
+        return cls(**raw)
+
+    def save(self, path: Path | None = None) -> Path:
+        path = path or CONFIGS / "frozen.yaml"
+        path.parent.mkdir(parents=True, exist_ok=True)
+        blob = asdict(self)
+        blob["seeds"] = list(self.seeds)
+        blob["_note"] = (
+            "PRE-REGISTERED, spec §2.2/§2.4/§2.5. Frozen end of Week 1. "
+            "lambda is NEVER tuned per coalition; n_max changes after E1 begins "
+            "must be recorded in the artefact with date and reason."
+        )
+        path.write_text(yaml.safe_dump(blob, sort_keys=False))
+        return path
+
+
+def write_artefact(name: str, payload: dict) -> Path:
+    """Every quantitative claim traces to a JSON here (spec §14, rule 1)."""
+    ARTEFACTS.mkdir(parents=True, exist_ok=True)
+    p = ARTEFACTS / name
+    p.write_text(json.dumps(payload, indent=2, default=str))
+    return p
+
+
+def read_artefact(name: str) -> dict:
+    return json.loads((ARTEFACTS / name).read_text())

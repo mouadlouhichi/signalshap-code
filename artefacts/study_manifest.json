@@ -1,0 +1,33 @@
+{
+  "generated_at": "2026-08-02T16:29:15.847680+00:00",
+  "datasets": [
+    "ml_1m",
+    "lastfm_2k",
+    "amazon_book"
+  ],
+  "seeds": [
+    42,
+    43,
+    44
+  ],
+  "synthetic": true,
+  "config": {
+    "n_max": {
+      "ml_1m": 80,
+      "lastfm_2k": 100,
+      "amazon_book": 120
+    },
+    "ridge_lambda": 1.0,
+    "v0_seed": 42,
+    "seeds": [
+      42,
+      43,
+      44,
+      45,
+      46
+    ],
+    "recall_gate": 0.6,
+    "max_growth_iters": 10,
+    "k_ndcg": 10
+  }
+}

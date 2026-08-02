@@ -1,0 +1,11 @@
+Symbol,Meaning
+$\mathcal{G}$,"signal sources (players), $|\mathcal{G}|=5$"
+$S \subseteq \mathcal{G}$,a coalition; there are $2^5=32$
+$C_u$,coalition-independent candidate set for user $u$
+$N_{max}^{(d)}$,"pre-registered candidate cap, per dataset"
+"$z_{u,g,i}$","per-user, per-source z-normalised score"
+$w_g^{(S)}$,"ridge fusion weight, frozen $\lambda$"
+$v(S)$,mean NDCG@10 over $C_u$ minus $v_0$
+$v_0$,NDCG@10 of one frozen permutation (cosmetic offset)
+$\varphi_g$,exact Shapley value of source $g$
+LOO$(g)$,$v(\mathcal{G}) - v(\mathcal{G} \setminus \{g\})$
