@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-08-02T16:29:15.847680+00:00",
+  "generated_at": "2026-08-02T16:53:31.571865+00:00",
   "datasets": [
     "ml_1m",
     "lastfm_2k",
@@ -13,9 +13,9 @@
   "synthetic": true,
   "config": {
     "n_max": {
-      "ml_1m": 80,
-      "lastfm_2k": 100,
-      "amazon_book": 120
+      "ml_1m": 200,
+      "lastfm_2k": 500,
+      "amazon_book": 1000
     },
     "ridge_lambda": 1.0,
     "v0_seed": 42,

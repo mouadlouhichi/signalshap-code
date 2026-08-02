@@ -1,7 +1,7 @@
 n_max:
-  ml_1m: 80
-  lastfm_2k: 100
-  amazon_book: 120
+  ml_1m: 200
+  lastfm_2k: 500
+  amazon_book: 1000
 ridge_lambda: 1.0
 v0_seed: 42
 seeds:

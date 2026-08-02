@@ -92,6 +92,61 @@ def evaluate_weights(feat: dict[int, np.ndarray], candidates: list[np.ndarray],
     return out
 
 
+def signalshap_fuse_v2(game, segments: np.ndarray, lam: float = 1.0, seed: int = 42) -> dict:
+    """C5 with head + shrinkage selected on the VALIDATION fold (spec §2.4).
+
+    The v1 head (plain per-segment ridge) is retained below for comparison.
+    Selection uses cross-validation inside the validation fold only; test data
+    is never consulted, so a win here is a real win and a loss is a real loss.
+    """
+    from ..fusion.heads import (fit_pairwise_logistic, fit_ridge_head,
+                                select_on_validation, shrink)
+
+    n_src = len(game.sources)
+    feat, cands = game.feat, game.candidates
+    sel = select_on_validation(feat, cands, game.valid_items, game.fit_users,
+                               segments, lam, game.k, seed=seed)
+
+    def _design(us):
+        Xs, ys, gs = [], [], []
+        for u in us:
+            y = (cands[u] == game.valid_items[u]).astype(float)
+            Xs.append(feat[u]); ys.append(y); gs.append((feat[u], y))
+        return (np.vstack(Xs), np.concatenate(ys), gs) if Xs else (None, None, [])
+
+    X, y, groups = _design(game.fit_users)
+    if X is None:
+        w_global = np.ones(n_src) / n_src
+    else:
+        w_global = (fit_ridge_head(X, y, lam) if sel["head"] == "ridge"
+                    else fit_pairwise_logistic(groups, lam, seed=seed))
+
+    w_seg = {}
+    for s in range(len(SEGMENT_NAMES)):
+        mem = [u for u in game.fit_users if segments[u] == s]
+        if len(mem) < 10:
+            w_seg[s] = w_global
+            continue
+        Xs, ys, gs = _design(mem)
+        raw = (fit_ridge_head(Xs, ys, lam) if sel["head"] == "ridge"
+               else fit_pairwise_logistic(gs, lam, seed=seed))
+        w_seg[s] = shrink(raw, w_global, sel["alpha"])
+
+    users = game.eval_users
+    w_uniform = np.ones(n_src) / n_src
+    return {
+        "uniform": evaluate_weights(feat, cands, game.test_items, users,
+                                    lambda u: w_uniform, game.k),
+        "global": evaluate_weights(feat, cands, game.test_items, users,
+                                   lambda u: w_global, game.k),
+        "signalshap_fuse": evaluate_weights(feat, cands, game.test_items, users,
+                                            lambda u: w_seg[segments[u]], game.k),
+        "weights": {"uniform": w_uniform.tolist(), "global": w_global.tolist(),
+                    **{f"segment_{SEGMENT_NAMES[s]}": w.tolist() for s, w in w_seg.items()}},
+        "selection": sel, "sources": list(game.sources), "users": users,
+    }
+
+
 def signalshap_fuse(game, segments: np.ndarray, lam: float = 1.0) -> dict:
     """C5: segment-adaptive fusion, compared against uniform and global.
 

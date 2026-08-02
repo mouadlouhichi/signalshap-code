@@ -33,6 +33,7 @@ from .game.core import (
 from .scorers.base import mask_seen, train_all_scorers
 from .segments.segments import (
     SEGMENT_NAMES, assign_segments, segment_shapley_profiles, signalshap_fuse,
+    signalshap_fuse_v2,
 )
 from .stats.tests import (
     bootstrap_ci, holm_bonferroni, permutation_test_between,
@@ -184,8 +185,19 @@ class Experiment:
                     if len(xa) >= 5 and len(xb) >= 5:
                         key = f"{g}:{SEGMENT_NAMES[a]}_vs_{SEGMENT_NAMES[b]}"
                         tests[key] = permutation_test_between(xa, xb, 10_000, self.seed)
+        n_sig = sum(1 for t in tests.values() if t["p_value"] < 0.05)
         return {
             "dataset": self.name, "profiles": profiles,
+            "heterogeneity_summary": {
+                "n_tests": len(tests), "n_significant_uncorrected": n_sig,
+                "expected_by_chance": round(0.05 * len(tests), 2),
+                "exceeds_chance": bool(n_sig > 0.05 * len(tests) * 2),
+                "note": (
+                    "If n_significant is at or near the chance rate, there is NO "
+                    "segment heterogeneity to exploit and C5 cannot work by "
+                    "construction -- C4 and C5 stand or fall together."
+                ),
+            },
             "segment_sizes": {
                 SEGMENT_NAMES[s]: int((u_seg == s).sum())
                 for s in range(len(SEGMENT_NAMES))
@@ -194,7 +206,8 @@ class Experiment:
         }
 
     def e4_signalshap_fuse(self) -> dict:
-        res = signalshap_fuse(self.game, self.segments, self.cfg.ridge_lambda)
+        res = signalshap_fuse_v2(self.game, self.segments, self.cfg.ridge_lambda,
+                                 seed=self.seed)
         users = res["users"]
         fuse = res["signalshap_fuse"]
 
@@ -236,6 +249,7 @@ class Experiment:
                 for k, v in fc.items()
             },
             "weights": res["weights"], "wilcoxon": effects, "holm_bonferroni": holm,
+            "selection": res.get("selection", {}),
             "note": (
                 "T5 is FULL-CATALOG for every method; SignalShap-Fuse scores "
                 "items outside C_u as -inf so its recall ceiling is visible. "

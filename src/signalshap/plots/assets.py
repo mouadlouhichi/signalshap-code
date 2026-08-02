@@ -36,13 +36,46 @@ def _dirs() -> None:
     TAB.mkdir(parents=True, exist_ok=True)
 
 
+def _tex_safe(x):
+    """Escape LaTeX specials in generated cells, leaving intentional math alone."""
+    if not isinstance(x, str):
+        return x
+    if x.count("$") >= 2:          # contains math: escape only outside $...$
+        parts = x.split("$")
+        for i in range(0, len(parts), 2):   # even indices are outside math
+            parts[i] = (parts[i].replace("_", r"\_").replace("&", r"\&")
+                        .replace("%", r"\%").replace("#", r"\#")
+                        .replace("—", "--").replace("±", r"\,$\pm$\,"))
+        return "$".join(parts)
+    for a, b in (("\\", r"\textbackslash{}"), ("&", r"\&"), ("%", r"\%"),
+                 ("_", r"\_"), ("#", r"\#"), ("—", "--"), ("±", r"$\pm$"),
+                 ("≥", r"$\geq$"), ("Δ", r"$\Delta$"), ("τ", r"$\tau$"),
+                 ("λ", r"$\lambda$"), ("φ", r"$\varphi$")):
+        x = x.replace(a, b)
+    return x
+
+
 def _save_table(df: pd.DataFrame, name: str, caption: str) -> None:
+    """Emit Markdown (review), LaTeX (Springer template), and CSV.
+
+    LaTeX output is escaped so `\input{}` compiles directly -- generated cells
+    can legitimately contain _, &, %, and en-dashes.
+    """
     _dirs()
     (TAB / f"{name}.md").write_text(f"**{caption}**\n\n{df.to_markdown(index=False)}\n")
-    (TAB / f"{name}.tex").write_text(
-        df.to_latex(index=False, escape=False, caption=caption, label=f"tab:{name}")
-    )
     df.to_csv(TAB / f"{name}.csv", index=False)
+
+    tex = df.copy()
+    tex.columns = [_tex_safe(c) for c in tex.columns]
+    for c in tex.columns:
+        tex[c] = tex[c].map(_tex_safe)
+    body = tex.to_latex(index=False, escape=False, longtable=False,
+                        column_format="l" * len(tex.columns))
+    (TAB / f"{name}.tex").write_text(
+        "\\begin{table}[htbp]\n\\centering\n\\footnotesize\n"
+        f"\\caption{{{_tex_safe(caption)}}}\n\\label{{tab:{name}}}\n"
+        f"{body}\\end{{table}}\n"
+    )
 
 
 # --------------------------------------------------------------------------- #

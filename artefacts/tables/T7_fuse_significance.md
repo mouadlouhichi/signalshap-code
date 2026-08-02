@@ -2,12 +2,12 @@
 
 | Dataset     | Baseline             |   Mean ΔNDCG@10 |   Wilcoxon $W$ |   raw $p$ |   Holm $p$ |   Cohen's $d_z$ |
 |:------------|:---------------------|----------------:|---------------:|----------:|-----------:|----------------:|
-| ml_1m       | uniform              |         0.05829 |         6290.5 |    0      |     0      |           0.278 |
-| ml_1m       | global               |        -0.00335 |          986   |    0.0304 |     0.0304 |          -0.068 |
-| ml_1m       | popularity_reference |         0.05244 |         1091   |    0      |     0      |           0.435 |
-| lastfm_2k   | uniform              |         0.00724 |         1047.5 |    0.1858 |     0.3715 |           0.048 |
-| lastfm_2k   | global               |        -0.00196 |          485   |    0.7136 |     0.7136 |          -0.041 |
-| lastfm_2k   | popularity_reference |         0.01017 |          553   |    0.0018 |     0.0054 |           0.105 |
-| amazon_book | uniform              |         0.01918 |          513   |    0      |     0      |           0.148 |
-| amazon_book | global               |        -0.00082 |          223   |    0.2016 |     0.4031 |          -0.038 |
-| amazon_book | popularity_reference |        -0.0019  |          732.5 |    0.3407 |     0.4031 |          -0.038 |
+| amazon_book | uniform              |         0.02142 |          427   |    0      |     0      |           0.169 |
+| amazon_book | global               |         0       |            0   |    1      |     1      |           0     |
+| amazon_book | popularity_reference |         0.00034 |          385   |    0.1984 |     0.3968 |           0.017 |
+| lastfm_2k   | uniform              |         0.00464 |         1068.5 |    0.308  |     0.6161 |           0.035 |
+| lastfm_2k   | global               |         0       |            0   |    1      |     1      |           0     |
+| lastfm_2k   | popularity_reference |         0.00943 |          556.5 |    0.0019 |     0.0058 |           0.102 |
+| ml_1m       | uniform              |         0.08324 |         5126.5 |    0      |     0      |           0.365 |
+| ml_1m       | global               |        -0.0002  |          580   |    0.4361 |     0.4361 |          -0.004 |
+| ml_1m       | popularity_reference |         0.07503 |         2826.5 |    0      |     0      |           0.466 |
