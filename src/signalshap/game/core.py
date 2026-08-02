@@ -117,6 +117,7 @@ class SignalShapGame:
 
         self._v0 = self._frozen_baseline(v0_seed)
         self._cache: dict[frozenset, float] = {}
+        self._gram_cache: tuple[np.ndarray, np.ndarray] | None = None
 
     # -- v_0 ---------------------------------------------------------------- #
 
@@ -141,6 +142,29 @@ class SignalShapGame:
 
     # -- ridge head --------------------------------------------------------- #
 
+    def _gram(self) -> tuple[np.ndarray, np.ndarray]:
+        """Accumulate X^T X and X^T y ONCE over all sources, cached.
+
+        Ridge needs only these sufficient statistics, and the versions for a
+        sub-coalition S are simply the corresponding SUBMATRICES. Rebuilding
+        and stacking the full design matrix per coalition -- as this did
+        originally -- costs O(2^|G|) passes over a matrix that can run to
+        several GB, which dominates runtime on large corpora and thrashes
+        memory. Accumulating once and slicing is algebraically identical and
+        removes a 2^|G| factor.
+        """
+        if self._gram_cache is None:
+            n = len(self.sources)
+            XtX = np.zeros((n, n))
+            Xty = np.zeros(n)
+            for u in self.fit_users:
+                F = self.feat[u]
+                y = (self.candidates[u] == self.valid_items[u]).astype(np.float64)
+                XtX += F.T @ F
+                Xty += F.T @ y
+            self._gram_cache = (XtX, Xty)
+        return self._gram_cache
+
     def _fit_weights(self, coalition: frozenset) -> np.ndarray:
         """Ridge head fitted on the validation fold, conditioned on S.
 
@@ -153,18 +177,15 @@ class SignalShapGame:
         idx = [i for i, g in enumerate(self.sources) if g in coalition]
         if not idx:
             return np.zeros(len(self.sources))
-        X_parts, y_parts = [], []
-        for u in self.fit_users:
-            c, target = self.candidates[u], self.valid_items[u]
-            X_parts.append(self.feat[u][:, idx])
-            y_parts.append((c == target).astype(np.float64))
-        if not X_parts:
+        if not self.fit_users:
             w = np.zeros(len(self.sources))
             w[idx] = 1.0
             return w
-        X, y = np.vstack(X_parts), np.concatenate(y_parts)
-        A = X.T @ X + self.lam * np.eye(len(idx))
-        sol = np.linalg.solve(A, X.T @ y)
+
+        XtX, Xty = self._gram()
+        ii = np.ix_(idx, idx)
+        A = XtX[ii] + self.lam * np.eye(len(idx))
+        sol = np.linalg.solve(A, Xty[idx])
         w = np.zeros(len(self.sources))
         w[idx] = sol
         return w

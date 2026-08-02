@@ -51,7 +51,7 @@ def inject_duplicate(scores: dict[str, np.ndarray], source: str,
 
 
 def recovery_experiment(exp, source: str = "cf", etas=(0.0, 0.01, 0.1, 0.5),
-                        seed: int = 42) -> dict:
+                        seed: int = 42, verbose: bool = True) -> dict:
     """Run the intervention at several redundancy strengths.
 
     `exp` is a prepared Experiment. Candidates are held FIXED at the
@@ -76,7 +76,12 @@ def recovery_experiment(exp, source: str = "cf", etas=(0.0, 0.01, 0.1, 0.5),
         ),
     }
 
-    for eta in etas:
+    import time as _t
+    for n_done, eta in enumerate(etas, 1):
+        _t0 = _t.time()
+        if verbose:
+            print(f"    [E9 {exp.name}] eta={eta} ({n_done}/{len(etas)}) "
+                  f"-- 2^6=64 coalitions...", flush=True)
         sc, dup = inject_duplicate(exp.scores, source, eta, seed)
         srcs = tuple(list(exp.game.sources) + [dup])
         g = SignalShapGame(
@@ -112,6 +117,9 @@ def recovery_experiment(exp, source: str = "cf", etas=(0.0, 0.01, 0.1, 0.5),
                 if abs(baseline_loo[source]) > 1e-12 else float("nan")
             ),
         }
+        if verbose:
+            print(f"    [E9 {exp.name}] eta={eta} done in {_t.time()-_t0:.1f}s  "
+                  f"symmetry_err={abs(phi[source]-phi[dup]):.2e}", flush=True)
     return out
 
 
