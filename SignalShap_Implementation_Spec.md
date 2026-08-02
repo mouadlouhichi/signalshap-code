@@ -195,7 +195,21 @@ Redundancy holds ($1.0 = 1.0 = 1.0$ at $S = \varnothing$; $0.5 = 0.5 = 0.5$ at $
 
 $$\varphi_{g_1} = \varphi_{g_2} = -0.4167, \qquad \varphi_{g_3} = +1.3333, \qquad \textstyle\sum = 0.5 = v(\mathcal{G}).$$
 
-**The redundant sources receive negative credit despite positive standalone value.** Redundancy alone is therefore compatible with $\varphi < 0$; the positivity clause requires monotonicity as a separate structural assumption. Adding monotonicity repairs it: on the monotone variant of the same game, $\varphi_{g_1} = 0.4167 \ge v(\{g_1\})/3 = 0.3333$. ✓
+**The redundant sources receive negative credit despite positive standalone value.** Redundancy alone is therefore compatible with $\varphi < 0$; the positivity clause requires monotonicity as a separate structural assumption.
+
+**The monotone variant — repair, shown in full.** Adding monotonicity while keeping the redundancy structure intact repairs the property. Only the three payoffs marked $\dagger$ differ from the table above:
+
+| $S$ | $\varnothing$ | $g_1$ | $g_2$ | $g_3$ | $g_1g_2$ | $g_1g_3$ | $g_2g_3$ | $g_1g_2g_3$ |
+|---|---|---|---|---|---|---|---|---|
+| $v(S)$ | $0$ | $1.0$ | $1.0$ | $5.0$ | $1.0$ | $5.5^\dagger$ | $5.5^\dagger$ | $5.5^\dagger$ |
+
+Verified mechanically: monotone ✓ (all 12 pairs), exactly redundant in $(g_1,g_2)$ ✓, $\mathrm{LOO}(g_1) = \mathrm{LOO}(g_2) = 0$ ✓. The Shapley values are
+
+$$\varphi_{g_1} = \varphi_{g_2} = 0.4167, \qquad \varphi_{g_3} = 4.6667, \qquad \textstyle\sum = 5.5 = v(\mathcal{G}) \;\checkmark$$
+
+and the bound holds: $\varphi_{g_1} = 0.4167 \ge v(\{g_1\})/|\mathcal{G}| = 1/3 = 0.3333$ ✓.
+
+This game does double duty. It is also the **witness that the rejected $\tfrac12$ constant is unattainable** (§3.4): $\tfrac12 v(\{g_1\}) = 0.5 > 0.4167 = \varphi_{g_1}$, so the overstated bound fails on a game that satisfies every hypothesis of the corrected property. Both tables are reproduced in Appendix A and encoded as `NON_MONOTONE_V` and `MONOTONE_V` in `tests/test_property2_counterexample.py`.
 
 **This couples §3 to §2.4.** The coalition-conditional ridge refit is precisely the mechanism that can break monotonicity — a head refit on $S \cup \{g\}$ may score worse than one refit on $S$. So the refit is not only a variance problem for Property 1's CIs; it is the plausible route by which Property 2's hypothesis fails on real data.
 
@@ -289,14 +303,18 @@ Each scorer trains **once** on the train split; its per-user score matrix is cac
 | $k=10$ | $\approx 15{,}000$ | $\approx 10{,}800$ | $\approx 0.76\%$ | **inverted** ✗ — $2.73\times$ *denser* than the "medium" dataset |
 | $k=20$ | $\approx 7{,}500$ | $\approx 4{,}500$ | $\approx 2.33\%$ | **badly inverted** ✗ — $8.33\times$, approaches ML-1M |
 
-(Illustrative retention rates; recompute against the real corpus in Week 1.)
+> ⚠️ **These retention rates are placeholders, and the table is non-authoritative.** They are order-of-magnitude estimates written to establish that the hazard is *real and large*, not measurements. **No filter decision may be taken from this table.** The invariant of rule (b) is checked against measured post-filter statistics only.
+>
+> **Week-1 obligation (blocking).** `scripts/measure_kcore_sweep.py` recomputes true retention and density for every $k \in \{3,5,8,10,20\}$ on the real Amazon-Book subsample, writes `artefacts/kcore_sweep.json`, and **overwrites this table with the measured values**, replacing this warning with the measurement date and corpus hash. Until that file exists, `tests/test_density_ordering.py::test_kcore_sweep_is_measured_not_estimated` fails whenever any $k$-core is configured, so rung 3 cannot be reached on placeholder numbers.
+>
+> **Why an extra gate.** The ordering invariant alone is insufficient here. It validates whichever densities it is handed — so if `dataset_stats.json` were ever built from estimates, or if a filter decision were justified from *this* table while the invariant checked a different quantity, the test would pass while the reasoning rested on numbers nobody measured. The estimates and the measurements must be structurally impossible to confuse, hence a separate provenance flag rather than a comment. The direction of error also matters: these figures assume retention rates that could easily be off by a factor of two, and §6.2's whole conclusion (that $k=10$ inverts the ordering) is a claim about real corpus structure that has never been checked against the corpus.
 
 So $k=10$ — a routine, defensible-looking choice — makes "dense movies / sparse books / medium music" **factually false**, and checkable from T2's own density column. That is worse than a blunted contrast: it is an inverted ordering presented as a finding.
 
 **Three binding rules.**
 
-- **(a) $k$ is capped by the ordering, not chosen for convenience.** Select the largest $k \in \{3,5,8,10\}$ whose *measured* post-filter density preserves $\rho_{\text{Amazon-Book}} < \rho_{\text{LastFM-2K}} < \rho_{\text{ML-1M}}$ with $\ge 1.5\times$ margin between adjacent datasets. If no $k$ both clears the recall gate and preserves the ordering, **rung 3 is unavailable** — fall through to Gowalla.
-- **(b) The ordering is a CI invariant, not a caution.** `tests/test_density_ordering.py` asserts the strict ordering and margins against as-used statistics. Any filter that inverts or compresses the ordering fails the build. *Prose warnings do not survive a Week-6 deadline; a red test does.*
+- **(a) $k$ is capped by the ordering, not chosen for convenience.** Select the largest $k \in \{3,5,8,10\}$ whose **measured** post-filter density — from `artefacts/kcore_sweep.json`, never from the placeholder table above — preserves $\rho_{\text{Amazon-Book}} < \rho_{\text{LastFM-2K}} < \rho_{\text{ML-1M}}$ with $\ge 1.5\times$ margin between adjacent datasets. If no $k$ both clears the recall gate and preserves the ordering, **rung 3 is unavailable** — fall through to Gowalla.
+- **(b) The ordering is a CI invariant, not a caution.** `tests/test_density_ordering.py` asserts the strict ordering and margins against as-used statistics. Any filter that inverts or compresses the ordering fails the build. *Prose warnings do not survive a Week-6 deadline; a red test does.* **Scope limit:** this test validates whatever densities it is given; it cannot tell measured values from estimates. Provenance is enforced separately by `test_kcore_sweep_is_measured_not_estimated` and by the `source: "measured"` field required in `dataset_stats.json`.
 - **(c) Downstream claims are regenerated, not hand-edited.** If any filter is applied, recompute density and re-propagate to T2, the introduction's framing sentence, §2.2's motivating figure, and C3's wording — all from the same JSON.
 
 **Artefact record.** The chosen rung, its date, triggering recall numbers, filter parameters, and pre/post-filter density for every dataset.
@@ -405,6 +423,7 @@ Plus abstract (≤ 250 w.), 5–7 keywords, Declarations, References with DOIs, 
 - **DOI archive.** Zenodo snapshot at submission, cited in Data Availability.
 - **Docker.** CPU image for the Shapley game; GPU image for one-time base-scorer training.
 - **One command.** `make reproduce` — raw data to every figure and table in ≤ 60 min on a modern laptop (Shapley step), plus a one-time GPU pass.
+- **Measured-not-estimated.** `artefacts/dataset_stats.json` and `artefacts/kcore_sweep.json` each carry `source`, `measured_at`, and `corpus_hash`. Any spec table derived from them is regenerated, never hand-maintained.
 - **Determinism.** All seeds pinned; tie-breaking by `(timestamp, original_record_index)`; frozen $v_0$ permutation serialised; `configs/frozen.yaml` holds $N_{\max}^{(d)}$, $\lambda$, and the $v_0$ seed.
 
 ### Repository layout
@@ -451,7 +470,7 @@ signalshap/
 
 Nine weeks is a **floor**, not a comfortable estimate.
 
-- **Week 1 — Scaffolding, pre-registration, gates.** Repo, CI, Docker, download scripts, temporal split, tie-breaking. Candidate builder **including the truncation rule**, with its three tests. **Pre-register $N_{\max}^{(d)}$ and freeze `configs/frozen.yaml`.** **Run E0-a on Amazon-Book first.** Serialise the $v_0$ permutation. Build `artefacts/dataset_stats.json` and **turn on `test_density_ordering.py` before any filter decision**. Property-1 smoke test plus `test_property2_counterexample.py`.
+- **Week 1 — Scaffolding, pre-registration, gates.** Repo, CI, Docker, download scripts, temporal split, tie-breaking. Candidate builder **including the truncation rule**, with its three tests. **Pre-register $N_{\max}^{(d)}$ and freeze `configs/frozen.yaml`.** **Run E0-a on Amazon-Book first.** Serialise the $v_0$ permutation. Build `artefacts/dataset_stats.json` (with `source: "measured"`) and **turn on `test_density_ordering.py` before any filter decision**. **Run `scripts/measure_kcore_sweep.py` and overwrite §6.2's placeholder table with measured values** — the estimates there have never been checked against the corpus, and §6.2's conclusion depends on them. Property-1 smoke test plus `test_property2_counterexample.py`.
 - **Week 2 — Base scorers.** ALS, TF-IDF, popularity-with-decay, recency, item2vec; cache all three datasets. Documented comparison runs against BPR-MF (discarded) and SASRec (moved to Appendix B).
 - **Week 3 — Game core, $\lambda$ freeze, fusion decision.** Fixed-candidate NDCG@10, coalition enumeration, exact Shapley, LOO/forward/permutation/MC baselines. **$\lambda$ pilot → freeze.** Ridge vs pairwise-logistic smoke test. **Run E0-b as soon as $v$ is computable and decide Lemma 1(ii)'s assumption now** — nearly free here, collides with the writing pass if deferred.
 - **Week 4 — E1 + E2.** All three datasets. F2, F3, F4, T6, with main-text CIs.
@@ -496,6 +515,7 @@ Nine weeks is a **floor**, not a comfortable estimate.
 | Reviewer constructs a counterexample to Property 2 | (mitigated) | **Would have been critical** — a false theorem | Monotonicity hypothesis explicit; counterexample stated openly in §3.2 and Appendix A; pinned in CI; E0-b discharges it empirically. |
 | Wrong constant or closed form re-enters Lemma 1 | (mitigated) | High | §3.4 derives $1/|\mathcal{G}|$ and names both rejected formulas; two regression tests. |
 | Amazon-Book recall fails the gate even at raised $N_{\max}$ | Medium | Medium | Four-rung ladder (§2.2); rung 1 bounded by the compute claim. |
+| Placeholder $k$-core estimates mistaken for measurements | Medium | Medium | §6.2 table flagged non-authoritative; `kcore_sweep.json` required with provenance fields; `test_kcore_sweep_is_measured_not_estimated` blocks rung 3 until measured (Week-1 obligation). |
 | $k$-core remedy inverts the density ordering and falsifies C3 | (mitigated) | Would have been high | $k$ capped by the invariant, rung demoted, `test_density_ordering.py`, all figures regenerated (§6.2). |
 | $\lambda$ tuned per coalition inflates $v(\mathcal{G})$ | (mitigated) | Would have been high | Frozen $\lambda$; E5-vi reports sensitivity without selecting (§2.4). |
 | T5 compares candidate-restricted against full-catalog methods | (mitigated) | Would have been high | Full-catalog for every method; $-\infty$ outside $C_u$ (§7). |
@@ -531,6 +551,8 @@ Preserved so that fixes are not silently reverted. Each entry is a **real error 
 | 12 | $C_u$ overshoot unhandled | Deterministic truncation rule | §2.3 |
 | 13 | "Exact Shapley" implying error-free attribution | "Exact given the fitted $v$"; main-text CIs | §2.7 |
 | 14 | Eight-week timeline | Nine weeks, floor | §15 |
+| 15 | Monotone-repair $\varphi$ asserted without its payoff table | Full table shown, mechanically verified, doubles as the witness that $\tfrac12$ is unattainable | §3.2 |
+| 16 | $k$-core estimates presented in a table indistinguishable from measurements | Table flagged non-authoritative; measurement gated by CI and a Week-1 obligation | §6.2 |
 
 ---
 
@@ -548,7 +570,7 @@ Preserved so that fixes are not silently reverted. Each entry is a **real error 
 - **Properties 1–3 are restated Shapley axioms, not novel theorems.** Lemma 1 is new but modest.
 - **Monotonicity is audited, never assumed.** Property 2 and Lemma 1(ii) may only be invoked where E0-b passes; where it fails, report negative $\varphi_g$ as substantive.
 - **The density ordering is a CI invariant, and C3 lives or dies by it.** No corpus filter without re-running the test. The one forbidden outcome is shipping an inverted ordering under the old wording.
-- **Density is computed, never quoted.**
+- **Density is computed, never quoted** — and never taken from a spec table. Placeholder estimates in this document are decision-support for *whether a hazard exists*, never inputs to a filter decision. Anything feeding a decision carries `source: "measured"`.
 - **$\lambda$ is frozen, never tuned per coalition.**
 - **T5 is full-catalog for every method.** Never restrict a baseline to $C_u$ to make a comparison "fair."
 - **Player overlap is pre-registered, not discovered.**

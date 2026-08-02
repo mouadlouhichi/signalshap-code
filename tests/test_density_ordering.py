@@ -139,3 +139,77 @@ def test_as_used_densities_preserve_the_ordering():
 
 if __name__ == "__main__":
     raise SystemExit(pytest.main([__file__, "-v"]))
+
+
+# --------------------------------------------------------------------------- #
+# Provenance gate: the ordering invariant validates whatever numbers it is
+# handed, so it cannot distinguish a measurement from an estimate. These tests
+# close that gap (spec §6.2, Week-1 obligation).
+# --------------------------------------------------------------------------- #
+
+SWEEP_PATH = os.environ.get("SIGNALSHAP_KCORE_SWEEP", "artefacts/kcore_sweep.json")
+
+REQUIRED_PROVENANCE = ("source", "measured_at", "corpus_hash")
+
+
+def kcore_configured() -> bool:
+    """True when rung 3 of the fallback ladder is active for any dataset."""
+    cfg = os.environ.get("SIGNALSHAP_KCORE_K", "").strip()
+    return bool(cfg) and cfg.lower() not in {"none", "0", "false"}
+
+
+def has_provenance(blob: dict) -> list:
+    """Missing-or-non-measured provenance fields; empty list means trustworthy."""
+    problems = [f for f in REQUIRED_PROVENANCE if not blob.get(f)]
+    if blob.get("source") not in (None, "measured"):
+        problems.append(
+            f"source is {blob['source']!r}, must be 'measured' before informing a decision"
+        )
+    return problems
+
+
+def test_kcore_sweep_is_measured_not_estimated():
+    """Rung 3 must not be reachable on the spec's placeholder retention rates.
+
+    §6.2's k-core table is explicitly non-authoritative: the retention rates are
+    order-of-magnitude estimates that establish the hazard is real, not
+    measurements of the corpus. Selecting k from them would mean the whole
+    density-inversion conclusion rests on numbers nobody checked.
+    """
+    if not kcore_configured():
+        pytest.skip("no k-core configured; rung 3 inactive")
+
+    assert os.path.exists(SWEEP_PATH), (
+        f"k-core is configured but {SWEEP_PATH} is missing. Run "
+        "scripts/measure_kcore_sweep.py first -- rung 3 may not be selected "
+        "from the placeholder table in spec §6.2."
+    )
+    with open(SWEEP_PATH) as fh:
+        sweep = json.load(fh)
+
+    problems = has_provenance(sweep)
+    assert not problems, f"{SWEEP_PATH} provenance unusable: {problems}"
+
+
+@pytest.mark.skipif(
+    not os.path.exists(STATS_PATH), reason=f"{STATS_PATH} not built yet"
+)
+def test_dataset_stats_declare_measured_provenance():
+    """dataset_stats.json feeds both the ordering invariant and every density
+    figure in the manuscript, so it must declare measured provenance too."""
+    with open(STATS_PATH) as fh:
+        stats = json.load(fh)
+    blob = stats.get("_meta", stats)
+    problems = has_provenance(blob)
+    assert not problems, f"{STATS_PATH} provenance unusable: {problems}"
+
+
+def test_provenance_helper_rejects_estimates():
+    assert has_provenance(
+        {"source": "measured", "measured_at": "2026-08-02", "corpus_hash": "abc123"}
+    ) == []
+    assert has_provenance(
+        {"source": "estimated", "measured_at": "2026-08-02", "corpus_hash": "abc123"}
+    )
+    assert has_provenance({"source": "measured"})  # missing fields
+    assert has_provenance({})
