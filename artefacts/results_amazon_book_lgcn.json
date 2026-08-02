@@ -1,0 +1,252 @@
+{
+  "dataset": "amazon_book_lgcn",
+  "seed": 42,
+  "synthetic": false,
+  "dataset_stats": {
+    "users": 1500,
+    "items": 46477,
+    "interactions": 73729,
+    "density": 0.0010575696939704943,
+    "train": 70729,
+    "valid": 1500,
+    "test": 1500,
+    "synthetic": false,
+    "no_timestamps": true
+  },
+  "timings_sec": {
+    "load": 1.2538814544677734,
+    "scorers": 44.25023055076599,
+    "candidates": 60.49043083190918,
+    "game_32_coalitions": 37.42883110046387
+  },
+  "e0a_candidates": {
+    "dataset": "amazon_book_lgcn",
+    "n_max": 5000,
+    "candidate_recall": 0.38533333333333336,
+    "recall_gate": 0.6,
+    "gate_passes": false,
+    "abs_size_mean": 4999.999333333333,
+    "abs_size_std": 0.025811280910141243,
+    "abs_size_min": 4999,
+    "abs_size_max": 5000,
+    "n_eval_users": 1500,
+    "note": "Candidate recall is the CEILING on every ranking metric: a test item outside C_u contributes zero to NDCG@10 by construction."
+  },
+  "e0b_monotonicity": {
+    "pairs_checked": 80,
+    "violations": 4,
+    "max_magnitude": 1.7505582087101734e-06,
+    "sources_involved": [
+      "pop"
+    ],
+    "detail": [
+      {
+        "S": [
+          "cf"
+        ],
+        "g": "pop",
+        "delta": -1.7505582087101734e-06
+      },
+      {
+        "S": [
+          "cf",
+          "ct"
+        ],
+        "g": "pop",
+        "delta": -1.7505582087101734e-06
+      },
+      {
+        "S": [
+          "cf",
+          "rec"
+        ],
+        "g": "pop",
+        "delta": -1.7505582087101734e-06
+      },
+      {
+        "S": [
+          "cf",
+          "ct",
+          "rec"
+        ],
+        "g": "pop",
+        "delta": -1.7505582087101734e-06
+      }
+    ],
+    "property2_applicable": false,
+    "dataset": "amazon_book_lgcn",
+    "note": "Property 2 and Lemma 1(ii) apply only where this passes. Where it fails, negative phi_g are SUBSTANTIVE findings, not numerical error. The coalition-conditional ridge refit (spec \u00a72.4) is the likely cause."
+  },
+  "e1_source_share": {
+    "dataset": "amazon_book_lgcn",
+    "shapley": {
+      "cf": 0.004948087192584417,
+      "ct": 8.952314772017908e-06,
+      "pop": 0.0009830741473032148,
+      "rec": 8.952314772017908e-06,
+      "seq": 0.005813336029221794
+    },
+    "efficiency": {
+      "sum_phi": 0.01176240199865346,
+      "v_grand": 0.011762401998653459,
+      "abs_error": 1.734723475976807e-18,
+      "passes": true
+    },
+    "v_grand": 0.011762401998653459,
+    "v0": 0.00019270988421192525,
+    "n_coalitions": 32,
+    "note": "EXACT GIVEN THE FITTED v: the 32-coalition aggregation has no sampling error, but v(S) is estimated, so phi carries estimation error -- see seed CIs. Efficiency holds exactly regardless of fit noise because it is structural."
+  },
+  "e2_loo_vs_shapley": {
+    "dataset": "amazon_book_lgcn",
+    "shapley": {
+      "cf": 0.004948087192584417,
+      "ct": 8.952314772017908e-06,
+      "pop": 0.0009830741473032148,
+      "rec": 8.952314772017908e-06,
+      "seq": 0.005813336029221794
+    },
+    "loo": {
+      "cf": 0.0012006398439121154,
+      "ct": 0.0,
+      "pop": 0.0008195513292155714,
+      "rec": 0.0,
+      "seq": 0.0034619397799449062
+    },
+    "gap": {
+      "cf": 0.003747447348672301,
+      "ct": 8.952314772017908e-06,
+      "pop": 0.00016352281808764335,
+      "rec": 8.952314772017908e-06,
+      "seq": 0.0023513962492768877
+    },
+    "forward": {
+      "cf": 0.008302212776917263,
+      "seq": 0.0026406378925206246,
+      "pop": 0.0008195513292155714,
+      "ct": 0.0,
+      "rec": 0.0
+    },
+    "permutation_importance": {
+      "cf": 0.004969954789202677,
+      "ct": 7.609467556215221e-06,
+      "pop": 0.00103393399628565,
+      "rec": 1.0742777726421488e-05,
+      "seq": 0.005740160967882495
+    },
+    "mc_shapley_50": {
+      "cf": 0.005268152849809915,
+      "ct": 8.057083294816115e-06,
+      "pop": 0.000957230795220395,
+      "rec": 8.057083294816115e-06,
+      "seq": 0.005520904187033516
+    },
+    "kendall_tau": {
+      "cf|ct": 0.0,
+      "cf|pop": -0.04728595623084085,
+      "cf|rec": 0.0,
+      "cf|seq": 0.1389465392508096,
+      "ct|pop": 0.0,
+      "ct|rec": 0.0,
+      "ct|seq": 0.0,
+      "pop|rec": 0.0,
+      "pop|seq": -0.17192692910073157,
+      "rec|seq": 0.0
+    },
+    "pair_gap": {
+      "cf|ct": 0.003756399663444319,
+      "cf|pop": 0.003910970166759944,
+      "cf|rec": 0.003756399663444319,
+      "cf|seq": 0.006098843597949189,
+      "ct|pop": 0.00017247513285966127,
+      "ct|rec": 1.7904629544035815e-05,
+      "ct|seq": 0.0023603485640489056,
+      "pop|rec": 0.00017247513285966127,
+      "pop|seq": 0.002514919067364531,
+      "rec|seq": 0.0023603485640489056
+    },
+    "redundancy_gap_correlation": 0.3242653553738183,
+    "permutation_tests": {
+      "cf": {
+        "observed": 0.0037474473486723016,
+        "p_value": 0.06999300069993,
+        "n_shuffles": 10000
+      },
+      "ct": {
+        "observed": 8.952314772017906e-06,
+        "p_value": 1.0,
+        "n_shuffles": 10000
+      },
+      "pop": {
+        "observed": 0.00016352281808764294,
+        "p_value": 0.6788321167883211,
+        "n_shuffles": 10000
+      },
+      "rec": {
+        "observed": 8.952314772017906e-06,
+        "p_value": 1.0,
+        "n_shuffles": 10000
+      },
+      "seq": {
+        "observed": 0.0023513962492768864,
+        "p_value": 0.053594640535946404,
+        "n_shuffles": 10000
+      }
+    },
+    "preregistered_pairs": [
+      "pop|cf",
+      "rec|ct"
+    ],
+    "note": "pop-cf and rec-ct overlap is PRE-REGISTERED (spec \u00a74), not discovered: ALS on implicit feedback chases popularity, and rec is defined over content clusters. RQ2 tests whether Shapley recovers known structure."
+  },
+  "e9_recovery": {
+    "dataset": "amazon_book_lgcn",
+    "injected_source": "cf",
+    "baseline_shapley": {
+      "cf": 0.004948087192584417,
+      "ct": 8.952314772017908e-06,
+      "pop": 0.0009830741473032148,
+      "rec": 8.952314772017908e-06,
+      "seq": 0.005813336029221794
+    },
+    "baseline_loo": {
+      "cf": 0.0012006398439121154,
+      "ct": 0.0,
+      "pop": 0.0008195513292155714,
+      "rec": 0.0,
+      "seq": 0.0034619397799449062
+    },
+    "conditions": {
+      "eta=0.0": {
+        "eta": 0.0,
+        "shapley": {
+          "cf": 0.003065095314478303,
+          "ct": 7.4602623100149224e-06,
+          "pop": 0.0007581600534439974,
+          "rec": 7.4602623100149224e-06,
+          "seq": 0.004859130791632826,
+          "cf_dup": 0.003065095314478303
+        },
+        "loo": {
+          "cf": 0.0,
+          "ct": 0.0,
+          "pop": 0.0008195513292155714,
+          "rec": 0.0,
+          "seq": 0.0034619397799449062,
+          "cf_dup": 0.0
+        },
+        "phi_original": 0.003065095314478303,
+        "phi_duplicate": 0.003065095314478303,
+        "pair_sum": 0.006130190628956606,
+        "baseline_phi_original": 0.004948087192584417,
+        "conservation_ratio": 1.2389010925562873,
+        "symmetry_abs_error": 0.0,
+        "symmetry_rel_error": 0.0,
+        "loo_original": 0.0,
+        "loo_duplicate": 0.0,
+        "loo_collapse_ratio": 0.0
+      }
+    },
+    "design": "A duplicate of the named source is injected into the player set on REAL data, with the candidate set held fixed. Ground truth follows by construction: symmetry requires equal credit for the pair, and efficiency requires their sum to approximate the pre-injection value of the original source. LOO must collapse for both."
+  }
+}

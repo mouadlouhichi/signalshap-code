@@ -1,0 +1,288 @@
+{
+  "dataset": "yelp2018",
+  "seed": 42,
+  "synthetic": false,
+  "dataset_stats": {
+    "users": 1500,
+    "items": 25946,
+    "interactions": 62187,
+    "density": 0.0015978570877977338,
+    "train": 59187,
+    "valid": 1500,
+    "test": 1500,
+    "synthetic": false,
+    "no_timestamps": true
+  },
+  "timings_sec": {
+    "load": 0.711540699005127,
+    "scorers": 25.697596788406372,
+    "candidates": 49.9949836730957,
+    "game_32_coalitions": 36.53930449485779
+  },
+  "e0a_candidates": {
+    "dataset": "yelp2018",
+    "n_max": 5000,
+    "candidate_recall": 0.652,
+    "recall_gate": 0.6,
+    "gate_passes": true,
+    "abs_size_mean": 4999.98,
+    "abs_size_std": 0.1814754345175493,
+    "abs_size_min": 4997,
+    "abs_size_max": 5000,
+    "n_eval_users": 1500,
+    "note": "Candidate recall is the CEILING on every ranking metric: a test item outside C_u contributes zero to NDCG@10 by construction."
+  },
+  "e0b_monotonicity": {
+    "pairs_checked": 80,
+    "violations": 8,
+    "max_magnitude": 0.0006363193324634454,
+    "sources_involved": [
+      "pop"
+    ],
+    "detail": [
+      {
+        "S": [
+          "cf"
+        ],
+        "g": "pop",
+        "delta": -0.0002800976328711513
+      },
+      {
+        "S": [
+          "cf",
+          "ct"
+        ],
+        "g": "pop",
+        "delta": -0.0002800976328711513
+      },
+      {
+        "S": [
+          "cf",
+          "rec"
+        ],
+        "g": "pop",
+        "delta": -0.0002800976328711513
+      },
+      {
+        "S": [
+          "cf",
+          "seq"
+        ],
+        "g": "pop",
+        "delta": -0.0006363193324634454
+      },
+      {
+        "S": [
+          "cf",
+          "ct",
+          "rec"
+        ],
+        "g": "pop",
+        "delta": -0.0002800976328711513
+      },
+      {
+        "S": [
+          "cf",
+          "ct",
+          "seq"
+        ],
+        "g": "pop",
+        "delta": -0.0006363193324634454
+      },
+      {
+        "S": [
+          "cf",
+          "rec",
+          "seq"
+        ],
+        "g": "pop",
+        "delta": -0.0006363193324634454
+      },
+      {
+        "S": [
+          "cf",
+          "ct",
+          "rec",
+          "seq"
+        ],
+        "g": "pop",
+        "delta": -0.0006363193324634454
+      }
+    ],
+    "property2_applicable": false,
+    "dataset": "yelp2018",
+    "note": "Property 2 and Lemma 1(ii) apply only where this passes. Where it fails, negative phi_g are SUBSTANTIVE findings, not numerical error. The coalition-conditional ridge refit (spec \u00a72.4) is the likely cause."
+  },
+  "e1_source_share": {
+    "dataset": "yelp2018",
+    "shapley": {
+      "cf": 0.010715004372890595,
+      "ct": 0.00034107228396726376,
+      "pop": 0.0027288835731705987,
+      "rec": 0.00034107228396726376,
+      "seq": 0.003497350878392979
+    },
+    "efficiency": {
+      "sum_phi": 0.0176233833923887,
+      "v_grand": 0.017623383392388697,
+      "abs_error": 3.469446951953614e-18,
+      "passes": true
+    },
+    "v_grand": 0.017623383392388697,
+    "v0": 0.0,
+    "n_coalitions": 32,
+    "note": "EXACT GIVEN THE FITTED v: the 32-coalition aggregation has no sampling error, but v(S) is estimated, so phi carries estimation error -- see seed CIs. Efficiency holds exactly regardless of fit noise because it is structural."
+  },
+  "e2_loo_vs_shapley": {
+    "dataset": "yelp2018",
+    "shapley": {
+      "cf": 0.010715004372890595,
+      "ct": 0.00034107228396726376,
+      "pop": 0.0027288835731705987,
+      "rec": 0.00034107228396726376,
+      "seq": 0.003497350878392979
+    },
+    "loo": {
+      "cf": 0.002578865048820886,
+      "ct": 0.0,
+      "pop": -0.0006363193324634454,
+      "rec": 0.0,
+      "seq": 0.00019635810956944444
+    },
+    "gap": {
+      "cf": 0.00813613932406971,
+      "ct": 0.00034107228396726376,
+      "pop": 0.003365202905634044,
+      "rec": 0.00034107228396726376,
+      "seq": 0.0033009927688235348
+    },
+    "forward": {
+      "cf": 0.017707122915690404,
+      "seq": 0.0005525798091617386,
+      "ct": 0.0,
+      "rec": 0.0,
+      "pop": -0.0006363193324634454
+    },
+    "permutation_importance": {
+      "cf": 0.010915008180102685,
+      "ct": 0.00028991144137217417,
+      "pop": 0.002563166698967929,
+      "rec": 0.00040928674076071646,
+      "seq": 0.003446010331185195
+    },
+    "mc_shapley_50": {
+      "cf": 0.01155649250632957,
+      "ct": 0.0003069650555705374,
+      "pop": 0.0022783078774731855,
+      "rec": 0.0003069650555705374,
+      "seq": 0.0031746528974448706
+    },
+    "kendall_tau": {
+      "cf|ct": 0.0,
+      "cf|pop": 0.02381271381044402,
+      "cf|rec": 0.0,
+      "cf|seq": 0.2194379438925175,
+      "ct|pop": 0.0,
+      "ct|rec": 0.0,
+      "ct|seq": 0.0,
+      "pop|rec": 0.0,
+      "pop|seq": -0.03615414733709839,
+      "rec|seq": 0.0
+    },
+    "pair_gap": {
+      "cf|ct": 0.008477211608036973,
+      "cf|pop": 0.011501342229703754,
+      "cf|rec": 0.008477211608036973,
+      "cf|seq": 0.011437132092893244,
+      "ct|pop": 0.003706275189601308,
+      "ct|rec": 0.0006821445679345275,
+      "ct|seq": 0.0036420650527907985,
+      "pop|rec": 0.003706275189601308,
+      "pop|seq": 0.006666195674457579,
+      "rec|seq": 0.0036420650527907985
+    },
+    "redundancy_gap_correlation": 0.5331558417018866,
+    "permutation_tests": {
+      "cf": {
+        "observed": 0.008136139324069707,
+        "p_value": 0.0007999200079992001,
+        "n_shuffles": 10000
+      },
+      "ct": {
+        "observed": 0.00034107228396726376,
+        "p_value": 0.014498550144985502,
+        "n_shuffles": 10000
+      },
+      "pop": {
+        "observed": 0.0033652029056340424,
+        "p_value": 9.999000099990002e-05,
+        "n_shuffles": 10000
+      },
+      "rec": {
+        "observed": 0.00034107228396726376,
+        "p_value": 0.014498550144985502,
+        "n_shuffles": 10000
+      },
+      "seq": {
+        "observed": 0.0033009927688235356,
+        "p_value": 0.0007999200079992001,
+        "n_shuffles": 10000
+      }
+    },
+    "preregistered_pairs": [
+      "pop|cf",
+      "rec|ct"
+    ],
+    "note": "pop-cf and rec-ct overlap is PRE-REGISTERED (spec \u00a74), not discovered: ALS on implicit feedback chases popularity, and rec is defined over content clusters. RQ2 tests whether Shapley recovers known structure."
+  },
+  "e9_recovery": {
+    "dataset": "yelp2018",
+    "injected_source": "cf",
+    "baseline_shapley": {
+      "cf": 0.010715004372890595,
+      "ct": 0.00034107228396726376,
+      "pop": 0.0027288835731705987,
+      "rec": 0.00034107228396726376,
+      "seq": 0.003497350878392979
+    },
+    "baseline_loo": {
+      "cf": 0.002578865048820886,
+      "ct": 0.0,
+      "pop": -0.0006363193324634454,
+      "rec": 0.0,
+      "seq": 0.00019635810956944444
+    },
+    "conditions": {
+      "eta=0.0": {
+        "eta": 0.0,
+        "shapley": {
+          "cf": 0.006589767651687152,
+          "ct": 0.00028422690330605306,
+          "pop": 0.001542761799121536,
+          "rec": 0.00028422690330605306,
+          "seq": 0.0023326324832807547,
+          "cf_dup": 0.006589767651687152
+        },
+        "loo": {
+          "cf": 0.0,
+          "ct": 0.0,
+          "pop": -0.0006363193324634454,
+          "rec": 0.0,
+          "seq": 0.00019635810956944444,
+          "cf_dup": 0.0
+        },
+        "phi_original": 0.006589767651687152,
+        "phi_duplicate": 0.006589767651687152,
+        "pair_sum": 0.013179535303374304,
+        "baseline_phi_original": 0.010715004372890595,
+        "conservation_ratio": 1.2300074591401078,
+        "symmetry_abs_error": 0.0,
+        "symmetry_rel_error": 0.0,
+        "loo_original": 0.0,
+        "loo_duplicate": 0.0,
+        "loo_collapse_ratio": 0.0
+      }
+    },
+    "design": "A duplicate of the named source is injected into the player set on REAL data, with the candidate set held fixed. Ground truth follows by construction: symmetry requires equal credit for the pair, and efficiency requires their sum to approximate the pre-injection value of the original source. LOO must collapse for both."
+  }
+}

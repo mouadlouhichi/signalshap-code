@@ -56,6 +56,8 @@ class Dataset:
     n_items: int
     item_meta: pd.DataFrame  # item -> 'tags' string, for the ct scorer
     synthetic: bool = False
+    #: True for corpora with no timestamps (published splits); disclosed in T2.
+    no_timestamps: bool = False
 
     @property
     def n_interactions(self) -> int:
@@ -75,6 +77,7 @@ class Dataset:
             "valid": int(len(self.valid)),
             "test": int(len(self.test)),
             "synthetic": bool(self.synthetic),
+            "no_timestamps": bool(self.no_timestamps),
         }
 
 
@@ -253,12 +256,91 @@ def _softmax(x: np.ndarray) -> np.ndarray:
 
 #: Synthetic stand-ins whose densities preserve the C3 ordering (spec §6.2).
 SYNTHETIC_SPECS = {
+    "gowalla": dict(n_users=900, n_items=1800, target_density=0.004),
+    "yelp2018": dict(n_users=900, n_items=1500, target_density=0.006),
+    "amazon_book_lgcn": dict(n_users=900, n_items=2400, target_density=0.003),
     "ml_1m": dict(n_users=900, n_items=700, target_density=0.045),
     "lastfm_2k": dict(n_users=700, n_items=1600, target_density=0.010),
     "amazon_book": dict(n_users=1200, n_items=3000, target_density=0.003),
 }
 
-LOADERS = {"ml_1m": load_ml_1m, "lastfm_2k": load_lastfm_2k, "amazon_book": load_amazon_book}
+def load_lightgcn_split(name: str, path: Path | None = None,
+                        max_users: int | None = None, seed: int = 42) -> Dataset:
+    """Load a standard LightGCN benchmark split (Gowalla / Yelp2018 / Amazon-Book).
+
+    These are the canonical preprocessed splits distributed with LightGCN
+    (He et al., SIGIR 2020) and reused across the recommender literature, which
+    makes them directly comparable to published work.
+
+    IMPORTANT -- these files carry NO timestamps. We therefore cannot apply the
+    leave-last-out TEMPORAL protocol used for MovieLens-1M. Instead we honour
+    the corpus's own published train/test partition and carve a validation fold
+    out of train. The absence of temporal ordering is a real protocol
+    difference and must be disclosed in the manuscript, not glossed: `rec` and
+    `seq` are handicapped here because interaction order is arbitrary, so their
+    attributions are lower bounds rather than estimates.
+    """
+    folder = {"gowalla": "gowalla", "yelp2018": "yelp2018",
+              "amazon_book_lgcn": "amazon-book"}[name]
+    base = Path(path) if path else find_raw(folder)
+    if base is None:
+        raise FileNotFoundError(f"{folder} not found under {RAW_SEARCH}")
+
+    def _read(fn):
+        rows = []
+        for line in (base / fn).read_text().splitlines():
+            parts = line.split()
+            if len(parts) < 2:
+                continue
+            u = int(parts[0])
+            rows.extend((u, int(i)) for i in parts[1:])
+        return rows
+
+    train_rows, test_rows = _read("train.txt"), _read("test.txt")
+    if max_users is not None:
+        rng = np.random.default_rng(seed)
+        uniq = np.unique([u for u, _ in train_rows])
+        if len(uniq) > max_users:
+            keep = set(rng.choice(uniq, max_users, replace=False).tolist())
+            train_rows = [r for r in train_rows if r[0] in keep]
+            test_rows = [r for r in test_rows if r[0] in keep]
+
+    # Synthesise a stable ordering: no timestamps exist, so position in the
+    # published file is the only ordering available. Recorded explicitly.
+    rows = [(u, i, idx, idx) for idx, (u, i) in enumerate(train_rows)]
+    off = len(rows)
+    rows += [(u, i, off + idx, off + idx) for idx, (u, i) in enumerate(test_rows)]
+    df = pd.DataFrame(rows, columns=SCHEMA)
+
+    df, n_users, n_items = _reindex(df)
+    n_train = len(train_rows)
+    tr_all = df.iloc[:n_train]
+    te = df.iloc[n_train:].groupby("user", as_index=False).first()
+
+    # One held-out validation interaction per user, drawn from train.
+    last = tr_all.groupby("user").tail(1)
+    tr = tr_all.drop(index=last.index)
+    va = last.groupby("user", as_index=False).first()
+
+    common = set(tr["user"]) & set(va["user"]) & set(te["user"])
+    tr = tr[tr["user"].isin(common)].reset_index(drop=True)
+    va = va[va["user"].isin(common)].reset_index(drop=True)
+    te = te[te["user"].isin(common)].reset_index(drop=True)
+
+    meta = pd.DataFrame({"item": np.arange(n_items), "tags": ""})
+    ds = Dataset(name, tr, va, te, n_users, n_items, meta, synthetic=False)
+    ds.no_timestamps = True
+    return ds
+
+
+LOADERS = {
+    "ml_1m": load_ml_1m,
+    "lastfm_2k": load_lastfm_2k,
+    "amazon_book": load_amazon_book,
+    "gowalla": lambda: load_lightgcn_split("gowalla", max_users=int(os.environ.get("SIGNALSHAP_MAX_USERS", 3000))),
+    "yelp2018": lambda: load_lightgcn_split("yelp2018", max_users=int(os.environ.get("SIGNALSHAP_MAX_USERS", 3000))),
+    "amazon_book_lgcn": lambda: load_lightgcn_split("amazon_book_lgcn", max_users=int(os.environ.get("SIGNALSHAP_MAX_USERS", 3000))),
+}
 
 
 def load_dataset(name: str, synthetic: bool = False, seed: int = 42,
