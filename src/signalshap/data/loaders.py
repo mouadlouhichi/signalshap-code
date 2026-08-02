@@ -11,6 +11,8 @@ records `synthetic: true`).
 from __future__ import annotations
 
 import hashlib
+import os
+import warnings
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
@@ -21,6 +23,22 @@ import pandas as pd
 from ..config import PROCESSED, ROOT
 
 RAW = ROOT / "data" / "raw"
+
+#: Raw corpora are looked for in several plausible locations, because a
+#: hand-placed download lands in data/<name>/ as often as data/raw/<name>/.
+#: Silently falling back to synthetic when real files are present but
+#: misplaced is the worst possible failure -- it yields a paper written on
+#: planted data that the author believes is real.
+RAW_SEARCH = (ROOT / "data" / "raw", ROOT / "data", ROOT)
+
+
+def find_raw(*names: str) -> Path | None:
+    """First existing directory matching any of `names` under RAW_SEARCH."""
+    for base in RAW_SEARCH:
+        for n in names:
+            if (base / n).is_dir():
+                return base / n
+    return None
 
 #: Columns every loader must produce, in this order.
 SCHEMA = ["user", "item", "timestamp", "original_record_index"]
@@ -110,7 +128,9 @@ def _finalise(df: pd.DataFrame, name: str, meta: pd.DataFrame | None, synthetic:
 
 def load_ml_1m(path: Path | None = None) -> Dataset:
     """MovieLens-1M. Expects ml-1m/ratings.dat and movies.dat."""
-    base = Path(path or RAW / "ml-1m")
+    base = Path(path) if path else find_raw("ml-1m", "ml_1m", "ml-1m/ml-1m")
+    if base is None:
+        raise FileNotFoundError("ml-1m not found under " + str(RAW_SEARCH))
     r = pd.read_csv(
         base / "ratings.dat", sep="::", engine="python", header=None,
         names=["user", "item", "rating", "timestamp"], encoding="latin-1",
@@ -129,7 +149,10 @@ def load_ml_1m(path: Path | None = None) -> Dataset:
 
 def load_lastfm_2k(path: Path | None = None) -> Dataset:
     """LastFM-2K (HetRec 2011). Expects user_taggedartists-timestamps.dat."""
-    base = Path(path or RAW / "hetrec2011-lastfm-2k")
+    base = Path(path) if path else find_raw(
+        "hetrec2011-lastfm-2k", "lastfm-2k", "lastfm_2k")
+    if base is None:
+        raise FileNotFoundError("lastfm-2k not found under " + str(RAW_SEARCH))
     r = pd.read_csv(base / "user_taggedartists-timestamps.dat", sep="\t")
     r = r.rename(columns={"userID": "user", "artistID": "item"})[["user", "item", "timestamp"]]
     tags = pd.read_csv(base / "tags.dat", sep="\t", encoding="latin-1")
@@ -144,7 +167,10 @@ def load_lastfm_2k(path: Path | None = None) -> Dataset:
 
 def load_amazon_book(path: Path | None = None, n_users: int = 50_000, seed: int = 42) -> Dataset:
     """Amazon-Book 2018, subsampled to n_users (spec §5, seeded + manifested)."""
-    base = Path(path or RAW / "amazon_book")
+    base = Path(path) if path else find_raw(
+        "amazon_book", "amazon-book", "amazon_books")
+    if base is None:
+        raise FileNotFoundError("amazon_book not found under " + str(RAW_SEARCH))
     r = pd.read_csv(base / "ratings_Books.csv", header=None,
                     names=["user", "item", "rating", "timestamp"])
     r = r[r["rating"] >= 4.0].drop(columns=["rating"])
@@ -235,14 +261,40 @@ SYNTHETIC_SPECS = {
 LOADERS = {"ml_1m": load_ml_1m, "lastfm_2k": load_lastfm_2k, "amazon_book": load_amazon_book}
 
 
-def load_dataset(name: str, synthetic: bool = False, seed: int = 42) -> Dataset:
-    """Load `name`, falling back to synthetic when raw files are absent."""
-    if not synthetic:
-        try:
-            return LOADERS[name]()
-        except (FileNotFoundError, OSError):
-            synthetic = True
-    return make_synthetic(name, seed=seed, **SYNTHETIC_SPECS[name])
+def load_dataset(name: str, synthetic: bool = False, seed: int = 42,
+                 strict: bool = False) -> Dataset:
+    """Load `name`; fall back to synthetic only when raw files are truly absent.
+
+    The fallback WARNS LOUDLY. A silent fallback is dangerous: real files that
+    are merely misplaced would be ignored and the study would report planted
+    numbers as if they were benchmark results. Pass `strict=True` (or set
+    SIGNALSHAP_STRICT_DATA=1) to make a missing corpus a hard error instead.
+    """
+    if synthetic:
+        return make_synthetic(name, seed=seed, **SYNTHETIC_SPECS[name])
+    try:
+        ds = LOADERS[name]()
+        print(f"[signalshap] {name}: loaded REAL data "
+              f"({ds.n_users:,} users x {ds.n_items:,} items, "
+              f"{ds.n_interactions:,} interactions)")
+        return ds
+    except (FileNotFoundError, OSError, KeyError) as exc:
+        if strict or os.environ.get("SIGNALSHAP_STRICT_DATA") == "1":
+            raise FileNotFoundError(
+                f"{name}: raw files not found and strict mode is on ({exc})"
+            ) from exc
+        warnings.warn(
+            f"\n{'!' * 74}\n"
+            f"[signalshap] {name}: RAW FILES NOT FOUND -> FALLING BACK TO SYNTHETIC.\n"
+            f"  reason    : {exc}\n"
+            f"  searched  : {[str(b) for b in RAW_SEARCH]}\n"
+            f"  Results will be a PLANTED PILOT, not benchmark numbers. Every\n"
+            f"  artefact is tagged synthetic=true. Do NOT report these as\n"
+            f"  MovieLens/LastFM/Amazon results.\n"
+            f"{'!' * 74}",
+            RuntimeWarning, stacklevel=2,
+        )
+        return make_synthetic(name, seed=seed, **SYNTHETIC_SPECS[name])
 
 
 # --------------------------------------------------------------------------- #

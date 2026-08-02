@@ -1,5 +1,5 @@
 n_max:
-  ml_1m: 200
+  ml_1m: 600
   lastfm_2k: 500
   amazon_book: 1000
 ridge_lambda: 1.0

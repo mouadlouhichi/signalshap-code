@@ -65,11 +65,15 @@ counterexample establishing that the redundancy--positivity property is
 discharge that hypothesis empirically rather than assume it. On a controlled
 pilot we find that LOO assigns \emph{negative} credit to three of five
 genuinely useful sources while exact Shapley assigns positive credit to all
-five, a qualitative disagreement rather than a difference of degree. We further
-report a negative result: segment-adaptive fusion yields no significant gain
-over globally tuned fusion, and we show \emph{why} --- the segment-level
-Shapley heterogeneity it presupposes is itself absent, at the rate expected by
-chance. We release code, cached matrices, and a one-command reproduction.
+five, a qualitative disagreement rather than a difference of degree. On MovieLens-1M, LOO and exact Shapley disagree in \emph{sign} for two of five
+sources: LOO reports collaborative filtering as actively harmful
+($-0.0044$) where Shapley ranks it the second most valuable source
+($+0.0154$). Measured redundancy correlates with the LOO--Shapley gap
+($\tau$-correlation $0.54$), as the lemma predicts. Segment-adaptive fusion
+improves over globally tuned fusion in the expected direction but the margin is
+not significant ($+0.00025$, Holm $p = 0.14$); we report this as an
+underpowered rather than a confirmed effect. We release code, cached matrices,
+and a one-command reproduction.
 \end{abstract}
 
 \noindent\textbf{Keywords:} Shapley value; cooperative game theory;
@@ -77,14 +81,13 @@ recommender systems; explainable AI; credit assignment; hybrid recommendation
 
 \bigskip
 \noindent\fbox{\parbox{0.97\linewidth}{\small
-\textbf{Scope of the present results.} All numbers reported here come from a
-\emph{controlled synthetic pilot} with planted signal structure, used to
-validate the estimator and the full analysis pipeline end to end. They are
-\emph{not} benchmark results on MovieLens-1M, Amazon-Book, or LastFM-2K.
-Section~\ref{sec:limitations} states precisely which claims are pilot-only and
-which are analytic and therefore data-independent. The public artefact
-reproduces every figure and table on real corpora with a single command once
-the raw files are in place.}}
+\textbf{Scope of the present results.} Results are reported on
+\textbf{real MovieLens-1M} \citep{harper2015movielens} (6{,}038 users,
+3{,}533 items, 575{,}276 positive interactions after the $\ge 4$-star
+threshold). LastFM-2K and Amazon-Book are not yet included; their raw corpora
+are pending, and the artefact runs them with the same command. Every claim
+below is therefore single-corpus, and \S\ref{sec:limitations} says so
+explicitly.}}
 
 %% ===================================================================
 \section{Introduction}
@@ -133,12 +136,17 @@ and the exact closed form is a short sum. We compute it directly.
       show by counterexample that the redundancy--positivity property is
       \textbf{false} without monotonicity, and we discharge that hypothesis
       with an empirical audit (\S\ref{sec:theory}).
-\item \textbf{C3.} Evidence that LOO and Shapley disagree \emph{qualitatively}
-      under redundancy: LOO assigns negative credit to three of five useful
-      sources (\S\ref{sec:results}).
-\item \textbf{C4/C5.} A \textbf{negative result}, reported in full: no
-      significant gain from segment-adaptive fusion, together with a diagnosis
-      of the cause --- the presupposed heterogeneity is absent
+\item \textbf{C3.} Evidence on MovieLens-1M that LOO and Shapley disagree in
+      \emph{sign}, not merely in magnitude: LOO judges collaborative filtering
+      harmful where Shapley ranks it second most valuable
+      (\S\ref{sec:results}).
+\item \textbf{C4.} Statistically detectable segment-level heterogeneity in
+      Shapley attributions (8 of 30 contrasts significant against 1.5 expected
+      by chance), establishing that per-user attribution carries signal a
+      global summary hides (\S\ref{sec:negative}).
+\item \textbf{C5.} An \textbf{underpowered} result, reported as such:
+      segment-adaptive fusion moves in the predicted direction but does not
+      reach significance against globally tuned fusion
       (\S\ref{sec:negative}).
 \item \textbf{C6.} A reproducible artefact with pre-registered configuration
       and CI-enforced invariants (\S\ref{sec:repro}).
@@ -434,21 +442,45 @@ points in the upper-left quadrant are sources LOO scores as \emph{harmful}
 that Shapley scores as useful.}
 \end{figure}
 
-This is the central empirical result. On the pilot, LOO assigns
-\emph{negative} credit to three of five sources ($cf$: $-0.0011$, $ct$:
-$-0.00002$, $rec$: $-0.00057$), while exact Shapley assigns \emph{positive}
-credit to all five ($cf$: $+0.0043$, $ct$: $+0.0024$, $rec$: $+0.0125$,
-$pop$: $+0.0507$, $seq$: $+0.0713$).
+This is the central empirical result, and on MovieLens-1M the two methods
+disagree in \textbf{sign} for two of five sources:
 
-The disagreement is qualitative, not a matter of degree. An engineer acting on
-LOO would conclude that collaborative filtering, content, and recency are
-\emph{actively harmful} and retire all three. The Shapley analysis says the
-opposite: each contributes positively when averaged over the coalitions in
-which it might appear, and LOO's verdict is an artefact of evaluating each
-source only against the grand coalition, where its contribution is masked by
-the others. We also observe a positive association between measured redundancy
-and the LOO--Shapley gap (Kendall-$\tau$ correlation $0.375$), in the direction
+\begin{center}\footnotesize
+\begin{tabular}{lrrr}
+\toprule
+Source & LOO & Shapley $\varphi_g$ & gap \\
+\midrule
+$cf$  & $-0.00444$ & $+0.01541$ & $+0.01985$ \\
+$ct$  & $+0.00083$ & $-0.00005$ & $-0.00089$ \\
+$pop$ & $+0.00098$ & $+0.00632$ & $+0.00535$ \\
+$rec$ & $+0.00045$ & $+0.00054$ & $+0.00009$ \\
+$seq$ & $+0.01658$ & $+0.02935$ & $+0.01277$ \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\noindent
+The collaborative-filtering row is the one that matters. LOO scores $cf$ at
+$-0.0044$ --- it looks \emph{actively harmful}, and an engineer following the
+standard methodology would retire it. Exact Shapley scores the same component
+at $+0.0154$, the second most valuable source in the system. The disagreement
+is not a matter of degree that careful reading would survive; the two methods
+recommend opposite actions.
+
+The mechanism is the one Property~\ref{prop:loo} describes. On MovieLens the
+collaborative signal overlaps substantially with the sequential and popularity
+signals, so removing $cf$ from the \emph{grand} coalition costs almost nothing
+--- the others absorb its role, and the small residual is negative noise. LOO
+sees only that single contrast. Shapley averages $cf$'s contribution over all
+16 coalitions in which it can appear, including the sparse ones where no other
+source covers for it, and recovers its true worth. Consistently, measured
+redundancy correlates with the LOO--Shapley gap at $0.537$, in the direction
 Lemma~\ref{lem:eps} predicts.
+
+We note $ct$ flips the other way: LOO credits it slightly positive
+($+0.00083$) where Shapley returns essentially zero ($-0.00005$). Under a
+non-monotone fitted game (below) a small negative value is admissible and is
+read as ``no reliable contribution'' rather than as harm.
 
 \input{../artefacts/tables/T6_loo_vs_shapley.tex}
 
@@ -476,40 +508,47 @@ cost for no measurable ranking loss. We stress that this conclusion is
 claim.
 
 %% ===================================================================
-\section{A Negative Result, and Its Diagnosis}\label{sec:negative}
+\section{Segment Heterogeneity and an Underpowered Loop}\label{sec:negative}
 %% ===================================================================
 
-We had hypothesised (RQ4) that fusion weights tuned per Shapley-derived segment
-would outperform a single globally tuned weight vector. \textbf{They do not.}
+Two questions separate here, and it is worth keeping them apart: whether
+attributions \emph{differ} across user segments (RQ3), and whether exploiting
+that difference \emph{pays} (RQ4). On MovieLens-1M the answer to the first is
+yes; the answer to the second is not yet.
+
+\paragraph{RQ3: heterogeneity is real.} Of 30 segment-pair contrasts,
+\textbf{8 are significant} at $\alpha = 0.05$ against $1.5$ expected by
+chance --- more than five times the chance rate. Per-user Shapley
+decomposition therefore carries structure that the global summary hides, which
+is the substance of C4.
 
 \input{../artefacts/tables/T7_fuse_significance.tex}
 
-Against globally tuned fusion the differences are
-$-0.0002$ (ML-1M, $p = 0.44$), $0.0000$ (LastFM-2K, $p = 1.00$), and
-$0.0000$ (Amazon-Book, $p = 1.00$). No dataset shows a significant gain, and
-after correcting the head and shrinkage strength on the validation fold, none
-shows a significant loss either.
+\paragraph{RQ4: the loop does not yet close.} SignalShap-Fuse attains
+$\NDCG = 0.06391$ against $0.06366$ for globally tuned fusion --- the predicted
+direction, but a margin of $+0.00025$ with Holm-corrected $p = 0.14$ and
+$d_z = +0.010$. It beats uniform fusion ($+0.0113$, $p < 0.001$) and the
+popularity reference ($+0.0456$, $p < 0.001$) decisively, but against a
+well-tuned global head it does not separate.
 
-Reporting the failure is less useful than explaining it, and the explanation is
-available from our own instrumentation. Segment-adaptive fusion presupposes
-that Shapley attributions \emph{differ} across segments; if they do not, there
-is nothing to adapt to and the method can only add estimation variance. We
-tested 30 segment-pair contrasts per dataset and found 4, 1, and 0 significant
-at $\alpha = 0.05$, against $1.5$ expected by chance. \textbf{The heterogeneity
-C4 posits is absent, so C5 cannot work by construction.} C4 and C5 stand or
-fall together, and here they fall together.
+We report this as \textbf{underpowered rather than refuted}, and the
+distinction is evidential, not rhetorical. The effect size is genuinely tiny
+($d_z = 0.01$); detecting it at conventional power would need on the order of
+$10^5$ users, where we have $6{,}035$. The honest statement is that we cannot
+resolve an effect this small on one corpus of this size --- not that the effect
+is absent.
 
-Two further pieces of evidence corroborate the diagnosis. First, when we let a
-validation-fold cross-validation choose the shrinkage strength between segment
-and global weights, it selected $\alpha = 0$ --- pure global weights --- on two
-of three datasets, independently concluding that segment adaptation is not
-worth its variance. Second, the fitted segment weight vectors sit within
-$0.003$ of the global vector in Euclidean norm.
+Two observations sharpen the interpretation. First, validation-fold
+cross-validation selected the pairwise-logistic head at shrinkage
+$\alpha = 1.0$ --- full segment adaptation, no pooling toward global --- which
+indicates the segment weights are informative enough to be worth keeping, in
+contrast to a pilot on planted data where the same procedure selected
+$\alpha = 0$ and discarded them. Second, the gain is positive on every seed.
 
-We consider this the more useful outcome than a marginal, fragile win. It also
-sharpens the positive contribution: exact source-level attribution is valuable
-as \emph{diagnosis} (C1--C3), and the closed loop to \emph{intervention} (C4--C5)
-requires heterogeneity that must be demonstrated, not assumed.
+The conservative reading, which we adopt: exact source-level attribution is
+established as a \emph{diagnostic} instrument (C1--C4); the closed loop to
+\emph{intervention} (C5) is directionally supported but not demonstrated, and
+needs either more users or a larger-margin fusion mechanism.
 
 \begin{figure}[t]
 \centering
@@ -563,21 +602,26 @@ Lemma~\ref{lem:eps}; the bias argument against grand-coalition candidate pools;
 the bias argument against per-coalition $\lambda$ tuning. These are
 mathematical and do not depend on any corpus.
 
-\paragraph{Pilot-only.} \emph{Every numeric result in
-\S\ref{sec:results}--\S\ref{sec:negative}.} These come from a controlled
-synthetic pilot with planted structure, built to validate the estimator and
-exercise the pipeline end to end. They establish that the machinery is correct
-and the analysis executable; they establish nothing about MovieLens-1M,
-Amazon-Book, or LastFM-2K. In particular the negative result of
-\S\ref{sec:negative} may well reverse on real corpora, where genuine behavioural
-heterogeneity is plausible --- the planted structure was not designed to contain
-it. Benchmark results are the immediate next step and the artefact runs them
-with one command.
+\paragraph{Single corpus.} All empirical results are MovieLens-1M only.
+The cross-density comparison that motivates a three-corpus design
+(dense movies, sparse books, medium music) is therefore \emph{not} tested
+here, and no claim in this paper should be read as holding across domains.
+LastFM-2K and Amazon-Book are the immediate next step; the artefact runs them
+unchanged.
 
-\paragraph{Two datasets miss the recall gate.} At the pre-registered
-$N_{\max}$, LastFM-2K (0.504) and Amazon-Book (0.402) fall below the 0.60 floor.
-Their attribution numbers are reported \emph{conditional on} that ceiling and
-should not be read as absolute ranking quality.
+\paragraph{$N_{\max}$ was re-registered once, on the record.} At the
+pre-registered $N_{\max} = 200$, candidate recall on MovieLens-1M was $0.461$,
+below the $0.60$ floor. We applied rung~1 of the declared fallback ladder ---
+raise $N_{\max}$, change nothing else --- and moved to $600$, giving recall
+$0.747$. The full sweep ($200 \to 0.461$, $400 \to 0.646$, $600 \to 0.747$,
+$1000 \to 0.856$, $2000 \to 0.964$), the date, and the trigger are recorded in
+the artefact. No corpus filter was applied, so no density figure moved. We flag
+this because a cap adjusted after seeing data is exactly the kind of choice
+that should be visible rather than quietly absorbed.
+
+\paragraph{C5 is underpowered, not established.} The fusion gain is positive
+and directionally consistent but does not reach significance
+($d_z = 0.010$). We do not claim it.
 
 \paragraph{The fitted game is non-monotone.} Consequently
 Property~\ref{prop:loo} is not applicable as stated on this data, and
@@ -597,15 +641,20 @@ cooperative game and computed exact Shapley values over all 32 coalitions,
 avoiding the estimator variance that forces feature-level Shapley to sample. We
 showed that a natural statement of the redundancy property is false without
 monotonicity, gave the counterexample, and audited the hypothesis rather than
-assuming it. On a controlled pilot, LOO and exact Shapley disagreed
-qualitatively --- LOO judged three of five useful sources harmful --- which is
-the practical case for the method. We also report, in full, that
-segment-adaptive fusion produced no gain, and we traced the cause to an absence
-of the segment heterogeneity such fusion presupposes.
+assuming it.
 
-Immediate future work is the benchmark evaluation on real corpora that the
-artefact is built to run. Beyond that: privacy-bearing signals as players,
-cascade hybrids, and causal extensions of source attribution.
+On MovieLens-1M the practical case for the method is direct: LOO scores
+collaborative filtering as harmful, exact Shapley ranks it the second most
+valuable source, and the two therefore recommend opposite engineering actions.
+Measured redundancy tracks the gap between them. Per-user attributions differ
+significantly across behavioural segments, so the decomposition carries
+structure a global summary discards. Turning that structure into a ranking gain
+is directionally supported but not yet demonstrated at this sample size.
+
+Immediate future work is the two remaining corpora, which the artefact runs
+unchanged and which will test whether the sign disagreement persists at
+contrasting densities. Beyond that: privacy-bearing signals as players, cascade
+hybrids, and causal extensions of source attribution.
 
 %% ===================================================================
 \section*{Declarations}

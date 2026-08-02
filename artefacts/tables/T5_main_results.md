@@ -10,7 +10,7 @@
 | lastfm_2k   | Globally-tuned fusion          |    0.0293 |      0.1543 |   0.0163 |
 | lastfm_2k   | Popularity (full-catalog ref.) |    0.0199 |      0.15   |   0.0099 |
 | lastfm_2k   | SignalShap-Fuse                |    0.0293 |      0.1543 |   0.0163 |
-| ml_1m       | Uniform fusion                 |    0.0919 |      0.27   |   0.0646 |
-| ml_1m       | Globally-tuned fusion          |    0.1754 |      0.4033 |   0.1324 |
-| ml_1m       | Popularity (full-catalog ref.) |    0.1001 |      0.2622 |   0.0626 |
-| ml_1m       | SignalShap-Fuse                |    0.1752 |      0.4022 |   0.1312 |
+| ml_1m       | Uniform fusion                 |    0.0526 |      0.1773 |   0.0362 |
+| ml_1m       | Globally-tuned fusion          |    0.0637 |      0.2108 |   0.0438 |
+| ml_1m       | Popularity (full-catalog ref.) |    0.0183 |      0.0729 |   0.0119 |
+| ml_1m       | SignalShap-Fuse                |    0.0639 |      0.2116 |   0.044  |
