@@ -187,3 +187,56 @@ def test_audit_helper_counts_all_pairs():
 
 if __name__ == "__main__":
     raise SystemExit(pytest.main([__file__, "-v"]))
+
+
+# --------------------------------------------------------------------------- #
+# Regression guards against two wrong formulas seen in a parallel draft.
+# Both look plausible and both fail on the counterexample above. Keep these
+# green so neither can be reintroduced into §5.
+# --------------------------------------------------------------------------- #
+
+
+def test_pairwise_closed_form_is_wrong():
+    """REJECTED: phi_g1 = 1/2 [v(G) - v(G \\ {g1,g2})].
+
+    Under exact redundancy this is not a valid closed form. It ignores every
+    coalition structure below the grand coalition and is off by 5.4x here.
+    """
+    G = frozenset(PLAYERS)
+    bogus = 0.5 * (NON_MONOTONE_V[G] - NON_MONOTONE_V[G - {"g1", "g2"}])
+    true = shapley(PLAYERS, NON_MONOTONE_V)["g1"]
+
+    assert bogus == pytest.approx(-2.25)
+    assert true == pytest.approx(-5 / 12)
+    assert bogus != pytest.approx(true), "the rejected closed form must not be adopted"
+
+
+def test_shapley_floor_constant_is_one_over_n_not_one_half():
+    """REJECTED: phi_g1 >= 1/2 v({g1}). The correct anchor constant is 1/|G|.
+
+    The weights over T subseteq G \\ {g1,g2} sum to 1/2 -- that is P(g1 precedes
+    g2) in a random ordering -- but the term carrying the v({g1}) anchor is
+    |T| = 0, whose weight is 1/n. Conflating the two overstates the bound by
+    n/2 (2.5x for the five-player game).
+    """
+    from fractions import Fraction as Frac
+
+    for n in (3, 5, 8):
+        # total mass on coalitions T excluding both g1 and g2
+        mass = sum(
+            Frac(factorial(t) * factorial(n - t - 1), factorial(n))
+            * len(list(combinations(range(n - 2), t)))
+            for t in range(n - 1)
+        )
+        w_empty = Frac(factorial(0) * factorial(n - 1), factorial(n))
+
+        assert mass == Frac(1, 2), "mass over T should be 1/2 for every n"
+        assert w_empty == Frac(1, n), "anchor weight should be 1/n"
+        if n != 2:
+            assert mass != w_empty, "1/2 and 1/n are different quantities"
+
+    # The bound the spec states is the one that survives on a monotone game.
+    phi = shapley(PLAYERS, MONOTONE_V)
+    v_g1 = MONOTONE_V[frozenset({"g1"})]
+    assert phi["g1"] >= v_g1 / len(PLAYERS) - 1e-12  # correct: v({g1})/|G|
+    assert phi["g1"] < 0.5 * v_g1, "the 1/2 constant is not attainable here"
