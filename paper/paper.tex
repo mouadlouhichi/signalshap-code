@@ -69,10 +69,10 @@ five, a qualitative disagreement rather than a difference of degree. On MovieLen
 sources: LOO reports collaborative filtering as actively harmful
 ($-0.0044$) where Shapley ranks it the second most valuable source
 ($+0.0154$). Measured redundancy correlates with the LOO--Shapley gap
-($\tau$-correlation $0.54$), as the lemma predicts. Segment-adaptive fusion
-improves over globally tuned fusion in the expected direction but the margin is
-not significant ($+0.00025$, Holm $p = 0.14$); we report this as an
-underpowered rather than a confirmed effect. We release code, cached matrices,
+($\tau$-correlation $0.54$), as the lemma predicts. Segment-adaptive fusion beats LightGCN
+($+0.030$) and SASRec ($+0.056$) at $p < 0.001$, but improves on a well-tuned
+global head by only $+0.00025$ (Holm $p = 0.14$); we report the closed loop as
+directionally supported and underpowered rather than as a confirmed effect. We release code, cached matrices,
 and a one-command reproduction.
 \end{abstract}
 
@@ -144,9 +144,10 @@ and the exact closed form is a short sum. We compute it directly.
       Shapley attributions (8 of 30 contrasts significant against 1.5 expected
       by chance), establishing that per-user attribution carries signal a
       global summary hides (\S\ref{sec:negative}).
-\item \textbf{C5.} An \textbf{underpowered} result, reported as such:
-      segment-adaptive fusion moves in the predicted direction but does not
-      reach significance against globally tuned fusion
+\item \textbf{C5.} Segment-adaptive fusion outperforms LightGCN, SASRec,
+      uniform, and popularity baselines at $p < 0.001$, but \emph{not} a
+      well-tuned global head ($d_z = 0.010$). We report the closed loop as
+      \textbf{directionally supported and underpowered}, and do not claim it
       (\S\ref{sec:negative}).
 \item \textbf{C6.} A reproducible artefact with pre-registered configuration
       and CI-enforced invariants (\S\ref{sec:repro}).
@@ -382,6 +383,24 @@ $pop$--$cf$ (ALS on implicit feedback chases popularity) and $rec$--$ct$
 \emph{recovers} known structure --- a validation of the estimator against a
 defensible ground truth.
 
+\paragraph{Neural reference baselines.} We compare against LightGCN
+\citep{he2020lightgcn} and SASRec \citep{kang2018sasrec}, reimplemented
+faithfully and trained once. Both are evaluated over the \emph{full}
+catalogue and are deliberately \textbf{not} restricted to $\Cu$: confining a
+strong baseline to a pool built from five other scorers' top-lists would
+handicap it and invite the obvious question of what its unhandicapped number
+was.
+
+A note on absolute magnitudes. Published LightGCN figures on MovieLens-1M
+(NDCG@10 $\approx 0.10$) are obtained under a random 80/20 split in which many
+held-out items are relevant. Our protocol is leave-last-out: exactly
+\emph{one} relevant item per user among 3{,}533 candidates. Absolute values are
+therefore not comparable across the two protocols, and we make no such
+comparison; what matters is that every method in Table~T5 is measured under one
+identical protocol. As a sanity anchor, ALS scores $0.0404$ under our protocol
+against LightGCN's $0.0340$, which is the expected ordering for a dense
+movie-rating corpus.
+
 \paragraph{Protocol.} Leave-last-out temporal split; ties broken by
 (timestamp, record index). Seeds $\{42,43,44\}$. Wilcoxon signed-rank for
 paired $\NDCG$, permutation tests (10\,000 shuffles) for gaps and
@@ -527,9 +546,11 @@ is the substance of C4.
 \paragraph{RQ4: the loop does not yet close.} SignalShap-Fuse attains
 $\NDCG = 0.06391$ against $0.06366$ for globally tuned fusion --- the predicted
 direction, but a margin of $+0.00025$ with Holm-corrected $p = 0.14$ and
-$d_z = +0.010$. It beats uniform fusion ($+0.0113$, $p < 0.001$) and the
-popularity reference ($+0.0456$, $p < 0.001$) decisively, but against a
-well-tuned global head it does not separate.
+$d_z = +0.010$. It separates decisively from every other comparator --- uniform fusion
+($+0.0113$), the popularity reference ($+0.0456$), LightGCN
+\citep{he2020lightgcn} ($+0.0300$, $d_z = 0.159$), and SASRec
+\citep{kang2018sasrec} ($+0.0559$, $d_z = 0.286$), all at Holm-corrected
+$p < 0.001$ --- but against a well-tuned global head it does not.
 
 We report this as \textbf{underpowered rather than refuted}, and the
 distinction is evidential, not rhetorical. The effect size is genuinely tiny

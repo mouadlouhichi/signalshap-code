@@ -25,12 +25,14 @@ from .candidates.builder import (
 )
 from .config import SOURCES, FrozenConfig, write_artefact
 from .data.loaders import Dataset, build_dataset_stats, load_dataset
-from .fusion.fullcatalog import evaluate_full_catalog, popularity_reference
+from .fusion.fullcatalog import (evaluate_full_catalog, full_catalog_metrics,
+                                 popularity_reference)
 from .game.core import (
     SignalShapGame, check_efficiency, exact_shapley, monotonicity_audit,
     per_user_shapley,
 )
 from .scorers.base import mask_seen, train_all_scorers
+from .scorers.neural import lightgcn_scores, sasrec_scores
 from .segments.segments import (
     SEGMENT_NAMES, assign_segments, segment_shapley_profiles, signalshap_fuse,
     signalshap_fuse_v2,
@@ -231,7 +233,30 @@ class Experiment:
                 self.scores, self.test_items, users),
         }
 
-        family = ["uniform", "global", "popularity_reference"]
+        # Strong neural references (spec §7). Trained once, full-catalog,
+        # unrestricted -- deliberately NOT confined to C_u, which would
+        # handicap them and invite the reviewer to ask for the real number.
+        tr_u = self.ds.train["user"].to_numpy()
+        tr_i = self.ds.train["item"].to_numpy()
+        for nm, fn in (("lightgcn", lightgcn_scores), ("sasrec", sasrec_scores)):
+            t0 = time.time()
+            S = fn(self.ds, seed=self.seed)
+            S[tr_u, tr_i] = -np.inf
+            per = np.array([full_catalog_metrics(S[u], self.test_items[u])["ndcg"]
+                            for u in users])
+            fc[nm] = {
+                "ndcg_at_10": float(per.mean()),
+                "recall_at_20": float(np.mean([
+                    full_catalog_metrics(S[u], self.test_items[u])["recall"]
+                    for u in users])),
+                "mrr_at_10": float(np.mean([
+                    full_catalog_metrics(S[u], self.test_items[u])["mrr"]
+                    for u in users])),
+                "per_user_ndcg": per, "n_users": len(users),
+            }
+            self.timings[f"baseline_{nm}"] = time.time() - t0
+
+        family = ["uniform", "global", "popularity_reference", "lightgcn", "sasrec"]
         raw_p, effects = {}, {}
         for b in family:
             t = wilcoxon_test(fc["signalshap_fuse"]["per_user_ndcg"],

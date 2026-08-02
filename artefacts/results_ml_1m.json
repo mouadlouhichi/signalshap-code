@@ -13,10 +13,12 @@
     "synthetic": false
   },
   "timings_sec": {
-    "load": 3.709996223449707,
-    "scorers": 16.22173500061035,
-    "candidates": 8.118999719619751,
-    "game_32_coalitions": 16.587818384170532
+    "load": 4.162498950958252,
+    "scorers": 16.524089097976685,
+    "candidates": 8.448506832122803,
+    "game_32_coalitions": 16.995457410812378,
+    "baseline_lightgcn": 77.6437554359436,
+    "baseline_sasrec": 40.77008581161499
   },
   "e0a_candidates": {
     "dataset": "ml_1m",
@@ -565,6 +567,18 @@
         "recall_at_20": 0.07290803645401822,
         "mrr_at_10": 0.011889112452492735,
         "n_users": 6035
+      },
+      "lightgcn": {
+        "ndcg_at_10": 0.03396023759053939,
+        "recall_at_20": 0.1307373653686827,
+        "mrr_at_10": 0.022519496061335336,
+        "n_users": 6035
+      },
+      "sasrec": {
+        "ndcg_at_10": 0.008055163682556842,
+        "recall_at_20": 0.021541010770505385,
+        "mrr_at_10": 0.006055680488157704,
+        "n_users": 6035
       }
     },
     "weights": {
@@ -635,24 +649,46 @@
         "n": 6035,
         "n_ties": 5103,
         "mean_diff": 0.045620142275107786
+      },
+      "lightgcn": {
+        "statistic": 130591.0,
+        "p_value": 6.42716501455498e-33,
+        "d_z": 0.15902315992630997,
+        "n": 6035,
+        "n_ties": 5067,
+        "mean_diff": 0.02994954765744779
+      },
+      "sasrec": {
+        "statistic": 36716.0,
+        "p_value": 3.787834770256072e-90,
+        "d_z": 0.2862715722522894,
+        "n": 6035,
+        "n_ties": 5186,
+        "mean_diff": 0.05585462156543035
       }
     },
     "holm_bonferroni": {
       "corrected": {
-        "popularity_reference": 6.698732477781173e-64,
+        "sasrec": 1.8939173851280363e-89,
+        "popularity_reference": 8.931643303708231e-64,
+        "lightgcn": 1.928149504366494e-32,
         "uniform": 1.4541817398670045e-13,
         "global": 0.14338475023735767
       },
-      "family_size": 3,
+      "family_size": 5,
       "family_composition": [
         "uniform",
         "global",
-        "popularity_reference"
+        "popularity_reference",
+        "lightgcn",
+        "sasrec"
       ],
       "raw": {
         "uniform": 7.270908699335022e-14,
         "global": 0.14338475023735767,
-        "popularity_reference": 2.2329108259270577e-64
+        "popularity_reference": 2.2329108259270577e-64,
+        "lightgcn": 6.42716501455498e-33,
+        "sasrec": 3.787834770256072e-90
       }
     },
     "selection": {
