@@ -1,5 +1,7 @@
 # SignalShap — Implementation Specification (v1.1.2, Q1-Ready, Post-Fix-Review)
 
+> **SUPERSEDED.** This file is revision history for `v1.1.2` only. The authoritative specification is **`SignalShap_Implementation_Spec.md`**. Do not build, cite, or edit from this document.
+
 **Target journal:** *Discover Artificial Intelligence* (Springer Nature — open access, CiteScore 6.0, Q1 in Artificial Intelligence). *SJR value to be re-verified against the live Scimago page immediately before submission (see §17).*
 **Article type:** Research article.
 **Working title:** *Game Theory Meets Recommendation: Exact Shapley Credit Assignment over Collaborative, Content, and Contextual Signals*.
