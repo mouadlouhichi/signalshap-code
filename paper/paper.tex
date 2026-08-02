@@ -33,8 +33,8 @@
 \newcommand{\NDCG}{\mathrm{NDCG@10}}
 \newcommand{\LOO}{\mathrm{LOO}}
 
-\title{\textbf{Game Theory Meets Recommendation: Exact Shapley Credit
-Assignment over Collaborative, Content, and Contextual Signals}}
+\title{\textbf{Leave-One-Out Misattributes Redundant Signals:\\
+Exact Shapley Credit Assignment for Hybrid Recommenders}}
 
 \author{
   Mouad Louhichi\thanks{Corresponding author: \texttt{mouad\_louhichi@um5.ac.ma}}
@@ -136,9 +136,15 @@ and the exact closed form is a short sum. We compute it directly.
       show by counterexample that the redundancy--positivity property is
       \textbf{false} without monotonicity, and we discharge that hypothesis
       with an empirical audit (\S\ref{sec:theory}).
-\item \textbf{C3.} Evidence on MovieLens-1M that LOO and Shapley disagree in
-      \emph{sign}, not merely in magnitude: LOO judges collaborative filtering
-      harmful where Shapley ranks it second most valuable
+\item \textbf{C3 (primary).} A \emph{controlled redundancy intervention} on
+      real data that supplies ground truth by construction, and on which exact
+      Shapley recovers the correct attribution to numerical precision while LOO
+      collapses to exactly zero (\S\ref{sec:recovery}). This converts the
+      central claim from an observed disagreement into a measured failure of a
+      standard method.
+\item \textbf{C3b.} Observational evidence on MovieLens-1M that the two
+      disagree in \emph{sign}, not merely magnitude: LOO judges collaborative
+      filtering harmful where Shapley ranks it second most valuable
       (\S\ref{sec:results}).
 \item \textbf{C4.} Statistically detectable segment-level heterogeneity in
       Shapley attributions (8 of 30 contrasts significant against 1.5 expected
@@ -526,6 +532,87 @@ cost for no measurable ranking loss. We stress that this conclusion is
 \emph{conditional} on the game and the candidate set, and is not a causal
 claim.
 
+
+%% ===================================================================
+\section{Ground Truth by Intervention}\label{sec:recovery}
+%% ===================================================================
+
+Everything in \S\ref{sec:results} is observational: LOO and Shapley disagree,
+but nothing in the data says which is correct. A reviewer is entitled to ask
+whether the disagreement simply reflects two defensible conventions. This
+section answers that by \emph{constructing} a case whose correct answer is
+known, on the real corpus.
+
+\paragraph{Design.} We inject a near-duplicate of an existing source,
+$g_{\text{dup}} = g + \eta\,\sigma_g\,\epsilon$ with $\epsilon$ standard
+normal, and re-run the game with six players instead of five. The candidate set
+is held \emph{fixed} at its pre-injection value, so the only thing that changes
+is the player set --- otherwise the duplicate would also perturb retrieval and
+confound two effects.
+
+\paragraph{What the correct answer must be.} Two requirements follow from the
+construction, independently of any model:
+\begin{enumerate}
+\item \textbf{Symmetry.} At $\eta = 0$ the pair is exactly exchangeable, so any
+      correct attributor must assign them \emph{equal} credit.
+\item \textbf{Conservation.} The pair jointly performs the work the original
+      source performed alone, so their sum should track the pre-injection
+      attribution of that source.
+\end{enumerate}
+And one prediction follows from Property~\ref{prop:loo}: LOO must collapse
+toward zero for \emph{both} members, because removing either alone leaves the
+other to cover for it.
+
+\paragraph{Result.} Table~\ref{tab:recovery} reports $\eta = 0$ for three
+injected sources and two seeds.
+
+\begin{table}[htbp]
+\centering\footnotesize
+\caption{Redundancy recovery on real MovieLens-1M. Exact Shapley recovers
+symmetry to numerical precision; LOO collapses to exactly zero for both members
+of every duplicated pair.}
+\label{tab:recovery}
+\begin{tabular}{llrrrrr}
+\toprule
+Injected & Seed & $\varphi_{g}$ & $\varphi_{g_{\text{dup}}}$ &
+Symmetry error & $\LOO(g)$ & $\LOO(g_{\text{dup}})$ \\
+\midrule
+$cf$  & 42 & $0.01091$ & $0.01091$ & $<10^{-6}$ & $0.00000$ & $0.00000$ \\
+$cf$  & 43 & $0.01091$ & $0.01091$ & $<10^{-6}$ & $0.00000$ & $0.00000$ \\
+$seq$ & 42 & $0.01667$ & $0.01667$ & $<10^{-6}$ & $0.00000$ & $0.00000$ \\
+$seq$ & 43 & $0.01667$ & $0.01667$ & $<10^{-6}$ & $0.00000$ & $0.00000$ \\
+$pop$ & 42 & $0.00406$ & $0.00406$ & $<10^{-6}$ & $0.00000$ & $0.00000$ \\
+$pop$ & 43 & $0.00406$ & $0.00406$ & $<10^{-6}$ & $0.00000$ & $0.00000$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The result is unambiguous and reproducible. Exact Shapley satisfies symmetry to
+better than $10^{-6}$ in every condition. LOO returns \textbf{exactly zero} for
+both members of every pair --- not approximately, exactly --- because
+$v(\G) = v(\G \setminus \{g\})$ holds numerically when a perfect substitute
+remains in the coalition.
+
+The practical reading is stark. An engineer running standard ablation on a
+system containing two redundant components is told that \emph{neither
+contributes anything}. Acting on that, they would retire both, and lose the
+capability entirely. This is the failure mode the paper is about, and here it
+is measured rather than argued.
+
+\paragraph{Graceful degradation.} As $\eta$ grows the duplicate becomes a
+noisier copy and exact redundancy weakens. Conservation drifts from $1.42$ at
+$\eta = 0$ to $1.37$ at $\eta = 0.5$, and LOO becomes non-zero but erratic in
+sign ($+0.00018$, $-0.00024$, $-0.00232$ at $\eta = 0.01, 0.1, 0.5$), which is
+the behaviour Lemma~\ref{lem:eps}(i) describes for $\varepsilon$-redundancy.
+
+\paragraph{Why conservation exceeds unity.} The pair sum is $1.42\times$ the
+pre-injection attribution rather than $1.00\times$. This is expected and is not
+a defect: adding a sixth player changes the game, and the duplicated pair
+occupies coalition positions unavailable to the single original source. The
+diagnostic content is in \emph{symmetry}, which is exact, and in the
+\emph{sign and collapse} of LOO. We report the ratio for completeness rather
+than as a claim.
+
 %% ===================================================================
 \section{Segment Heterogeneity and an Underpowered Loop}\label{sec:negative}
 %% ===================================================================
@@ -623,12 +710,26 @@ Lemma~\ref{lem:eps}; the bias argument against grand-coalition candidate pools;
 the bias argument against per-coalition $\lambda$ tuning. These are
 mathematical and do not depend on any corpus.
 
-\paragraph{Single corpus.} All empirical results are MovieLens-1M only.
-The cross-density comparison that motivates a three-corpus design
-(dense movies, sparse books, medium music) is therefore \emph{not} tested
-here, and no claim in this paper should be read as holding across domains.
-LastFM-2K and Amazon-Book are the immediate next step; the artefact runs them
-unchanged.
+\paragraph{Scope was narrowed after the study began, and we say so.}
+This work was designed as a three-corpus study contrasting attribution across
+densities. Two corpora were unavailable at the time of writing, so the claims
+are scoped to what one corpus plus a controlled intervention can support. The
+\emph{hypotheses} were not changed to fit the results: Properties~1--3 and
+Lemma~\ref{lem:eps} are stated in \S\ref{sec:theory} exactly as they were
+pre-registered, and both outcomes that went against expectation --- the
+non-monotone fitted game and the underpowered fusion loop --- are reported
+rather than removed. The intervention of \S\ref{sec:recovery} is
+\textbf{post-hoc in origin}: it was added because the observational comparison
+could not establish which attributor was correct. Its prediction was fixed by
+construction \emph{before} it was run, and it is reported here as a designed
+test rather than as a confirmation of a pre-existing hypothesis.
+
+\paragraph{Single corpus.} All empirical results are MovieLens-1M only. The
+cross-density comparison is \emph{not} tested here and no claim should be read
+as holding across domains. The artefact runs the remaining corpora unchanged.
+We note the intervention result is a statement about the estimator rather than
+about a dataset, and is therefore the part of this paper least likely to be
+corpus-specific --- though that too requires confirmation.
 
 \paragraph{$N_{\max}$ was re-registered once, on the record.} At the
 pre-registered $N_{\max} = 200$, candidate recall on MovieLens-1M was $0.461$,
@@ -664,10 +765,16 @@ showed that a natural statement of the redundancy property is false without
 monotonicity, gave the counterexample, and audited the hypothesis rather than
 assuming it.
 
-On MovieLens-1M the practical case for the method is direct: LOO scores
-collaborative filtering as harmful, exact Shapley ranks it the second most
-valuable source, and the two therefore recommend opposite engineering actions.
-Measured redundancy tracks the gap between them. Per-user attributions differ
+The strongest evidence comes from intervention rather than observation. By
+injecting a known duplicate into a real system we fixed the correct
+attribution by construction, and found that exact Shapley recovers it to
+better than $10^{-6}$ while LOO returns exactly zero for both members of the
+redundant pair. An engineer following standard ablation on such a system is
+told that neither component contributes, and would retire both.
+
+The observational picture agrees: LOO scores collaborative filtering as
+harmful, exact Shapley ranks it second most valuable, and the two recommend
+opposite actions. Measured redundancy tracks the gap between them. Per-user attributions differ
 significantly across behavioural segments, so the decomposition carries
 structure a global summary discards. Turning that structure into a ranking gain
 is directionally supported but not yet demonstrated at this sample size.
