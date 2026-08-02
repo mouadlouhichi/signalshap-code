@@ -7,3 +7,8 @@ data/processed/*
 !data/processed/.gitkeep
 *.egg-info/
 .venv/
+
+# Benchmark corpora: fetched by scripts/fetch_benchmarks.sh, not tracked
+data/raw/gowalla/
+data/raw/yelp2018/
+data/raw/amazon-book/
