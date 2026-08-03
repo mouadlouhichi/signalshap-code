@@ -7,12 +7,46 @@
     "train": 563206,
     "valid": 6035,
     "test": 6035,
-    "synthetic": false
+    "synthetic": false,
+    "no_timestamps": false
+  },
+  "yelp2018": {
+    "users": 21026,
+    "items": 38048,
+    "interactions": 839455,
+    "density": 0.0010493223596689174,
+    "train": 797403,
+    "valid": 21026,
+    "test": 21026,
+    "synthetic": false,
+    "no_timestamps": true
+  },
+  "gowalla": {
+    "users": 19521,
+    "items": 40981,
+    "interactions": 549280,
+    "density": 0.0006866084959218764,
+    "train": 510238,
+    "valid": 19521,
+    "test": 19521,
+    "synthetic": false,
+    "no_timestamps": true
+  },
+  "amazon_book_lgcn": {
+    "users": 8733,
+    "items": 86537,
+    "interactions": 398784,
+    "density": 0.0005276821819378757,
+    "train": 381318,
+    "valid": 8733,
+    "test": 8733,
+    "synthetic": false,
+    "no_timestamps": true
   },
   "_meta": {
     "source": "measured",
-    "measured_at": "2026-08-02T18:33:45.241367+00:00",
-    "corpus_hash": "e73e0add9cd22120",
+    "measured_at": "2026-08-02T22:25:25.884599+00:00",
+    "corpus_hash": "59805a07ca22b6a1",
     "synthetic": false
   }
 }
