@@ -11,6 +11,7 @@ Every experiment writes a JSON to artefacts/ so the manuscript can cite it
 
 from __future__ import annotations
 
+import gc
 import time
 from datetime import datetime, timezone
 
@@ -255,6 +256,8 @@ class Experiment:
                 "per_user_ndcg": per, "n_users": len(users),
             }
             self.timings[f"baseline_{nm}"] = time.time() - t0
+            del S
+            gc.collect()
 
         family = ["uniform", "global", "popularity_reference", "lightgcn", "sasrec"]
         raw_p, effects = {}, {}
@@ -300,6 +303,8 @@ class Experiment:
                 "candidate_recall": float(candidate_recall(cands, self.test_items)),
                 "shapley": exact_shapley(v), "v_grand": v[frozenset(SOURCES)],
             }
+            del g, cands, v
+            gc.collect()
         out["candidate_size"] = sweep
         out["candidate_size_note"] = (
             "Recall is reported PER CELL because changing |C_u| moves the ceiling "
@@ -311,6 +316,8 @@ class Experiment:
             g = SignalShapGame(self.scores, self.candidates, self.valid_items,
                                self.test_items, lam, self.cfg.k_ndcg, self.cfg.v0_seed)
             lam_sweep[f"lambda_{lam}"] = exact_shapley(g.v_all())
+            del g
+            gc.collect()
         out["lambda_sensitivity"] = lam_sweep
         out["lambda_note"] = (
             "SENSITIVITY ONLY, never selection. lambda is frozen (spec §2.4); "
@@ -334,6 +341,8 @@ class Experiment:
             gg = SignalShapGame(sc, self.candidates, self.valid_items, self.test_items,
                                 self.cfg.ridge_lambda, self.cfg.k_ndcg, self.cfg.v0_seed)
             rescale[kind] = exact_shapley(gg.v_all())
+            del gg, sc
+            gc.collect()
         out["monotone_rescaling"] = rescale
         out["rescaling_note"] = (
             "Remark 1: invariance is AFFINE only. log1p/rank are nonlinear, so "
@@ -351,6 +360,8 @@ class Experiment:
             gg = SignalShapGame(sc, self.candidates, self.valid_items, self.test_items,
                                 self.cfg.ridge_lambda, self.cfg.k_ndcg, self.cfg.v0_seed)
             noise[f"sigma_{lvl}"] = exact_shapley(gg.v_all())
+            del gg, sc
+            gc.collect()
         out["noise_injection"] = noise
         return out
 
@@ -391,6 +402,7 @@ class Experiment:
                             self.cfg.ridge_lambda, self.cfg.k_ndcg, self.cfg.v0_seed)
         v2 = g2.v_all()
         phi_union, phi_grand = exact_shapley(self.v), exact_shapley(v2)
+        del g2
         return {
             "dataset": self.name,
             "union_candidates": {
