@@ -14,12 +14,12 @@
     "no_timestamps": false
   },
   "timings_sec": {
-    "load": 1.554110050201416,
-    "scorers": 6.050431966781616,
-    "candidates": 5.028422832489014,
-    "game_32_coalitions": 7.658415079116821,
-    "baseline_lightgcn": 30.95343327522278,
-    "baseline_sasrec": 12.64088773727417
+    "load": 2.4597549438476562,
+    "scorers": 9.379303932189941,
+    "candidates": 7.850478172302246,
+    "game_32_coalitions": 12.066831111907959,
+    "baseline_lightgcn": 47.429929971694946,
+    "baseline_sasrec": 20.171827793121338
   },
   "e0a_candidates": {
     "dataset": "ml_1m",

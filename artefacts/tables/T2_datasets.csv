@@ -1,2 +1,2 @@
 Dataset,Users,Items,Interactions,Density (as used),$N_{max}$,$|C_u|$ mean±std,Candidate recall,Gate (≥0.60),Monot. violations,Prop. 2 applicable
-ml_1m,6038,3533,575276,2.6967%,600,600.0±0.1,0.747,PASS,20/80,no
+ml_1m,6038,3533,575276,2.6967%,600,600.0±0.1,0.748,PASS,26/80,no
