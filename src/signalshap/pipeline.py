@@ -243,21 +243,23 @@ class Experiment:
             t0 = time.time()
             S = fn(self.ds, seed=self.seed)
             S[tr_u, tr_i] = -np.inf
-            per = np.array([full_catalog_metrics(S[u], self.test_items[u])["ndcg"]
-                            for u in users])
-            fc[nm] = {
-                "ndcg_at_10": float(per.mean()),
-                "recall_at_20": float(np.mean([
-                    full_catalog_metrics(S[u], self.test_items[u])["recall"]
-                    for u in users])),
-                "mrr_at_10": float(np.mean([
-                    full_catalog_metrics(S[u], self.test_items[u])["mrr"]
-                    for u in users])),
-                "per_user_ndcg": per, "n_users": len(users),
-            }
-            self.timings[f"baseline_{nm}"] = time.time() - t0
+            # Extract all three metrics in ONE pass, then release immediately.
+            # The previous code called full_catalog_metrics three times per user
+            # and kept S alive throughout, which on large corpora costs several
+            # GB for no reason.
+            nd = np.empty(len(users)); rc = np.empty(len(users)); mr = np.empty(len(users))
+            for ix, u in enumerate(users):
+                m = full_catalog_metrics(S[u], self.test_items[u])
+                nd[ix], rc[ix], mr[ix] = m["ndcg"], m["recall"], m["mrr"]
             del S
             gc.collect()
+            fc[nm] = {
+                "ndcg_at_10": float(nd.mean()),
+                "recall_at_20": float(rc.mean()),
+                "mrr_at_10": float(mr.mean()),
+                "per_user_ndcg": nd, "n_users": len(users),
+            }
+            self.timings[f"baseline_{nm}"] = time.time() - t0
 
         family = ["uniform", "global", "popularity_reference", "lightgcn", "sasrec"]
         raw_p, effects = {}, {}

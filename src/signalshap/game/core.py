@@ -111,9 +111,12 @@ class SignalShapGame:
         self.feat: dict[int, np.ndarray] = {}
         for u in set(self.eval_users) | set(self.fit_users):
             c = candidates[u]
+            # float32 halves the largest resident structure; the ridge solve
+            # promotes to float64 via the Gram accumulation, so precision of
+            # the fitted weights is unaffected.
             self.feat[u] = np.column_stack(
                 [z_normalise(scores[g][u][c]) for g in self.sources]
-            ).astype(np.float64)
+            ).astype(np.float32)
 
         self._v0 = self._frozen_baseline(v0_seed)
         self._cache: dict[frozenset, float] = {}
@@ -158,7 +161,7 @@ class SignalShapGame:
             XtX = np.zeros((n, n))
             Xty = np.zeros(n)
             for u in self.fit_users:
-                F = self.feat[u]
+                F = self.feat[u].astype(np.float64, copy=False)
                 y = (self.candidates[u] == self.valid_items[u]).astype(np.float64)
                 XtX += F.T @ F
                 Xty += F.T @ y
