@@ -4,7 +4,7 @@ n_max:
   amazon_book: 1000
   gowalla: 2500
   yelp2018: 5000
-  amazon_book_lgcn: 5000
+  amazon_book_lgcn: 20000
 ridge_lambda: 1.0
 v0_seed: 42
 seeds:

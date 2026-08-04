@@ -1,4 +1,26 @@
 {
+  "amazon_book_lgcn": {
+    "users": 7422,
+    "items": 84348,
+    "interactions": 342709,
+    "density": 0.0005474314831536035,
+    "train": 327865,
+    "valid": 7422,
+    "test": 7422,
+    "synthetic": false,
+    "no_timestamps": true
+  },
+  "gowalla": {
+    "users": 5797,
+    "items": 39005,
+    "interactions": 162573,
+    "density": 0.0007189932899841643,
+    "train": 150979,
+    "valid": 5797,
+    "test": 5797,
+    "synthetic": false,
+    "no_timestamps": true
+  },
   "ml_1m": {
     "users": 6038,
     "items": 3533,
@@ -11,42 +33,22 @@
     "no_timestamps": false
   },
   "yelp2018": {
-    "users": 21026,
+    "users": 19018,
     "items": 38048,
-    "interactions": 839455,
-    "density": 0.0010493223596689174,
-    "train": 797403,
-    "valid": 21026,
-    "test": 21026,
-    "synthetic": false,
-    "no_timestamps": true
-  },
-  "gowalla": {
-    "users": 19521,
-    "items": 40981,
-    "interactions": 549280,
-    "density": 0.0006866084959218764,
-    "train": 510238,
-    "valid": 19521,
-    "test": 19521,
-    "synthetic": false,
-    "no_timestamps": true
-  },
-  "amazon_book_lgcn": {
-    "users": 8733,
-    "items": 86537,
-    "interactions": 398784,
-    "density": 0.0005276821819378757,
-    "train": 381318,
-    "valid": 8733,
-    "test": 8733,
+    "interactions": 756903,
+    "density": 0.0010460285798032426,
+    "train": 718867,
+    "valid": 19018,
+    "test": 19018,
     "synthetic": false,
     "no_timestamps": true
   },
   "_meta": {
     "source": "measured",
-    "measured_at": "2026-08-04T00:56:56.430236+00:00",
+    "measured_at": "2026-08-04T09:01:36.374521+00:00",
     "corpus_hash": "59805a07ca22b6a1",
-    "synthetic": false
+    "synthetic": false,
+    "reconciled_from": "results_*.json (post-downsize run scale)",
+    "note": "Rebuilt from each runs own stats. The previous file was written BEFORE auto-downsizing, so it reported pre-downsize user counts beside post-downsize results."
   }
 }

@@ -12,3 +12,4 @@ data/processed/*
 data/raw/gowalla/
 data/raw/yelp2018/
 data/raw/amazon-book/
+data/raw/ml-1m/

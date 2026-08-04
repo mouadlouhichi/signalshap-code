@@ -83,7 +83,7 @@ sources: LOO reports collaborative filtering as actively harmful
 ($+0.0154$). Measured redundancy correlates with the LOO--Shapley gap
 ($\tau$-correlation $0.54$), as the lemma predicts. Segment-adaptive fusion beats LightGCN
 ($+0.030$) and SASRec ($+0.056$) at $p < 0.001$, but improves on a well-tuned
-global head by only $+0.00025$ (Holm $p = 0.14$); we report the closed loop as
+global head by only $+0.00013$ (Holm $p = 0.59$); we report the closed loop as
 directionally supported and underpowered rather than as a confirmed effect. We release code, cached matrices,
 and a one-command reproduction.
 \end{abstract}
@@ -93,15 +93,17 @@ recommender systems; explainable AI; credit assignment; hybrid recommendation
 
 \bigskip
 \noindent\fbox{\parbox{0.97\linewidth}{\small
-\textbf{Corpora.} Four real datasets spanning a $25\times$ density range:
-MovieLens-1M \citep{harper2015movielens} ($2.70\%$), Yelp2018 ($0.160\%$),
-Gowalla ($0.117\%$), and Amazon-Book ($0.106\%$), the latter three taken from
-the standard LightGCN benchmark splits \citep{he2020lightgcn} so that our
-preprocessing matches published practice. Two protocol differences are
-disclosed rather than smoothed over: the LightGCN splits carry no timestamps,
-so the leave-last-out \emph{temporal} protocol applies to MovieLens only, and
-those three corpora are subsampled to 1{,}500 users to fit a 3\,GB memory
-ceiling. Both are recorded in \S\ref{sec:limitations}.}}
+\textbf{Corpora.} Four real datasets spanning a $49\times$ density range:
+MovieLens-1M \citep{harper2015movielens} ($2.697\%$, 6{,}038 users), Yelp2018
+($0.105\%$, 19{,}018), Gowalla ($0.072\%$, 5{,}797), and Amazon-Book
+($0.055\%$, 7{,}422) --- the latter three from the standard LightGCN benchmark
+splits \citep{he2020lightgcn} so that preprocessing matches published practice.
+Two protocol differences are disclosed rather than smoothed over: the LightGCN
+splits carry no timestamps, so the leave-last-out \emph{temporal} protocol
+applies to MovieLens only; and those three corpora are subsampled to fit a
+memory budget, with the per-corpus scale reported in Table~T2 and derived
+from that budget rather than chosen. Both are detailed in
+\S\ref{sec:limitations}.}}
 
 %% ===================================================================
 \section{Introduction}
@@ -166,7 +168,7 @@ and the exact closed form is a short sum. We compute it directly.
       global summary hides (\S\ref{sec:negative}).
 \item \textbf{C5.} Segment-adaptive fusion outperforms LightGCN, SASRec,
       uniform, and popularity baselines at $p < 0.001$, but \emph{not} a
-      well-tuned global head ($d_z = 0.010$). We report the closed loop as
+      well-tuned global head ($d_z = 0.006$). We report the closed loop as
       \textbf{directionally supported and underpowered}, and do not claim it
       (\S\ref{sec:negative}).
 \item \textbf{C6.} A reproducible artefact with pre-registered configuration
@@ -499,20 +501,20 @@ disagree in \textbf{sign} for two of five sources:
 \toprule
 Source & LOO & Shapley $\varphi_g$ & gap \\
 \midrule
-$cf$  & $-0.00444$ & $+0.01541$ & $+0.01985$ \\
-$ct$  & $+0.00083$ & $-0.00005$ & $-0.00089$ \\
-$pop$ & $+0.00098$ & $+0.00632$ & $+0.00535$ \\
-$rec$ & $+0.00045$ & $+0.00054$ & $+0.00009$ \\
-$seq$ & $+0.01658$ & $+0.02935$ & $+0.01277$ \\
+$cf$  & $-0.00478$ & $+0.01520$ & $+0.01998$ \\
+$ct$  & $+0.00109$ & $-0.00017$ & $-0.00126$ \\
+$pop$ & $+0.00118$ & $+0.00629$ & $+0.00511$ \\
+$rec$ & $+0.00033$ & $+0.00033$ & $-0.00000$ \\
+$seq$ & $+0.01672$ & $+0.02910$ & $+0.01238$ \\
 \bottomrule
 \end{tabular}
 \end{center}
 
 \noindent
 The collaborative-filtering row is the one that matters. LOO scores $cf$ at
-$-0.0044$ --- it looks \emph{actively harmful}, and an engineer following the
-standard methodology would retire it. Exact Shapley scores the same component
-at $+0.0154$, the second most valuable source in the system. The disagreement
+$-0.0048$ --- it looks \emph{actively harmful}, and an engineer following the
+standard methodology would retire it. Shapley scores the same component
+at $+0.0152$, the second most valuable source in the system. The disagreement
 is not a matter of degree that careful reading would survive; the two methods
 recommend opposite actions.
 
@@ -523,11 +525,11 @@ signals, so removing $cf$ from the \emph{grand} coalition costs almost nothing
 sees only that single contrast. Shapley averages $cf$'s contribution over all
 16 coalitions in which it can appear, including the sparse ones where no other
 source covers for it, and recovers its true worth. Consistently, measured
-redundancy correlates with the LOO--Shapley gap at $0.537$, in the direction
+redundancy correlates with the LOO--Shapley gap at $0.491$, in the direction
 Lemma~\ref{lem:eps} predicts.
 
 We note $ct$ flips the other way: LOO credits it slightly positive
-($+0.00083$) where Shapley returns essentially zero ($-0.00005$). Under a
+($+0.00109$) where Shapley returns essentially zero ($-0.00017$). Under a
 non-monotone fitted game (below) a small negative value is admissible and is
 read as ``no reliable contribution'' rather than as harm.
 
@@ -604,7 +606,7 @@ of exactly $0.0$ and $\LOO = 0.00000$ for both members, matching MovieLens-1M:
 
 \begin{table}[htbp]
 \centering\footnotesize
-\caption{Redundancy recovery across four real corpora spanning a $25\times$
+\caption{Redundancy recovery across four real corpora spanning a $49\times$
 density range (injected duplicate of $cf$, $\eta = 0$).}
 \label{tab:recovery-multi}
 \begin{tabular}{lrrrr}
@@ -679,33 +681,37 @@ attributions \emph{differ} across user segments (RQ3), and whether exploiting
 that difference \emph{pays} (RQ4). On MovieLens-1M the answer to the first is
 yes; the answer to the second is not yet.
 
-\paragraph{RQ3: heterogeneity is real.} Of 30 segment-pair contrasts,
-\textbf{8 are significant} at $\alpha = 0.05$ against $1.5$ expected by
-chance --- more than five times the chance rate. Per-user Shapley
+\paragraph{RQ3: heterogeneity is real, but only on the dense corpus.} On
+MovieLens-1M, \textbf{7 of 30} segment-pair contrasts are significant at
+$\alpha = 0.05$ against $1.5$ expected by chance. On the three sparse corpora
+the counts are $2$, $1$, and $3$ of $30$ --- at or near the chance rate. We
+therefore claim segment heterogeneity for the dense setting only, and note
+that its absence on sparse data is a plausible reason C5 does not close. Per-user Shapley
 decomposition therefore carries structure that the global summary hides, which
 is the substance of C4.
 
 \input{../artefacts/tables/T7_fuse_significance.tex}
 
 \paragraph{RQ4: the loop does not yet close.} SignalShap-Fuse attains
-$\NDCG = 0.06391$ against $0.06366$ for globally tuned fusion --- the predicted
-direction, but a margin of $+0.00025$ with Holm-corrected $p = 0.14$ and
-$d_z = +0.010$. It separates decisively from every other comparator --- uniform fusion
-($+0.0113$), the popularity reference ($+0.0456$), LightGCN
-\citep{he2020lightgcn} ($+0.0300$, $d_z = 0.159$), and SASRec
-\citep{kang2018sasrec} ($+0.0559$, $d_z = 0.286$), all at Holm-corrected
+$\NDCG = 0.06344$ against $0.06331$ for globally tuned fusion --- the predicted
+direction, but a margin of $+0.00013$ with Holm-corrected $p = 0.59$ and
+$d_z = +0.006$. It separates decisively from every other comparator --- uniform fusion
+($+0.0118$), the popularity reference ($+0.0452$), LightGCN
+\citep{he2020lightgcn} ($+0.0295$, $d_z = 0.157$), and SASRec
+\citep{kang2018sasrec} ($+0.0570$, $d_z = 0.300$), all at Holm-corrected
 $p < 0.001$ --- but against a well-tuned global head it does not.
 
 We report this as \textbf{underpowered rather than refuted}, and the
 distinction is evidential, not rhetorical. The effect size is genuinely tiny
-($d_z = 0.01$); detecting it at conventional power would need on the order of
+($d_z = 0.006$); detecting it at conventional power would need on the order of
 $10^5$ users, where we have $6{,}035$. The honest statement is that we cannot
 resolve an effect this small on one corpus of this size --- not that the effect
 is absent.
 
 Two observations sharpen the interpretation. First, validation-fold
 cross-validation selected the pairwise-logistic head at shrinkage
-$\alpha = 1.0$ --- full segment adaptation, no pooling toward global --- which
+$\alpha = 0.75$ --- mostly segment-adaptive, lightly pooled toward global ---
+which
 indicates the segment weights are informative enough to be worth keeping, in
 contrast to a pilot on planted data where the same procedure selected
 $\alpha = 0$ and discarded them. Second, the gain is positive on every seed.
@@ -790,17 +796,23 @@ $rec$ and $seq$ players --- their attributions there are lower bounds, not
 estimates, and should not be compared across the two protocols.
 
 \paragraph{Subsampling was a hardware constraint, not a design choice.} The
-three LightGCN corpora are subsampled to 1{,}500 users because five dense
-score matrices at full size require roughly 10\,GB against a 3\,GB ceiling.
-The subsample is seeded and recorded in the artefact. It reduces statistical
-power on those corpora; it does not bias the intervention, whose prediction is
-fixed by construction independently of sample size.
+three LightGCN corpora are subsampled because five dense score matrices at full
+size run to tens of gigabytes. Per-corpus user counts are \emph{derived} from
+the available memory budget rather than chosen, and are reported in Table~T2
+(19{,}018 / 7{,}422 / 5{,}797 for Yelp2018 / Amazon-Book / Gowalla). Subsamples
+are seeded and recorded in the artefact. This reduces statistical power on
+those corpora; it does not bias the intervention, whose prediction is fixed by
+construction independently of sample size.
 
-\paragraph{The full experimental suite ran on MovieLens-1M only.} Robustness
-sweeps, segment analysis, fusion, and the neural baselines are MovieLens
-results. On the other three corpora we report the preconditions, attribution,
-and the intervention. Completing the suite on all four is mechanical, not
-conceptual.
+\paragraph{Amazon-Book required an unusually large candidate pool.} At the
+pre-registered $N_{\max} = 5000$ its candidate recall was $0.529$, below the
+$0.60$ floor. Applying rung~1 of the declared ladder (raise $N_{\max}$, change
+nothing else) reaches $0.637$ at $N_{\max} = 20{,}000$. That is roughly a
+quarter of its $84$k catalogue --- far larger, proportionally, than any other
+corpus --- so for Amazon-Book specifically the game sits closer to
+full-catalogue ranking than to the fixed-candidate design the method assumes.
+We flag this rather than absorb it: attribution on that corpus is the least
+comparable of the four. The sweep and re-registration are in the artefact.
 
 \paragraph{$N_{\max}$ was re-registered once, on the record.} At the
 pre-registered $N_{\max} = 200$, candidate recall on MovieLens-1M was $0.461$,
