@@ -50,14 +50,54 @@ def inject_duplicate(scores: dict[str, np.ndarray], source: str,
     return {**scores, name: dup}, name
 
 
+def coalition_redundancy_deviation(v, sources, g1: str, g2: str) -> dict:
+    """Max deviation from EXACT redundancy across all background coalitions.
+
+    Duplicating a source guarantees exchangeability, but under ridge it does
+    NOT structurally guarantee redundancy: two identical columns share the
+    penalty, so the effective regularisation on their common direction is
+    halved and the fitted predictions can move. LOO collapse is therefore an
+    empirical outcome to be measured, not a theorem to be assumed. This
+    function measures it directly:
+
+        max_S max(|v(S+g1) - v(S+g2)|,
+                  |v(S+g1) - v(S+g1+g2)|,
+                  |v(S+g2) - v(S+g1+g2)|)
+    """
+    from itertools import combinations as _c
+
+    rest = [s for s in sources if s not in (g1, g2)]
+    devs = []
+    for k in range(len(rest) + 1):
+        for c in _c(rest, k):
+            S = frozenset(c)
+            a, b, ab = v[S | {g1}], v[S | {g2}], v[S | {g1, g2}]
+            devs.append(max(abs(a - b), abs(a - ab), abs(b - ab)))
+    return {
+        "max_deviation": float(max(devs)) if devs else 0.0,
+        "mean_deviation": float(sum(devs) / len(devs)) if devs else 0.0,
+        "n_background_coalitions": len(devs),
+        "exactly_redundant": bool(max(devs) < 1e-12) if devs else True,
+    }
+
+
 def recovery_experiment(exp, source: str = "cf", etas=(0.0, 0.01, 0.1, 0.5),
-                        seed: int = 42, verbose: bool = True) -> dict:
+                        seed: int = 42, verbose: bool = True,
+                        diagnostic_lambda: float | None = None) -> dict:
     """Run the intervention at several redundancy strengths.
 
     `exp` is a prepared Experiment. Candidates are held FIXED at the
     pre-injection set so that the only thing changing is the player set --
     otherwise the duplicate would also alter retrieval and the comparison
     would confound two effects.
+
+    `diagnostic_lambda` overrides the frozen ridge penalty for this diagnostic
+    only. Setting it to 0 makes duplication provably prediction-invariant
+    (least squares is invariant to a repeated column), which turns the
+    redundancy prediction into a structural guarantee rather than an empirical
+    observation. We report BOTH settings: the frozen lambda answers "what does
+    the deployed game do?", lambda=0 answers "is the axiom recovered when the
+    estimator is replication-invariant by construction?".
     """
     baseline_phi = exact_shapley(exp.v)
     baseline_loo = loo_attribution(exp.v)
@@ -84,9 +124,11 @@ def recovery_experiment(exp, source: str = "cf", etas=(0.0, 0.01, 0.1, 0.5),
                   f"-- 2^6=64 coalitions...", flush=True)
         sc, dup = inject_duplicate(exp.scores, source, eta, seed)
         srcs = tuple(list(exp.game.sources) + [dup])
+        lam = (exp.cfg.ridge_lambda if diagnostic_lambda is None
+               else diagnostic_lambda)
         g = SignalShapGame(
             sc, exp.candidates, exp.valid_items, exp.test_items,
-            ridge_lambda=exp.cfg.ridge_lambda, k_ndcg=exp.cfg.k_ndcg,
+            ridge_lambda=lam, k_ndcg=exp.cfg.k_ndcg,
             v0_seed=exp.cfg.v0_seed, sources=srcs,
         )
         v = g.v_all()
@@ -112,6 +154,9 @@ def recovery_experiment(exp, source: str = "cf", etas=(0.0, 0.01, 0.1, 0.5),
             "symmetry_rel_error": abs(phi[source] - phi[dup]) / denom,
             "loo_original": loo[source],
             "loo_duplicate": loo[dup],
+            "diagnostic_lambda": lam,
+            "coalition_redundancy": coalition_redundancy_deviation(
+                v, srcs, source, dup),
             "loo_collapse_ratio": (
                 loo[source] / baseline_loo[source]
                 if abs(baseline_loo[source]) > 1e-12 else float("nan")

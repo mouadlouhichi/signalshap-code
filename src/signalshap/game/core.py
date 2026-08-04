@@ -163,8 +163,13 @@ class SignalShapGame:
             for u in self.fit_users:
                 F = self.feat[u].astype(np.float64, copy=False)
                 y = (self.candidates[u] == self.valid_items[u]).astype(np.float64)
-                XtX += F.T @ F
-                Xty += F.T @ y
+                # Per-user normalisation by |C_u|. Candidate sets differ in
+                # size across users; without this factor users with larger
+                # pools would contribute proportionally more rows and dominate
+                # the fitted head.
+                inv = 1.0 / max(len(self.candidates[u]), 1)
+                XtX += inv * (F.T @ F)
+                Xty += inv * (F.T @ y)
             self._gram_cache = (XtX, Xty)
         return self._gram_cache
 
@@ -188,7 +193,16 @@ class SignalShapGame:
         XtX, Xty = self._gram()
         ii = np.ix_(idx, idx)
         A = XtX[ii] + self.lam * np.eye(len(idx))
-        sol = np.linalg.solve(A, Xty[idx])
+        try:
+            sol = np.linalg.solve(A, Xty[idx])
+        except np.linalg.LinAlgError:
+            # Singular Gram: happens when lam = 0 and two sources are exactly
+            # collinear, which is precisely the duplicate-injection diagnostic.
+            # lstsq returns the MINIMUM-NORM solution, which splits a shared
+            # coefficient evenly between duplicated columns and is therefore
+            # replication-invariant in its predictions -- the property the
+            # diagnostic needs.
+            sol = np.linalg.lstsq(A, Xty[idx], rcond=None)[0]
         w = np.zeros(len(self.sources))
         w[idx] = sol
         return w

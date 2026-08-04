@@ -116,6 +116,14 @@ def check() -> list[str]:
             if needed and lib not in loaded:
                 bad.append(f"tikz library '{lib}' used but not loaded")
 
+    # Commands that need an explicitly loaded package. sn-jnl.cls loads few
+    # packages itself, so a missing \\usepackage is a compile error waiting to
+    # happen -- and one that static brace-checking will not catch.
+    for cmd, pkg in (("multirow", "multirow"), ("includegraphics", "graphicx"),
+                     ("cmidrule", "booktabs"), ("tikz", "tikz")):
+        if re.search(r"\\\\" + cmd + r"\\b", t) and f"usepackage{{{pkg}}}" not in t:
+            bad.append(f"\\\\{cmd} used but \\\\usepackage{{{pkg}}} is missing")
+
     if BIB.exists():
         cited = {c.strip() for g in re.findall(r"\\cite[a-z]*\{([^}]*)\}", t)
                  for c in g.split(",")}

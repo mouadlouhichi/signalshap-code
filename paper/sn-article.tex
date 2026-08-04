@@ -17,6 +17,7 @@
 \usepackage{amsmath}
 \usepackage{amssymb}
 \usepackage{graphicx}
+\usepackage{multirow}
 
 %% Architecture diagram (Fig. 1) is drawn in TikZ rather than embedded as a
 %% raster: it keeps lettering vector-sharp at any zoom, matches the body font
@@ -226,7 +227,7 @@ and efficiency on real fitted games.
 \node[snbox=snGame, below=of cand] (game)
   {\textbf{All $2^5=32$ coalitions}\\[1pt]
    head $w^{(S)}$, then
-   $v(S)=\overline{\NDCG}-v_0$};
+   $v(S)=\mathrm{mean}_u\, v_u(S)$};
 
 \node[snbox=snShap, below=of game] (shap)
   {\textbf{Exact Shapley}\\[1pt]
@@ -287,6 +288,22 @@ interactions, the Shapley output is reported as diagnosis and is deliberately
 what keeps the downstream comparison of Section~\ref{sec:segments}
 non-circular}\label{fig:workflow}
 \end{figure}
+
+\subsection{Research questions}
+
+\begin{description}
+\item[RQ1] Does a fixed-candidate, coalition-independent cooperative game over
+  architectural sources admit an exact additive decomposition of ranking
+  quality, and does the implementation satisfy the Shapley axioms on real
+  fitted games?
+\item[RQ2] Does source-level Shapley attribution differ materially from
+  leave-one-out ablation, and is the difference associated with measured
+  redundancy between sources?
+\item[RQ3] Do per-user attributions vary across behavioural segments, or does
+  the global summary suffice?
+\item[RQ4] Do fusion weights derived from segment-level attributions improve
+  ranking quality relative to uniform, neural, and globally tuned baselines?
+\end{description}
 
 \paragraph{What is not in this paper} Graph-neural or Transformer players;
 causal attribution; online or counterfactual evaluation. All attribution is
@@ -353,9 +370,19 @@ Let $\G = \{cf, ct, pop, rec, seq\}$ with $|\G| = 5$.
 For user $u$ and source $g$, let $\text{top-}N_g^{(g)}(u)$ be that source's own
 top-$N_g$ items, and set
 \begin{equation}
-\Cu \;=\; \bigcup_{g \in \G} \text{top-}N_g^{(g)}(u),
+\Cu \;=\; \operatorname{Trunc}_{N_{\max}^{(d)}}\!\Bigl(
+\bigcup_{g \in \G} \operatorname{top-}\!N_g^{(g)}(u) \Bigr),
 \qquad |\Cu| \le N_{\max}^{(d)} .
+\label{eq:cand}
 \end{equation}
+Here $d$ indexes the dataset, since the cap is pre-registered per corpus
+(Table~\ref{tab:preconditions}), and $\operatorname{Trunc}_{N}$ retains the
+first $N$ items after sorting the union by the key
+$(\text{best rank of the item across } g\in\G,\ \text{source order in }\G,\
+\text{item index})$. All three components are seed-independent, so $\Cu$ is
+deterministic; the bound in~\eqref{eq:cand} holds by construction rather than
+by assumption. Sources contribute equal depth, $N_g = N$ for all $g$, with $N$
+grown until the union reaches the cap.
 
 This choice is load-bearing. The obvious alternative --- draw one candidate pool
 from the full fused scorer --- is \emph{invalid}, because it hands the grand
@@ -378,28 +405,45 @@ ranking metric downstream, and we report it before any attribution number
 Let $z_{u,g,i}$ be the per-user, per-source $z$-normalised score. For coalition
 $S$, $\hat{s}_{u,i}(S) = \sum_{g \in S} w_g^{(S)} z_{u,g,i}$ with $w^{(S)}$ a
 head fitted on the validation fold, and
+Let $y_{u,i} = \mathbb{1}[i = i_u^{\mathrm{test}}]$ for $i \in \Cu$ be the
+binary relevance vector, let $\pi_u(S)$ be the ranking of $\Cu$ induced by
+$\hat{s}_{u,\cdot}(S)$ under a deterministic tie rule (descending score, then
+ascending item index), and let $\pi_u^{0}$ be a frozen permutation of $\Cu$
+drawn once. Define the \emph{per-user} baseline and game
 \begin{equation}
-v(S) \;=\; \frac{1}{|\mathcal{U}|} \sum_{u} \NDCG\!\left(
-\text{rank}_i\, \hat{s}_{u,i}(S) ;\, \text{test}_u \cap \Cu \right) - v_0 .
+b_u = \NDCG(\pi_u^{0}; y_u), \qquad
+v_u(S) = \NDCG(\pi_u(S); y_u) - b_u, \qquad
+v(S) = \frac{1}{|\mathcal{U}|}\sum_{u} v_u(S).
+\label{eq:game}
 \end{equation}
+If $i_u^{\mathrm{test}} \notin \Cu$ then $y_u = \mathbf{0}$ and
+$\NDCG(\cdot\,; y_u) = 0$ for every ranking, so $v_u(S) = -b_u = 0$; such users
+contribute zero to every coalition and are the reason candidate recall bounds
+all downstream metrics. Because $v_u(\varnothing) = \NDCG(\pi_u^{0}; y_u) - b_u
+= 0$ \emph{for every user}, the empty coalition is zero per user and not merely
+on average, which is what Property~\ref{prop:decomp} requires.
 
 The coalition head is the ridge solution on the validation fold,
 \begin{equation}
 w^{(S)} \;=\; \arg\min_{w \in \mathbb{R}^{|S|}}
-\sum_{u} \bigl\| \mathbf{y}_u - Z_u^{(S)} w \bigr\|_2^2
+\sum_{u} \frac{1}{|\Cu|}\bigl\| \mathbf{y}^{\mathrm{val}}_u - Z_u^{(S)} w \bigr\|_2^2
 \;+\; \lambda \|w\|_2^2 ,
+\label{eq:head}
 \end{equation}
-where $Z_u^{(S)}$ stacks the $z$-normalised scores of the sources in $S$ over
-$i \in \Cu$, and $\mathbf{y}_u$ is the binary relevance of the user's held-out
-\emph{validation} interaction. Weights are unconstrained, no intercept is
-fitted, and $\lambda$ is frozen (below). Test interactions are never used to
-fit $w^{(S)}$.
+where $Z_u^{(S)} \in \mathbb{R}^{|\Cu| \times |S|}$ stacks the $z$-normalised
+scores of the sources in $S$ over $i \in \Cu$, and
+$\mathbf{y}^{\mathrm{val}}_u \in \{0,1\}^{|\Cu|}$ marks the user's held-out
+validation interaction. The $1/|\Cu|$ factor matters: candidate sets differ in
+size across users, and without it users with larger pools would dominate the
+fit. Weights are unconstrained and no intercept is fitted. Test interactions
+are never used to fit $w^{(S)}$.
 
-Here $v_0$ is the $\NDCG$ of \emph{one frozen permutation} of $\Cu$, drawn once
-and reused for every coalition and user. The empty-coalition ranking is defined
-as that same permutation, so $v(\varnothing) = 0$ \emph{exactly and per user},
-which Property~\ref{prop:decomp} requires. Note $\varphi_g$ is invariant to
-$v_0$ altogether, since the offset cancels in every marginal difference.
+The frozen permutation $\pi_u^{0}$ is drawn once under a fixed seed and reused
+for every coalition, user, and experiment; the empty-coalition ranking is
+defined to be that same permutation. Note that $\varphi_g$ is invariant to the
+baseline altogether, since $b_u$ cancels in every marginal difference
+$v_u(S\cup\{g\}) - v_u(S)$: it exists only so that efficiency reads
+$\sum_g \varphi_g = v(\G)$ rather than $v(\G) - v(\varnothing)$.
 
 \paragraph{The regularisation strength is frozen}
 $\lambda$ is chosen once on a pilot and never tuned per coalition.
@@ -472,26 +516,59 @@ $\varphi_g = \frac{1}{|\mathcal{U}|}\sum_u \varphi_g(u)$, by linearity of the
 Shapley operator.
 \end{property}
 
-\begin{lemma}[$\varepsilon$-redundancy]\label{lem:eps}
-Exact redundancy is measure-zero and never holds on data, so
-Property~\ref{prop:loo} motivates but cannot instantiate an empirical test. Let
-$g_1,g_2$ be $\varepsilon$-redundant, i.e.\
-$|v(S \cup \{g_1\}) - v(S \cup \{g_1,g_2\})| \le \varepsilon$ for all
-$S \subseteq \G\setminus\{g_1,g_2\}$. Then \emph{(i)}
-$|\LOO(g_2)| \le \varepsilon$; and \emph{(ii)} if additionally $v$ is monotone
-and $v(\{g_1\}) \ge c$, then $\varphi_{g_1} \ge c/|\G| - O(\varepsilon)$.
+\begin{lemma}[$\varepsilon$-substitutability]\label{lem:eps}
+Exact redundancy is a measure-zero condition that is unlikely to hold on data
+without controlled duplication, so Property~\ref{prop:loo} motivates but cannot
+instantiate an empirical test. We therefore use a \emph{two-sided} condition.
+Call $g_1,g_2$ \textbf{$\varepsilon$-substitutable} if, for every
+$S \subseteq \G\setminus\{g_1,g_2\}$,
+\begin{equation}
+\max\bigl\{
+|v(S\cup\{g_1\}) - v(S\cup\{g_1,g_2\})|,\;
+|v(S\cup\{g_2\}) - v(S\cup\{g_1,g_2\})|
+\bigr\} \;\le\; \varepsilon .
+\label{eq:epssub}
+\end{equation}
+Then:
+\begin{enumerate}
+\item[(i)] $|\LOO(g_1)| \le \varepsilon$ and $|\LOO(g_2)| \le \varepsilon$.
+\item[(ii)] If in addition $v$ is monotone and $v(\{g_1\}) \ge c$, then
+$\varphi_{g_1} \ge c/|\G|$, with no $\varepsilon$ correction.
+\end{enumerate}
 \end{lemma}
 
-\begin{proof}[Proof sketch]
-(i) is immediate from the definition of LOO. For (ii), under redundancy $g_1$'s
-marginal contribution vanishes for every coalition already containing $g_2$, so
-$\varphi_{g_1} = \sum_{T \subseteq \G\setminus\{g_1,g_2\}} w(|T|)
-[v(T\cup\{g_1\}) - v(T)]$. Two quantities must not be conflated: the weights
-$w(|T|)$ over that index set sum to $\tfrac12$ --- this is
-$\Pr[g_1 \text{ precedes } g_2]$ in a random ordering --- but the term carrying
-the $v(\{g_1\})$ anchor is $T = \varnothing$, whose weight is $1/n$. Under
-monotonicity all remaining terms are non-negative, giving the bound.
+\begin{proof}
+(i) Taking $S = \G\setminus\{g_1,g_2\}$ in~\eqref{eq:epssub} gives
+$|v(\G\setminus\{g_2\}) - v(\G)| \le \varepsilon$ and
+$|v(\G\setminus\{g_1\}) - v(\G)| \le \varepsilon$, which are exactly
+$|\LOO(g_2)| \le \varepsilon$ and $|\LOO(g_1)| \le \varepsilon$. The two-sided
+form of~\eqref{eq:epssub} is what makes both statements available; a one-sided
+condition bounds only one of them.
+
+(ii) Write the Shapley value in permutation form,
+$\varphi_{g_1} = \sum_{T \subseteq \G\setminus\{g_1\}} w(|T|)\,
+[v(T\cup\{g_1\}) - v(T)]$ with $w(t) = t!\,(n-t-1)!/n!$ and $n = |\G|$. Under
+monotonicity every summand is non-negative, so discarding all terms except
+$T = \varnothing$ can only decrease the total:
+\[
+\varphi_{g_1} \;\ge\; w(0)\,[v(\{g_1\}) - v(\varnothing)]
+\;=\; \tfrac{1}{n}\,v(\{g_1\}) \;\ge\; c/n .
+\]
+
+Two remarks. First, the bound in (ii) follows from monotonicity alone and does
+\emph{not} require substitutability; we state the two parts together only
+because the pair is what makes the LOO--Shapley gap quantitative. Second, the
+anchor weight is $w(0) = 1/n$, not the mass
+$\sum_{T \subseteq \G\setminus\{g_1,g_2\}} w(|T|) = 1/2$ that corresponds to
+$\Pr[g_1 \text{ precedes } g_2]$ under a uniform random ordering. Conflating
+the two would overstate the bound by a factor of $n/2$.
 \end{proof}
+
+\noindent
+Combining the two parts, an $\varepsilon$-substitutable pair in a monotone game
+has a LOO--Shapley gap of at least $c/n - \varepsilon$ for each member. This is
+the quantitative form of the qualitative statement in
+Property~\ref{prop:loo}.
 
 \noindent
 \textbf{Two corrections worth recording.} The constant in
@@ -620,8 +697,28 @@ player set.
 At $\eta = 0$ the original and duplicated sources are exchangeable in the
 declared game, so any rule satisfying the symmetry axiom must assign them equal
 values. This gives a checkable constraint that does not depend on the data.
-Property~\ref{prop:loo} adds a second prediction: leave-one-out must collapse
-toward zero for \emph{both} members, since either alone is dispensable.
+Property~\ref{prop:loo} suggests a second outcome: leave-one-out should
+collapse toward zero for \emph{both} members, since either alone is
+dispensable. \textbf{This one is not structurally guaranteed under our fitted
+game, and we do not treat it as such.} Duplicating a column in a ridge
+regression is not prediction-invariant: two identical columns share the
+penalty, so the effective regularisation on their common direction is halved
+and the fitted scores can move. Exchangeability of the pair is guaranteed;
+redundancy of the coalition \emph{values} is an empirical question. We
+therefore measure it, reporting
+\begin{equation}
+\Delta_{\mathrm{red}} = \max_{S \subseteq \G\setminus\{g,g_{\mathrm{dup}}\}}
+\max\bigl\{|v(S\cup\{g\}) - v(S\cup\{g,g_{\mathrm{dup}}\})|,\;
+|v(S\cup\{g_{\mathrm{dup}}\}) - v(S\cup\{g,g_{\mathrm{dup}}\})|\bigr\}
+\label{eq:reddev}
+\end{equation}
+alongside the symmetry error, and we run the diagnostic at both the frozen
+$\lambda$ and at $\lambda = 0$. The latter matters because ordinary least
+squares \emph{is} invariant to a repeated column --- with the minimum-norm
+solution a shared coefficient splits evenly and predictions are unchanged --- so
+$\lambda = 0$ turns the redundancy prediction into a structural guarantee and
+isolates whether any deviation at the frozen $\lambda$ is due to
+regularisation.
 
 We are deliberately precise about the limits of this design.
 \textbf{Duplication does not conserve credit}, and it would be wrong to require
@@ -632,29 +729,27 @@ $g$ by perfect substitutes $g_1,g_2$ gives
 $\varphi_{g_1} = \varphi_{g_2} = 7/3$ and a pair sum of $14/3 \approx 4.67$.
 Clone insertion redistributes credit among \emph{all} players, a sensitivity of
 Shapley allocations to replication that is known in the cooperative-game
-literature~\citep{han2022replication}. Our own runs show the same effect: the
-pair sum is $1.42\times$ the pre-injection value on MovieLens-1M
-(Table~\ref{tab:recovery}). We therefore report the pair sum as a
-\emph{diagnostic}, not as a requirement, and treat the experiment as a
-symmetry and implementation check rather than as recovery of absolute credit.
+literature~\citep{han2022replication}. Our own runs show the same effect: on
+MovieLens-1M the pair sum is $0.02208$ against a pre-injection
+$\varphi_{cf} = 0.01547$, a ratio of $1.43$. We therefore treat the pair sum as
+a \emph{diagnostic}, not a requirement, and the experiment as a symmetry and
+implementation check rather than as recovery of absolute credit.
 
 \begin{table}[t]
-\caption{Duplicate-source diagnostics (injected clone of $cf$, $\eta = 0$),
-across four corpora spanning a $49$-fold density ratio. Symmetry holds to
-numerical precision everywhere, and LOO returns exactly zero for both members.
-The final column reports the pair sum relative to the pre-injection
-$\varphi_{cf}$: it is \emph{not} unity, and is not required to be --- clone
-insertion redistributes credit among all players.}
+\caption{Duplicate-source diagnostics on MovieLens-1M (injected clone of $cf$,
+$\eta = 0$) at the frozen ridge penalty and at $\lambda = 0$.
+$\Delta_{\mathrm{red}}$ is the coalition-level redundancy deviation of
+Eq.~\eqref{eq:reddev}, measured over all $2^4 = 16$ background coalitions
+rather than assumed. Symmetry is guaranteed by exchangeability; redundancy is
+not, and is reported as an empirical outcome}
 \label{tab:recovery}
-\begin{tabular}{@{}lrrrrrr@{}}
+\begin{tabular}{@{}lrrrrr@{}}
 \toprule
-Corpus & Density & $\varphi_{cf}$ & $\varphi_{cf_{\text{dup}}}$ &
-Sym.\ err. & $\LOO$ both & Pair sum / pre \\
+Corpus & $\lambda$ & Sym.\ err. & $\Delta_{\mathrm{red}}$ &
+$\LOO(cf)$ & $\LOO(cf_{\mathrm{dup}})$ \\
 \midrule
-MovieLens-1M & $2.697\%$ & $0.01078$ & $0.01078$ & $0.0$ & $0.000000$ & $1.42$ \\
-Yelp2018     & $0.105\%$ & $0.00618$ & $0.00618$ & $0.0$ & $0.000000$ & --- \\
-Gowalla      & $0.072\%$ & $0.01430$ & $0.01430$ & $0.0$ & $0.000000$ & --- \\
-Amazon-Book  & $0.055\%$ & $0.00251$ & $0.00251$ & $0.0$ & $0.000000$ & --- \\
+\multirow{2}{*}{MovieLens-1M} & frozen & $0.0$ & $0.0$ & $0.000000$ & $0.000000$ \\
+                              & $0$    & $0.0$ & $0.0$ & $0.000000$ & $0.000000$ \\
 \botrule
 \end{tabular}
 \end{table}
@@ -688,11 +783,11 @@ in the artefact.}
 \toprule
 Source & LOO & Shapley $\varphi_g$ & Gap & \\
 \midrule
-$cf$  & $-0.00478$ & $+0.01520$ & $+0.01998$ & \textbf{sign flip} \\
-$ct$  & $+0.00109$ & $-0.00017$ & $-0.00126$ & \textbf{sign flip} \\
-$pop$ & $+0.00118$ & $+0.00629$ & $+0.00511$ & \\
-$rec$ & $+0.00033$ & $+0.00033$ & $-0.00000$ & \\
-$seq$ & $+0.01672$ & $+0.02910$ & $+0.01238$ & \\
+$cf$  & $-0.00501$ & $+0.01547$ & $+0.02048$ & \textbf{sign flip} \\
+$ct$  & $+0.00083$ & $+0.00008$ & $-0.00075$ & \\
+$pop$ & $+0.00098$ & $+0.00664$ & $+0.00565$ & \\
+$rec$ & $+0.00044$ & $+0.00071$ & $+0.00027$ & \\
+$seq$ & $+0.01673$ & $+0.02964$ & $+0.01290$ & \\
 \botrule
 \end{tabular}
 \end{table}
@@ -709,9 +804,9 @@ zero.}\label{fig:scatter}
 Table~\ref{tab:loo} gives the per-source comparison and
 Figure~\ref{fig:scatter} plots it. The collaborative-filtering row is the one
 that matters. LOO scores $cf$ at
-$-0.0048$ --- it looks \emph{actively harmful}, and an engineer following the
+$-0.0050$ --- it looks \emph{actively harmful}, and an engineer following the
 standard methodology would retire it. Shapley scores the same component at
-$+0.0152$, the second most valuable source in the system. The disagreement is
+$+0.0155$, the second most valuable source in the system. The disagreement is
 not a matter of degree that careful reading would survive; the two methods
 recommend opposite actions.
 
@@ -728,7 +823,7 @@ $cf$'s contribution over all 16 coalitions in which it can appear, including
 those where no other source covers for it, and so recovers the value the
 overlap conceals.
 
-Measured redundancy is associated with the attribution shift at $r = 0.491$
+Measured redundancy is associated with the attribution shift at $r = 0.525$
 across the ten source pairs, in the direction the redundancy argument suggests.
 We are careful not to overstate this. Lemma~\ref{lem:eps} defines redundancy
 through \emph{coalition values}, whereas this statistic is a Kendall
@@ -783,17 +878,21 @@ covered by the released test suite.
 
 \paragraph{Attribution-derived fusion is competitive}
 Weights derived from the segment-level attributions outperform every
-independent comparator at Holm-corrected $p < 0.001$: uniform fusion
-($+0.0118$), a popularity reference ($+0.0452$),
-LightGCN~\citep{he2020lightgcn} ($+0.0295$, $d_z = 0.157$), and
-SASRec~\citep{kang2018sasrec} ($+0.0570$, $d_z = 0.300$). At
-$\NDCG = 0.06344$ the fused ranker is the strongest configuration we evaluate
-(Figure~\ref{fig:fusion}).
+\emph{independent} comparator at Holm-corrected $p < 0.001$: uniform fusion
+($+0.0111$, $d_z = 0.092$), a popularity reference ($+0.0455$,
+$d_z = 0.233$), LightGCN~\citep{he2020lightgcn} ($+0.0299$, $d_z = 0.159$), and
+SASRec~\citep{kang2018sasrec} ($+0.0558$, $d_z = 0.286$), at
+$\NDCG = 0.06382$ (Figure~\ref{fig:fusion}).
 
-Against a globally tuned head of the same family ($\NDCG = 0.06331$) the
-margin is positive ($+0.00013$) but within noise at this sample size
-($d_z = 0.006$, $p = 0.59$). We report it as inconclusive rather than as a
-gain.
+Against a globally tuned head of the same family ($\NDCG = 0.06388$) the
+difference is $-0.00005$ ($d_z = -0.003$, $p = 0.99$) --- indistinguishable from
+zero, and now marginally negative rather than marginally positive. Under the
+per-user normalisation of Eq.~\eqref{eq:head} the sign of this comparison
+changed while its magnitude stayed within noise, which is itself the clearest
+evidence that no effect is resolvable here. \textbf{We therefore make no claim
+of any advantage over a well-tuned global head}, and note that the comparisons
+against LightGCN and SASRec are conditional on tuning budgets that were not
+matched to our own pipeline.
 
 \begin{figure}[t]
 \centering
@@ -803,9 +902,12 @@ separates decisively from the neural and heuristic baselines but not from a
 well-tuned global head.}\label{fig:fusion}
 \end{figure}
 
-Resolving a difference this small would require on the order of $10^5$ users
-against the $6\,035$ available, so the comparison is underpowered rather than
-negative. We therefore make the claim the evidence supports: SignalShap
+Resolving a difference of this magnitude would require on the order of $10^5$
+users against the $6\,035$ available. Rather than describe the result as
+underpowered, we state the defensible conclusion directly: at this scale the
+two are \emph{equivalent for practical purposes}, and establishing otherwise
+would require a pre-specified smallest meaningful difference and a formal
+equivalence test, which we did not conduct. We therefore make the claim the evidence supports: SignalShap
 attribution yields fusion weights competitive with strong neural baselines,
 and its advantage over a carefully tuned global head is not established at
 this scale.

@@ -1,0 +1,290 @@
+{
+  "ml_1m_lamfrozen": {
+    "eta": 0.0,
+    "shapley": {
+      "cf": 0.011038258851183098,
+      "ct": 0.0002911500131712619,
+      "pop": 0.004538991289588704,
+      "rec": 0.000620103488820406,
+      "seq": 0.025004574130024375,
+      "cf_dup": 0.011038258851183098
+    },
+    "loo": {
+      "cf": 0.0,
+      "ct": 0.000827985417758248,
+      "pop": 0.0009787376472445292,
+      "rec": 0.000442132253218451,
+      "seq": 0.016734543208459275,
+      "cf_dup": 0.0
+    },
+    "phi_original": 0.011038258851183098,
+    "phi_duplicate": 0.011038258851183098,
+    "pair_sum": 0.022076517702366197,
+    "baseline_phi_original": 0.015466289626521275,
+    "conservation_ratio": 1.4273958548215622,
+    "symmetry_abs_error": 0.0,
+    "symmetry_rel_error": 0.0,
+    "loo_original": 0.0,
+    "loo_duplicate": 0.0,
+    "diagnostic_lambda": 1.0,
+    "coalition_redundancy": {
+      "max_deviation": 0.0,
+      "mean_deviation": 0.0,
+      "n_background_coalitions": 16,
+      "exactly_redundant": true
+    },
+    "loo_collapse_ratio": -0.0
+  },
+  "ml_1m_lam0": {
+    "eta": 0.0,
+    "shapley": {
+      "cf": 0.011038258851183098,
+      "ct": 0.0002911500131712619,
+      "pop": 0.004538991289588704,
+      "rec": 0.000620103488820406,
+      "seq": 0.025004574130024375,
+      "cf_dup": 0.011038258851183098
+    },
+    "loo": {
+      "cf": 0.0,
+      "ct": 0.000827985417758248,
+      "pop": 0.0009787376472445292,
+      "rec": 0.000442132253218451,
+      "seq": 0.016734543208459275,
+      "cf_dup": 0.0
+    },
+    "phi_original": 0.011038258851183098,
+    "phi_duplicate": 0.011038258851183098,
+    "pair_sum": 0.022076517702366197,
+    "baseline_phi_original": 0.015466289626521275,
+    "conservation_ratio": 1.4273958548215622,
+    "symmetry_abs_error": 0.0,
+    "symmetry_rel_error": 0.0,
+    "loo_original": 0.0,
+    "loo_duplicate": 0.0,
+    "diagnostic_lambda": 0.0,
+    "coalition_redundancy": {
+      "max_deviation": 0.0,
+      "mean_deviation": 0.0,
+      "n_background_coalitions": 16,
+      "exactly_redundant": true
+    },
+    "loo_collapse_ratio": -0.0
+  },
+  "yelp2018_lamfrozen": {
+    "eta": 0.0,
+    "shapley": {
+      "cf": 0.00044054276414762727,
+      "ct": 0.00106299268188088,
+      "pop": 0.03003847292748922,
+      "rec": 0.0012270507789824466,
+      "seq": 0.0009810420835032144,
+      "cf_dup": 0.00044054276414762727
+    },
+    "loo": {
+      "cf": 0.0,
+      "ct": 1.9853840608444195e-05,
+      "pop": 0.028479796883447407,
+      "rec": 3.5892597410387694e-05,
+      "seq": 3.325138573443548e-05,
+      "cf_dup": 0.0
+    },
+    "phi_original": 0.00044054276414762727,
+    "phi_duplicate": 0.00044054276414762727,
+    "pair_sum": 0.0008810855282952545,
+    "baseline_phi_original": 0.0005135016782769061,
+    "conservation_ratio": 1.7158376799308699,
+    "symmetry_abs_error": 0.0,
+    "symmetry_rel_error": 0.0,
+    "loo_original": 0.0,
+    "loo_duplicate": 0.0,
+    "diagnostic_lambda": 1.0,
+    "coalition_redundancy": {
+      "max_deviation": 0.0,
+      "mean_deviation": 0.0,
+      "n_background_coalitions": 16,
+      "exactly_redundant": true
+    },
+    "loo_collapse_ratio": NaN
+  },
+  "yelp2018_lam0": {
+    "eta": 0.0,
+    "shapley": {
+      "cf": 0.00044054276414762727,
+      "ct": 0.00106299268188088,
+      "pop": 0.03003847292748922,
+      "rec": 0.0012270507789824466,
+      "seq": 0.0009810420835032144,
+      "cf_dup": 0.00044054276414762727
+    },
+    "loo": {
+      "cf": 0.0,
+      "ct": 1.9853840608444195e-05,
+      "pop": 0.028479796883447407,
+      "rec": 3.5892597410387694e-05,
+      "seq": 3.325138573443548e-05,
+      "cf_dup": 0.0
+    },
+    "phi_original": 0.00044054276414762727,
+    "phi_duplicate": 0.00044054276414762727,
+    "pair_sum": 0.0008810855282952545,
+    "baseline_phi_original": 0.0005135016782769061,
+    "conservation_ratio": 1.7158376799308699,
+    "symmetry_abs_error": 0.0,
+    "symmetry_rel_error": 0.0,
+    "loo_original": 0.0,
+    "loo_duplicate": 0.0,
+    "diagnostic_lambda": 0.0,
+    "coalition_redundancy": {
+      "max_deviation": 0.0,
+      "mean_deviation": 0.0,
+      "n_background_coalitions": 16,
+      "exactly_redundant": true
+    },
+    "loo_collapse_ratio": NaN
+  },
+  "gowalla_lamfrozen": {
+    "eta": 0.0,
+    "shapley": {
+      "cf": 0.00020099512186434415,
+      "ct": -0.0001562649300874326,
+      "pop": 0.006193298809548327,
+      "rec": 5.18307427456904e-05,
+      "seq": -0.0008439246882814581,
+      "cf_dup": 0.00020099512186434415
+    },
+    "loo": {
+      "cf": 0.0,
+      "ct": 0.0,
+      "pop": 0.006576279926375916,
+      "rec": 0.00012571910307273247,
+      "seq": 0.0001218618134915337,
+      "cf_dup": 0.0
+    },
+    "phi_original": 0.00020099512186434415,
+    "phi_duplicate": 0.00020099512186434415,
+    "pair_sum": 0.0004019902437286883,
+    "baseline_phi_original": 0.00032405587407485125,
+    "conservation_ratio": 1.2404967040833075,
+    "symmetry_abs_error": 0.0,
+    "symmetry_rel_error": 0.0,
+    "loo_original": 0.0,
+    "loo_duplicate": 0.0,
+    "diagnostic_lambda": 1.0,
+    "coalition_redundancy": {
+      "max_deviation": 0.0,
+      "mean_deviation": 0.0,
+      "n_background_coalitions": 16,
+      "exactly_redundant": true
+    },
+    "loo_collapse_ratio": -0.0
+  },
+  "gowalla_lam0": {
+    "eta": 0.0,
+    "shapley": {
+      "cf": 0.00020099512186434415,
+      "ct": -0.0001562649300874326,
+      "pop": 0.006193298809548327,
+      "rec": 5.18307427456904e-05,
+      "seq": -0.0008439246882814581,
+      "cf_dup": 0.00020099512186434415
+    },
+    "loo": {
+      "cf": 0.0,
+      "ct": 0.0,
+      "pop": 0.006576279926375916,
+      "rec": 0.00012571910307273247,
+      "seq": 0.0001218618134915337,
+      "cf_dup": 0.0
+    },
+    "phi_original": 0.00020099512186434415,
+    "phi_duplicate": 0.00020099512186434415,
+    "pair_sum": 0.0004019902437286883,
+    "baseline_phi_original": 0.00032405587407485125,
+    "conservation_ratio": 1.2404967040833075,
+    "symmetry_abs_error": 0.0,
+    "symmetry_rel_error": 0.0,
+    "loo_original": 0.0,
+    "loo_duplicate": 0.0,
+    "diagnostic_lambda": 0.0,
+    "coalition_redundancy": {
+      "max_deviation": 0.0,
+      "mean_deviation": 0.0,
+      "n_background_coalitions": 16,
+      "exactly_redundant": true
+    },
+    "loo_collapse_ratio": -0.0
+  },
+  "amazon_book_lgcn_lamfrozen": {
+    "eta": 0.0,
+    "shapley": {
+      "cf": 0.000132713871707094,
+      "ct": -0.0007457219569570057,
+      "pop": 0.022752126280001346,
+      "rec": -0.00015272297962818564,
+      "seq": 2.8543359537740984e-05,
+      "cf_dup": 0.000132713871707094
+    },
+    "loo": {
+      "cf": 0.0,
+      "ct": -0.0010255371101540144,
+      "pop": 0.023776037199775685,
+      "rec": 0.0,
+      "seq": 0.001271264066085239,
+      "cf_dup": 0.0
+    },
+    "phi_original": 0.000132713871707094,
+    "phi_duplicate": 0.000132713871707094,
+    "pair_sum": 0.000265427743414188,
+    "baseline_phi_original": 7.471563977473168e-05,
+    "conservation_ratio": 3.552505796837918,
+    "symmetry_abs_error": 0.0,
+    "symmetry_rel_error": 0.0,
+    "loo_original": 0.0,
+    "loo_duplicate": 0.0,
+    "diagnostic_lambda": 1.0,
+    "coalition_redundancy": {
+      "max_deviation": 0.0,
+      "mean_deviation": 0.0,
+      "n_background_coalitions": 16,
+      "exactly_redundant": true
+    },
+    "loo_collapse_ratio": -0.0
+  },
+  "amazon_book_lgcn_lam0": {
+    "eta": 0.0,
+    "shapley": {
+      "cf": 0.000132713871707094,
+      "ct": -0.0007457219569570057,
+      "pop": 0.022752126280001346,
+      "rec": -0.00015272297962818564,
+      "seq": 2.8543359537740984e-05,
+      "cf_dup": 0.000132713871707094
+    },
+    "loo": {
+      "cf": 0.0,
+      "ct": -0.0010255371101540144,
+      "pop": 0.023776037199775685,
+      "rec": 0.0,
+      "seq": 0.001271264066085239,
+      "cf_dup": 0.0
+    },
+    "phi_original": 0.000132713871707094,
+    "phi_duplicate": 0.000132713871707094,
+    "pair_sum": 0.000265427743414188,
+    "baseline_phi_original": 7.471563977473168e-05,
+    "conservation_ratio": 3.552505796837918,
+    "symmetry_abs_error": 0.0,
+    "symmetry_rel_error": 0.0,
+    "loo_original": 0.0,
+    "loo_duplicate": 0.0,
+    "diagnostic_lambda": 0.0,
+    "coalition_redundancy": {
+      "max_deviation": 0.0,
+      "mean_deviation": 0.0,
+      "n_background_coalitions": 16,
+      "exactly_redundant": true
+    },
+    "loo_collapse_ratio": -0.0
+  }
+}

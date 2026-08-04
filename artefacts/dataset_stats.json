@@ -1,26 +1,4 @@
 {
-  "amazon_book_lgcn": {
-    "users": 7422,
-    "items": 84348,
-    "interactions": 342709,
-    "density": 0.0005474314831536035,
-    "train": 327865,
-    "valid": 7422,
-    "test": 7422,
-    "synthetic": false,
-    "no_timestamps": true
-  },
-  "gowalla": {
-    "users": 5797,
-    "items": 39005,
-    "interactions": 162573,
-    "density": 0.0007189932899841643,
-    "train": 150979,
-    "valid": 5797,
-    "test": 5797,
-    "synthetic": false,
-    "no_timestamps": true
-  },
   "ml_1m": {
     "users": 6038,
     "items": 3533,
@@ -32,23 +10,10 @@
     "synthetic": false,
     "no_timestamps": false
   },
-  "yelp2018": {
-    "users": 19018,
-    "items": 38048,
-    "interactions": 756903,
-    "density": 0.0010460285798032426,
-    "train": 718867,
-    "valid": 19018,
-    "test": 19018,
-    "synthetic": false,
-    "no_timestamps": true
-  },
   "_meta": {
     "source": "measured",
-    "measured_at": "2026-08-04T09:01:36.374521+00:00",
-    "corpus_hash": "59805a07ca22b6a1",
-    "synthetic": false,
-    "reconciled_from": "results_*.json (post-downsize run scale)",
-    "note": "Rebuilt from each runs own stats. The previous file was written BEFORE auto-downsizing, so it reported pre-downsize user counts beside post-downsize results."
+    "measured_at": "2026-08-04T12:26:23.993468+00:00",
+    "corpus_hash": "e73e0add9cd22120",
+    "synthetic": false
   }
 }

@@ -1,0 +1,891 @@
+{
+  "dataset": "amazon_book_lgcn",
+  "seed": 42,
+  "synthetic": true,
+  "dataset_stats": {
+    "users": 900,
+    "items": 1922,
+    "interactions": 6434,
+    "density": 0.00371950514510348,
+    "train": 4634,
+    "valid": 900,
+    "test": 900,
+    "synthetic": true,
+    "no_timestamps": false
+  },
+  "timings_sec": {
+    "load": 0.12147331237792969,
+    "scorers": 2.594135046005249,
+    "candidates": 4.518694639205933,
+    "game_32_coalitions": 6.10446310043335,
+    "baseline_lightgcn": 0.7096328735351562,
+    "baseline_sasrec": 2.488135576248169
+  },
+  "e0a_candidates": {
+    "dataset": "amazon_book_lgcn",
+    "n_max": 20000,
+    "candidate_recall": 1.0,
+    "recall_gate": 0.6,
+    "gate_passes": true,
+    "abs_size_mean": 1916.851111111111,
+    "abs_size_std": 2.521474191572349,
+    "abs_size_min": 1907,
+    "abs_size_max": 1921,
+    "n_eval_users": 900,
+    "note": "Candidate recall is the CEILING on every ranking metric: a test item outside C_u contributes zero to NDCG@10 by construction."
+  },
+  "e0b_monotonicity": {
+    "pairs_checked": 80,
+    "violations": 39,
+    "max_magnitude": 0.0024058173948537575,
+    "sources_involved": [
+      "cf",
+      "ct",
+      "rec",
+      "seq"
+    ],
+    "detail": [
+      {
+        "S": [],
+        "g": "ct",
+        "delta": -0.001421919959656133
+      },
+      {
+        "S": [],
+        "g": "rec",
+        "delta": -0.0006143096759474754
+      },
+      {
+        "S": [],
+        "g": "seq",
+        "delta": -0.001355894669542
+      },
+      {
+        "S": [
+          "cf"
+        ],
+        "g": "ct",
+        "delta": -0.0008794828201039355
+      },
+      {
+        "S": [
+          "cf"
+        ],
+        "g": "rec",
+        "delta": -0.0006017270050612389
+      },
+      {
+        "S": [
+          "cf"
+        ],
+        "g": "seq",
+        "delta": -0.0024058173948537575
+      },
+      {
+        "S": [
+          "ct"
+        ],
+        "g": "seq",
+        "delta": -1.3294632606770202e-05
+      },
+      {
+        "S": [
+          "pop"
+        ],
+        "g": "cf",
+        "delta": -0.0003850707007889767
+      },
+      {
+        "S": [
+          "pop"
+        ],
+        "g": "ct",
+        "delta": -0.0013586671482626114
+      },
+      {
+        "S": [
+          "pop"
+        ],
+        "g": "rec",
+        "delta": -0.00036106703817351954
+      },
+      {
+        "S": [
+          "rec"
+        ],
+        "g": "ct",
+        "delta": -0.00036655528656386255
+      },
+      {
+        "S": [
+          "rec"
+        ],
+        "g": "seq",
+        "delta": -0.0006437047070897505
+      },
+      {
+        "S": [
+          "seq"
+        ],
+        "g": "cf",
+        "delta": -0.0002724900838655961
+      },
+      {
+        "S": [
+          "seq"
+        ],
+        "g": "ct",
+        "delta": -7.931992272090316e-05
+      },
+      {
+        "S": [
+          "cf",
+          "ct"
+        ],
+        "g": "rec",
+        "delta": -0.0003018234732743082
+      },
+      {
+        "S": [
+          "cf",
+          "ct"
+        ],
+        "g": "seq",
+        "delta": -0.001526334574749822
+      },
+      {
+        "S": [
+          "cf",
+          "pop"
+        ],
+        "g": "ct",
+        "delta": -0.000675069234884508
+      },
+      {
+        "S": [
+          "cf",
+          "pop"
+        ],
+        "g": "rec",
+        "delta": -0.0006069678568255792
+      },
+      {
+        "S": [
+          "cf",
+          "rec"
+        ],
+        "g": "ct",
+        "delta": -0.0005795792883170049
+      },
+      {
+        "S": [
+          "cf",
+          "rec"
+        ],
+        "g": "seq",
+        "delta": -0.0017270643432074
+      }
+    ],
+    "property2_applicable": false,
+    "dataset": "amazon_book_lgcn",
+    "note": "Property 2 and Lemma 1(ii) apply only where this passes. Where it fails, negative phi_g are SUBSTANTIVE findings, not numerical error. The coalition-conditional ridge refit (spec \u00a72.4) is the likely cause."
+  },
+  "e1_source_share": {
+    "dataset": "amazon_book_lgcn",
+    "shapley": {
+      "cf": 9.814280073750187e-06,
+      "ct": -0.0007624337048082942,
+      "pop": 0.022870797675389715,
+      "rec": -0.00014655489284174118,
+      "seq": 0.00017602908855465825
+    },
+    "efficiency": {
+      "sum_phi": 0.02214765244636809,
+      "v_grand": 0.02214765244636809,
+      "abs_error": 0.0,
+      "passes": true
+    },
+    "v_grand": 0.02214765244636809,
+    "v0": 0.002106914262378033,
+    "n_coalitions": 32,
+    "note": "EXACT GIVEN THE FITTED v: the 32-coalition aggregation has no sampling error, but v(S) is estimated, so phi carries estimation error -- see seed CIs. Efficiency holds exactly regardless of fit noise because it is structural."
+  },
+  "e2_loo_vs_shapley": {
+    "dataset": "amazon_book_lgcn",
+    "shapley": {
+      "cf": 9.814280073750187e-06,
+      "ct": -0.0007624337048082942,
+      "pop": 0.022870797675389715,
+      "rec": -0.00014655489284174118,
+      "seq": 0.00017602908855465825
+    },
+    "loo": {
+      "cf": -0.0007043539698008035,
+      "ct": -0.0010122424775472413,
+      "pop": 0.023776037199775685,
+      "rec": 0.0,
+      "seq": 0.001271264066085239
+    },
+    "gap": {
+      "cf": 0.0007141682498745536,
+      "ct": 0.0002498087727389472,
+      "pop": -0.0009052395243859708,
+      "rec": -0.00014655489284174118,
+      "seq": -0.0010952349775305808
+    },
+    "forward": {
+      "pop": 0.021936528315956334,
+      "seq": 0.0015699651413951937,
+      "rec": -0.0003211831403532109,
+      "cf": -2.5415393082987153e-05,
+      "ct": -0.0010122424775472413
+    },
+    "permutation_importance": {
+      "cf": 3.1085877979023216e-06,
+      "ct": -0.0006816921847939256,
+      "pop": 0.023073812127521673,
+      "rec": -0.00017086293047429324,
+      "seq": -7.671315368326816e-05
+    },
+    "mc_shapley_50": {
+      "cf": 0.00010900789924710535,
+      "ct": -0.0007356564023688379,
+      "pop": 0.022944617276331833,
+      "rec": -0.00015190397124450152,
+      "seq": -1.841235559750001e-05
+    },
+    "kendall_tau": {
+      "cf|ct": -0.0024841275893798674,
+      "cf|pop": -0.03458825889018618,
+      "cf|rec": -0.0014743423519902072,
+      "cf|seq": 0.27589394661314864,
+      "ct|pop": 0.001311172150409409,
+      "ct|rec": 0.6364652376707215,
+      "ct|seq": -0.0031462342517367564,
+      "pop|rec": 0.00945357287785237,
+      "pop|seq": 0.21242297246997474,
+      "rec|seq": -0.0003234879245715214
+    },
+    "pair_gap": {
+      "cf|ct": 0.0009639770226135008,
+      "cf|pop": 0.0016194077742605244,
+      "cf|rec": 0.0008607231427162948,
+      "cf|seq": 0.0018094032274051344,
+      "ct|pop": 0.001155048297124918,
+      "ct|rec": 0.0003963636655806884,
+      "ct|seq": 0.0013450437502695281,
+      "pop|rec": 0.001051794417227712,
+      "pop|seq": 0.0020004745019165516,
+      "rec|seq": 0.001241789870372322
+    },
+    "redundancy_gap_correlation": -0.26053321148840736,
+    "permutation_tests": {
+      "cf": {
+        "observed": 0.0007141682498745543,
+        "p_value": 0.0670932906709329,
+        "n_shuffles": 10000
+      },
+      "ct": {
+        "observed": 0.0002498087727389478,
+        "p_value": 0.47775222477752227,
+        "n_shuffles": 10000
+      },
+      "pop": {
+        "observed": -0.0009052395243859702,
+        "p_value": 0.8055194480551945,
+        "n_shuffles": 10000
+      },
+      "rec": {
+        "observed": -0.000146554892841741,
+        "p_value": 0.6315368463153684,
+        "n_shuffles": 10000
+      },
+      "seq": {
+        "observed": -0.0010952349775305817,
+        "p_value": 0.039996000399960006,
+        "n_shuffles": 10000
+      }
+    },
+    "preregistered_pairs": [
+      "pop|cf",
+      "rec|ct"
+    ],
+    "note": "pop-cf and rec-ct overlap is PRE-REGISTERED (spec \u00a74), not discovered: ALS on implicit feedback chases popularity, and rec is defined over content clusters. RQ2 tests whether Shapley recovers known structure."
+  },
+  "e3_segments": {
+    "dataset": "amazon_book_lgcn",
+    "profiles": {
+      "cold_stable": {
+        "cf": 8.950844116651721e-05,
+        "ct": -0.000858961618120862,
+        "pop": 0.02773072470209065,
+        "rec": -0.00013290126186155498,
+        "seq": 0.0005135453483534081,
+        "n_users": 503
+      },
+      "cold_recency": {
+        "cf": 0.0,
+        "ct": 0.0,
+        "pop": 0.0,
+        "rec": 0.0,
+        "seq": 0.0,
+        "n_users": 0
+      },
+      "heavy_stable": {
+        "cf": -9.115842277174402e-05,
+        "ct": -0.0006401325954979114,
+        "pop": 0.016713257890929843,
+        "rec": -0.0001638540776856542,
+        "seq": -0.0002516048627772592,
+        "n_users": 397
+      },
+      "heavy_recency": {
+        "cf": 0.0,
+        "ct": 0.0,
+        "pop": 0.0,
+        "rec": 0.0,
+        "seq": 0.0,
+        "n_users": 0
+      }
+    },
+    "heterogeneity_summary": {
+      "n_tests": 5,
+      "n_significant_uncorrected": 0,
+      "expected_by_chance": 0.25,
+      "exceeds_chance": false,
+      "note": "If n_significant is at or near the chance rate, there is NO segment heterogeneity to exploit and C5 cannot work by construction -- C4 and C5 stand or fall together."
+    },
+    "segment_sizes": {
+      "cold_stable": 503,
+      "cold_recency": 0,
+      "heavy_stable": 397,
+      "heavy_recency": 0
+    },
+    "permutation_tests": {
+      "cf:cold_stable_vs_heavy_stable": {
+        "observed": 0.00018066686393826122,
+        "p_value": 0.8211178882111789,
+        "n_shuffles": 10000
+      },
+      "ct:cold_stable_vs_heavy_stable": {
+        "observed": -0.00021882902262295063,
+        "p_value": 0.7587241275872413,
+        "n_shuffles": 10000
+      },
+      "pop:cold_stable_vs_heavy_stable": {
+        "observed": 0.011017466811160809,
+        "p_value": 0.11958804119588042,
+        "n_shuffles": 10000
+      },
+      "rec:cold_stable_vs_heavy_stable": {
+        "observed": 3.095281582409922e-05,
+        "p_value": 0.9604039596040396,
+        "n_shuffles": 10000
+      },
+      "seq:cold_stable_vs_heavy_stable": {
+        "observed": 0.0007651502111306672,
+        "p_value": 0.47655234476552344,
+        "n_shuffles": 10000
+      }
+    }
+  },
+  "e4_signalshap_fuse": {
+    "dataset": "amazon_book_lgcn",
+    "candidate_set_ndcg": {
+      "uniform": 0.002572738751984143,
+      "global": 0.02425456670874612,
+      "signalshap_fuse": 0.02425456670874612
+    },
+    "full_catalog": {
+      "signalshap_fuse": {
+        "ndcg_at_10": 0.02425456670874612,
+        "recall_at_20": 0.09222222222222222,
+        "mrr_at_10": 0.014210317460317461,
+        "n_users": 900
+      },
+      "global": {
+        "ndcg_at_10": 0.02425456670874612,
+        "recall_at_20": 0.09,
+        "mrr_at_10": 0.014210317460317461,
+        "n_users": 900
+      },
+      "uniform": {
+        "ndcg_at_10": 0.002572738751984143,
+        "recall_at_20": 0.008888888888888889,
+        "mrr_at_10": 0.0019907407407407404,
+        "n_users": 900
+      },
+      "popularity_reference": {
+        "ndcg_at_10": 0.024043442578334368,
+        "recall_at_20": 0.09222222222222222,
+        "mrr_at_10": 0.014223985890652557,
+        "n_users": 900
+      },
+      "lightgcn": {
+        "ndcg_at_10": 0.008082054327086316,
+        "recall_at_20": 0.035555555555555556,
+        "mrr_at_10": 0.005417989417989417,
+        "n_users": 900
+      },
+      "sasrec": {
+        "ndcg_at_10": 0.03830392758700169,
+        "recall_at_20": 0.11222222222222222,
+        "mrr_at_10": 0.027734567901234568,
+        "n_users": 900
+      }
+    },
+    "weights": {
+      "uniform": [
+        0.2,
+        0.2,
+        0.2,
+        0.2,
+        0.2
+      ],
+      "global": [
+        1.018001922202249e-05,
+        2.6278664312067867e-05,
+        0.0004110488207183157,
+        -1.2358650243722346e-06,
+        -4.5276949513662844e-05
+      ],
+      "segment_cold_stable": [
+        8.309725746424081e-06,
+        1.9451931419107546e-05,
+        0.00042577792221682804,
+        7.682094900145854e-06,
+        -4.321491953360821e-05
+      ],
+      "segment_cold_recency": [
+        1.018001922202249e-05,
+        2.6278664312067867e-05,
+        0.0004110488207183157,
+        -1.2358650243722346e-06,
+        -4.5276949513662844e-05
+      ],
+      "segment_heavy_stable": [
+        1.2382174055253328e-05,
+        3.097937226869656e-05,
+        0.000392395333197671,
+        -8.647766431901872e-06,
+        -4.808160895361758e-05
+      ],
+      "segment_heavy_recency": [
+        1.018001922202249e-05,
+        2.6278664312067867e-05,
+        0.0004110488207183157,
+        -1.2358650243722346e-06,
+        -4.5276949513662844e-05
+      ]
+    },
+    "wilcoxon": {
+      "uniform": {
+        "statistic": 75.0,
+        "p_value": 5.418744024990207e-09,
+        "d_z": 0.19315188059401311,
+        "n": 900,
+        "n_ties": 845,
+        "mean_diff": 0.021681827956761983
+      },
+      "global": {
+        "statistic": 0.0,
+        "p_value": 1.0,
+        "d_z": 0.0,
+        "n": 900,
+        "n_ties": 900,
+        "mean_diff": 0.0
+      },
+      "popularity_reference": {
+        "statistic": 66.5,
+        "p_value": 0.9375687001882693,
+        "d_z": 0.0072001105878954814,
+        "n": 900,
+        "n_ties": 884,
+        "mean_diff": 0.00021112413041175505
+      },
+      "lightgcn": {
+        "statistic": 132.0,
+        "p_value": 3.6904770559097417e-07,
+        "d_z": 0.1832257010066567,
+        "n": 900,
+        "n_ties": 848,
+        "mean_diff": 0.016172512381659808
+      },
+      "sasrec": {
+        "statistic": 950.5,
+        "p_value": 0.0013177784269779423,
+        "d_z": -0.10524912497078417,
+        "n": 900,
+        "n_ties": 820,
+        "mean_diff": -0.014049360878255573
+      }
+    },
+    "holm_bonferroni": {
+      "corrected": {
+        "uniform": 2.7093720124951036e-08,
+        "lightgcn": 1.4761908223638967e-06,
+        "sasrec": 0.003953335280933827,
+        "popularity_reference": 1.0,
+        "global": 1.0
+      },
+      "family_size": 5,
+      "family_composition": [
+        "uniform",
+        "global",
+        "popularity_reference",
+        "lightgcn",
+        "sasrec"
+      ],
+      "raw": {
+        "uniform": 5.418744024990207e-09,
+        "global": 1.0,
+        "popularity_reference": 0.9375687001882693,
+        "lightgcn": 3.6904770559097417e-07,
+        "sasrec": 0.0013177784269779423
+      }
+    },
+    "selection": {
+      "head": "ridge",
+      "alpha": 0.25,
+      "validation_ndcg": {
+        "ridge|alpha=0.0": 0.07117659552846525,
+        "ridge|alpha=0.25": 0.07189117511642315,
+        "ridge|alpha=0.5": 0.07130562623334691,
+        "ridge|alpha=0.75": 0.07135921518119837,
+        "ridge|alpha=1.0": 0.0716170142431134,
+        "pairwise|alpha=0.0": 0.06752027946813874,
+        "pairwise|alpha=0.25": 0.06684967028269338,
+        "pairwise|alpha=0.5": 0.06644996163381156,
+        "pairwise|alpha=0.75": 0.0655524701647421,
+        "pairwise|alpha=1.0": 0.06453874516660624
+      },
+      "best_validation_ndcg": 0.07189117511642315,
+      "note": "selected by cross-validation WITHIN the validation fold; test never used"
+    },
+    "note": "T5 is FULL-CATALOG for every method; SignalShap-Fuse scores items outside C_u as -inf so its recall ceiling is visible. v(S) itself remains fixed-candidate by definition of the game."
+  },
+  "e5_robustness": {
+    "dataset": "amazon_book_lgcn",
+    "candidate_size": {
+      "n_max_10000": {
+        "n_max": 10000,
+        "candidate_recall": 1.0,
+        "shapley": {
+          "cf": 9.814280073750187e-06,
+          "ct": -0.0007624337048082942,
+          "pop": 0.022870797675389715,
+          "rec": -0.00014655489284174118,
+          "seq": 0.00017602908855465825
+        },
+        "v_grand": 0.02214765244636809
+      },
+      "n_max_20000": {
+        "n_max": 20000,
+        "candidate_recall": 1.0,
+        "shapley": {
+          "cf": 9.814280073750187e-06,
+          "ct": -0.0007624337048082942,
+          "pop": 0.022870797675389715,
+          "rec": -0.00014655489284174118,
+          "seq": 0.00017602908855465825
+        },
+        "v_grand": 0.02214765244636809
+      },
+      "n_max_40000": {
+        "n_max": 40000,
+        "candidate_recall": 1.0,
+        "shapley": {
+          "cf": 9.814280073750187e-06,
+          "ct": -0.0007624337048082942,
+          "pop": 0.022870797675389715,
+          "rec": -0.00014655489284174118,
+          "seq": 0.00017602908855465825
+        },
+        "v_grand": 0.02214765244636809
+      }
+    },
+    "candidate_size_note": "Recall is reported PER CELL because changing |C_u| moves the ceiling and hence the level of v; without it the cells are not comparable.",
+    "lambda_sensitivity": {
+      "lambda_0.1": {
+        "cf": 1.0479011704088822e-05,
+        "ct": -0.0007650926313296487,
+        "pop": 0.02287146240702005,
+        "rec": -0.00014589016121140252,
+        "seq": 0.00017669382018499692
+      },
+      "lambda_1.0": {
+        "cf": 9.814280073750187e-06,
+        "ct": -0.0007624337048082942,
+        "pop": 0.022870797675389715,
+        "rec": -0.00014655489284174118,
+        "seq": 0.00017602908855465825
+      },
+      "lambda_10.0": {
+        "cf": 7.379627249369563e-06,
+        "ct": -0.0007526950935107717,
+        "pop": 0.022868363022565334,
+        "rec": -0.00014898954566612178,
+        "seq": 0.00017359443573027766
+      }
+    },
+    "lambda_note": "SENSITIVITY ONLY, never selection. lambda is frozen (spec \u00a72.4); per-coalition tuning would be optimistic bias growing with |S|.",
+    "monotone_rescaling": {
+      "identity": {
+        "cf": 9.814280073750187e-06,
+        "ct": -0.0007624337048082942,
+        "pop": 0.022870797675389715,
+        "rec": -0.00014655489284174118,
+        "seq": 0.00017602908855465825
+      },
+      "log1p": {
+        "cf": 0.0006017652465367316,
+        "ct": -0.000911185219893993,
+        "pop": 0.021701408973317786,
+        "rec": -0.00043308090532959267,
+        "seq": -0.0003474893873486952
+      },
+      "rank": {
+        "cf": -0.0008596178177046169,
+        "ct": -0.0008864783437821814,
+        "pop": 0.009470705017438717,
+        "rec": -0.0007659165238023792,
+        "seq": -0.0031196831990394735
+      }
+    },
+    "rescaling_note": "Remark 1: invariance is AFFINE only. log1p/rank are nonlinear, so drift here is expected and is the empirical content of the remark.",
+    "noise_injection": {
+      "sigma_0.0": {
+        "cf": 9.814280073750187e-06,
+        "ct": -0.0007624337048082942,
+        "pop": 0.022870797675389715,
+        "rec": -0.00014655489284174118,
+        "seq": 0.00017602908855465825
+      },
+      "sigma_0.1": {
+        "cf": 0.0003467607688759396,
+        "ct": -0.00048091972015234337,
+        "pop": 0.02151016917854648,
+        "rec": 6.864887235839975e-05,
+        "seq": -0.0006818100748930838
+      },
+      "sigma_0.5": {
+        "cf": -0.00022844054987538112,
+        "ct": -0.0006583681261718337,
+        "pop": 0.021767415934293682,
+        "rec": -0.0001618054675798558,
+        "seq": 5.1244400148361616e-05
+      }
+    }
+  },
+  "e6_ablation": {
+    "dataset": "amazon_book_lgcn",
+    "full": {
+      "cf": 9.814280073750187e-06,
+      "ct": -0.0007624337048082942,
+      "pop": 0.022870797675389715,
+      "rec": -0.00014655489284174118,
+      "seq": 0.00017602908855465825
+    },
+    "dropped": {
+      "cf": {
+        "ct": -0.0007337537363160714,
+        "pop": 0.023144090885723723,
+        "rec": -0.00015764895491758238,
+        "seq": 0.0005993182216788238
+      },
+      "ct": {
+        "cf": 3.8494248565972866e-05,
+        "pop": 0.023092854790035797,
+        "rec": -0.00013266541626887654,
+        "seq": 0.00016121130158243554
+      },
+      "pop": {
+        "cf": 0.0002831074904077568,
+        "ct": -0.0005403765901622118,
+        "rec": -0.00016967180935289054,
+        "seq": -0.0012014438443002508
+      },
+      "rec": {
+        "cf": -1.2797820020910109e-06,
+        "ct": -0.0007485442282354294,
+        "pop": 0.022847680758878566,
+        "seq": 4.9795697727042856e-05
+      },
+      "seq": {
+        "cf": 0.0004331034131979159,
+        "ct": -0.0007772514917805167,
+        "pop": 0.02149332474253481,
+        "rec": -0.0002727882836693564
+      }
+    }
+  },
+  "e7_actionability": {
+    "dataset": "amazon_book_lgcn",
+    "lowest_shapley_source": "ct",
+    "shapley_value": -0.0007624337048082942,
+    "v_full": 0.02214765244636809,
+    "v_without": 0.02315989492391533,
+    "delta": -0.0010122424775472413,
+    "wilcoxon": {
+      "statistic": 7.5,
+      "p_value": 0.13113050286965086,
+      "d_z": -0.046840764395915176,
+      "n": 900,
+      "n_ties": 892,
+      "mean_diff": -0.001012242477547239
+    },
+    "interpretation": "Disabling 'ct' saves one scorer at deployment; the NDCG delta is -0.00101 (p=0.1311)."
+  },
+  "e8_appendix_b": {
+    "dataset": "amazon_book_lgcn",
+    "union_candidates": {
+      "shapley": {
+        "cf": 9.814280073750187e-06,
+        "ct": -0.0007624337048082942,
+        "pop": 0.022870797675389715,
+        "rec": -0.00014655489284174118,
+        "seq": 0.00017602908855465825
+      },
+      "v_grand": 0.02214765244636809,
+      "recall": 1.0
+    },
+    "regenerated_candidates": {
+      "shapley": {
+        "cf": 0.0002397853289611812,
+        "ct": -0.0005324626559208628,
+        "pop": 0.023100768724277142,
+        "rec": 8.341615604569053e-05,
+        "seq": 0.00040600013744208896
+      },
+      "v_grand": 0.023297507690805245,
+      "recall": 1.0
+    },
+    "v_grand_inflation": 0.0011498552444371563,
+    "note": "E8-a quantifies the bias avoided by \u00a72.1. The rejected v1.0 design draws candidates from the grand-coalition scorer, inflating v(G) relative to every v(S) for proper subsets S."
+  },
+  "multi_seed": {
+    "dataset": "amazon_book_lgcn",
+    "seeds": [
+      42,
+      43,
+      44
+    ],
+    "per_seed": {
+      "42": {
+        "cf": 9.814280073750187e-06,
+        "ct": -0.0007624337048082942,
+        "pop": 0.022870797675389715,
+        "rec": -0.00014655489284174118,
+        "seq": 0.00017602908855465825
+      },
+      "43": {
+        "cf": 0.000572515122878352,
+        "ct": 0.0004378046406419325,
+        "pop": 0.01798770466008777,
+        "rec": 0.0005587791867866309,
+        "seq": -0.0009699260207648652
+      },
+      "44": {
+        "cf": 0.0008848846118572205,
+        "ct": 0.0007762097140660821,
+        "pop": 0.054310901894063256,
+        "rec": 0.00048644752634157475,
+        "seq": -0.00032238522321787925
+      }
+    },
+    "ci": {
+      "cf": {
+        "mean": 0.0004890713382697743,
+        "std": 0.0004434627045020362,
+        "lo": -1.2753952897053477e-05,
+        "hi": 0.000990896629436602,
+        "n_seeds": 3
+      },
+      "ct": {
+        "mean": 0.00015052688329990683,
+        "std": 0.0008085494882868675,
+        "lo": -0.0007644329955425851,
+        "hi": 0.0010654867621423987,
+        "n_seeds": 3
+      },
+      "pop": {
+        "mean": 0.03172313474318025,
+        "std": 0.019713360139659214,
+        "lo": 0.009415367727982245,
+        "hi": 0.05403090175837825,
+        "n_seeds": 3
+      },
+      "rec": {
+        "mean": 0.00029955727342882146,
+        "std": 0.0003880335242561464,
+        "lo": -0.00013954399555159375,
+        "hi": 0.0007386585424092367,
+        "n_seeds": 3
+      },
+      "seq": {
+        "mean": -0.00037209405180936204,
+        "std": 0.0005745924676445327,
+        "lo": -0.0010223066389124106,
+        "hi": 0.0002781185352936865,
+        "n_seeds": 3
+      }
+    }
+  },
+  "e9_recovery": {
+    "dataset": "amazon_book_lgcn",
+    "injected_source": "cf",
+    "baseline_shapley": {
+      "cf": 9.814280073750187e-06,
+      "ct": -0.0007624337048082942,
+      "pop": 0.022870797675389715,
+      "rec": -0.00014655489284174118,
+      "seq": 0.00017602908855465825
+    },
+    "baseline_loo": {
+      "cf": -0.0007043539698008035,
+      "ct": -0.0010122424775472413,
+      "pop": 0.023776037199775685,
+      "rec": 0.0,
+      "seq": 0.001271264066085239
+    },
+    "conditions": {
+      "eta=0.0": {
+        "eta": 0.0,
+        "shapley": {
+          "cf": 0.00012178618981854062,
+          "ct": -0.000737266823676205,
+          "pop": 0.022756593023500117,
+          "rec": -0.00014825623612941692,
+          "seq": 3.3010103036509674e-05,
+          "cf_dup": 0.00012178618981854062
+        },
+        "loo": {
+          "cf": 0.0,
+          "ct": -0.0010122424775472413,
+          "pop": 0.023776037199775685,
+          "rec": 0.0,
+          "seq": 0.001271264066085239,
+          "cf_dup": 0.0
+        },
+        "phi_original": 0.00012178618981854062,
+        "phi_duplicate": 0.00012178618981854062,
+        "pair_sum": 0.00024357237963708124,
+        "baseline_phi_original": 9.814280073750187e-06,
+        "conservation_ratio": 24.818160660459785,
+        "symmetry_abs_error": 0.0,
+        "symmetry_rel_error": 0.0,
+        "loo_original": 0.0,
+        "loo_duplicate": 0.0,
+        "diagnostic_lambda": 1.0,
+        "coalition_redundancy": {
+          "max_deviation": 0.0,
+          "mean_deviation": 0.0,
+          "n_background_coalitions": 16,
+          "exactly_redundant": true
+        },
+        "loo_collapse_ratio": -0.0
+      }
+    },
+    "design": "A duplicate of the named source is injected into the player set on REAL data, with the candidate set held fixed. Ground truth follows by construction: symmetry requires equal credit for the pair, and efficiency requires their sum to approximate the pre-injection value of the original source. LOO must collapse for both."
+  }
+}

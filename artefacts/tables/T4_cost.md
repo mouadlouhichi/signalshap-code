@@ -1,8 +1,5 @@
 **T4 — Computational cost. The 'laptop CPU, seconds' claim applies to the Shapley computation (32-coalition sweep and downstream analysis); base-scorer training is a separate one-time cost.**
 
-| Dataset          |   Scorers (train once, s) |   Candidates (s) |   32 coalitions (s) |   Total (s) |
-|:-----------------|--------------------------:|-----------------:|--------------------:|------------:|
-| amazon_book_lgcn |                     37.58 |           184.57 |               87.22 |      480.33 |
-| gowalla          |                     18.56 |            60.17 |               31.33 |      169.24 |
-| ml_1m            |                      6.59 |             5.3  |                8.53 |       65.27 |
-| yelp2018         |                     29.08 |           317.75 |              228.83 |      742.42 |
+| Dataset   |   Scorers (train once, s) |   Candidates (s) |   32 coalitions (s) |   Total (s) |
+|:----------|--------------------------:|-----------------:|--------------------:|------------:|
+| ml_1m     |                     16.91 |             8.39 |               13.23 |      163.29 |
