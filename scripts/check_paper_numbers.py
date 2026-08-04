@@ -17,7 +17,9 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 ART = ROOT / "artefacts"
-PAPER = ROOT / "paper" / "paper.tex"
+# The submission manuscript on the Springer template. The earlier working
+# draft (paper.tex) was removed so there is exactly one source of truth.
+PAPER = ROOT / "paper" / "sn-article.tex"
 TOL = 5e-5
 
 
@@ -71,9 +73,12 @@ def check() -> list[str]:
     # 4. C4 heterogeneity counts
     if "ml_1m" in res:
         h = res["ml_1m"]["e3_segments"]["heterogeneity_summary"]
-        frag = f"{h['n_significant_uncorrected']} of {h['n_tests']}"
-        if frag not in tex and f"{h['n_significant_uncorrected']}/{h['n_tests']}" not in tex:
-            bad.append(f"C4 heterogeneity '{frag}' not found in prose")
+        n, m = h["n_significant_uncorrected"], h["n_tests"]
+        # Accept plain, slashed, and math-delimited forms: "7 of 30",
+        # "7/30", and Springer-style "$7$ of $30$".
+        flat = tex.replace("$", "")
+        if not any(f in flat for f in (f"{n} of {m}", f"{n}/{m}", f"{n} of the {m}")):
+            bad.append(f"C4 heterogeneity '{n} of {m}' not found in prose")
 
     # 5. efficiency bound must not understate the artefact
     worst = max(r["e1_source_share"]["efficiency"]["abs_error"] for r in res.values())

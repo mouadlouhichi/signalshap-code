@@ -15,7 +15,7 @@
 \usepackage{amsmath}
 \usepackage{amssymb}
 \usepackage{graphicx}
-\graphicspath{{../artefacts/figures/}}
+\graphicspath{{figures/}}
 
 \theoremstyle{thmstyleone}
 \newtheorem{theorem}{Theorem}
@@ -101,7 +101,8 @@ covert2021explaining}, but almost entirely at the granularity of \emph{input
 features}. Our object of study is different: the players are
 \emph{architectural sources}, and the payoff is a ranking metric.
 
-That change of granularity buys something unusual. Feature-level Shapley must
+Figure~\ref{fig:workflow} summarises the pipeline. That change of granularity
+buys something unusual. Feature-level Shapley must
 approximate --- the coalition lattice over hundreds of features is intractable,
 so KernelSHAP and its relatives sample and inherit estimator variance. With
 five architectural sources the lattice has $2^5 = 32$ elements and the exact
@@ -134,6 +135,14 @@ closed form is a short sum, which we compute directly.
 \item \textbf{C6.} A reproducible artefact with pre-registered configuration
       and CI-enforced invariants.
 \end{itemize}
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\textwidth]{F1_workflow.png}
+\caption{The SignalShap pipeline. The candidate set is identical for every
+coalition, so differences in $v(S)$ reflect fusion within the coalition rather
+than retrieval from a pool that favours it.}\label{fig:workflow}
+\end{figure}
 
 \paragraph{What is not in this paper} Graph-neural or Transformer players;
 causal attribution; online or counterfactual evaluation. All attribution is
@@ -395,8 +404,18 @@ Amazon-Book the game sits closer to full-catalogue ranking than to the
 fixed-candidate design. We flag this rather than absorb it: attribution on that
 corpus is the least comparable of the four.
 
-Efficiency holds to machine precision on every corpus, with worst-case
+Per-source attributions with seed-based intervals appear in
+Figure~\ref{fig:shares}. Efficiency holds to machine precision on every corpus,
+with worst-case
 $|\sum_g \varphi_g - v(\G)| = 6.9 \times 10^{-18}$.
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\textwidth]{F2_shapley_shares.png}
+\caption{Per-source Shapley shares with seed-based error bars. Intervals appear
+in the main text because $v$ is fitted: exactness is a property of the
+aggregation, not of the attribution end to end.}\label{fig:shares}
+\end{figure}
 
 \section{Ground Truth by Intervention}\label{sec:recovery}
 
@@ -438,7 +457,8 @@ Amazon-Book  & $0.055\%$ & $0.0$ & $0.000000$ & $0.000000$ \\
 \end{tabular}
 \end{table}
 
-The result is unambiguous and reproducible. Shapley satisfies symmetry exactly
+Table~\ref{tab:recovery} reports the outcome. The result is unambiguous and
+reproducible: Shapley satisfies symmetry exactly
 in every condition. LOO returns \textbf{exactly zero} for both members of every
 pair --- not approximately, exactly --- because
 $v(\G) = v(\G \setminus \{g\})$ holds numerically when a perfect substitute
@@ -475,7 +495,17 @@ $seq$ & $+0.01672$ & $+0.02910$ & $+0.01238$ & \\
 \end{tabular}
 \end{table}
 
-The collaborative-filtering row is the one that matters. LOO scores $cf$ at
+\begin{figure}[t]
+\centering
+\includegraphics[width=0.7\textwidth]{F3_loo_vs_shapley.png}
+\caption{LOO versus Shapley. Points off the diagonal are LOO misattribution;
+points in the upper-left quadrant are sources LOO scores as \emph{harmful} that
+Shapley scores as useful.}\label{fig:scatter}
+\end{figure}
+
+Table~\ref{tab:loo} gives the per-source comparison and
+Figure~\ref{fig:scatter} plots it. The collaborative-filtering row is the one
+that matters. LOO scores $cf$ at
 $-0.0048$ --- it looks \emph{actively harmful}, and an engineer following the
 standard methodology would retire it. Shapley scores the same component at
 $+0.0152$, the second most valuable source in the system. The disagreement is
@@ -491,6 +521,17 @@ sees only that single contrast. Shapley averages $cf$'s contribution over all
 source covers for it. Consistently, measured redundancy correlates with the
 LOO--Shapley gap at $0.491$, in the direction Lemma~\ref{lem:eps} predicts.
 
+Figure~\ref{fig:redundancy} shows the pairwise structure directly.
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\textwidth]{F4_redundancy_heatmap.png}
+\caption{Redundancy between sources, measured as Kendall $\tau$ between
+per-user score vectors. The $pop$--$cf$ and $rec$--$ct$ pairs are
+pre-registered as overlapping by construction
+(Section~\ref{sec:setup}).}\label{fig:redundancy}
+\end{figure}
+
 \section{Segment Heterogeneity and an Underpowered Loop}\label{sec:segments}
 
 Two questions separate here: whether attributions \emph{differ} across user
@@ -502,7 +543,17 @@ $\alpha = 0.05$ against $1.5$ expected by chance. On the three sparse corpora
 the counts are $2$, $1$, and $3$ of $30$ --- at or near the chance rate. We
 therefore claim segment heterogeneity for the dense setting only, and note that
 its absence on sparse data is a plausible reason the closed loop does not
-deliver.
+deliver. Figure~\ref{fig:segments} plots the per-segment profiles;
+near-coincident polygons on the sparse corpora are the visual form of that null
+result.
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\textwidth]{F5_segment_radar.png}
+\caption{Segment-level Shapley profiles. Near-coincident polygons indicate
+little heterogeneity to exploit, which is what we observe on the sparse
+corpora.}\label{fig:segments}
+\end{figure}
 
 \paragraph{The loop does not yet close}
 SignalShap-Fuse attains $\NDCG = 0.06344$ against $0.06331$ for globally tuned
@@ -511,7 +562,16 @@ Holm-corrected $p = 0.59$ and $d_z = +0.006$. It separates decisively from
 every other comparator --- uniform fusion ($+0.0118$), a popularity reference
 ($+0.0452$), LightGCN~\citep{he2020lightgcn} ($+0.0295$, $d_z = 0.157$), and
 SASRec~\citep{kang2018sasrec} ($+0.0570$, $d_z = 0.300$), all at Holm-corrected
-$p < 0.001$ --- but against a well-tuned global head it does not.
+$p < 0.001$ --- but against a well-tuned global head it does not
+(Figure~\ref{fig:fusion}).
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=0.85\textwidth]{F6_fuse_gain.png}
+\caption{Fusion comparison under the full-catalogue protocol. SignalShap-Fuse
+separates decisively from the neural and heuristic baselines but not from a
+well-tuned global head.}\label{fig:fusion}
+\end{figure}
 
 We report this as \textbf{underpowered rather than refuted}, and the
 distinction is evidential. The effect size is genuinely tiny
@@ -547,6 +607,15 @@ protocol applies to MovieLens-1M only. Interaction order on those corpora is
 arbitrary, which structurally handicaps the $rec$ and $seq$ players --- their
 attributions there are lower bounds, not estimates.
 
+\begin{figure}[t]
+\centering
+\includegraphics[width=\textwidth]{F7_robustness.png}
+\caption{Robustness. Candidate recall is annotated per cell of the $|\Cu|$
+sweep, because changing $|\Cu|$ moves the recall ceiling and hence the level of
+$v$; without it the cells are not comparable. The $\lambda$ panel is
+sensitivity only and is never used for selection.}\label{fig:robustness}
+\end{figure}
+
 \paragraph{Subsampling was a hardware constraint}
 Per-corpus user counts are derived from an available-memory budget rather than
 chosen. Subsamples are seeded and recorded. This reduces statistical power; it
@@ -554,7 +623,8 @@ does not bias the intervention, whose prediction is fixed by construction
 independently of sample size.
 
 \paragraph{The full suite is uneven across corpora}
-Robustness sweeps, segment analysis, and fusion are strongest on MovieLens-1M.
+Robustness sweeps (Figure~\ref{fig:robustness}), segment analysis, and fusion
+are strongest on MovieLens-1M.
 Amazon-Book required an unusually large candidate pool
 (Section~\ref{sec:preconditions}) and its attribution is the least comparable.
 

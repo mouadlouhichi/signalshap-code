@@ -14,7 +14,7 @@ compiles standalone.
 ```bash
 brew install --cask mactex-no-gui     # or BasicTeX + tlmgr install the deps
 cd ~/signalshap-code/paper
-make -f Makefile.springer             # runs the number check, then pdflatex x3
+make             # runs the number check, then pdflatex x3
 ```
 
 I could not compile here — no TeX in the sandbox. I validated statically
@@ -28,7 +28,7 @@ fix one or two small things on the first run.
 - [ ] Zero undefined citations or references in `sn-article.log`
 - [ ] Bibliography renders in Springer style
 
-Two manuscripts now exist. `sn-article.tex` is the **submission** version;
+The `paper/` directory is self-contained: class file, bibliography style, and figures all live there, so it zips and uploads as-is.
 `paper.tex` is the working version with inline `\input` of generated tables.
 Keep `sn-article.tex` authoritative and delete `paper.tex` before submitting, or
 you will eventually edit the wrong one.
@@ -107,7 +107,7 @@ here.
 - [ ] Re-verify the journal's CiteScore/SJR on Scimago (the spec requires this
       within 24 h of submission)
 - [ ] Archive on Zenodo, insert the DOI into Data Availability
-- [ ] Build `make -f Makefile.springer zip` for Snapp/Editorial Manager
+- [ ] Build `make zip` for Snapp/Editorial Manager
 
 ---
 

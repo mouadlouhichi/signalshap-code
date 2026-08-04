@@ -21,7 +21,7 @@ import pytest
 
 ROOT = Path(__file__).resolve().parents[1]
 ART = ROOT / "artefacts"
-PAPER = ROOT / "paper" / "paper.tex"
+PAPER = ROOT / "paper" / "sn-article.tex"
 
 
 def _results():

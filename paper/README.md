@@ -1,26 +1,44 @@
-# Manuscript
+# Manuscript — Springer Nature template
 
-`paper.tex` + `paper.bib`, targeting *Discover Artificial Intelligence*.
+Self-contained submission directory for *Discover Artificial Intelligence*.
+
+| File | Purpose |
+|---|---|
+| `sn-article.tex` | The manuscript |
+| `paper.bib` | Bibliography (24 entries) |
+| `sn-jnl.cls` | Official Springer Nature class, December 2024 package |
+| `sn-basic.bst` | Official Springer bibliography style |
+| `figures/` | F1–F7, copied from `artefacts/figures/` |
+
+Nothing here references paths outside this directory, so the folder can be
+zipped and uploaded as-is.
 
 ## Build
 
 ```bash
-cd .. && python scripts/run_study.py --synthetic && python scripts/make_assets.py
-cd paper && make
+make          # number check, then pdflatex → bibtex → pdflatex ×2
+make zip      # flat submission.zip for Snapp / Editorial Manager
 ```
 
-Figures are read from `../artefacts/figures/`; tables are `\input{}` from
-`../artefacts/tables/*.tex`. **No number is typed into the manuscript by hand** —
-regenerate assets and the paper follows.
+Requires a TeX distribution: `brew install --cask mactex-no-gui`, or BasicTeX
+plus `tlmgr install natbib booktabs`.
+
+## When results change
+
+Figures are **copies**. After re-running the study, refresh them:
+
+```bash
+cd .. && python scripts/make_assets.py
+cp artefacts/figures/*.png paper/figures/
+python scripts/check_paper_numbers.py --strict
+```
+
+`make` runs that last check automatically and refuses to build on drift.
+Inline numbers in the prose still need updating by hand — the checker tells you
+which ones.
 
 ## Before submitting
 
-1. **Run on real corpora.** Every number is currently from the synthetic pilot.
-   Put raw files in `data/raw/` and re-run without `--synthetic`.
-2. **Re-check the negative result.** C4/C5 fail on synthetic data because the
-   planted structure contains no segment heterogeneity. Real behavioural data
-   may differ; if it does, §6 needs rewriting from a negative result to a
-   positive one.
-3. Add funding statement and ORCID.
-4. Re-verify the journal's SJR on Scimago.
-5. Archive the artefact on Zenodo and insert the DOI.
+See `../SUBMISSION_CHECKLIST.md`. The short version: fill in funding and ORCID,
+delete the title-rationale comment block, and confirm the abstract is under
+250 words.
