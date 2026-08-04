@@ -16,6 +16,7 @@ raises, so a temporal claim can never be silently built on file order.
 
 from __future__ import annotations
 
+import os
 from pathlib import Path
 
 import numpy as np
@@ -171,6 +172,13 @@ def _prepare(df: pd.DataFrame, name: str, max_users: int | None,
             keep = set(rng.choice(uniq, max_users, replace=False).tolist())
             df = df[df["user"].isin(keep)]
 
+    if df.empty:
+        raise ValueError(
+            f"{name}: no interactions survive preprocessing. The k-core filter "
+            "is the usual cause on a small or heavily subsampled extract -- "
+            "lower k_core, or check that the raw file is complete."
+        )
+
     lo, hi = int(df["timestamp"].min()), int(df["timestamp"].max())
     # 1990-01-01 .. 2035-01-01, a generous but finite window
     if not (631152000 < lo and hi < 2051222400):
@@ -188,11 +196,35 @@ def _prepare(df: pd.DataFrame, name: str, max_users: int | None,
     return ds
 
 
+def _env_cap(explicit: int | None = None) -> int | None:
+    """Resolve the user cap, honouring SIGNALSHAP_MAX_USERS.
+
+    Experiment() constructs corpora through the registry with no arguments, so
+    a loader that ignores this variable silently loads the FULL corpus even
+    after the caller has computed a memory-safe size. That is what OOM-killed
+    the Gowalla run: sizing reported 14,419 users, then 52,985 were loaded.
+    An explicit argument always wins over the environment.
+    """
+    if explicit is not None:
+        return explicit
+    raw = os.environ.get("SIGNALSHAP_MAX_USERS", "").strip()
+    if not raw or raw.lower() in {"none", "0", "all"}:
+        return None
+    try:
+        return int(raw)
+    except ValueError:
+        return None
+
+
 TIMESTAMPED_LOADERS = {
-    "gowalla_ts": load_gowalla_timestamped,
-    "lastfm_1k": load_lastfm_1k,
-    "amazon_video_games": lambda **kw: load_amazon_timestamped("Video_Games", **kw),
-    "amazon_books_ts": lambda **kw: load_amazon_timestamped("Books", **kw),
+    "gowalla_ts": lambda max_users=None, **kw: load_gowalla_timestamped(
+        max_users=_env_cap(max_users), **kw),
+    "lastfm_1k": lambda max_users=None, **kw: load_lastfm_1k(
+        max_users=_env_cap(max_users), **kw),
+    "amazon_video_games": lambda max_users=None, **kw: load_amazon_timestamped(
+        "Video_Games", max_users=_env_cap(max_users), **kw),
+    "amazon_books_ts": lambda max_users=None, **kw: load_amazon_timestamped(
+        "Books", max_users=_env_cap(max_users), **kw),
 }
 
 

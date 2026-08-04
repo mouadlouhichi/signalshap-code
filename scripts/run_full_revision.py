@@ -97,16 +97,31 @@ def main() -> int:
             # Load a probe to learn the catalogue size, then derive how many
             # users actually fit. Gowalla is 53k x 122k, which needs ~207 GB
             # for five score matrices -- it must be subsampled, not attempted.
-            probe = TIMESTAMPED_LOADERS[name](max_users=a.max_users or 2000)
-            n_users_fit = _fit_users(probe.n_items, 10 ** 9, budget)
+            # Probe with a SMALL cap purely to learn the catalogue size; the
+            # full corpus can be millions of rows and we only need n_items.
+            os.environ["SIGNALSHAP_MAX_USERS"] = str(a.max_users or 1500)
+            probe = TIMESTAMPED_LOADERS[name]()
+            # The probe's item count under-estimates the full catalogue, so
+            # scale it up: a larger user sample reaches more items. This is
+            # deliberately conservative -- over-estimating n_items yields a
+            # smaller, safer user cap.
+            est_items = max(probe.n_items * 3, probe.n_items)
+            n_users_fit = _fit_users(est_items, 10 ** 9, budget)
             if a.max_users:
                 n_users_fit = min(n_users_fit, a.max_users)
             os.environ["SIGNALSHAP_MAX_USERS"] = str(n_users_fit)
-            print(f"{name}: {probe.n_items:,} items -> "
-                  f"{n_users_fit:,} users fit the budget")
+            print(f"{name}: ~{est_items:,} items (est) -> "
+                  f"{n_users_fit:,} users fit a {budget:.0f} GB budget")
             del probe
 
-            ds = TIMESTAMPED_LOADERS[name](max_users=n_users_fit)
+            os.environ["SIGNALSHAP_MAX_USERS"] = str(n_users_fit)
+            ds = TIMESTAMPED_LOADERS[name]()
+            print(f"{name}: loaded {ds.n_users:,} users x {ds.n_items:,} items "
+                  f"({5 * ds.n_users * ds.n_items * 4 / 1e9:.1f} GB of scores)")
+            if 5 * ds.n_users * ds.n_items * 4 / 1e9 > budget:
+                print(f"  SKIP: still exceeds the budget; lower --budget-gb "
+                      f"or pass --max-users")
+                continue
             rep = temporal_validity_report(ds)
             print(f"{name}: temporally_valid={rep['temporally_valid']} "
                   f"span={rep['span_days']:.0f}d "

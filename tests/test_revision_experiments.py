@@ -214,3 +214,48 @@ def test_timestamped_corpus_never_falls_back_to_synthetic():
 
     with _pt.raises((FileNotFoundError, KeyError)):
         load_dataset("lastfm_1k")     # not fetched in CI
+
+
+def test_timestamped_loaders_honour_the_user_cap_env_var():
+    """Experiment() builds corpora with no arguments, so loaders MUST read
+    SIGNALSHAP_MAX_USERS.
+
+    The Gowalla run was OOM-killed twice because the timestamped loaders
+    ignored it: the runner computed a memory-safe 14,419 users, then the
+    registry loaded all 52,985 (~207 GB of score matrices). The LightGCN
+    loaders had always read the variable; these had not.
+    """
+    import os
+
+    from signalshap.data.timestamped import _env_cap
+
+    prev = os.environ.get("SIGNALSHAP_MAX_USERS")
+    try:
+        os.environ.pop("SIGNALSHAP_MAX_USERS", None)
+        assert _env_cap(None) is None, "absent variable means no cap"
+
+        os.environ["SIGNALSHAP_MAX_USERS"] = "14419"
+        assert _env_cap(None) == 14419, "the env var must be honoured"
+        assert _env_cap(500) == 500, "an explicit argument wins"
+
+        os.environ["SIGNALSHAP_MAX_USERS"] = "none"
+        assert _env_cap(None) is None
+
+        os.environ["SIGNALSHAP_MAX_USERS"] = "not-a-number"
+        assert _env_cap(None) is None, "a malformed value must not crash"
+    finally:
+        os.environ.pop("SIGNALSHAP_MAX_USERS", None)
+        if prev is not None:
+            os.environ["SIGNALSHAP_MAX_USERS"] = prev
+
+
+def test_empty_corpus_after_filtering_fails_clearly():
+    """k-core can empty a small extract; that must not surface as a NaN cast."""
+    import pandas as pd
+    import pytest as _pt
+
+    from signalshap.data.timestamped import _prepare
+
+    with _pt.raises(ValueError, match="no interactions survive"):
+        _prepare(pd.DataFrame(columns=["user", "item", "timestamp"]),
+                 "probe", None, 42)
