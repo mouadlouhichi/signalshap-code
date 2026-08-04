@@ -33,8 +33,20 @@
 \newcommand{\NDCG}{\mathrm{NDCG@10}}
 \newcommand{\LOO}{\mathrm{LOO}}
 
-\title{\textbf{Leave-One-Out Misattributes Redundant Signals:\\
-Exact Shapley Credit Assignment for Hybrid Recommenders}}
+\title{\textbf{Ablation Fails on Redundant Signals:\\
+Source-Level Shapley Attribution for Hybrid Recommenders}}
+
+%% Title rationale (delete before submission).
+%%   * Leads with the FINDING: a controlled intervention on four corpora where
+%%     LOO returns exactly zero for both members of every redundant pair.
+%%   * "Ablation" rather than "leave-one-out": it is what practitioners call
+%%     the practice and what they will search for.
+%%   * Deliberately omits "exact". Section 3 establishes that exactness is a
+%%     property of the AGGREGATION, not of the attribution end-to-end, because
+%%     v is fitted. An unqualified "Exact" would contradict the paper's own
+%%     caveat -- the first thing a careful reviewer checks.
+%%   * Softer variant if preferred: "Ablation Misattributes Redundant
+%%     Signals: ..." -- more precise, less punch.
 
 \author{
   Mouad Louhichi\thanks{Corresponding author: \texttt{mouad\_louhichi@um5.ac.ma}}
@@ -448,8 +460,18 @@ is the reason the monotonicity hypothesis was made explicit in the first place.
 
 \subsection{Efficiency holds to machine precision}
 
-Across all datasets $|\sum_g \varphi_g - v(\G)| \le 3.5 \times 10^{-18}$,
-confirming Property~\ref{prop:eff} numerically.
+Property~\ref{prop:eff} is verified numerically per dataset in Table~T9, which
+is generated from the artefact rather than transcribed: on MovieLens-1M
+$|\sum_g \varphi_g - v(\G)| = 6.9 \times 10^{-18}$, i.e.\ agreement to the last
+representable bit of a double.
+
+Two presentational cautions, since both have caused confusion in drafts of this
+work. First, the bound quoted here is read from Table~T9 and changes when the
+run changes; it must never be hardcoded in the text. Second, summing the
+five-decimal \emph{rounded} per-source values in Table~T6 can land one unit in
+the last place away from the rounded $v(\G)$. That is display rounding, not a
+violated axiom, and Table~T9 carries an explicit column flagging whenever it
+occurs.
 
 \subsection{LOO and Shapley disagree qualitatively}
 
@@ -510,6 +532,17 @@ non-monotone fitted game (below) a small negative value is admissible and is
 read as ``no reliable contribution'' rather than as harm.
 
 \input{../artefacts/tables/T6_loo_vs_shapley.tex}
+
+\input{../artefacts/tables/T9_efficiency.tex}
+
+\noindent
+\textbf{A note on the two bases in Table~T6.} The LOO, Shapley, and Gap columns
+are \emph{single-seed} (seed 42), so that the gap is a like-for-like difference
+computed on one fitted game. The seed-mean and CI columns aggregate over all
+seeds. These differ, and that difference is not an inconsistency: it \emph{is}
+the estimation error in the fitted $v$ that the CI exists to quantify
+(\S\ref{sec:game}). We label the bases separately rather than silently blending
+them, and no row should be read across the two.
 
 \begin{figure}[t]
 \centering

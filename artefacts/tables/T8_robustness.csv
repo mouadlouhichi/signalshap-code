@@ -1,4 +1,22 @@
 Dataset,Stress test,Candidate recall,Top source,$v(\mathcal{G})$
+amazon_book_lgcn,$|C_u|$ = 2500,0.408,seq,0.01230
+amazon_book_lgcn,$|C_u|$ = 5000,0.529,seq,0.01182
+amazon_book_lgcn,$|C_u|$ = 10000,0.648,seq,0.01172
+amazon_book_lgcn,$\lambda$ = 0.1,—,seq,—
+amazon_book_lgcn,$\lambda$ = 1.0,—,seq,—
+amazon_book_lgcn,$\lambda$ = 10.0,—,seq,—
+amazon_book_lgcn,rescale: identity,—,seq,—
+amazon_book_lgcn,rescale: log1p,—,seq,—
+amazon_book_lgcn,rescale: rank,—,seq,—
+gowalla,$|C_u|$ = 1250,0.558,cf,0.04133
+gowalla,$|C_u|$ = 2500,0.678,cf,0.04283
+gowalla,$|C_u|$ = 5000,0.785,cf,0.04311
+gowalla,$\lambda$ = 0.1,—,cf,—
+gowalla,$\lambda$ = 1.0,—,cf,—
+gowalla,$\lambda$ = 10.0,—,cf,—
+gowalla,rescale: identity,—,cf,—
+gowalla,rescale: log1p,—,cf,—
+gowalla,rescale: rank,—,seq,—
 ml_1m,$|C_u|$ = 300,0.565,seq,0.05277
 ml_1m,$|C_u|$ = 600,0.748,seq,0.05075
 ml_1m,$|C_u|$ = 1200,0.890,seq,0.05024
@@ -17,21 +35,3 @@ yelp2018,$\lambda$ = 10.0,—,cf,—
 yelp2018,rescale: identity,—,cf,—
 yelp2018,rescale: log1p,—,cf,—
 yelp2018,rescale: rank,—,cf,—
-gowalla,$|C_u|$ = 1250,0.558,cf,0.04133
-gowalla,$|C_u|$ = 2500,0.678,cf,0.04283
-gowalla,$|C_u|$ = 5000,0.785,cf,0.04311
-gowalla,$\lambda$ = 0.1,—,cf,—
-gowalla,$\lambda$ = 1.0,—,cf,—
-gowalla,$\lambda$ = 10.0,—,cf,—
-gowalla,rescale: identity,—,cf,—
-gowalla,rescale: log1p,—,cf,—
-gowalla,rescale: rank,—,seq,—
-amazon_book_lgcn,$|C_u|$ = 2500,0.408,seq,0.01230
-amazon_book_lgcn,$|C_u|$ = 5000,0.529,seq,0.01182
-amazon_book_lgcn,$|C_u|$ = 10000,0.648,seq,0.01172
-amazon_book_lgcn,$\lambda$ = 0.1,—,seq,—
-amazon_book_lgcn,$\lambda$ = 1.0,—,seq,—
-amazon_book_lgcn,$\lambda$ = 10.0,—,seq,—
-amazon_book_lgcn,rescale: identity,—,seq,—
-amazon_book_lgcn,rescale: log1p,—,seq,—
-amazon_book_lgcn,rescale: rank,—,seq,—

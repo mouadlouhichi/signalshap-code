@@ -1,0 +1,16 @@
+\begin{table}[htbp]
+\centering
+\footnotesize
+\caption{T9 -- Property 1 (efficiency) verified per dataset, at full double precision. The final columns exist because summing the 5-decimal rounded per-source values can land 1 ulp away from the rounded $v(\mathcal{G})$; where that column reads 'yes' the discrepancy is DISPLAY ROUNDING, not a violated axiom. The error bound quoted in the text is read from this table, never typed by hand.}
+\label{tab:T9_efficiency}
+\begin{tabular}{llllllll}
+\toprule
+Dataset & $\sum_g \varphi_g$ & $v(\mathcal{G})$ & $|$error$|$ & Passes & Sum of rounded $\varphi_g$ & Rounded $v(\mathcal{G})$ & Display-rounding artefact \\
+\midrule
+amazon\_book\_lgcn & 0.01181950474225024 & 0.011819504742250242 & 1.7e-18 & yes & 0.01181 & 0.01182 & yes \\
+gowalla & 0.04282906601610155 & 0.042829066016101543 & 6.9e-18 & yes & 0.04283 & 0.04283 & no \\
+ml\_1m & 0.050748686972074769 & 0.050748686972074762 & 6.9e-18 & yes & 0.05075 & 0.05075 & no \\
+yelp2018 & 0.017306074158586506 & 0.017306074158586506 & 0.0e+00 & yes & 0.01731 & 0.01731 & no \\
+\bottomrule
+\end{tabular}
+\end{table}

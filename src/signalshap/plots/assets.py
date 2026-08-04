@@ -309,7 +309,15 @@ def table1_positioning() -> pd.DataFrame:
 def table2_datasets(results: dict, stats: dict) -> pd.DataFrame:
     rows = []
     for name, r in results.items():
-        s = stats.get(name, {})
+        # Authoritative source is the RUN's own stats, not dataset_stats.json:
+        # auto-downsizing can shrink a corpus after the global stats file was
+        # written, and printing the pre-downsize counts beside post-downsize
+        # results would misstate the scale every downstream number was computed at.
+        s = r.get("dataset_stats") or stats.get(name, {})
+        glob_s = stats.get(name, {})
+        if glob_s.get("users") and s.get("users") and glob_s["users"] != s["users"]:
+            print(f"  [T2] {name}: using run scale {s['users']:,} users "
+                  f"(dataset_stats.json says {glob_s['users']:,} -- pre-downsize)")
         e0a, e0b = r["e0a_candidates"], r["e0b_monotonicity"]
         rows.append({
             "Dataset": name, "Users": s.get("users"), "Items": s.get("items"),
@@ -346,6 +354,43 @@ def table3_notation() -> pd.DataFrame:
         ["LOO$(g)$", "$v(\\mathcal{G}) - v(\\mathcal{G} \\setminus \\{g\\})$"],
     ], columns=["Symbol", "Meaning"])
     _save_table(df, "T3_notation", "T3 — Notation.")
+    return df
+
+
+def table_efficiency(results: dict) -> pd.DataFrame:
+    """Efficiency check, read from the artefact -- never hardcoded in prose.
+
+    Two traps this table exists to avoid:
+      * quoting a stale bound in the text while the JSON says something else;
+      * printing rounded per-source values whose sum is 1 ulp off the rounded
+        v(G), which looks like a violated axiom but is only display rounding.
+    """
+    rows = []
+    for name, r in results.items():
+        e = r["e1_source_share"]["efficiency"]
+        phi = r["e1_source_share"]["shapley"]
+        rounded_sum = round(sum(round(v, 5) for v in phi.values()), 5)
+        rows.append({
+            "Dataset": name,
+            "$\\sum_g \\varphi_g$": f"{e['sum_phi']:.17g}",
+            "$v(\\mathcal{G})$": f"{e['v_grand']:.17g}",
+            "$|$error$|$": f"{e['abs_error']:.1e}",
+            "Passes": "yes" if e["passes"] else "NO",
+            "Sum of rounded $\\varphi_g$": f"{rounded_sum:.5f}",
+            "Rounded $v(\\mathcal{G})$": f"{round(e['v_grand'], 5):.5f}",
+            "Display-rounding artefact": (
+                "yes" if abs(rounded_sum - round(e["v_grand"], 5)) > 1e-12 else "no"
+            ),
+        })
+    df = pd.DataFrame(rows)
+    _save_table(df, "T9_efficiency",
+                "T9 — Property 1 (efficiency) verified per dataset, at full "
+                "double precision. The final columns exist because summing the "
+                "5-decimal rounded per-source values can land 1 ulp away from "
+                "the rounded $v(\\mathcal{G})$; where that column reads 'yes' the "
+                "discrepancy is DISPLAY ROUNDING, not a violated axiom. The "
+                "error bound quoted in the text is read from this table, never "
+                "typed by hand.")
     return df
 
 
@@ -398,19 +443,28 @@ def table6_loo_vs_shapley(results: dict) -> pd.DataFrame:
         ci = r.get("multi_seed", {}).get("ci", {})
         for g in SOURCES:
             c = ci.get(g, {})
+            has_ci = bool(c) and c.get("n_seeds", 0) > 1
+            mean = c.get("mean", e2["shapley"][g])
             rows.append({
                 "Dataset": name, "Source": g,
-                "LOO": f"{e2['loo'][g]:.5f}",
-                "Shapley": f"{e2['shapley'][g]:.5f}",
-                "Seed CI (±1.96 SE)": f"[{c.get('lo', 0):.5f}, {c.get('hi', 0):.5f}]",
-                "Gap": f"{e2['gap'][g]:.5f}",
+                "LOO (seed 42)": f"{e2['loo'][g]:.5f}",
+                "Shapley (seed 42)": f"{e2['shapley'][g]:.5f}",
+                "Shapley (seed mean)": f"{mean:.5f}" if has_ci else "n/a",
+                "Seed CI (±1.96 SE)": (
+                    f"[{c.get('lo', 0):.5f}, {c.get('hi', 0):.5f}]" if has_ci else "n/a"
+                ),
+                "Gap (seed 42)": f"{e2['gap'][g]:.5f}",
                 "Perm. $p$": f"{e2['permutation_tests'][g]['p_value']:.4f}",
             })
     df = pd.DataFrame(rows)
     _save_table(df, "T6_loo_vs_shapley",
-                "T6 — LOO vs Shapley per (dataset, source), with MAIN-TEXT "
-                "seed-based CIs: $v$ is a fitted quantity, so $\\varphi_g$ carries "
-                "estimation error even though the aggregation is exact.")
+                "T6 — LOO vs Shapley per (dataset, source). TWO BASES ARE "
+                "REPORTED SEPARATELY AND MUST NOT BE COMPARED ACROSS COLUMNS: "
+                "LOO, Shapley and Gap are single-seed (seed 42) so that the gap "
+                "is a like-for-like difference on one fitted game; the seed-mean "
+                "and CI columns aggregate over all seeds. They differ because "
+                "$v$ is fitted, which is precisely the estimation error the CI "
+                "quantifies. Mixing the bases within a row would be an error.")
     return df
 
 
@@ -484,6 +538,7 @@ def generate_all_assets(results: dict, stats: dict) -> dict:
         "T3": table3_notation(), "T4": table4_cost(results),
         "T5": table5_main_results(results), "T6": table6_loo_vs_shapley(results),
         "T7": table7_fuse_significance(results), "T8": table8_robustness(results),
+        "T9": table_efficiency(results),
     }
     return {"figures": {k: str(v) for k, v in figs.items()},
             "tables": {k: f"{TAB}/{k}_*.md" for k in tabs}}
