@@ -79,6 +79,30 @@ def check() -> list[str]:
     if refs - labels:
         bad.append(f"broken \\ref: {sorted(refs - labels)}")
 
+    # TikZ figures: verify every node reference resolves and libraries are
+    # loaded. A malformed picture fails at compile time with an error that is
+    # often hard to localise, so it is cheaper to check statically.
+    for pic in re.findall(r"\\begin\{tikzpicture\}(.*?)\\end\{tikzpicture\}", t, re.S):
+        if pic.count("{") != pic.count("}"):
+            bad.append("unbalanced braces inside a tikzpicture")
+        if len(re.findall(r"\\node", pic)) != len(re.findall(r"\\node\[[^\]]*\][^;]*;", pic)):
+            bad.append("a \\node in tikzpicture is not terminated with ';'")
+        if len(re.findall(r"\\draw", pic)) != len(re.findall(r"\\draw\[[^\]]*\][^;]*;", pic)):
+            bad.append("a \\draw in tikzpicture is not terminated with ';'")
+        declared = set(re.findall(r"^\s*(\w+)/\.style", t, re.M))
+        used = set(re.findall(r"\\node\[(\w+)", pic)) | set(re.findall(r"\\draw\[(\w+)", pic))
+        undeclared = used - declared - {"fit"}
+        if undeclared:
+            bad.append(f"undeclared tikz styles: {sorted(undeclared)}")
+        libs = re.search(r"usetikzlibrary\{([^}]*)\}", t)
+        loaded = {l.strip() for l in libs.group(1).split(",")} if libs else set()
+        for lib, needed in (("arrows.meta", "Stealth" in pic),
+                            ("positioning", "=of " in pic),
+                            ("fit", "fit=" in pic),
+                            ("backgrounds", "background layer" in pic)):
+            if needed and lib not in loaded:
+                bad.append(f"tikz library '{lib}' used but not loaded")
+
     if BIB.exists():
         cited = {c.strip() for g in re.findall(r"\\cite[a-z]*\{([^}]*)\}", t)
                  for c in g.split(",")}

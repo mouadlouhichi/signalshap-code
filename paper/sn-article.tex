@@ -17,6 +17,37 @@
 \usepackage{amsmath}
 \usepackage{amssymb}
 \usepackage{graphicx}
+
+%% Architecture diagram (Fig. 1) is drawn in TikZ rather than embedded as a
+%% raster: it keeps lettering vector-sharp at any zoom, matches the body font
+%% automatically, and lets the data-flow constraints be drawn explicitly.
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta,positioning,fit,backgrounds,calc,shapes.geometric}
+
+%% Set \tikzfigurefalse to fall back to the pre-rendered raster (figures/Fig1.png)
+%% if the submission system's TeX installation misbehaves with TikZ.
+\newif\iftikzfigure
+\tikzfiguretrue
+
+\definecolor{snSource}{HTML}{2E5EAA}
+\definecolor{snCand}{HTML}{D96C3F}
+\definecolor{snGame}{HTML}{57A773}
+\definecolor{snShap}{HTML}{9B5DE5}
+\definecolor{snFuse}{HTML}{C8963E}
+\definecolor{snGrey}{HTML}{4A4A4A}
+
+\tikzset{
+  snbox/.style={
+    rounded corners=2pt, draw=#1, line width=0.7pt, fill=#1!7,
+    inner sep=3.2pt, align=center, font=\scriptsize},
+  snfold/.style={
+    rounded corners=1pt, draw=snGrey!70, line width=0.5pt, fill=snGrey!5,
+    inner sep=2.6pt, align=center, font=\scriptsize},
+  snflow/.style={-{Stealth[length=4pt,width=3pt]}, draw=snGrey, line width=0.65pt},
+  sndata/.style={-{Stealth[length=4pt,width=3pt]}, draw=snGrey!60,
+    line width=0.55pt, dashed, dash pattern=on 2pt off 1.4pt},
+  snlbl/.style={font=\tiny, inner sep=1.2pt, text=snGrey},
+}
 \graphicspath{{figures/}}
 
 \theoremstyle{thmstyleone}
@@ -159,13 +190,95 @@ and efficiency on real fitted games.
       and dated in the repository, but there is no external registration.
 \end{itemize}
 
-\begin{figure}[t]
+\begin{figure*}[t]
 \centering
+\iftikzfigure
+\begin{tikzpicture}[node distance=4mm]
+
+%% ---- data folds -------------------------------------------------------
+\node[snfold] (train) {\textbf{Train}\\[-1pt]\tiny all but last two};
+\node[snfold, below=3.5mm of train] (val) {\textbf{Validation}\\[-1pt]\tiny 2nd-to-last};
+\node[snfold, below=3.5mm of val] (test) {\textbf{Test}\\[-1pt]\tiny last interaction};
+\node[snlbl, above=1.2mm of train] {leave-last-out split};
+
+%% ---- stage 1: sources -------------------------------------------------
+\node[snbox=snSource, right=8mm of train, minimum height=15mm]
+  (src) {\textbf{Five sources}\\[1pt]
+         $cf$\, $ct$\, $pop$\, $rec$\, $seq$\\[1pt]
+         \tiny trained once, cached};
+
+%% ---- stage 2: candidates ---------------------------------------------
+\node[snbox=snCand, right=7mm of src, minimum height=15mm]
+  (cand) {\textbf{Candidates} $\Cu$\\[1pt]
+          $\bigcup_g$ top-$N_g^{(g)}(u)$\\[1pt]
+          \tiny identical for all $S$};
+
+%% ---- stage 3: the game ------------------------------------------------
+\node[snbox=snGame, right=7mm of cand, minimum height=15mm]
+  (game) {\textbf{$2^5=32$ coalitions}\\[1pt]
+          head $w^{(S)}$ on val.\\[1pt]
+          $v(S)=\overline{\NDCG}-v_0$};
+
+%% ---- stage 4: exact Shapley -------------------------------------------
+\node[snbox=snShap, right=7mm of game, minimum height=15mm]
+  (shap) {\textbf{Exact Shapley}\\[1pt]
+          $\varphi_g$, $\varphi_g(u)$\\[1pt]
+          \tiny no sampling error};
+
+%% ---- outputs ----------------------------------------------------------
+\node[snbox=snShap, above right=1mm and 7mm of shap]
+  (diag) {\textbf{Diagnosis}\\[-1pt]\tiny source credit, redundancy};
+\node[snbox=snFuse, below right=1mm and 7mm of shap]
+  (fuse) {\textbf{SignalShap-Fuse}\\[-1pt]\tiny segment weights};
+
+%% ---- main flow --------------------------------------------------------
+\draw[snflow] (src)  -- (cand);
+\draw[snflow] (cand) -- (game);
+\draw[snflow] (game) -- (shap);
+\draw[snflow] (shap.east) -- (diag.west);
+
+%% ---- fold routing: this is the load-bearing part ----------------------
+\draw[sndata] (train.east) -- node[snlbl,above,pos=0.45]{fit} (src.west);
+\draw[sndata] (val.east) to[out=0,in=200]
+  node[snlbl,pos=0.72,below,sloped]{fit $w^{(S)}$} (game.south west);
+\draw[sndata] (test.east) to[out=-8,in=250]
+  node[snlbl,pos=0.85,below,sloped]{score only} (game.south);
+
+%% fusion weights come from VALIDATION, never from the Shapley output
+\draw[sndata] (val.south) to[out=-60,in=180]
+  node[snlbl,pos=0.5,below,align=center]{fusion weights\\fitted here} (fuse.west);
+
+%% ---- the barrier ------------------------------------------------------
+\begin{scope}[on background layer]
+  \node[fit=(shap)(diag), draw=snShap!45, dashed, rounded corners=3pt,
+        inner sep=3pt, fill=snShap!4] (rep) {};
+\end{scope}
+\node[snlbl, above=0.5mm of rep.north, text=snShap!85]
+  {reported, not fed forward};
+
+\draw[-{Stealth[length=4pt,width=3pt]}, draw=snShap!70, line width=0.6pt,
+      dotted] (rep.south) -- node[snlbl,right,pos=0.4]{$\times$ no path} (fuse.north);
+
+%% ---- protocol note ----------------------------------------------------
+\node[snlbl, below=2mm of fuse.south east, anchor=north east, align=right]
+  {$v(S)$: fixed-candidate within $\Cu$\\
+   reporting: full catalogue, $-\infty$ outside $\Cu$};
+
+\end{tikzpicture}
+\else
 \includegraphics[width=\textwidth]{Fig1.png}
-\caption{The SignalShap pipeline. The candidate set is identical for every
-coalition, so differences in $v(S)$ reflect fusion within the coalition rather
-than retrieval from a pool that favours it.}\label{fig:workflow}
-\end{figure}
+\fi
+\caption{The SignalShap pipeline, with data folds made explicit. Sources are
+fitted on train; every coalition head $w^{(S)}$ and every fusion weight is
+fitted on \emph{validation}; test interactions are used only to score. The
+candidate set $\Cu$ is the union of all sources' top-$N$ lists and is identical
+for every coalition, so differences in $v(S)$ reflect fusion within $S$ rather
+than retrieval from a pool that favours it. Because $v(S)$ is evaluated on test
+interactions, the Shapley output is reported as diagnosis and is deliberately
+\emph{not} an input to the fusion weights (dotted arrow): that separation is
+what keeps the downstream comparison of Section~\ref{sec:segments}
+non-circular}\label{fig:workflow}
+\end{figure*}
 
 \paragraph{What is not in this paper} Graph-neural or Transformer players;
 causal attribution; online or counterfactual evaluation. All attribution is
