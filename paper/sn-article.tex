@@ -8,14 +8,15 @@
 %%     python scripts/check_paper_numbers.py --strict
 %% which re-derives them and fails on drift.
 
-\documentclass[pdflatex,sn-basic]{sn-jnl}
+%% Discover AI requires numbered citations in square brackets, e.g. [1-3, 7].
+%% The 'Numbered' option selects that reference style in sn-jnl.cls.
+\documentclass[pdflatex,sn-basic,Numbered]{sn-jnl}
 
 %% sn-jnl.cls does not load these itself, and this manuscript uses
 %% \bigcup / \bigl / \varepsilon (amsmath) and includes figures (graphicx).
 \usepackage{amsmath}
 \usepackage{amssymb}
 \usepackage{graphicx}
-\usepackage{url}
 \graphicspath{{figures/}}
 
 \theoremstyle{thmstyleone}
@@ -52,7 +53,8 @@ signals --- collaborative filtering, content, popularity, recency, and
 sequential order --- and practitioners need to know how much each one earns.
 We present \emph{SignalShap}, which recasts source attribution as a
 five-player cooperative game whose characteristic function is a
-fixed-candidate NDCG@10 evaluated on a coalition-independent candidate set.
+fixed-candidate normalised discounted cumulative gain at rank~10
+(NDCG@10) evaluated on a coalition-independent candidate set.
 Because the player set is small, the Shapley value is obtained in closed form
 over all $2^5=32$ coalitions, so the aggregation carries no sampling error and
 runs in seconds on a laptop CPU.
@@ -85,8 +87,9 @@ component exploits item metadata, a popularity component exploits global
 frequency, a recency component exploits temporal locality, and a sequential
 component exploits order. Engineering decisions --- which component to invest
 in, which to retire --- rest on estimates of how much each contributes. In
-practice those estimates come from \emph{leave-one-out ablation}: disable one
-component, measure the drop.
+practice those estimates come from \emph{leave-one-out} (LOO) \emph{ablation}:
+disable one component, measure the drop in ranking quality, and attribute that
+drop to the component.
 
 Ablation answers a narrower question than the one being asked. It measures what
 is lost when a component is removed from the \emph{complete} system, which is
@@ -158,7 +161,7 @@ and efficiency on real fitted games.
 
 \begin{figure}[t]
 \centering
-\includegraphics[width=\textwidth]{F1_workflow.png}
+\includegraphics[width=\textwidth]{Fig1.png}
 \caption{The SignalShap pipeline. The candidate set is identical for every
 coalition, so differences in $v(S)$ reflect fusion within the coalition rather
 than retrieval from a pool that favours it.}\label{fig:workflow}
@@ -471,7 +474,7 @@ $|\sum_g \varphi_g - v(\G)| = 6.9 \times 10^{-18}$.
 
 \begin{figure}[t]
 \centering
-\includegraphics[width=\textwidth]{F2_shapley_shares.png}
+\includegraphics[width=\textwidth]{Fig2.png}
 \caption{Per-source Shapley shares with seed-based error bars. Intervals appear
 in the main text because $v$ is fitted: exactness is a property of the
 aggregation, not of the attribution end to end.}\label{fig:shares}
@@ -575,7 +578,7 @@ $seq$ & $+0.01672$ & $+0.02910$ & $+0.01238$ & \\
 
 \begin{figure}[t]
 \centering
-\includegraphics[width=0.7\textwidth]{F3_loo_vs_shapley.png}
+\includegraphics[width=0.7\textwidth]{Fig3.png}
 \caption{SignalShap attribution against leave-one-out ablation. Points on the
 diagonal are cases where the two agree; the upper-left quadrant holds sources
 SignalShap credits as valuable that ablation scores below
@@ -617,7 +620,7 @@ Figure~\ref{fig:redundancy} shows the pairwise structure directly.
 
 \begin{figure}[t]
 \centering
-\includegraphics[width=\textwidth]{F4_redundancy_heatmap.png}
+\includegraphics[width=\textwidth]{Fig4.png}
 \caption{Redundancy between sources, measured as Kendall $\tau$ between
 per-user score vectors. The $pop$--$cf$ and $rec$--$ct$ pairs are
 expected to overlap by construction, as stated in advance in
@@ -641,7 +644,7 @@ result.
 
 \begin{figure}[t]
 \centering
-\includegraphics[width=\textwidth]{F5_segment_radar.png}
+\includegraphics[width=\textwidth]{Fig5.png}
 \caption{Segment-level Shapley profiles. Near-coincident polygons indicate
 little heterogeneity to exploit, which is what we observe on the sparse
 corpora.}\label{fig:segments}
@@ -673,7 +676,7 @@ gain.
 
 \begin{figure}[t]
 \centering
-\includegraphics[width=0.85\textwidth]{F6_fuse_gain.png}
+\includegraphics[width=0.85\textwidth]{Fig6.png}
 \caption{Fusion comparison under the full-catalogue protocol. SignalShap-Fuse
 separates decisively from the neural and heuristic baselines but not from a
 well-tuned global head.}\label{fig:fusion}
@@ -731,7 +734,7 @@ this work.
 
 \begin{figure}[t]
 \centering
-\includegraphics[width=\textwidth]{F7_robustness.png}
+\includegraphics[width=\textwidth]{Fig7.png}
 \caption{Robustness. Candidate recall is annotated per cell of the $|\Cu|$
 sweep, because changing $|\Cu|$ moves the recall ceiling and hence the level of
 $v$; without it the cells are not comparable. The $\lambda$ panel is

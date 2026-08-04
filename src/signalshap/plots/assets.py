@@ -21,14 +21,39 @@ from ..segments.segments import SEGMENT_NAMES
 FIG = ARTEFACTS / "figures"
 TAB = ARTEFACTS / "tables"
 
+# Springer Nature artwork rules (Discover AI submission guidelines):
+#   * lettering in a sans-serif face at 8-12 pt, with minimal size variance
+#     within a figure -- no 8 pt axis ticks next to 20 pt labels;
+#   * no titles or captions inside the artwork (captions live in the text);
+#   * 300 dpi minimum for halftones.
+# Artwork problems are the single most common reason submissions are returned
+# before peer review, so these are set globally rather than per figure.
+SN_FONT_MIN = 8
 plt.rcParams.update({
-    "figure.dpi": 150, "savefig.dpi": 300, "font.size": 9,
+    "figure.dpi": 150, "savefig.dpi": 300,
+    "font.family": "sans-serif",
+    "font.sans-serif": ["Helvetica", "Arial", "DejaVu Sans"],
+    "font.size": 9,
+    "axes.titlesize": 10, "axes.labelsize": 9,
+    "xtick.labelsize": SN_FONT_MIN, "ytick.labelsize": SN_FONT_MIN,
+    "legend.fontsize": SN_FONT_MIN,
     "axes.grid": True, "grid.alpha": 0.3, "axes.spines.top": False,
     "axes.spines.right": False, "figure.autolayout": True,
 })
 
 PALETTE = {"cf": "#2E5EAA", "ct": "#D96C3F", "pop": "#57A773",
            "rec": "#9B5DE5", "seq": "#E4B363"}
+
+#: Publication names. Internal identifiers (ml_1m, amazon_book_lgcn) are for
+#: filenames and JSON keys; artwork and tables use the corpus names a reader
+#: recognises.
+DISPLAY = {"ml_1m": "MovieLens-1M", "yelp2018": "Yelp2018",
+           "gowalla": "Gowalla", "amazon_book_lgcn": "Amazon-Book",
+           "lastfm_2k": "LastFM-2K", "amazon_book": "Amazon-Book"}
+
+
+def disp(name: str) -> str:
+    return DISPLAY.get(name, name)
 
 
 def _dirs() -> None:
@@ -99,13 +124,13 @@ def fig1_workflow() -> Path:
         x = i * 2.15
         ax.add_patch(plt.Rectangle((x, 0.3), 1.75, 1.1, facecolor=col,
                                    edgecolor="#333", linewidth=1.1))
-        ax.text(x + 0.875, 0.85, txt, ha="center", va="center", fontsize=8.5)
+        ax.text(x + 0.875, 0.85, txt, ha="center", va="center", fontsize=SN_FONT_MIN)
         if i < len(steps) - 1:
             ax.annotate("", xy=(x + 2.1, 0.85), xytext=(x + 1.78, 0.85),
                         arrowprops=dict(arrowstyle="->", lw=1.4, color="#333"))
     ax.text(5.4, 0.02, "candidate set is identical for every coalition — "
             "differences in $v(S)$ reflect fusion, not retrieval",
-            ha="center", fontsize=7.5, style="italic", color="#555")
+            ha="center", fontsize=SN_FONT_MIN, style="italic", color="#555")
     ax.set_xlim(-0.2, 11); ax.set_ylim(-0.1, 1.6)
     p = FIG / "F1_workflow.png"
     fig.savefig(p, bbox_inches="tight"); plt.close(fig)
@@ -127,12 +152,10 @@ def fig2_shapley_shares(results: dict) -> Path:
         ax.bar(SOURCES, vals, yerr=err, capsize=3,
                color=[PALETTE[g] for g in SOURCES], edgecolor="#333", linewidth=0.6)
         ax.axhline(0, color="#333", lw=0.8)
-        ax.set_title(f"{name}\n$v(\\mathcal{{G}})$="
+        ax.set_title(f"{disp(name)}\n$v(\\mathcal{{G}})$="
                      f"{r['e1_source_share']['v_grand']:.4f}", fontsize=9)
         ax.set_xlabel("source")
     axes[0].set_ylabel("Shapley value $\\varphi_g$")
-    fig.suptitle("F2 — Exact Shapley shares (error bars: std across seeds)",
-                 fontsize=10, y=1.04)
     p = FIG / "F2_shapley_shares.png"
     fig.savefig(p, bbox_inches="tight"); plt.close(fig)
     return p
@@ -160,7 +183,7 @@ def fig3_loo_vs_shapley(results: dict) -> Path:
                for g in SOURCES]
     handles += [plt.Line2D([], [], marker=m, ls="", color="#555", label=n)
                 for n, m in marks.items() if n in results]
-    ax.legend(handles=handles, fontsize=7, ncol=2, loc="best")
+    ax.legend(handles=handles, fontsize=SN_FONT_MIN, ncol=2, loc="best")
     p = FIG / "F3_loo_vs_shapley.png"
     fig.savefig(p, bbox_inches="tight"); plt.close(fig)
     return p
@@ -182,14 +205,12 @@ def fig4_redundancy_heatmap(results: dict) -> Path:
         im = ax.imshow(M, cmap="RdBu_r", vmin=-1, vmax=1)
         ax.set_xticks(range(len(SOURCES)), SOURCES, fontsize=8)
         ax.set_yticks(range(len(SOURCES)), SOURCES, fontsize=8)
-        ax.set_title(name, fontsize=9); ax.grid(False)
+        ax.set_title(disp(name), fontsize=9); ax.grid(False)
         for i in range(len(SOURCES)):
             for j in range(len(SOURCES)):
-                ax.text(j, i, f"{M[i, j]:.2f}", ha="center", va="center", fontsize=6.5,
+                ax.text(j, i, f"{M[i, j]:.2f}", ha="center", va="center", fontsize=SN_FONT_MIN,
                         color="white" if abs(M[i, j]) > 0.55 else "#222")
     fig.colorbar(im, ax=axes.tolist(), shrink=0.8, label="Kendall $\\tau$")
-    fig.suptitle("F4 — Redundancy between sources (pop–cf, rec–ct pre-registered)",
-                 fontsize=10, y=1.03)
     p = FIG / "F4_redundancy_heatmap.png"
     fig.savefig(p, bbox_inches="tight"); plt.close(fig)
     return p
@@ -214,11 +235,10 @@ def fig5_segment_radar(results: dict) -> Path:
             v = np.concatenate([v, v[:1]])
             ax.plot(ang, v, lw=1.3, label=seg)
             ax.fill(ang, v, alpha=0.08)
-        ax.set_xticks(ang[:-1], SOURCES, fontsize=7.5)
-        ax.set_title(name, fontsize=9, pad=14)
-        ax.tick_params(labelsize=6)
-    axes[-1].legend(fontsize=6, loc="upper right", bbox_to_anchor=(1.4, 1.15))
-    fig.suptitle("F5 — Segment-level Shapley profiles", fontsize=10, y=1.05)
+        ax.set_xticks(ang[:-1], SOURCES, fontsize=SN_FONT_MIN)
+        ax.set_title(disp(name), fontsize=9, pad=14)
+        ax.tick_params(labelsize=SN_FONT_MIN)
+    axes[-1].legend(fontsize=SN_FONT_MIN, loc="upper right", bbox_to_anchor=(1.4, 1.15))
     p = FIG / "F5_segment_radar.png"
     fig.savefig(p, bbox_inches="tight"); plt.close(fig)
     return p
@@ -236,8 +256,8 @@ def fig6_fuse_gain(results: dict) -> Path:
         vals = [results[n]["e4_signalshap_fuse"]["full_catalog"][m]["ndcg_at_10"]
                 for n in names]
         b = ax.bar(x + (i - 1) * w, vals, w, label=lab, edgecolor="#333", linewidth=0.6)
-        ax.bar_label(b, fmt="%.3f", fontsize=6.5, padding=1.5)
-    ax.set_xticks(x, names); ax.set_ylabel("NDCG@10 (full catalog)")
+        ax.bar_label(b, fmt="%.3f", fontsize=SN_FONT_MIN, padding=1.5)
+    ax.set_xticks(x, [disp(n) for n in names]); ax.set_ylabel("NDCG@10 (full catalog)")
     ax.set_title("F6 — SignalShap-Fuse vs fusion baselines\n"
                  "(full-catalog: items outside $C_u$ scored as misses)", fontsize=9.5)
     ax.legend(fontsize=8)
@@ -263,9 +283,9 @@ def fig7_robustness(results: dict) -> Path:
                     marker="o", ms=4, color=PALETTE[g], label=g, lw=1.2)
         for k in keys:
             ax.annotate(f"r={sweep[k]['candidate_recall']:.2f}",
-                        (sweep[k]["n_max"], ax.get_ylim()[0]), fontsize=6,
+                        (sweep[k]["n_max"], ax.get_ylim()[0]), fontsize=SN_FONT_MIN,
                         ha="center", va="bottom", color="#666")
-        ax.set_title(f"{name}: $|C_u|$ sweep", fontsize=9)
+        ax.set_title(f"{disp(name)}: $|C_u|$ sweep", fontsize=9)
         ax.set_xlabel("$N_{max}$"); ax.set_ylabel("$\\varphi_g$" if j == 0 else "")
 
         ax = axes[1][j]
@@ -274,12 +294,10 @@ def fig7_robustness(results: dict) -> Path:
         for g in SOURCES:
             ax.plot([float(k.split("_")[1]) for k in lk], [lam[k][g] for k in lk],
                     marker="s", ms=4, color=PALETTE[g], lw=1.2)
-        ax.set_xscale("log"); ax.set_title(f"{name}: $\\lambda$ sensitivity", fontsize=9)
+        ax.set_xscale("log"); ax.set_title(f"{disp(name)}: $\\lambda$ sensitivity", fontsize=9)
         ax.set_xlabel("$\\lambda$ (frozen = 1.0)")
         ax.set_ylabel("$\\varphi_g$" if j == 0 else "")
-    axes[0][0].legend(fontsize=6.5, ncol=2)
-    fig.suptitle("F7 — Robustness (recall annotated per cell; $\\lambda$ is "
-                 "sensitivity only, never selection)", fontsize=10, y=1.01)
+    axes[0][0].legend(fontsize=SN_FONT_MIN, ncol=2)
     p = FIG / "F7_robustness.png"
     fig.savefig(p, bbox_inches="tight"); plt.close(fig)
     return p
@@ -320,7 +338,7 @@ def table2_datasets(results: dict, stats: dict) -> pd.DataFrame:
                   f"(dataset_stats.json says {glob_s['users']:,} -- pre-downsize)")
         e0a, e0b = r["e0a_candidates"], r["e0b_monotonicity"]
         rows.append({
-            "Dataset": name, "Users": s.get("users"), "Items": s.get("items"),
+            "Dataset": disp(name), "Users": s.get("users"), "Items": s.get("items"),
             "Interactions": s.get("interactions"),
             "Density (as used)": f"{s.get('density', 0) * 100:.4f}%",
             "$N_{max}$": e0a["n_max"],
@@ -371,7 +389,7 @@ def table_efficiency(results: dict) -> pd.DataFrame:
         phi = r["e1_source_share"]["shapley"]
         rounded_sum = round(sum(round(v, 5) for v in phi.values()), 5)
         rows.append({
-            "Dataset": name,
+            "Dataset": disp(name),
             "$\\sum_g \\varphi_g$": f"{e['sum_phi']:.17g}",
             "$v(\\mathcal{G})$": f"{e['v_grand']:.17g}",
             "$|$error$|$": f"{e['abs_error']:.1e}",
@@ -446,7 +464,7 @@ def table6_loo_vs_shapley(results: dict) -> pd.DataFrame:
             has_ci = bool(c) and c.get("n_seeds", 0) > 1
             mean = c.get("mean", e2["shapley"][g])
             rows.append({
-                "Dataset": name, "Source": g,
+                "Dataset": disp(name), "Source": g,
                 "LOO (seed 42)": f"{e2['loo'][g]:.5f}",
                 "Shapley (seed 42)": f"{e2['shapley'][g]:.5f}",
                 "Shapley (seed mean)": f"{mean:.5f}" if has_ci else "n/a",
