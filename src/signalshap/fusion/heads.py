@@ -106,8 +106,12 @@ def select_on_validation(
     """Choose head and shrinkage alpha by cross-validation WITHIN the validation fold.
 
     Splits the validation users into `n_folds`, fits on one part and scores on
-    the held-out part, so neither the head nor alpha ever sees test data. The
-    returned configuration is then refit on the whole validation fold.
+    the held-out part. Neither the head family nor alpha ever sees test data:
+    this function does not receive a test-item mapping at all, which is what
+    keeps the downstream fusion comparison non-circular. The characteristic
+    function of the game IS evaluated on test interactions, so deriving fusion
+    weights from Shapley output would be leakage; weights come from here
+    instead, and are frozen before any test evaluation.
     """
     rng = np.random.default_rng(seed)
     users = np.array(sorted(fit_users))

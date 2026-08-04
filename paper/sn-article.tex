@@ -15,6 +15,7 @@
 \usepackage{amsmath}
 \usepackage{amssymb}
 \usepackage{graphicx}
+\usepackage{url}
 \graphicspath{{figures/}}
 
 \theoremstyle{thmstyleone}
@@ -35,8 +36,8 @@
 
 \begin{document}
 
-\title[Verified Source-Level Credit Attribution]{SignalShap: Verified
-Source-Level Credit Attribution for Hybrid Recommenders}
+\title[Exact Ranking-Stage Source Attribution]{SignalShap: Exact
+Ranking-Stage Attribution of Sources in Hybrid Recommenders}
 
 \author*[1]{\fnm{Mouad} \sur{Louhichi}}\email{mouad\_louhichi@um5.ac.ma}
 \author[1]{\fnm{Redwane} \sur{Nesmaoui}}\email{redwane.nesmaoui@um5.ac.ma}
@@ -56,18 +57,20 @@ Because the player set is small, the Shapley value is obtained in closed form
 over all $2^5=32$ coalitions, so the aggregation carries no sampling error and
 runs in seconds on a laptop CPU.
 
-Our central result is a \emph{validation}: we establish that the method
-recovers correct credit on real data where the answer is known in advance.
-Injecting a controlled duplicate of an existing source fixes the correct
-attribution by construction, since symmetry requires the duplicated pair to
-receive equal credit. SignalShap recovers this to numerical precision on
-\emph{all four} corpora, which span a $49\times$ density range, while the
-leave-one-out ablation that dominates current practice returns zero credit for
-both members of every pair. Efficiency is verified to $6.9\times10^{-18}$, and
-measured redundancy tracks the attribution shift at $r=0.49$, recovering
-structure we pre-registered as present. Fusion weights derived from these
-attributions outperform LightGCN, SASRec, uniform, and popularity baselines at
-$p<0.001$. We release code and a one-command reproduction.}
+We validate the implementation against constraints that are known in advance.
+Injecting an exact duplicate of an existing source makes the pair exchangeable
+in the declared game, so any rule satisfying symmetry must assign them equal
+credit; SignalShap recovers this equality to numerical precision on all four
+corpora, which span a $49$-fold density ratio, and efficiency holds to
+$6.9\times10^{-18}$. We are explicit that these are \emph{axiom and
+implementation} checks: they establish that the estimator behaves as its
+theory requires, not that the absolute magnitudes are the uniquely correct
+engineering credit. Under the same duplication, leave-one-out ablation assigns
+zero marginal value to both substitutes, illustrating a known limitation of
+removal-based attribution. Fusion weights derived from validation-fold
+attributions, frozen before test evaluation, outperform LightGCN, SASRec,
+uniform, and popularity baselines at $p<0.001$; against a globally tuned head
+of the same family the difference is not established. We release code and a one-command reproduction.}
 
 \keywords{Shapley value, cooperative game theory, recommender systems,
 explainable AI, credit assignment, hybrid recommendation}
@@ -111,10 +114,9 @@ so KernelSHAP and its relatives sample and inherit estimator variance. With
 five architectural sources the lattice has $2^5 = 32$ elements and the exact
 closed form is a short sum, which we compute directly. Second, and more
 importantly, \emph{verifiability}: a small player set makes it possible to
-construct cases whose correct attribution is known in advance and check that
-the method returns it. Section~\ref{sec:recovery} does this, and to our
-knowledge it is the first such validation for recommender-architecture
-attribution.
+construct cases in which the attribution must satisfy a known constraint, and
+check that the method does. Section~\ref{sec:recovery} does this for symmetry
+and efficiency on real fitted games.
 
 \subsection{Contributions}
 
@@ -127,13 +129,14 @@ attribution.
       redundancy--positivity property is \textbf{false} without monotonicity,
       and discharge that hypothesis with an empirical audit
       (Section~\ref{sec:theory}).
-\item \textbf{C3 (primary).} A \emph{validation protocol} for source
-      attribution, and evidence that SignalShap passes it. Injecting a
-      controlled duplicate supplies ground truth by construction, and the
-      method recovers the correct credit to numerical precision on all four
-      corpora (Section~\ref{sec:recovery}). To our knowledge this is the first
-      attribution method for recommender architectures validated against a
-      constructed ground truth rather than assessed only by inspection.
+\item \textbf{C3 (primary).} A \emph{diagnostic protocol} for source
+      attribution based on controlled duplicate injection, and evidence that
+      SignalShap passes it. Duplication makes a pair exchangeable, so symmetry
+      fixes a constraint the attribution must satisfy regardless of the data;
+      the method meets it to numerical precision on all four corpora
+      (Section~\ref{sec:recovery}). We report the pair-sum shift as a
+      diagnostic and note explicitly that Shapley credit is
+      \emph{not} conserved under replication.
 \item \textbf{C3b.} Evidence that the credit SignalShap assigns is
       \emph{materially different} from what current practice reports, and in
       the direction theory predicts: on MovieLens-1M it identifies
@@ -147,8 +150,10 @@ attribution.
       LightGCN, SASRec, uniform, and popularity baselines at $p<0.001$. Against
       a well-tuned global head the margin is positive but within noise at this
       sample size, and we report it as such.
-\item \textbf{C6.} A reproducible artefact with pre-registered configuration
-      and CI-enforced invariants.
+\item \textbf{C6.} A reproducible artefact with a frozen configuration fixed
+      before the reported runs and CI-enforced invariants. We use ``frozen''
+      rather than ``pre-registered'': the configuration is version-controlled
+      and dated in the repository, but there is no external registration.
 \end{itemize}
 
 \begin{figure}[t]
@@ -181,6 +186,31 @@ prediction?''. We answer ``which architectural component earned the system's
 ranking quality?''. The unit of attribution differs, the payoff is a ranking
 metric rather than a scalar output, and the actionable decision differs --- ours
 is a build-or-retire decision about a subsystem.
+
+\paragraph{Attribution to model components and to performance}
+Closer to our unit of analysis than feature-level XAI is work attributing
+behaviour to \emph{model components} rather than inputs~\citep{shah2024coar},
+and work attributing changes in \emph{performance} rather than individual
+predictions~\citep{zhang2023performance}. Ranking-specific treatments of
+Shapley stability are also directly relevant given our
+payoff~\citep{chowdhury2024rankshap}. We position SignalShap within this
+performance- and component-attribution line rather than within
+prediction-explanation.
+
+\paragraph{Which Shapley, and which game}
+Shapley uniqueness holds \emph{once a game is fixed}; it does not select the
+game. Sundararajan and Najmi~\citep{sundararajan2020many} show that plausible
+operationalisations differ materially, which is why we state our candidate
+construction, coalition head, and baseline explicitly and treat them as
+declared modelling choices rather than as the canonical formulation.
+Alternative cooperative values --- Banzhaf and other
+semivalues~\citep{karczmarz2022banzhaf} --- and interaction-aware extensions
+such as the Shapley--Taylor index~\citep{sundararajan2020shapleytaylor} are
+natural comparators that we do not evaluate here; redundancy between sources is
+central to our setting, so interaction indices are a clear next step.
+Replication sensitivity of Shapley allocations~\citep{han2022replication} is
+directly relevant to our duplicate-injection design and is discussed in
+Section~\ref{sec:recovery}.
 
 \paragraph{Hybrid recommenders and ablation practice}
 Burke's taxonomy~\citep{burke2002hybrid} classifies hybridisation strategies;
@@ -228,6 +258,18 @@ head fitted on the validation fold, and
 v(S) \;=\; \frac{1}{|\mathcal{U}|} \sum_{u} \NDCG\!\left(
 \text{rank}_i\, \hat{s}_{u,i}(S) ;\, \text{test}_u \cap \Cu \right) - v_0 .
 \end{equation}
+
+The coalition head is the ridge solution on the validation fold,
+\begin{equation}
+w^{(S)} \;=\; \arg\min_{w \in \mathbb{R}^{|S|}}
+\sum_{u} \bigl\| \mathbf{y}_u - Z_u^{(S)} w \bigr\|_2^2
+\;+\; \lambda \|w\|_2^2 ,
+\end{equation}
+where $Z_u^{(S)}$ stacks the $z$-normalised scores of the sources in $S$ over
+$i \in \Cu$, and $\mathbf{y}_u$ is the binary relevance of the user's held-out
+\emph{validation} interaction. Weights are unconstrained, no intercept is
+fitted, and $\lambda$ is frozen (below). Test interactions are never used to
+fit $w^{(S)}$.
 
 Here $v_0$ is the $\NDCG$ of \emph{one frozen permutation} of $\Cu$, drawn once
 and reused for every coalition and user. The empty-coalition ranking is defined
@@ -336,10 +378,13 @@ $\tfrac12 v(\{g_1\}) = 0.5 > 0.4167 = \varphi_{g_1}$. Relatedly, no pairwise
 closed form $\tfrac12[v(\G) - v(\G\setminus\{g_1,g_2\})]$ is valid; it returns
 $-2.25$ against a true $-0.4167$ on the counterexample.
 
-\begin{remark}[Affine scale invariance]
+\begin{remark}[Positive-affine scale invariance]
 Per-user $z$-normalisation makes $\varphi_g$ invariant under user- and
-source-specific affine maps. Invariance does \emph{not} extend to nonlinear
-monotone maps; we test this empirically.
+source-specific maps $z \mapsto az + b$ \textbf{with $a > 0$}. The restriction
+matters: a negative $a$ reverses the induced ranking and is not an invariance,
+and the normalisation is undefined for a constant score vector, which we handle
+by mapping zero-variance sources to the zero vector. Invariance does not extend
+to nonlinear monotone maps.
 \end{remark}
 
 \section{Experimental Setup}\label{sec:setup}
@@ -351,9 +396,9 @@ an item's content cluster. $seq$: item2vec, realised as SVD of the shifted PPMI
 co-occurrence matrix, the closed-form equivalent of skip-gram with negative
 sampling~\citep{levy2014neural} and deterministic on CPU.
 
-\paragraph{Pre-registered overlap}
-Two pairs overlap \emph{by construction} and we declare this in advance rather
-than present it as a discovery: $pop$--$cf$ (ALS on implicit feedback chases
+\paragraph{Expected overlap, stated in advance}
+Two pairs overlap \emph{by construction} and we state this before reporting
+results rather than present it as a discovery: $pop$--$cf$ (ALS on implicit feedback chases
 popularity) and $rec$--$ct$ (recency is defined over content clusters). RQ2
 asks whether Shapley \emph{recovers} known structure --- a validation of the
 estimator against a defensible ground truth.
@@ -447,28 +492,45 @@ normal, and re-run the game with six players. The candidate set is held
 \emph{fixed} at its pre-injection value, so the only thing that changes is the
 player set.
 
-\paragraph{What the correct answer must be}
-Two requirements follow from the construction, independently of any model.
-\emph{Symmetry:} at $\eta = 0$ the pair is exactly exchangeable, so any correct
-attributor must assign them equal credit. \emph{Conservation:} the pair jointly
-performs the work the original source performed alone. And one prediction
-follows from Property~\ref{prop:loo}: LOO must collapse toward zero for
-\emph{both} members.
+\paragraph{What is known in advance, and what is not}
+At $\eta = 0$ the original and duplicated sources are exchangeable in the
+declared game, so any rule satisfying the symmetry axiom must assign them equal
+values. This gives a checkable constraint that does not depend on the data.
+Property~\ref{prop:loo} adds a second prediction: leave-one-out must collapse
+toward zero for \emph{both} members, since either alone is dispensable.
+
+We are deliberately precise about the limits of this design.
+\textbf{Duplication does not conserve credit}, and it would be wrong to require
+that it should. The combined Shapley value of a cloned pair need not equal the
+original player's pre-duplication value: in the two-player monotone game
+$v(g)=7$, $v(h)=8$, $v(g,h)=8$ one has $\varphi_g = 3.5$, whereas replacing
+$g$ by perfect substitutes $g_1,g_2$ gives
+$\varphi_{g_1} = \varphi_{g_2} = 7/3$ and a pair sum of $14/3 \approx 4.67$.
+Clone insertion redistributes credit among \emph{all} players, a sensitivity of
+Shapley allocations to replication that is known in the cooperative-game
+literature~\citep{han2022replication}. Our own runs show the same effect: the
+pair sum is $1.42\times$ the pre-injection value on MovieLens-1M
+(Table~\ref{tab:recovery}). We therefore report the pair sum as a
+\emph{diagnostic}, not as a requirement, and treat the experiment as a
+symmetry and implementation check rather than as recovery of absolute credit.
 
 \begin{table}[t]
-\caption{Redundancy recovery across four real corpora spanning a $49\times$
-density range (injected duplicate of $cf$, $\eta = 0$). Shapley satisfies
-symmetry to numerical precision; LOO returns exactly zero for both members of
-every pair.}
+\caption{Duplicate-source diagnostics (injected clone of $cf$, $\eta = 0$),
+across four corpora spanning a $49$-fold density ratio. Symmetry holds to
+numerical precision everywhere, and LOO returns exactly zero for both members.
+The final column reports the pair sum relative to the pre-injection
+$\varphi_{cf}$: it is \emph{not} unity, and is not required to be --- clone
+insertion redistributes credit among all players.}
 \label{tab:recovery}
-\begin{tabular}{@{}lrrrr@{}}
+\begin{tabular}{@{}lrrrrrr@{}}
 \toprule
-Corpus & Density & Symmetry error & $\LOO(cf)$ & $\LOO(cf_{\text{dup}})$ \\
+Corpus & Density & $\varphi_{cf}$ & $\varphi_{cf_{\text{dup}}}$ &
+Sym.\ err. & $\LOO$ both & Pair sum / pre \\
 \midrule
-MovieLens-1M & $2.697\%$ & $0.0$ & $0.000000$ & $0.000000$ \\
-Yelp2018     & $0.105\%$ & $0.0$ & $0.000000$ & $0.000000$ \\
-Gowalla      & $0.072\%$ & $0.0$ & $0.000000$ & $0.000000$ \\
-Amazon-Book  & $0.055\%$ & $0.0$ & $0.000000$ & $0.000000$ \\
+MovieLens-1M & $2.697\%$ & $0.01078$ & $0.01078$ & $0.0$ & $0.000000$ & $1.42$ \\
+Yelp2018     & $0.105\%$ & $0.00618$ & $0.00618$ & $0.0$ & $0.000000$ & --- \\
+Gowalla      & $0.072\%$ & $0.01430$ & $0.01430$ & $0.0$ & $0.000000$ & --- \\
+Amazon-Book  & $0.055\%$ & $0.00251$ & $0.00251$ & $0.0$ & $0.000000$ & --- \\
 \botrule
 \end{tabular}
 \end{table}
@@ -529,8 +591,12 @@ $+0.0152$, the second most valuable source in the system. The disagreement is
 not a matter of degree that careful reading would survive; the two methods
 recommend opposite actions.
 
-The mechanism is the one Property~\ref{prop:loo} describes, and it explains why
-SignalShap sees what ablation cannot. On MovieLens the collaborative signal
+The mechanism is \emph{qualitatively} the one Property~\ref{prop:loo}
+describes, though we note the property does not formally apply here: the fitted
+MovieLens game is non-monotone ($26/80$ violations,
+Table~\ref{tab:preconditions}), so the theorem's positivity conclusion is not
+available and the account below is an interpretation rather than a
+theorem-backed prediction. On MovieLens the collaborative signal
 overlaps substantially with the sequential and popularity signals, so removing
 $cf$ from the \emph{grand} coalition costs almost nothing: the others absorb
 its role. Ablation observes only that single contrast. SignalShap averages
@@ -538,10 +604,14 @@ $cf$'s contribution over all 16 coalitions in which it can appear, including
 those where no other source covers for it, and so recovers the value the
 overlap conceals.
 
-This also serves as a second validation. Measured redundancy correlates with
-the attribution shift at $r = 0.491$, the relationship Lemma~\ref{lem:eps}
-predicts --- the method recovers a structure we pre-registered as present
-(Section~\ref{sec:setup}) rather than discovering one after the fact.
+Measured redundancy is associated with the attribution shift at $r = 0.491$
+across the ten source pairs, in the direction the redundancy argument suggests.
+We are careful not to overstate this. Lemma~\ref{lem:eps} defines redundancy
+through \emph{coalition values}, whereas this statistic is a Kendall
+correlation between per-user \emph{score vectors}; the two are related but not
+equivalent, and the lemma predicts no particular correlation coefficient. The
+observation is therefore consistent with the theory rather than a test of it,
+and with ten pairs it carries little inferential weight on its own.
 
 Figure~\ref{fig:redundancy} shows the pairwise structure directly.
 
@@ -550,8 +620,8 @@ Figure~\ref{fig:redundancy} shows the pairwise structure directly.
 \includegraphics[width=\textwidth]{F4_redundancy_heatmap.png}
 \caption{Redundancy between sources, measured as Kendall $\tau$ between
 per-user score vectors. The $pop$--$cf$ and $rec$--$ct$ pairs are
-pre-registered as overlapping by construction
-(Section~\ref{sec:setup}).}\label{fig:redundancy}
+expected to overlap by construction, as stated in advance in
+Section~\ref{sec:setup}.}\label{fig:redundancy}
 \end{figure}
 
 \section{Segment-Level Attribution and Fusion}\label{sec:segments}
@@ -576,6 +646,16 @@ result.
 little heterogeneity to exploit, which is what we observe on the sparse
 corpora.}\label{fig:segments}
 \end{figure}
+
+\paragraph{Fusion weights never see test outcomes}
+Because the characteristic function of Section~\ref{sec:game} is evaluated on
+test interactions, deriving fusion weights from those same attributions would
+be circular. We avoid this: the fusion heads, the segment-specific weights, the
+choice of head family, and the shrinkage strength are all fitted on the
+\emph{validation} fold only, and are frozen before a single test evaluation.
+The Shapley values reported in Section~\ref{sec:results} are diagnostic output;
+they are not inputs to the weights. This separation is enforced in code and
+covered by the released test suite.
 
 \paragraph{Attribution-derived fusion is competitive}
 Weights derived from the segment-level attributions outperform every
@@ -621,18 +701,33 @@ $\lambda$ tuning. These are mathematical and depend on no corpus.
 \paragraph{Scope was narrowed after the study began}
 This work was designed as a study contrasting attribution across densities. The
 \emph{hypotheses} were not changed to fit results: Properties~1--3 and
-Lemma~\ref{lem:eps} are stated as pre-registered, and both outcomes that went
+Lemma~\ref{lem:eps} are stated as originally formulated, and both outcomes that went
 against expectation --- the non-monotone fitted game and the inconclusive
 fusion comparison --- are reported rather than removed. The intervention of
 Section~\ref{sec:recovery} is \textbf{post-hoc in origin}: it was added because
 the observational comparison could not establish which attributor was correct.
 Its prediction was fixed by construction \emph{before} it was run.
 
-\paragraph{Protocol differences across corpora}
-The three LightGCN splits carry no timestamps, so the leave-last-out temporal
-protocol applies to MovieLens-1M only. Interaction order on those corpora is
-arbitrary, which structurally handicaps the $rec$ and $seq$ players --- their
-attributions there are lower bounds, not estimates.
+\paragraph{Temporal players are not interpretable on three of four corpora}
+This is the most serious limitation of the present protocol, and it is a
+protocol flaw rather than a reporting nuance. The three LightGCN splits carry
+no timestamps. We therefore substitute file order, which means the recency
+player, the time-decay term of the popularity player, and the sequential player
+operate on an ordering with no temporal meaning. Attributions for $rec$ and
+$seq$ on Yelp2018, Gowalla, and Amazon-Book should be read as
+\emph{uninterpretable} rather than as small: an arbitrary order can inflate or
+deflate a measured contribution, so they are not bounds in either direction. An
+earlier draft of this paper described them as lower bounds; that claim was
+unjustified and is withdrawn.
+
+The consequence for the cross-corpus comparison is that only the
+$cf$ and $ct$ players carry consistent semantics across all four datasets, and
+only MovieLens-1M supports the full five-source game as specified. The
+duplicate-injection diagnostics of Section~\ref{sec:recovery} are unaffected,
+since exchangeability of a clone does not depend on the semantics of the
+cloned source. A proper cross-density study requires timestamped corpora
+throughout, and we flag it as the primary requirement for the next version of
+this work.
 
 \begin{figure}[t]
 \centering
@@ -655,6 +750,50 @@ are strongest on MovieLens-1M.
 Amazon-Book required an unusually large candidate pool
 (Section~\ref{sec:preconditions}) and its attribution is the least comparable.
 
+\section{Threats to Validity}\label{sec:threats}
+
+\paragraph{Construct validity: what the game measures}
+The candidate set is the union of \emph{all} sources' top-$N$ lists and is held
+fixed across coalitions. This is deliberate --- it makes $v(S)$ comparable, since
+a coalition-specific pool would hand the grand coalition a retrieval advantage
+--- but it has a consequence we did not previously state clearly. Every
+coalition, including the empty one, ranks items that absent sources helped
+retrieve. SignalShap therefore estimates \emph{ranking-stage} credit, not
+end-to-end subsystem value. Retiring a source in production would also remove
+its retrieved candidates, an effect this game excludes by construction. Claims
+about build-or-retire decisions should be read with that scope in mind, and
+separating $v_{\text{rank}}$ from a coalition-retrieval $v_{\text{e2e}}$ is the
+most valuable extension we can identify.
+
+\paragraph{Construct validity: what the validation establishes}
+The duplicate experiment verifies symmetry and efficiency on real fitted games.
+It does not establish absolute correctness of the magnitudes, and no experiment
+here does, because no independent ground-truth attribution exists for these
+systems. Analytic synthetic games with a fully known Shapley vector would go
+further, and we regard that as the natural complement to this work.
+
+\paragraph{Statistical conclusion validity}
+Three training seeds are too few to characterise model-level variability, and
+all users share the same fitted source models, so treating users as independent
+understates dependence. The fusion comparison against the globally tuned head
+is not merely underpowered: with $d_z = 0.006$ the honest framing requires a
+pre-specified smallest meaningful difference and an equivalence test, neither
+of which we conducted. We therefore make no claim of superiority over that
+baseline.
+
+\paragraph{Internal validity}
+Fusion weights are fitted on the validation fold and frozen before test
+evaluation, so the downstream comparison is not circular. Baseline tuning
+budgets for LightGCN and SASRec were modest and are not matched to the effort
+spent on our own pipeline; the absolute figures for those models should be read
+as reference points under our protocol rather than as their attainable best.
+
+\paragraph{External validity}
+One subsample per corpus, drawn to fit a memory budget, means cross-corpus
+results may be sample-specific. Combined with the timestamp limitation above,
+the four corpora vary in density, protocol, metadata, and sampling
+simultaneously, so this is not a controlled density comparison.
+
 \section{Conclusion}\label{sec:conclusion}
 
 We formulated hybrid-recommender source attribution as a five-player
@@ -664,14 +803,21 @@ to sample. We showed that a natural statement of the redundancy property is
 false without monotonicity, gave the counterexample, and audited the hypothesis
 rather than assuming it.
 
-The strongest evidence is the validation. By injecting a known duplicate into a
-real system we fixed the correct attribution by construction, and SignalShap
-recovered it to numerical precision on all four corpora, spanning a $49\times$
-density range. Attribution methods are usually assessed by whether their output
-looks reasonable; here the answer was known in advance and the method returned
-it. Under the same condition, ablation assigns zero credit to both members of
-the redundant pair, which is why the two approaches recommend opposite actions
-on real systems.
+The strongest evidence is the set of invariant checks. Injecting a duplicate
+into a real system creates a constraint that holds independently of the data ---
+exchangeable players must receive equal credit --- and SignalShap satisfies it
+to numerical precision on all four corpora, alongside efficiency to
+$6.9\times10^{-18}$. Attribution values are otherwise difficult to falsify by
+inspection, so establishing that the implementation realises its axioms on real
+fitted games is a meaningful, if bounded, form of validation. Under the same
+condition, ablation assigns zero credit to both substitutes.
+
+We are explicit about what remains open. These checks do not identify the
+absolute correct credit; the game measures ranking-stage rather than
+end-to-end contribution; and three of four corpora lack the timestamps its
+temporal players require. Establishing that Shapley credit leads to better
+subsystem decisions than ablation would require a retirement simulation we have
+not run, and we regard that as the decisive experiment for this line of work.
 
 Future work: completing the robustness suite uniformly across corpora,
 privacy-bearing signals as players, cascade hybrids, and causal extensions of
@@ -681,7 +827,11 @@ source attribution.
 
 \bmhead{Supplementary information}
 Code, configuration, cached score matrices, and every artefact JSON backing the
-numbers above are available in the reproduction package.
+numbers reported here are available at
+\url{https://github.com/mouadlouhichi/signalshap-code}. The repository contains
+the frozen configuration, one command per table and figure, and a test suite
+covering the efficiency, symmetry, and monotonicity invariants. An immutable
+archived release with a DOI will be deposited at acceptance.
 
 \bmhead{Acknowledgements}
 Not applicable.
