@@ -94,6 +94,19 @@ def check() -> list[str]:
         undeclared = used - declared - {"fit"}
         if undeclared:
             bad.append(f"undeclared tikz styles: {sorted(undeclared)}")
+        # sn-jnl.cls redefines \tiny to 5pt and \footnotesize to 7pt, both
+        # below Springer's 8pt artwork floor. Relative size macros inside a
+        # picture are therefore unsafe; explicit \fontsize is required.
+        for macro in (r"\\tiny", r"\\footnotesize", r"\\scriptsize"):
+            if re.search(macro + r"\b", pic):
+                bad.append(
+                    f"figure uses {macro.replace(chr(92)+chr(92), chr(92))}, which "
+                    "sn-jnl.cls sets below the 8pt artwork minimum; use \\fontsize"
+                )
+        for pts in re.findall(r"\\fontsize\{([\d.]+)\}", t):
+            if float(pts) < 8:
+                bad.append(f"figure lettering at {pts}pt is below the 8pt minimum")
+
         libs = re.search(r"usetikzlibrary\{([^}]*)\}", t)
         loaded = {l.strip() for l in libs.group(1).split(",")} if libs else set()
         for lib, needed in (("arrows.meta", "Stealth" in pic),

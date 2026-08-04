@@ -36,17 +36,25 @@
 \definecolor{snFuse}{HTML}{C8963E}
 \definecolor{snGrey}{HTML}{4A4A4A}
 
+%% Springer requires figure lettering at 8-12pt. Note that sn-jnl.cls
+%% redefines the size macros: \tiny is 5pt and \footnotesize is 7pt, both of
+%% which would VIOLATE that rule. We therefore set explicit point sizes here
+%% rather than relying on the relative macros.
+\newcommand{\snFigMain}{\fontsize{9}{10.5}\selectfont}
+\newcommand{\snFigSub}{\fontsize{8}{9.5}\selectfont}
+
 \tikzset{
   snbox/.style={
     rounded corners=2pt, draw=#1, line width=0.7pt, fill=#1!7,
-    inner sep=3.2pt, align=center, font=\scriptsize},
+    inner sep=4pt, align=center, font=\snFigMain, text width=32mm},
   snfold/.style={
     rounded corners=1pt, draw=snGrey!70, line width=0.5pt, fill=snGrey!5,
-    inner sep=2.6pt, align=center, font=\scriptsize},
-  snflow/.style={-{Stealth[length=4pt,width=3pt]}, draw=snGrey, line width=0.65pt},
-  sndata/.style={-{Stealth[length=4pt,width=3pt]}, draw=snGrey!60,
-    line width=0.55pt, dashed, dash pattern=on 2pt off 1.4pt},
-  snlbl/.style={font=\tiny, inner sep=1.2pt, text=snGrey},
+    inner sep=3pt, align=center, font=\snFigSub, text width=26mm},
+  snflow/.style={-{Stealth[length=4.5pt,width=3.5pt]}, draw=snGrey,
+    line width=0.7pt},
+  sndata/.style={-{Stealth[length=4.5pt,width=3.5pt]}, draw=snGrey!65,
+    line width=0.6pt, dashed, dash pattern=on 2.2pt off 1.6pt},
+  snlbl/.style={font=\snFigSub, inner sep=1.6pt, text=snGrey},
 }
 \graphicspath{{figures/}}
 
@@ -190,83 +198,83 @@ and efficiency on real fitted games.
       and dated in the repository, but there is no external registration.
 \end{itemize}
 
-\begin{figure*}[t]
+\begin{figure}[t]
 \centering
 \iftikzfigure
-\begin{tikzpicture}[node distance=4mm]
+%% resizebox is a no-op while the picture fits; it guarantees the figure can
+%% never exceed the text block if node sizes are later changed.
+\resizebox{\linewidth}{!}{%
+\begin{tikzpicture}[node distance=5mm]
 
-%% ---- data folds -------------------------------------------------------
-\node[snfold] (train) {\textbf{Train}\\[-1pt]\tiny all but last two};
-\node[snfold, below=3.5mm of train] (val) {\textbf{Validation}\\[-1pt]\tiny 2nd-to-last};
-\node[snfold, below=3.5mm of val] (test) {\textbf{Test}\\[-1pt]\tiny last interaction};
-\node[snlbl, above=1.2mm of train] {leave-last-out split};
+%% ------------------------------------------------------------------
+%% Vertical layout: the pipeline reads top-to-bottom in the main
+%% column, with the three data folds as a narrow rail on the left.
+%% Kept inside \linewidth so it cannot overflow the text block.
+%% ------------------------------------------------------------------
 
-%% ---- stage 1: sources -------------------------------------------------
-\node[snbox=snSource, right=8mm of train, minimum height=15mm]
-  (src) {\textbf{Five sources}\\[1pt]
-         $cf$\, $ct$\, $pop$\, $rec$\, $seq$\\[1pt]
-         \tiny trained once, cached};
+%% --- pipeline spine (centre) --------------------------------------
+\node[snbox=snSource] (src)
+  {\textbf{Five sources}\\[1pt]
+   $cf$\quad $ct$\quad $pop$\quad $rec$\quad $seq$\\[1pt]
+   {\snFigSub trained once, cached}};
 
-%% ---- stage 2: candidates ---------------------------------------------
-\node[snbox=snCand, right=7mm of src, minimum height=15mm]
-  (cand) {\textbf{Candidates} $\Cu$\\[1pt]
-          $\bigcup_g$ top-$N_g^{(g)}(u)$\\[1pt]
-          \tiny identical for all $S$};
+\node[snbox=snCand, below=of src] (cand)
+  {\textbf{Candidate set} $\Cu$\\[1pt]
+   $\bigcup_g\ \text{top-}N_g^{(g)}(u)$\\[1pt]
+   {\snFigSub identical for every coalition}};
 
-%% ---- stage 3: the game ------------------------------------------------
-\node[snbox=snGame, right=7mm of cand, minimum height=15mm]
-  (game) {\textbf{$2^5=32$ coalitions}\\[1pt]
-          head $w^{(S)}$ on val.\\[1pt]
-          $v(S)=\overline{\NDCG}-v_0$};
+\node[snbox=snGame, below=of cand] (game)
+  {\textbf{All $2^5=32$ coalitions}\\[1pt]
+   head $w^{(S)}$, then
+   $v(S)=\overline{\NDCG}-v_0$};
 
-%% ---- stage 4: exact Shapley -------------------------------------------
-\node[snbox=snShap, right=7mm of game, minimum height=15mm]
-  (shap) {\textbf{Exact Shapley}\\[1pt]
-          $\varphi_g$, $\varphi_g(u)$\\[1pt]
-          \tiny no sampling error};
+\node[snbox=snShap, below=of game] (shap)
+  {\textbf{Exact Shapley}\\[1pt]
+   $\varphi_g$ \ and \ $\varphi_g(u)$\\[1pt]
+   {\snFigSub closed form, no sampling error}};
 
-%% ---- outputs ----------------------------------------------------------
-\node[snbox=snShap, above right=1mm and 7mm of shap]
-  (diag) {\textbf{Diagnosis}\\[-1pt]\tiny source credit, redundancy};
-\node[snbox=snFuse, below right=1mm and 7mm of shap]
-  (fuse) {\textbf{SignalShap-Fuse}\\[-1pt]\tiny segment weights};
+\node[snbox=snShap, below=of shap] (diag)
+  {\textbf{Diagnosis}\\[1pt]
+   {\snFigSub source credit, redundancy, segments}};
 
-%% ---- main flow --------------------------------------------------------
+\node[snbox=snFuse, below=of diag] (fuse)
+  {\textbf{SignalShap-Fuse}\\[1pt]
+   {\snFigSub segment weights, frozen before test}};
+
 \draw[snflow] (src)  -- (cand);
 \draw[snflow] (cand) -- (game);
 \draw[snflow] (game) -- (shap);
-\draw[snflow] (shap.east) -- (diag.west);
+\draw[snflow] (shap) -- (diag);
 
-%% ---- fold routing: this is the load-bearing part ----------------------
-\draw[sndata] (train.east) -- node[snlbl,above,pos=0.45]{fit} (src.west);
-\draw[sndata] (val.east) to[out=0,in=200]
-  node[snlbl,pos=0.72,below,sloped]{fit $w^{(S)}$} (game.south west);
-\draw[sndata] (test.east) to[out=-8,in=250]
-  node[snlbl,pos=0.85,below,sloped]{score only} (game.south);
+%% --- data folds (left rail) ---------------------------------------
+\node[snfold, left=11mm of src]  (train) {\textbf{Train}\\{\snFigSub all but last two}};
+\node[snfold, left=11mm of game] (val)   {\textbf{Validation}\\{\snFigSub 2nd-to-last}};
+\node[snfold, left=11mm of shap] (test)  {\textbf{Test}\\{\snFigSub last interaction}};
 
-%% fusion weights come from VALIDATION, never from the Shapley output
-\draw[sndata] (val.south) to[out=-60,in=180]
-  node[snlbl,pos=0.5,below,align=center]{fusion weights\\fitted here} (fuse.west);
+\draw[sndata] (train) -- node[snlbl,above]{fit} (src);
+\draw[sndata] (val)   -- node[snlbl,above]{fit $w^{(S)}$} (game);
+\draw[sndata] (test)  -- node[snlbl,above]{score only} (shap);
 
-%% ---- the barrier ------------------------------------------------------
-\begin{scope}[on background layer]
-  \node[fit=(shap)(diag), draw=snShap!45, dashed, rounded corners=3pt,
-        inner sep=3pt, fill=snShap!4] (rep) {};
-\end{scope}
-\node[snlbl, above=0.5mm of rep.north, text=snShap!85]
-  {reported, not fed forward};
+%% validation also supplies the fusion weights -- never the Shapley output
+\draw[sndata] (val.west) to[out=180,in=180,looseness=1.15]
+  node[snlbl,left,pos=0.5,align=center]{fusion\\weights} (fuse.west);
 
-\draw[-{Stealth[length=4pt,width=3pt]}, draw=snShap!70, line width=0.6pt,
-      dotted] (rep.south) -- node[snlbl,right,pos=0.4]{$\times$ no path} (fuse.north);
+%% --- the separation that prevents circularity ---------------------
+\draw[{Stealth[length=4.5pt,width=3.5pt]}-, draw=snShap!75, line width=0.7pt,
+      dotted] (fuse.north) -- node[snlbl,right,text=snShap!85]{no path} (diag.south);
 
-%% ---- protocol note ----------------------------------------------------
-\node[snlbl, below=2mm of fuse.south east, anchor=north east, align=right]
-  {$v(S)$: fixed-candidate within $\Cu$\\
-   reporting: full catalogue, $-\infty$ outside $\Cu$};
+\node[snlbl, right=3mm of diag.east, anchor=west, align=left, text width=26mm]
+  {reported only;\\not fed forward};
 
-\end{tikzpicture}
+%% --- protocol note ------------------------------------------------
+\node[snlbl, below=3mm of fuse.south, align=center, text width=64mm]
+  {$v(S)$ is fixed-candidate within $\Cu$;\\
+   reporting is full-catalogue, scoring $-\infty$ outside $\Cu$};
+
+\end{tikzpicture}%
+}
 \else
-\includegraphics[width=\textwidth]{Fig1.png}
+\includegraphics[width=\linewidth]{Fig1.png}
 \fi
 \caption{The SignalShap pipeline, with data folds made explicit. Sources are
 fitted on train; every coalition head $w^{(S)}$ and every fusion weight is
@@ -275,10 +283,10 @@ candidate set $\Cu$ is the union of all sources' top-$N$ lists and is identical
 for every coalition, so differences in $v(S)$ reflect fusion within $S$ rather
 than retrieval from a pool that favours it. Because $v(S)$ is evaluated on test
 interactions, the Shapley output is reported as diagnosis and is deliberately
-\emph{not} an input to the fusion weights (dotted arrow): that separation is
+\emph{not} an input to the fusion weights (dotted arrow); that separation is
 what keeps the downstream comparison of Section~\ref{sec:segments}
 non-circular}\label{fig:workflow}
-\end{figure*}
+\end{figure}
 
 \paragraph{What is not in this paper} Graph-neural or Transformer players;
 causal attribution; online or counterfactual evaluation. All attribution is
