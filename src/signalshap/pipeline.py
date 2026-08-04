@@ -277,10 +277,15 @@ class Experiment:
             "candidate_set_ndcg": {
                 k: float(np.mean(res[k])) for k in ("uniform", "global", "signalshap_fuse")
             },
+            # JSON-serialisable summary...
             "full_catalog": {
                 k: {m: v[m] for m in ("ndcg_at_10", "recall_at_20", "mrr_at_10", "n_users")}
                 for k, v in fc.items()
             },
+            # ...plus the raw per-user vectors, which hierarchical inference
+            # needs. write_artefact() drops ndarrays via its default= handler,
+            # so this stays in memory without breaking serialisation.
+            "per_user": {k: v["per_user_ndcg"] for k, v in fc.items()},
             "weights": res["weights"], "wilcoxon": effects, "holm_bonferroni": holm,
             "selection": res.get("selection", {}),
             "note": (

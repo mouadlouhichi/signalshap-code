@@ -161,7 +161,9 @@ def sasrec_scores(ds: Dataset, dim: int = 64, max_len: int = 50,
             h = encode(hist)
             neg = int(rng.integers(0, n_i))
             x = float(h @ (E[tgt] - E[neg]))
-            g = 1.0 / (1.0 + np.exp(x))
+            # clip before exp: large positive margins overflow float64 and
+            # emit a RuntimeWarning, though the gradient is ~0 either way
+            g = 1.0 / (1.0 + np.exp(np.clip(x, -30.0, 30.0)))
             E[tgt] += lr * g * h
             E[neg] -= lr * g * h
             P[len(hist) - 1] += lr * g * (E[tgt] - E[neg]) * 0.1

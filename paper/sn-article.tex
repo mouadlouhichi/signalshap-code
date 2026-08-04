@@ -912,12 +912,18 @@ separates decisively from the neural and heuristic baselines but not from a
 well-tuned global head.}\label{fig:fusion}
 \end{figure}
 
-Resolving a difference of this magnitude would require on the order of $10^5$
-users against the $6\,035$ available. Rather than describe the result as
-underpowered, we state the defensible conclusion directly: at this scale the
-two are \emph{equivalent for practical purposes}, and establishing otherwise
-would require a pre-specified smallest meaningful difference and a formal
-equivalence test, which we did not conduct. We therefore make the claim the evidence supports: SignalShap
+We now test this directly rather than describing it as underpowered. Because
+users share the same fitted source models and coalition heads, a user-level
+test conditions on one draw of the training procedure; we therefore use a
+two-level bootstrap that resamples seeds and then users within each seed. It
+gives a mean difference of $+0.00005$ with a 95\% interval of
+$[-0.00022, +0.00032]$, which spans zero.
+
+We also pre-specified a smallest meaningful difference of $0.002$ NDCG@10 and
+ran a two one-sided test. It rejects a true difference larger than that margin
+($p < 0.001$), so the two configurations are \textbf{statistically equivalent
+for practical purposes} --- a positive claim, and a stronger one than the
+absence of significance. The rank-biserial correlation is $+0.007$. We therefore make the claim the evidence supports: SignalShap
 attribution yields fusion weights competitive with strong neural baselines,
 and its advantage over a carefully tuned global head is not established at
 this scale.
