@@ -114,3 +114,55 @@ def test_tost_declares_equivalence_for_a_null_effect():
     x = rng.normal(0.06, 0.01, 3000)
     y = x + rng.normal(0, 1e-4, 3000)
     assert tost_equivalence(x, y, margin=0.005)["equivalent"]
+
+
+# --------------------------------------------------------------------------- #
+# Timestamp handling (found while fetching real corpora)
+# --------------------------------------------------------------------------- #
+
+
+def test_epoch_conversion_is_resolution_independent():
+    """pandas 2.x may parse to datetime64[s|ms|us], not always [ns].
+
+    The common idiom `.astype("int64") // 10**9` silently under-reports by
+    1000x on a [us] column: the result still looks like a plausible epoch
+    integer, so nothing raises, but every recency and time-decay computation
+    downstream is wrong. This pins the fix.
+    """
+    import pandas as pd
+    from signalshap.data.timestamped import _to_epoch_seconds
+
+    want = 1287532527  # 2010-10-19T23:55:27Z
+    for raw in ("2010-10-19T23:55:27Z", "2010-10-19 23:55:27"):
+        got = int(_to_epoch_seconds(pd.Series([raw])).iloc[0])
+        assert got == want, f"{raw}: got {got}, want {want}"
+
+
+def test_implausible_epoch_is_rejected():
+    """A resolution mismatch must fail loudly rather than corrupt `rec`."""
+    import pandas as pd
+    import pytest as _pt
+    from signalshap.data.timestamped import _prepare
+
+    bad = pd.DataFrame({
+        "user": [0, 0, 1, 1] * 3,
+        "item": [1, 2, 1, 2] * 3,
+        # 1287532 seconds = 1970, the symptom of dividing [us] by 1e9
+        "timestamp": list(range(1287532, 1287544)),
+    })
+    with _pt.raises(ValueError, match="plausible Unix-seconds"):
+        _prepare(bad, "probe", None, 42)
+
+
+def test_temporal_validity_rejects_positional_index():
+    """The failure that produced the withdrawn results must stay detectable."""
+    from signalshap.data.loaders import make_synthetic
+    from signalshap.data.timestamped import temporal_validity_report
+
+    ds = make_synthetic("probe", 120, 200, 0.03, seed=1)
+    for fold in ("train", "valid", "test"):
+        d = getattr(ds, fold).copy()
+        d["timestamp"] = d["original_record_index"]
+        setattr(ds, fold, d)
+    rep = temporal_validity_report(ds)
+    assert rep["looks_like_positional_index"] or not rep["temporally_valid"]

@@ -31,7 +31,35 @@ get() {  # name url subdir
 
 echo "Timestamped corpora"
 get "Gowalla check-ins"  "https://snap.stanford.edu/data/loc-gowalla_totalCheckins.txt.gz" "gowalla_ts"
-get "Last.fm-1K"         "http://mtg.upf.edu/static/datasets/last.fm/lastfm-dataset-1K.tar.gz" "lastfm_1k"
+# Last.fm-1K: the UPF host now returns 403 to non-browser clients. Try a few
+# mirrors, then fall back to printing manual instructions rather than failing
+# silently -- two timestamped corpora are already enough for the five-source
+# game, so this one is optional.
+if [ -d "$DEST/lastfm_1k" ]; then
+  echo "  Last.fm-1K: already present"
+else
+  LFM_OK=0
+  for u in \
+    "https://web.archive.org/web/2019/http://mtg.upf.edu/static/datasets/last.fm/lastfm-dataset-1K.tar.gz" \
+    "http://ocelma.net/MusicRecommendationDataset/lastfm-1K.tar.gz" ; do
+    echo "  Last.fm-1K: trying $(echo "$u" | cut -d/ -f3)..."
+    tmp=$(mktemp -d)
+    if curl -fsSL --retry 2 --max-time 900 -A "Mozilla/5.0" -o "$tmp/f" "$u" 2>/dev/null \
+       && tar tzf "$tmp/f" >/dev/null 2>&1; then
+      mkdir -p "$DEST/lastfm_1k" && tar xzf "$tmp/f" -C "$DEST/lastfm_1k"
+      echo "  Last.fm-1K: -> $DEST/lastfm_1k"; LFM_OK=1; rm -rf "$tmp"; break
+    fi
+    rm -rf "$tmp"
+  done
+  if [ "$LFM_OK" -eq 0 ]; then
+    echo "  Last.fm-1K: UNAVAILABLE (upstream host returns 403)."
+    echo "     OPTIONAL -- Gowalla and Amazon already give you two timestamped"
+    echo "     corpora plus MovieLens-1M, which is enough for the five-source game."
+    echo "     To add it anyway, download lastfm-dataset-1K.tar.gz in a browser"
+    echo "     from http://ocelma.net/MusicRecommendationDataset/ and extract to:"
+    echo "       $DEST/lastfm_1k/"
+  fi
+fi
 get "Amazon Video Games" "https://mcauleylab.ucsd.edu/public_datasets/data/amazon_2023/raw/review_categories/Video_Games.jsonl.gz" "amazon_Video_Games"
 
 echo

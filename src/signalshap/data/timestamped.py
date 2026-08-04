@@ -24,6 +24,20 @@ import pandas as pd
 from .loaders import SCHEMA, Dataset, _finalise, find_raw
 
 
+def _to_epoch_seconds(series: pd.Series) -> pd.Series:
+    """Datetime column -> Unix seconds, robust to the parsed resolution.
+
+    pandas 2.x may return datetime64[s], [ms], or [us] depending on the input,
+    so the common idiom ``.astype("int64") // 10**9`` is wrong for anything but
+    nanoseconds -- on a [us] column it under-reports by 1000x. That failure is
+    silent: the values still look like plausible epoch integers, but every
+    recency and decay computation downstream is corrupted. We normalise to
+    nanoseconds first.
+    """
+    t = pd.to_datetime(series, errors="coerce", utc=True)
+    return (t.astype("datetime64[ns, UTC]").astype("int64") // 10**9)
+
+
 def _require(folder: str, *names: str) -> Path:
     base = find_raw(folder, *names)
     if base is None:
@@ -68,7 +82,7 @@ def load_gowalla_timestamped(path: Path | None = None, k_core: int = 10,
 
     df = pd.read_csv(f, sep="\t", header=None,
                      names=["user", "time", "lat", "lon", "item"])
-    df["timestamp"] = pd.to_datetime(df["time"], errors="coerce").astype("int64") // 10**9
+    df["timestamp"] = _to_epoch_seconds(df["time"])
     df = df[df["timestamp"] > 0][["user", "item", "timestamp"]]
     df = _k_core(df, k_core)
     return _prepare(df, "gowalla_ts", max_users, seed)
@@ -136,8 +150,7 @@ def load_lastfm_1k(path: Path | None = None, k_core: int = 10,
                             "traid", "traname"],
                      usecols=["user", "time", "artid"])
     df = df.rename(columns={"artid": "item"}).dropna()
-    df["timestamp"] = pd.to_datetime(df["time"], errors="coerce",
-                                     utc=True).astype("int64") // 10**9
+    df["timestamp"] = _to_epoch_seconds(df["time"])
     df = df[df["timestamp"] > 0][["user", "item", "timestamp"]]
     df = df.drop_duplicates(["user", "item"])   # implicit feedback
     df = _k_core(df, k_core)
@@ -157,6 +170,16 @@ def _prepare(df: pd.DataFrame, name: str, max_users: int | None,
         if len(uniq) > max_users:
             keep = set(rng.choice(uniq, max_users, replace=False).tolist())
             df = df[df["user"].isin(keep)]
+
+    lo, hi = int(df["timestamp"].min()), int(df["timestamp"].max())
+    # 1990-01-01 .. 2035-01-01, a generous but finite window
+    if not (631152000 < lo and hi < 2051222400):
+        raise ValueError(
+            f"{name}: timestamps span {lo}..{hi}, which is not a plausible "
+            "Unix-seconds range. This usually means a resolution mismatch "
+            "(datetime64[us] divided by 1e9). Refusing to build temporal "
+            "players on corrupted times."
+        )
 
     df = df.sort_values(["user", "timestamp"], kind="mergesort").reset_index(drop=True)
     df["original_record_index"] = np.arange(len(df))
