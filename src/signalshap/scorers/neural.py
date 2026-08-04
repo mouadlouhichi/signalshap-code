@@ -136,19 +136,38 @@ def sasrec_scores(ds: Dataset, dim: int = 64, max_len: int = 50,
           for _ in range(n_blocks)]
     scale = 1.0 / np.sqrt(dim)
 
+    def _layer_norm(X: np.ndarray, eps: float = 1e-6) -> np.ndarray:
+        """Row-wise layer normalisation.
+
+        SASRec specifies layer norm after each residual block. Omitting it let
+        the residual stack grow without bound during BPR training: once the
+        attention logits reached +/-inf, `A - A.max()` became inf - inf = NaN
+        and the whole sequence embedding was silently poisoned. Restoring it is
+        both faithful to the architecture and the actual numerical fix.
+        """
+        mu = X.mean(axis=-1, keepdims=True)
+        sd = X.std(axis=-1, keepdims=True)
+        return (X - mu) / (sd + eps)
+
     def encode(seq: np.ndarray) -> np.ndarray:
         """Causal self-attention stack; returns the final position's state."""
         L = len(seq)
-        H = E[seq] + P[:L]
+        H = _layer_norm(E[seq] + P[:L])
         mask = np.triu(np.full((L, L), -1e9, np.float32), 1)   # no peeking ahead
         for b in range(n_blocks):
             A = (H @ Wq[b]) @ (H @ Wk[b]).T * scale + mask
-            A -= A.max(1, keepdims=True)
+            # Clip before the softmax: the mask contributes -1e9, and an
+            # unbounded H can push the rest to +inf, so the subtraction below
+            # would otherwise evaluate inf - inf.
+            A = np.clip(A, -1e9, 1e9)
+            A = A - A.max(axis=1, keepdims=True)
             A = np.exp(A)
-            A /= A.sum(1, keepdims=True)
-            H = H + A @ H                       # residual attention
-            H = H + np.maximum(H, 0.0) * 0.5    # residual point-wise FFN (ReLU)
-        return H[-1]
+            denom = A.sum(axis=1, keepdims=True)
+            A = A / np.where(denom > 0, denom, 1.0)
+            H = _layer_norm(H + A @ H)                    # residual attention
+            H = _layer_norm(H + np.maximum(H, 0.0) * 0.5)  # residual FFN (ReLU)
+        out = H[-1]
+        return out if np.isfinite(out).all() else np.zeros_like(out)
 
     order = list(seqs)
     for _ in range(n_epochs):

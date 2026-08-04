@@ -166,3 +166,51 @@ def test_temporal_validity_rejects_positional_index():
         setattr(ds, fold, d)
     rep = temporal_validity_report(ds)
     assert rep["looks_like_positional_index"] or not rep["temporally_valid"]
+
+
+def test_sasrec_encode_is_numerically_stable():
+    """SASRec must not produce NaN/inf even with large embeddings.
+
+    Without layer normalisation the residual stack grew unbounded during BPR
+    training; once attention logits hit +/-inf, `A - A.max()` evaluated
+    inf - inf = NaN and silently poisoned the sequence embedding. The symptom
+    was a RuntimeWarning and a badly under-performing baseline, which made the
+    comparison against SASRec unfair.
+    """
+    import warnings as _w
+
+    import numpy as np
+
+    from signalshap.data.loaders import make_synthetic
+    from signalshap.scorers.neural import sasrec_scores
+
+    ds = make_synthetic("probe", 120, 200, 0.04, seed=3)
+    with _w.catch_warnings():
+        _w.simplefilter("error", RuntimeWarning)   # any overflow/NaN raises
+        S = sasrec_scores(ds, seed=42, n_epochs=5)
+    assert np.isfinite(S).all(), "SASRec produced non-finite scores"
+
+
+def test_timestamped_loaders_are_registered_for_experiment():
+    """Experiment() resolves corpora through LOADERS, not TIMESTAMPED_LOADERS.
+
+    The validity gate used one registry and the pipeline the other, so a
+    corpus could pass validation and then crash with KeyError on the very next
+    line. This pins the merge.
+    """
+    from signalshap.data.loaders import LOADERS, _register_timestamped
+    from signalshap.data.timestamped import TIMESTAMPED_LOADERS
+
+    _register_timestamped()
+    for name in TIMESTAMPED_LOADERS:
+        assert name in LOADERS, f"{name} unreachable from Experiment()"
+
+
+def test_timestamped_corpus_never_falls_back_to_synthetic():
+    """A missing temporal corpus must raise, not silently plant data."""
+    import pytest as _pt
+
+    from signalshap.data.loaders import load_dataset
+
+    with _pt.raises((FileNotFoundError, KeyError)):
+        load_dataset("lastfm_1k")     # not fetched in CI

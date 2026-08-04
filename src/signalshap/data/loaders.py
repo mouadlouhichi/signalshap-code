@@ -343,6 +343,25 @@ LOADERS = {
 }
 
 
+def _register_timestamped() -> None:
+    """Merge the timestamped loaders into LOADERS.
+
+    Done lazily and once: timestamped.py imports helpers from this module, so
+    a top-level import would be circular. Without this, Experiment() cannot
+    see corpora like gowalla_ts even though the validity gate can, which is
+    exactly the mismatch that crashed the first full run.
+    """
+    if getattr(_register_timestamped, "_done", False):
+        return
+    _register_timestamped._done = True
+    try:
+        from .timestamped import TIMESTAMPED_LOADERS
+    except Exception:
+        return
+    for k, fn in TIMESTAMPED_LOADERS.items():
+        LOADERS.setdefault(k, fn)
+
+
 def load_dataset(name: str, synthetic: bool = False, seed: int = 42,
                  strict: bool = False) -> Dataset:
     """Load `name`; fall back to synthetic only when raw files are truly absent.
@@ -352,9 +371,18 @@ def load_dataset(name: str, synthetic: bool = False, seed: int = 42,
     numbers as if they were benchmark results. Pass `strict=True` (or set
     SIGNALSHAP_STRICT_DATA=1) to make a missing corpus a hard error instead.
     """
+    _register_timestamped()
+
     if synthetic:
+        if name not in SYNTHETIC_SPECS:
+            raise KeyError(
+                f"{name}: no synthetic specification. Timestamped corpora are "
+                "never faked -- supply the real files under data/raw/."
+            )
         return make_synthetic(name, seed=seed, **SYNTHETIC_SPECS[name])
     try:
+        if name not in LOADERS:
+            raise FileNotFoundError(f"no loader registered for {name!r}")
         ds = LOADERS[name]()
         print(f"[signalshap] {name}: loaded REAL data "
               f"({ds.n_users:,} users x {ds.n_items:,} items, "
@@ -364,6 +392,15 @@ def load_dataset(name: str, synthetic: bool = False, seed: int = 42,
         if strict or os.environ.get("SIGNALSHAP_STRICT_DATA") == "1":
             raise FileNotFoundError(
                 f"{name}: raw files not found and strict mode is on ({exc})"
+            ) from exc
+        if name not in SYNTHETIC_SPECS:
+            # Temporal corpora have no synthetic stand-in by design: a planted
+            # substitute would silently invalidate rec/seq/pop-decay, which is
+            # the precise failure this whole module exists to prevent.
+            raise FileNotFoundError(
+                f"{name}: raw files not found ({exc}). This corpus has no "
+                "synthetic fallback -- run scripts/fetch_timestamped.sh, or "
+                "check that the extracted files are under data/raw/."
             ) from exc
         warnings.warn(
             f"\n{'!' * 74}\n"
