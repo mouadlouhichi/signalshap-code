@@ -1,141 +1,159 @@
-# What you need to do — SignalShap submission
+# What you need to do
 
-Everything I can do in a sandbox is done. This is what needs your machine, your
-judgement, or your credentials. Ordered by what blocks submission soonest.
-
----
-
-## 1. Compile the Springer manuscript (30 min)
-
-`paper/sn-article.tex` is the manuscript on the official `sn-jnl.cls`
-(December 2024 package). The class and `sn-basic.bst` are committed, so it
-compiles standalone.
-
-```bash
-brew install --cask mactex-no-gui     # or BasicTeX + tlmgr install the deps
-cd ~/signalshap-code/paper
-make             # runs the number check, then pdflatex x3
-```
-
-I could not compile here — no TeX in the sandbox. I validated statically
-instead: balanced braces/environments/math, no broken `\ref`, no missing
-citations, and every command checked against `sn-jnl.cls`. Two real errors were
-caught that way (`\jyear` is absent from this class version; the class does not
-load `amsmath`/`graphicx`), but **static checks are not a compiler.** Expect to
-fix one or two small things on the first run.
-
-- [ ] Compiles clean with `pdflatex`
-- [ ] Zero undefined citations or references in `sn-article.log`
-- [ ] Bibliography renders in Springer style
-
-The `paper/` directory is self-contained: class file, bibliography style, and figures all live there, so it zips and uploads as-is.
-`paper.tex` is the working version with inline `\input` of generated tables.
-Keep `sn-article.tex` authoritative and delete `paper.tex` before submitting, or
-you will eventually edit the wrong one.
+Everything runnable in a sandbox is done. This is what needs your machine, your
+data, or your judgement. Ordered by what blocks resubmission soonest.
 
 ---
 
-## 2. Fill in what only you can supply (15 min)
+## 0. Read this first: one result changed the paper's claim
 
-- [ ] **Funding statement** — currently `[To be completed.]`
-- [ ] **ORCID** for the corresponding author
-- [ ] **Co-author emails** — I used plausible `um5.ac.ma` patterns; verify
-- [ ] **Acknowledgements** — currently "Not applicable"
-- [ ] Decide whether to name the IJACSA 2025 paper as companion prior work
+The retirement simulation (E12) found that **leave-one-out predicts the true
+cost of removing a source better than Shapley** — rank agreement τ = 1.00
+versus 0.20 — and correctly picks `cf` as cheapest to retire where Shapley picks
+`ct`. Removing `cf` actually *improves* NDCG@10 by 0.0056 because it is largely
+redundant with `seq` and `pop`.
 
----
+This is not a refutation. The two methods answer different questions: LOO
+measures the grand-coalition quantity a single-source removal needs, Shapley
+measures average marginal credit. But it does mean **the paper can no longer
+claim retirement guidance**, and I have rewritten it to claim credit allocation
+only.
 
-## 3. Decide two open scientific questions
-
-These are judgement calls I deliberately did not make for you.
-
-### 3a. Amazon-Book's candidate pool
-
-At `N_max=5000` recall is `0.529`, below your `0.60` gate. Rung 1 reaches
-`0.637` at `N_max=20000` — but that is ~24% of its 84k catalogue, so the game
-sits closer to full-catalogue ranking than to the fixed-candidate design.
-
-Options: **(a)** keep it with the caveat already written into
-§Preconditions; **(b)** drop Amazon-Book and report three corpora; **(c)** keep
-it for the intervention only, where the pool size does not matter.
-
-I currently have (a). **(c) is arguably the most defensible** — the
-intervention is the paper's central claim and is unaffected by pool size.
-
-### 3b. The C5 fusion claim
-
-`d_z = 0.006`, Holm `p = 0.59`. It is written as "underpowered, not refuted".
-A reviewer may still say a contribution you cannot detect is not a
-contribution. Consider demoting C5 from the contributions list to a
-Future Work paragraph. The paper survives without it; C1–C4 carry it.
+If you disagree with that framing, this is the decision to revisit before
+anything else — it propagates to the title, abstract, and contributions.
 
 ---
 
-## 4. Finish the experimental suite (2–4 h compute)
+## 1. Re-run on real corpora (blocking, 3–6 h)
 
-Robustness sweeps, segments, and fusion currently ran fully only on
-MovieLens-1M. The other three have E0–E2 and E9.
+The sandbox lost the raw benchmark files mid-session and the loader silently
+substituted synthetic data. I caught it (candidate recall jumped to 1.000),
+quarantined those runs in `artefacts/synthetic_pilot/`, and cut the paper back
+to **real MovieLens-1M only**. That makes the reviewer's "effectively one
+dataset" criticism literally true right now.
 
 ```bash
 cd ~/signalshap-code && git pull
-# close other apps first — every freed GB is ~800 more users
-jupyter lab notebooks/SignalShap_M4_FullStudy.ipynb
-```
+bash scripts/fetch_benchmarks.sh        # Gowalla, Yelp2018, Amazon-Book
+# MovieLens-1M goes in data/raw/ml-1m/ separately
 
-Set `SCORE_BUDGET_GB = 10` if corpora auto-downsize more than you like. Then:
-
-```bash
+python scripts/run_study.py             # E0–E8, all corpora
+python scripts/run_revision_experiments.py --dataset ml_1m   # E10–E13
 python scripts/make_assets.py
 python scripts/check_paper_numbers.py --strict
 ```
 
-- [ ] All four corpora have E3–E8
-- [ ] `check_paper_numbers.py` passes after regenerating
+`run_revision_experiments.py` **aborts** if the loader falls back to synthetic
+data, so this failure cannot recur silently.
 
-**Run that checker after every re-run.** Stale numbers have reached the
-manuscript four times in this project; it is the single highest-yield habit
-here.
-
----
-
-## 5. Pre-submission gates
-
-- [ ] `pytest tests/ -q` — 26 pass, 1 skipped
-- [ ] `python scripts/check_paper_numbers.py --strict` — clean
-- [ ] Abstract ≤ 250 words *(currently ~200)*
-- [ ] Delete the title-rationale comment block in `paper.tex`
-- [ ] Re-verify the journal's CiteScore/SJR on Scimago (the spec requires this
-      within 24 h of submission)
-- [ ] Archive on Zenodo, insert the DOI into Data Availability
-- [ ] Build `make zip` for Snapp/Editorial Manager
+- [ ] Four corpora present, all `synthetic: false`
+- [ ] `check_paper_numbers.py` clean after regenerating
+- [ ] Restore the four-corpus rows in Table 1 and the recovery table
 
 ---
 
-## 6. Repository hygiene
+## 2. Ten or more seeds with hierarchical inference (blocking, ~4 h)
 
-- **`data/ml-1m/` is committed (24 MB).** GroupLens permits redistribution with
-  attribution so it is not a licence violation, but most reviewers expect a
-  download script. `scripts/fetch_benchmarks.sh` already handles the other
-  three.
-- **Use `git push --force-with-lease`, not `--force`.** A force-push overwrote
-  three of my commits earlier; `--force-with-lease` refuses when the remote has
-  commits you have not seen.
+Three seeds cannot characterise training variability, and users sharing a
+fitted model are not independent replicates. Both tools are implemented:
+
+```python
+from signalshap.stats.tests import hierarchical_bootstrap, tost_equivalence
+```
+
+`hierarchical_bootstrap` resamples seeds then users; `tost_equivalence` tests
+practical equivalence against a **pre-specified** margin.
+
+- [ ] Re-run with `SEEDS = tuple(range(42, 52))`
+- [ ] Report hierarchical CIs alongside the Wilcoxon p-values
+- [ ] **Pre-specify the smallest meaningful NDCG difference before looking**,
+      then run TOST against the global head
+
+Expect the hierarchical intervals to be wider than the current ones. That width
+is the honest answer, and reporting it is stronger than defending `p < 0.001`.
 
 ---
 
-## Honest status
+## 3. Timestamped corpora (blocking for the temporal players)
 
-**Strong:** the intervention replicates on all four corpora (symmetry error
-`0.0`, LOO exactly `0.000000`) — that is a ground-truth result about the
-estimator, not a dataset artefact. Efficiency verified to `6.9e-18`. Wins over
-LightGCN and SASRec at `p<0.001`. Reproducibility discipline is well above the
-norm for this venue.
+Three of five players (`rec`, `seq`, time-decayed `pop`) are uninterpretable on
+the LightGCN splits, which carry no timestamps. Either:
 
-**Weak:** C5 is undetectable at this scale. Three of four corpora have a
-non-monotone fitted game, so Property 2 does not formally apply there — this is
-reported as a finding, and it is honest, but a reviewer will press on it. The
-suite is uneven across corpora until you finish step 4.
+- **(a)** swap in timestamped corpora — Amazon Reviews with timestamps, MIND,
+  or Last.fm-1K — and run the full five-source game; or
+- **(b)** run a reduced two-source game (`cf`, `ct`) on the untimestamped
+  corpora and say so.
 
-**My read:** with step 4 done, this is a credible *Discover AI* submission. The
-intervention is the reason — it converts "two methods disagree" into "one method
-fails a test with a known answer."
+I'd take (a) for at least two corpora. (b) is defensible but concedes the
+cross-density comparison.
+
+---
+
+## 4. Matched baseline tuning (~2 h)
+
+LightGCN and SASRec got modest, unequal budgets. Any reviewer will discount the
+`p < 0.001` wins until the budgets match.
+
+- [ ] Equal search space, trials, and early-stopping for all methods
+- [ ] Report the search space and selected values in a table
+
+---
+
+## 5. Fill in what only you can supply (15 min)
+
+- [ ] **Funding statement** — still `[To be completed]`; `check_discover_ai.py`
+      flags it and it blocks submission
+- [ ] ORCID for the corresponding author
+- [ ] Verify co-author emails (I used plausible `um5.ac.ma` patterns)
+- [ ] Archive on Zenodo and insert the DOI — the reviewer asked for an
+      immutable artefact **at review time**, not at acceptance
+
+---
+
+## 6. Compile and check (30 min)
+
+```bash
+cd paper && make          # runs both checkers, then pdflatex ×3
+make zip                  # flat bundle for Snapp
+```
+
+No TeX exists in the sandbox, so **the manuscript has never been compiled.** I
+validated statically — balanced environments, resolved refs and citations, every
+command checked against `sn-jnl.cls`, required packages present — and that caught
+three real errors (`\jyear` absent from the class, missing `amsmath`/`graphicx`,
+missing `multirow`). Expect one or two layout nudges on the first run; the TikZ
+figure's node spacing is the likeliest.
+
+`\tikzfigurefalse` reverts Figure 1 to the raster in one line if TikZ misbehaves.
+
+---
+
+## What is already done
+
+| | |
+|---|---|
+| Lemma 1 | Rewritten two-sided with a complete proof; `O(ε)` removed |
+| Ridge duplication | Reviewer was right; redundancy now **measured** over 16 coalitions at both λ and λ=0 |
+| Per-user normalisation | Fixed in Eq. (3) and the code — this changed two published numbers |
+| Analytic ground truth | Six closed-form games, all exact (E13) |
+| Alternative values | Banzhaf, semivalues, Shapley–Taylor interactions (E10) |
+| Estimand comparison | Fixed vs refitted vs end-to-end heads (E11) |
+| Retirement simulation | E12 — the negative result above |
+| Fusion mapping | Explicit softmax with temperature and shrinkage |
+| Leakage | Verified absent, documented, and pinned by tests |
+| Springer compliance | 15 automated checks; only funding outstanding |
+| Tests | 43 passing, 2 skipped |
+
+---
+
+## Honest assessment
+
+**Major Revision remains right.** The mathematical objections are resolved and
+the missing experiments now exist and run, which is real progress. But the
+empirical base is currently one corpus and three seeds, and E12 narrowed the
+practical claim. Items 1–4 are the difference between a defensible resubmission
+and a second round of the same criticisms.
+
+The strongest remaining assets are the analytic validation (E13), the
+interaction indices localising redundancy, and the candour about E12 — reviewers
+reward a paper that reports the result that weakens its own framing.
