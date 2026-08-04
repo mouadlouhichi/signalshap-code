@@ -169,3 +169,74 @@ def select_on_validation(
         "best_validation_ndcg": mean[best],
         "note": "selected by cross-validation WITHIN the validation fold; test never used",
     }
+
+
+# --------------------------------------------------------------------------- #
+# Explicit Shapley -> fusion weight mapping (review Critical Issue #4)
+# --------------------------------------------------------------------------- #
+
+
+def shapley_to_weights(phi: dict[str, float], sources: tuple[str, ...],
+                       tau: float = 1.0, rho: float = 0.5,
+                       phi_global: dict[str, float] | None = None) -> np.ndarray:
+    """Map segment-level attributions to fusion weights.
+
+    The reviewer noted this mapping was never stated, which made the paper's
+    applied contribution unreproducible. It is:
+
+        q_{s,g} = softmax(phi_{s,g} / tau)
+        a_{s,g} = (1 - rho) * q_{s,g} + rho * q_{global,g}
+
+    Softmax keeps weights non-negative and normalised, which matters because
+    Shapley values can be negative under a non-monotone game and a raw negative
+    weight would invert a source's scores rather than down-weight it. The
+    shrinkage rho pools toward the global profile; both tau and rho are chosen
+    on validation and frozen before any test evaluation.
+    """
+    v = np.array([phi.get(g, 0.0) for g in sources], dtype=float)
+    q = np.exp((v - v.max()) / max(tau, 1e-9))
+    q /= q.sum()
+    if phi_global is None:
+        return q
+    gv = np.array([phi_global.get(g, 0.0) for g in sources], dtype=float)
+    qg = np.exp((gv - gv.max()) / max(tau, 1e-9))
+    qg /= qg.sum()
+    return (1.0 - rho) * q + rho * qg
+
+
+def select_fusion_hyperparams(feat, candidates, valid_targets, fit_users,
+                              segments, seg_phi, global_phi, sources,
+                              k: int = 10, taus=(0.001, 0.01, 0.1),
+                              rhos=(0.0, 0.5, 1.0), seed: int = 42,
+                              n_folds: int = 2) -> dict:
+    """Choose (tau, rho) by cross-validation INSIDE the validation fold.
+
+    Test data is never consulted, so a win here is a real win.
+    """
+    rng = np.random.default_rng(seed)
+    users = np.array(sorted(fit_users))
+    if len(users) < 4 * n_folds:
+        return {"tau": taus[0], "rho": 1.0, "note": "too few users"}
+    folds = np.array_split(rng.permutation(users), n_folds)
+
+    scores: dict[tuple[float, float], list[float]] = {}
+    for i in range(n_folds):
+        held = folds[i]
+        for tau in taus:
+            for rho in rhos:
+                w = {s: shapley_to_weights(seg_phi.get(s, global_phi), sources,
+                                           tau, rho, global_phi)
+                     for s in set(int(segments[u]) for u in users)}
+                val = ndcg_of_weights(
+                    feat, candidates, valid_targets, list(held),
+                    lambda u: w[int(segments[u])], k)
+                scores.setdefault((tau, rho), []).append(val)
+    if not scores:
+        return {"tau": taus[0], "rho": 1.0, "note": "no folds"}
+    mean = {kk: float(np.mean(vv)) for kk, vv in scores.items()}
+    best = max(mean, key=mean.get)
+    return {
+        "tau": best[0], "rho": best[1],
+        "validation_ndcg": {f"tau={a},rho={b}": s for (a, b), s in mean.items()},
+        "note": "selected within the validation fold; test never used",
+    }

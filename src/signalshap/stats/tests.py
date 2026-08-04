@@ -123,3 +123,105 @@ def seed_ci(values: list[float]) -> dict:
         "hi": float(a.mean() + 1.96 * sd / np.sqrt(a.size)),
         "n_seeds": int(a.size),
     }
+
+
+# --------------------------------------------------------------------------- #
+# Hierarchical inference (review Issue #6: pseudoreplication)
+# --------------------------------------------------------------------------- #
+
+
+def hierarchical_bootstrap(per_seed_user_scores: dict[int, np.ndarray],
+                           per_seed_user_baseline: dict[int, np.ndarray],
+                           n_boot: int = 10_000, seed: int = 42,
+                           alpha: float = 0.05) -> dict:
+    """Two-level bootstrap over (seed, user), for paired NDCG differences.
+
+    Users are NOT independent replicates: they share the same fitted source
+    models and the same coalition heads, so a user-level test conditions on one
+    draw of the training procedure and understates uncertainty. This resamples
+    seeds first, then users within the selected seed, which propagates both
+    sources of variation.
+
+    With few seeds the interval is necessarily wide -- that width is the honest
+    answer, not a defect of the method.
+    """
+    rng = np.random.default_rng(seed)
+    seeds = sorted(per_seed_user_scores)
+    if not seeds:
+        return {"mean_diff": 0.0, "lo": 0.0, "hi": 0.0, "n_seeds": 0}
+
+    diffs = {s: np.asarray(per_seed_user_scores[s], float)
+                - np.asarray(per_seed_user_baseline[s], float) for s in seeds}
+    obs = float(np.mean([d.mean() for d in diffs.values()]))
+
+    boot = np.empty(n_boot)
+    for b in range(n_boot):
+        picked = rng.choice(seeds, size=len(seeds), replace=True)
+        vals = []
+        for s in picked:
+            d = diffs[s]
+            idx = rng.integers(0, len(d), size=len(d))
+            vals.append(d[idx].mean())
+        boot[b] = np.mean(vals)
+
+    lo, hi = np.percentile(boot, [100 * alpha / 2, 100 * (1 - alpha / 2)])
+    return {
+        "mean_diff": obs,
+        "lo": float(lo), "hi": float(hi),
+        "n_seeds": len(seeds),
+        "n_boot": n_boot,
+        "excludes_zero": bool(lo > 0 or hi < 0),
+        "note": (
+            "Two-level bootstrap over seeds then users. Compare against the "
+            "user-level Wilcoxon p: if the interval spans zero where Wilcoxon "
+            "reports p<0.001, the discrepancy is pseudoreplication."
+        ),
+    }
+
+
+def tost_equivalence(a: np.ndarray, b: np.ndarray, margin: float,
+                     alpha: float = 0.05) -> dict:
+    """Two one-sided tests for practical equivalence (review Issue: fusion).
+
+    A non-significant difference is not evidence of equivalence. TOST inverts
+    the question: can we reject that the true difference exceeds +/- `margin`?
+    `margin` must be a pre-specified smallest meaningful difference, not chosen
+    after seeing the data.
+    """
+    from scipy import stats as _st
+
+    d = np.asarray(a, float) - np.asarray(b, float)
+    n = len(d)
+    if n < 2:
+        return {"equivalent": False, "note": "insufficient data"}
+    m, se = d.mean(), d.std(ddof=1) / np.sqrt(n)
+    if se < 1e-15:
+        return {"equivalent": bool(abs(m) < margin), "note": "zero variance"}
+    t_lo = (m + margin) / se
+    t_hi = (m - margin) / se
+    p_lo = 1 - _st.t.cdf(t_lo, n - 1)   # H0: diff <= -margin
+    p_hi = _st.t.cdf(t_hi, n - 1)       # H0: diff >= +margin
+    p = max(p_lo, p_hi)
+    return {
+        "mean_diff": float(m),
+        "margin": float(margin),
+        "p_tost": float(p),
+        "equivalent": bool(p < alpha),
+        "ci_90": [float(m - 1.645 * se), float(m + 1.645 * se)],
+        "note": ("Equivalent means we can reject a true difference larger than "
+                 "the margin; the margin must be pre-specified."),
+    }
+
+
+def rank_biserial(a: np.ndarray, b: np.ndarray) -> float:
+    """Rank-biserial correlation: a better effect size than d_z here.
+
+    Paired NDCG@10 with one relevant item is discrete and zero-inflated, which
+    makes a standardised mean difference hard to interpret. Rank-biserial is
+    the proportion of pairs favouring a, minus the proportion favouring b.
+    """
+    d = np.asarray(a, float) - np.asarray(b, float)
+    nz = d[d != 0]
+    if nz.size == 0:
+        return 0.0
+    return float((np.sum(nz > 0) - np.sum(nz < 0)) / nz.size)

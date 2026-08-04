@@ -17,6 +17,9 @@ from datetime import datetime, timezone
 
 import numpy as np
 
+from .attribution.values import compare_values
+from .experiments.estimands import compare_estimands, retirement_simulation
+from .experiments.synthetic_games import validate_implementation
 from .attribution.baselines import (
     ablate_source, forward_selection, loo_attribution, mc_shapley,
     permutation_importance, redundancy_kendall_tau,
@@ -423,6 +426,27 @@ class Experiment:
             ),
         }
 
+    def e10_alternative_values(self) -> dict:
+        """Banzhaf, semivalue and Shapley-Taylor interactions (review #8)."""
+        from .attribution.values import shapley_taylor_interaction
+
+        out = compare_values(self.v)
+        out["interactions"] = shapley_taylor_interaction(self.v)
+        out["dataset"] = self.name
+        return out
+
+    def e11_estimands(self, include_e2e: bool = True) -> dict:
+        """Fixed-head vs refitted-head vs end-to-end games (review #5, #7)."""
+        return compare_estimands(self, include_e2e=include_e2e, verbose=False)
+
+    def e12_retirement(self) -> dict:
+        """Does attribution predict the true cost of removing a source?"""
+        return retirement_simulation(self, verbose=False)
+
+    def e13_synthetic_ground_truth(self) -> dict:
+        """Analytic games with known Shapley vectors -- magnitude validation."""
+        return validate_implementation()
+
     def run_all(self) -> dict:
         """E0 gates first, then everything else."""
         res = {
@@ -451,6 +475,8 @@ class Experiment:
             "e6_ablation": self.e6_ablation(),
             "e7_actionability": self.e7_actionability(),
             "e8_appendix_b": self.e8_appendix_b(),
+            "e10_alternative_values": self.e10_alternative_values(),
+            "e13_synthetic_ground_truth": self.e13_synthetic_ground_truth(),
         })
         return res
 

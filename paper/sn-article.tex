@@ -90,29 +90,31 @@ Analysis (ENSIAS)}, \orgname{Mohammed V University in Rabat},
 
 \abstract{Hybrid recommender systems fuse several architecturally distinct
 signals --- collaborative filtering, content, popularity, recency, and
-sequential order --- and practitioners need to know how much each one earns.
+sequential order --- and practitioners need to know how much each earns.
 We present \emph{SignalShap}, which recasts source attribution as a
-five-player cooperative game whose characteristic function is a
-fixed-candidate normalised discounted cumulative gain at rank~10
-(NDCG@10) evaluated on a coalition-independent candidate set.
-Because the player set is small, the Shapley value is obtained in closed form
-over all $2^5=32$ coalitions, so the aggregation carries no sampling error and
-runs in seconds on a laptop CPU.
+five-player cooperative game whose payoff is a fixed-candidate normalised
+discounted cumulative gain at rank~10 (NDCG@10) on a coalition-independent
+candidate set. With five players the Shapley value follows from exact
+enumeration of all $2^5=32$ coalitions, so the aggregation carries no sampling
+error.
 
-We validate the implementation against constraints that are known in advance.
-Injecting an exact duplicate of an existing source makes the pair exchangeable
-in the declared game, so any rule satisfying symmetry must assign them equal
-credit; SignalShap recovers this equality to numerical precision on all four
-corpora, which span a $49$-fold density ratio, and efficiency holds to
-$6.9\times10^{-18}$. We are explicit that these are \emph{axiom and
-implementation} checks: they establish that the estimator behaves as its
-theory requires, not that the absolute magnitudes are the uniquely correct
-engineering credit. Under the same duplication, leave-one-out ablation assigns
-zero marginal value to both substitutes, illustrating a known limitation of
-removal-based attribution. Fusion weights derived from validation-fold
-attributions, frozen before test evaluation, outperform LightGCN, SASRec,
-uniform, and popularity baselines at $p<0.001$; against a globally tuned head
-of the same family the difference is not established. We release code and a one-command reproduction.}
+We validate the implementation against constraints known in advance: duplicate
+injection makes a pair exchangeable, so symmetry requires equal credit, and
+SignalShap recovers this to numerical precision with efficiency to
+$6.9\times10^{-18}$. Six analytic games with closed-form Shapley vectors ---
+additive, substitute, complementary, null, and harmful sources --- are
+reproduced exactly, validating magnitudes rather than symmetry alone. These
+remain implementation checks, not evidence of correct magnitudes.
+
+Two results bound the practical claim. On MovieLens-1M, leave-one-out reports
+collaborative filtering as harmful ($-0.0050$) where Shapley ranks it second
+most valuable ($+0.0155$); second-order Shapley--Taylor indices localise the
+redundancy driving this. But in an end-to-end retirement simulation
+leave-one-out predicts the true cost of removing a source \emph{better} than
+Shapley ($\tau=1.00$ versus $0.20$). The two answer different questions, and we
+claim credit allocation rather than retirement guidance. Fusion weights from validation-fold attributions beat LightGCN, SASRec,
+uniform, and popularity baselines at $p<0.001$, but not a tuned global head.
+Results use one corpus and three seeds; code is released.}
 
 \keywords{Shapley value, cooperative game theory, recommender systems,
 explainable AI, credit assignment, hybrid recommendation}
@@ -125,8 +127,10 @@ A production hybrid recommender is an ensemble of architecturally distinct
 scorers. A collaborative-filtering component exploits co-occurrence, a content
 component exploits item metadata, a popularity component exploits global
 frequency, a recency component exploits temporal locality, and a sequential
-component exploits order. Engineering decisions --- which component to invest
-in, which to retire --- rest on estimates of how much each contributes. In
+component exploits order. Engineering decisions --- which component to invest in, which to retire --- rest
+on estimates of how much each contributes. We show in
+Section~\ref{sec:estimands} that these are two distinct questions requiring
+different instruments, and that this paper addresses the first. In
 practice those estimates come from \emph{leave-one-out} (LOO) \emph{ablation}:
 disable one component, measure the drop in ranking quality, and attribute that
 drop to the component.
@@ -182,13 +186,19 @@ and efficiency on real fitted games.
       \emph{not} conserved under replication.
 \item \textbf{C3b.} Evidence that the credit SignalShap assigns is
       \emph{materially different} from what current practice reports, and in
-      the direction theory predicts: on MovieLens-1M it identifies
+      the direction the redundancy structure predicts: on MovieLens-1M it identifies
       collaborative filtering as the second most valuable source
       ($+0.0152$) where ablation scores it below zero
       (Section~\ref{sec:results}).
 \item \textbf{C4.} Per-user attribution that resolves behavioural segments on
       the dense corpus, showing the decomposition carries structure a global
       summary discards (Section~\ref{sec:segments}).
+\item \textbf{C4b.} A comparison of three estimands (fixed head, refitted
+      head, end-to-end retrieval) and a retirement simulation showing that
+      leave-one-out, not Shapley, is the appropriate instrument for
+      single-source removal decisions (Section~\ref{sec:estimands}). This
+      narrows the paper's practical claim, and we regard stating it as part of
+      the contribution.
 \item \textbf{C5.} Fusion weights derived from these attributions beat
       LightGCN, SASRec, uniform, and popularity baselines at $p<0.001$. Against
       a well-tuned global head the margin is positive but within noise at this
@@ -975,6 +985,76 @@ Robustness sweeps (Figure~\ref{fig:robustness}), segment analysis, and fusion
 are strongest on MovieLens-1M.
 Amazon-Book required an unusually large candidate pool
 (Section~\ref{sec:preconditions}) and its attribution is the least comparable.
+
+\section{Which Estimand, and Does Attribution Predict Retirement Cost?}
+\label{sec:estimands}
+
+Two experiments added in revision test whether the paper's framing survives
+contact with the decision it motivates.
+
+\paragraph{Three estimands}
+Our main game refits the fusion head per coalition on a candidate set built
+from \emph{all} sources. Two alternatives isolate what that choice contributes:
+$v_{\mathrm{fixed}}$ holds the deployed grand-coalition head fixed and merely
+masks it to $S$; $v_{\mathrm{e2e}}$ lets each coalition retrieve its own
+candidates and refit, so a removed source loses its retrieval role too. On
+MovieLens-1M all three rank $seq$ first and agree closely
+(Kendall $\tau = 1.00$ between refit and fixed heads, $0.80$ between either and
+end-to-end). The ranking-stage restriction is therefore consequential in
+principle but does not change the ordering here --- a scope limitation we can
+now quantify rather than merely declare.
+
+\paragraph{Retirement simulation, and a negative result}
+The stronger test is whether attribution predicts what removing a source
+actually costs. We removed each source \emph{entirely} --- from retrieval and
+fusion --- rebuilt candidates from the survivors, refitted, and measured the true
+end-to-end NDCG@10 loss.
+
+\begin{table}[t]
+\caption{True cost of retiring each source on MovieLens-1M, measured
+end-to-end, against what each attribution method predicts. Negative loss means
+removal \emph{improved} the metric}
+\label{tab:retirement}
+\begin{tabular}{@{}lrrrr@{}}
+\toprule
+Source & True loss & Recall after & Shapley & LOO \\
+\midrule
+$cf$  & $-0.00561$ & $0.690$ & $+0.01547$ & $-0.00501$ \\
+$rec$ & $-0.00082$ & $0.782$ & $+0.00071$ & $+0.00044$ \\
+$ct$  & $+0.00002$ & $0.785$ & $+0.00008$ & $+0.00083$ \\
+$pop$ & $+0.00247$ & $0.723$ & $+0.00664$ & $+0.00098$ \\
+$seq$ & $+0.01569$ & $0.659$ & $+0.02964$ & $+0.01673$ \\
+\midrule
+\multicolumn{2}{@{}l}{Rank agreement with true loss}
+      & & $\tau = +0.20$ & $\tau = +1.00$ \\
+\botrule
+\end{tabular}
+\end{table}
+
+\textbf{LOO predicts retirement cost better than Shapley
+(Table~\ref{tab:retirement}).} Its ranking matches the true loss exactly
+($\tau = 1.00$ against $0.20$), and it correctly identifies $cf$ as the
+cheapest source to retire, where Shapley selects $ct$. We report this plainly
+because it bounds the paper's practical claim.
+
+The result is also consistent with the theory rather than a contradiction of
+it. Removing $cf$ \emph{improves} end-to-end NDCG@10 by $0.00561$ while
+dropping candidate recall from $0.748$ to $0.690$: the collaborative signal is
+substantially redundant with $seq$ and $pop$ --- the Shapley--Taylor interaction
+indices are $-0.056$ for $cf|seq$ and $-0.026$ for $cf|pop$, the two most
+negative pairs --- so in the grand coalition its scores add noise the others
+already cover. LOO measures exactly that grand-coalition quantity, which is
+precisely the quantity a single-source retirement decision needs. Shapley
+averages over coalitions in which $cf$ has no substitute, and correctly reports
+that the capability has value; but that is not the question a retirement
+decision asks.
+
+The two methods therefore answer different questions, and our earlier framing
+conflated them. LOO is the right instrument for ``what happens if I remove this
+one source and keep the rest?''. Shapley is the right instrument for ``how
+should credit for the system's quality be divided among sources?'', which is
+the question that arises when allocating engineering effort across a roadmap
+rather than deleting a component today. We now claim only the latter.
 
 \section{Threats to Validity}\label{sec:threats}
 

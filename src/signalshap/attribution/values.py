@@ -1,0 +1,136 @@
+"""Alternative cooperative values and interaction indices (review Issue #8).
+
+Shapley uniqueness holds *once a game is fixed*, and it does not select the
+game or the value. A reviewer is entitled to ask whether the reported source
+ranking is an artefact of choosing Shapley in particular. This module supplies
+the comparators needed to answer that:
+
+  * **Banzhaf value** -- uniform weight over coalitions rather than over
+    permutations; satisfies symmetry and dummy, but not efficiency.
+  * **Weighted semivalues** -- the family containing both, parameterised by a
+    distribution over coalition sizes.
+  * **Shapley--Taylor interaction index** (order 2) -- pairwise synergy and
+    redundancy, which matters here because redundancy is the paper's whole
+    motivation and main effects alone cannot express it.
+
+All are exact enumerations over the 2^n lattice, since n = 5.
+"""
+
+from __future__ import annotations
+
+from itertools import combinations
+from math import comb, factorial
+
+import numpy as np
+
+from ..config import SOURCES
+
+
+def _subsets(players):
+    for k in range(len(players) + 1):
+        yield from (frozenset(c) for c in combinations(players, k))
+
+
+def banzhaf_value(v: dict, sources: tuple[str, ...] = SOURCES) -> dict[str, float]:
+    """Banzhaf value: mean marginal contribution over all coalitions.
+
+    Unlike Shapley it weights every coalition equally rather than every
+    *permutation*, so it does not satisfy efficiency. Reported precisely to
+    show which conclusions survive a change of value.
+    """
+    n = len(sources)
+    out = {}
+    for g in sources:
+        others = [s for s in sources if s != g]
+        total = sum(v[S | {g}] - v[S] for S in _subsets(others))
+        out[g] = total / (2 ** (n - 1))
+    return out
+
+
+def semivalue(v: dict, weights: dict[int, float] | None = None,
+              sources: tuple[str, ...] = SOURCES) -> dict[str, float]:
+    """Weighted semivalue with an explicit distribution over coalition sizes.
+
+    `weights[k]` is the total mass placed on coalitions of size k among the
+    n-1 possible predecessors. Shapley uses uniform mass per size; Banzhaf uses
+    mass proportional to the number of coalitions of that size.
+    """
+    n = len(sources)
+    if weights is None:  # Shapley
+        weights = {k: 1.0 / n for k in range(n)}
+    out = {}
+    for g in sources:
+        others = [s for s in sources if s != g]
+        total = 0.0
+        for S in _subsets(others):
+            k = len(S)
+            per = weights.get(k, 0.0) / max(comb(n - 1, k), 1)
+            total += per * (v[S | {g}] - v[S])
+        out[g] = total
+    return out
+
+
+def shapley_taylor_interaction(v: dict, sources: tuple[str, ...] = SOURCES,
+                               order: int = 2) -> dict[str, float]:
+    """Shapley--Taylor interaction index of the given order.
+
+    For order 2 the pairwise term quantifies whether two sources are
+    complementary (positive) or redundant (negative) beyond their main
+    effects. This is the natural instrument for the paper's central claim, and
+    its absence was a fair criticism: main-effect Shapley values alone cannot
+    distinguish redundancy from low individual value.
+    """
+    n = len(sources)
+    out: dict[str, float] = {}
+
+    # Order-1 terms: discrete derivative at the empty set.
+    for g in sources:
+        out[g] = v[frozenset({g})] - v[frozenset()]
+
+    # Order-2 terms: averaged second-order discrete derivative.
+    for a, b in combinations(sources, 2):
+        rest = [s for s in sources if s not in (a, b)]
+        total = 0.0
+        for S in _subsets(rest):
+            k = len(S)
+            w = factorial(k) * factorial(n - k - order) / factorial(n - order + 1)
+            delta = (v[S | {a, b}] - v[S | {a}] - v[S | {b}] + v[S])
+            total += w * delta
+        out[f"{a}|{b}"] = order * total
+    return out
+
+
+def compare_values(v: dict, sources: tuple[str, ...] = SOURCES) -> dict:
+    """Shapley vs Banzhaf vs a size-uniform semivalue, with rank agreement.
+
+    The question this answers is not "which value is right?" but "does the
+    engineering conclusion depend on that choice?". If the top-ranked source
+    is stable across values, the conclusion is robust to the choice; if it is
+    not, the paper must say so.
+    """
+    from ..game.core import exact_shapley
+    from scipy.stats import kendalltau
+
+    n = len(sources)
+    shap = exact_shapley(v, sources)
+    banz = banzhaf_value(v, sources)
+    semi = semivalue(v, {k: 1.0 / n for k in range(n)}, sources)
+
+    order = list(sources)
+    s_vec = [shap[g] for g in order]
+    b_vec = [banz[g] for g in order]
+
+    tau = kendalltau(s_vec, b_vec).correlation
+    return {
+        "shapley": shap,
+        "banzhaf": banz,
+        "semivalue_uniform": semi,
+        "shapley_top": max(shap, key=shap.get),
+        "banzhaf_top": max(banz, key=banz.get),
+        "top_source_agrees": max(shap, key=shap.get) == max(banz, key=banz.get),
+        "kendall_tau_shapley_banzhaf": float(tau) if np.isfinite(tau) else 0.0,
+        "note": (
+            "Banzhaf does not satisfy efficiency, so its values do not sum to "
+            "v(G); only the induced ORDERING is comparable across values."
+        ),
+    }
