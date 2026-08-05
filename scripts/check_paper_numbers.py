@@ -23,9 +23,28 @@ PAPER = ROOT / "paper" / "sn-article.tex"
 TOL = 5e-5
 
 
-def results() -> dict:
-    return {p.stem.replace("results_", ""): json.loads(p.read_text())
-            for p in sorted(ART.glob("results_*.json"))}
+def results(include_failed: bool = False) -> dict:
+    """Load result artefacts, EXCLUDING any whose recall gate failed.
+
+    A run behind a failed gate still writes a complete, well-formed artefact
+    (gowalla_ts reached 0.132 candidate recall against a 0.60 threshold and
+    produced 1,192 lines of plausible JSON). Globbing results_*.json therefore
+    silently mixes reportable and unreportable corpora into the same table --
+    the same way stale synthetic runs contaminated T5 earlier. Spec §2.2 makes
+    a failed gate non-reportable, so it is filtered here, at the single point
+    every consumer goes through, rather than trusted to each caller.
+    """
+    out = {}
+    for p in sorted(ART.glob("results_*.json")):
+        blob = json.loads(p.read_text())
+        gate = (blob.get("e0a_candidates") or {}).get("gate_passes", True)
+        if not gate and not include_failed:
+            print(f"  [skipped] {p.name}: recall gate FAILED "
+                  f"({blob['e0a_candidates']['candidate_recall']:.3f}) -- "
+                  f"not reportable under spec §2.2", file=sys.stderr)
+            continue
+        out[p.stem.replace("results_", "")] = blob
+    return out
 
 
 def check() -> list[str]:
@@ -80,7 +99,39 @@ def check() -> list[str]:
         if not any(f in flat for f in (f"{n} of {m}", f"{n}/{m}", f"{n} of the {m}")):
             bad.append(f"C4 heterogeneity '{n} of {m}' not found in prose")
 
-    # 5. efficiency bound must not understate the artefact
+    # 5. monotonicity violations, wherever the paper states them
+    #
+    # The paper claimed 26/80 for MovieLens while the artefact said 16/80, in
+    # two places, and no check caught it: the fraction never appeared in any
+    # rule above. Anything of the form "n/80" is now matched against the
+    # measured count, in the preconditions table AND in the prose that reasons
+    # from it -- Property 2's applicability turns on this number.
+    for name, r in res.items():
+        m = r.get("e0b_monotonicity") or {}
+        if not m:
+            continue
+        v, pairs = m["violations"], m["pairs_checked"]
+        if name != "ml_1m":
+            continue    # other corpora legitimately differ; only ml_1m is quoted
+        # Scope to lines that actually concern MovieLens: the preconditions
+        # table row and any prose naming the corpus. A bare "n/80" search also
+        # matches the Yelp2018 (0/80) and Gowalla (10/80) rows, which are
+        # correct as they stand.
+        for line in tex.splitlines():
+            if "MovieLens" not in line:
+                continue
+            for q in re.findall(rf"\$?(\d+)\s*/\s*{pairs}\$?", line):
+                if int(q) != v:
+                    bad.append(f"monotonicity: paper says {q}/{pairs} for "
+                               f"MovieLens, artefact gives {v}/{pairs}")
+
+    # 6. candidate recall quoted per corpus
+    for name, r in res.items():
+        rec = r["e0a_candidates"]["candidate_recall"]
+        if name == "ml_1m" and f"{rec:.3f}" not in tex:
+            bad.append(f"ml_1m candidate recall {rec:.3f} not found in prose")
+
+    # 7. efficiency bound must not understate the artefact
     worst = max(r["e1_source_share"]["efficiency"]["abs_error"] for r in res.values())
     for mant, exp in re.findall(r"([\d.]+)\s*\\times\s*10\^\{-(\d+)\}", tex):
         b = float(mant) * 10 ** (-int(exp))
