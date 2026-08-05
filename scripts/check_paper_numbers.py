@@ -142,7 +142,48 @@ def check() -> list[str]:
         if name == "ml_1m" and f"{rec:.3f}" not in tex:
             bad.append(f"ml_1m candidate recall {rec:.3f} not found in prose")
 
-    # 7. efficiency bound must not understate the artefact
+    # 7. self-contradiction guard
+    #
+    # A reviewer found five places where the manuscript asserted something in
+    # one section and its negation in another: the abstract claimed six
+    # analytic games while Threats called them future work; Related Work said
+    # interaction indices were not evaluated while two sections reported them;
+    # Threats said no equivalence test was run while Segments reported a TOST.
+    # Every one described work that HAD been done -- the text was a fossil of
+    # an earlier draft. No numeric check catches that, so the pairs are pinned
+    # here. Two rule shapes, kept separate because conflating them produced
+    # false positives the first time this was written:
+    #
+    #   FORBIDDEN  -- the phrase must never appear.
+    #   REQUIRES   -- if the first phrase appears, the second must too.
+    flat = " ".join(tex.lower().split())
+
+    forbidden = [
+        ("would go further", "Threats still calls analytic games future work"),
+        ("we do not evaluate here",
+         "Related Work still disclaims interaction indices"),
+        ("neither of which we conducted",
+         "Threats still denies conducting the equivalence test"),
+        ("three sparse corpora", "only two sparse corpora exist"),
+        ("margin is positive but within noise",
+         "C5 claims a positive fusion margin; measured value is negative"),
+        ("d_z = 0.006", "stale effect size; measured value is -0.003"),
+    ]
+    for phrase, why in forbidden:
+        if phrase.lower() in flat:
+            bad.append(f"stale text: {why}")
+
+    requires = [
+        ("unreachable at any pool size", "and we withdraw it",
+         "impossibility claim must appear only with its retraction"),
+        ("six analytic", "table~\\ref{tab:analytic}",
+         "analytic-games claim must cite the table that reports them"),
+    ]
+    for phrase, needed, why in requires:
+        if phrase.lower() in flat and needed.lower() not in flat:
+            bad.append(f"self-contradiction: {why}")
+
+    # 8. efficiency bound must not understate the artefact
     worst = max(r["e1_source_share"]["efficiency"]["abs_error"] for r in res.values())
     for mant, exp in re.findall(r"([\d.]+)\s*\\times\s*10\^\{-(\d+)\}", tex):
         b = float(mant) * 10 ** (-int(exp))

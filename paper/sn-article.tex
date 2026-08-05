@@ -112,9 +112,10 @@ on Amazon. Shapley--Taylor indices localise the redundancy driving this.
 Two findings bound the practical claim. In an end-to-end retirement simulation
 leave-one-out predicts the true cost of removing a source \emph{better} than
 Shapley ($\tau=1.00$ versus $0.20$ and $0.60$), so we claim credit allocation
-rather than retirement guidance. On Gowalla the candidate-recall gate proves
-unreachable at any pool size, locating a sparsity boundary for fixed-candidate
-attribution. Code and every backing artefact are released.}
+rather than retirement guidance. Only one corpus clears our candidate-recall
+gate; on the sparsest, reaching it would require a candidate pool so large that
+the fixed-candidate design collapses into full-catalogue ranking. Code and
+every backing artefact are released.}
 
 \keywords{Shapley value, cooperative game theory, recommender systems,
 explainable AI, credit assignment, hybrid recommendation}
@@ -193,8 +194,8 @@ and efficiency on real fitted games.
       ($-0.0050$), a gap of $39\%$ of the grand-coalition payoff. We report
       that \emph{which} source flips varies by corpus --- popularity on
       Gowalla, recency on Amazon-VG, the latter negligible in magnitude --- so
-      the claim is that ablation misjudges some source in every system, not
-      that it systematically misjudges a particular one
+      the claim is that the two rules diverge on some source in every system,
+      not that ablation systematically undervalues a particular one
       (Section~\ref{sec:results}).
 \item \textbf{C4.} Per-user attribution that resolves behavioural segments on
       the dense corpus, showing the decomposition carries structure a global
@@ -206,9 +207,14 @@ and efficiency on real fitted games.
       narrows the paper's practical claim, and we regard stating it as part of
       the contribution.
 \item \textbf{C5.} Fusion weights derived from these attributions beat
-      LightGCN, SASRec, uniform, and popularity baselines at $p<0.001$. Against
-      a well-tuned global head the margin is positive but within noise at this
-      sample size, and we report it as such.
+      LightGCN, SASRec, uniform, and popularity baselines at $p<0.001$ ---
+      though we note the neural baselines received smaller tuning budgets
+      (Section~\ref{sec:threats}). Against a well-tuned global head there is
+      \emph{no} advantage: the difference is $-0.00005$ on MovieLens and a
+      pre-specified equivalence test concludes the two are equivalent within
+      $0.002$ $\NDCG$. Attribution-derived fusion is therefore not a
+      contribution of this paper, and we report the negative result rather than
+      the favourable framing of an earlier draft.
 \item \textbf{C6.} A reproducible artefact with a frozen configuration fixed
       before the reported runs and CI-enforced invariants. We use ``frozen''
       rather than ``pre-registered'': the configuration is version-controlled
@@ -346,13 +352,34 @@ is a build-or-retire decision about a subsystem.
 
 \paragraph{Attribution to model components and to performance}
 Closer to our unit of analysis than feature-level XAI is work attributing
-behaviour to \emph{model components} rather than inputs~\citep{shah2024coar},
-and work attributing changes in \emph{performance} rather than individual
-predictions~\citep{zhang2023performance}. Ranking-specific treatments of
-Shapley stability are also directly relevant given our
-payoff~\citep{chowdhury2024rankshap}. We position SignalShap within this
-performance- and component-attribution line rather than within
-prediction-explanation.
+behaviour to \emph{model components} rather than inputs. Neuron
+Shapley~\citep{ghorbani2020neuron} treats individual neurons as players with a
+performance payoff, and ensemble games~\citep{rozemberczki2021ensemble} treat
+whole classifiers as players and allocate ensemble accuracy among them --- the
+closest structural precedent for what we do, since both take trained models as
+players and a performance metric as the characteristic function. Related work
+attributes changes in \emph{performance} rather than individual
+predictions~\citep{zhang2023performance,shah2024coar}. Our framing of Shapley
+as ``almost entirely feature-level'' would be wrong; the correct statement is
+that component-level valuation exists and that this paper extends it to
+architectural sources in a ranking system.
+
+\paragraph{Shapley for ranking}
+A recent line develops Shapley attribution specifically for ranked outputs.
+RankSHAP~\citep{chowdhury2025rankshap} axiomatises feature attribution for
+learning-to-rank and evaluates against ranking metrics;
+RankingSHAP~\citep{heuss2025rankingshap} gives a listwise formulation;
+ShaRP~\citep{pliatsika2025sharp} defines games for score, rank, top-$k$, and
+pairwise-preference outcomes. Within recommendation, triplet
+importance~\citep{he2024triplet} values training triplets by ranking utility.
+All of these take \emph{features} or \emph{training data} as players and
+approximate the value by sampling. SignalShap differs on both axes: the players
+are architectural source models, and with five players the value is computed by
+exhaustive enumeration rather than estimated. The distinguishing design choice
+is the coalition-independent candidate set with a coalition-refitted fusion
+head, which makes coalition values comparable across a subset lattice in a
+two-stage retrieval-then-rank architecture --- a construction these works do not
+require because their players do not affect retrieval.
 
 \paragraph{Which Shapley, and which game}
 Shapley uniqueness holds \emph{once a game is fixed}; it does not select the
@@ -363,8 +390,9 @@ declared modelling choices rather than as the canonical formulation.
 Alternative cooperative values --- Banzhaf and other
 semivalues~\citep{karczmarz2022banzhaf} --- and interaction-aware extensions
 such as the Shapley--Taylor index~\citep{sundararajan2020shapleytaylor} are
-natural comparators that we do not evaluate here; redundancy between sources is
-central to our setting, so interaction indices are a clear next step.
+natural comparators, and because redundancy between sources is central to our
+setting we evaluate both rather than deferring them
+(Section~\ref{sec:alternatives}).
 Replication sensitivity of Shapley allocations~\citep{han2022replication} is
 directly relevant to our duplicate-injection design and is discussed in
 Section~\ref{sec:recovery}.
@@ -618,7 +646,7 @@ Two pairs overlap \emph{by construction} and we state this before reporting
 results rather than present it as a discovery: $pop$--$cf$ (ALS on implicit feedback chases
 popularity) and $rec$--$ct$ (recency is defined over content clusters). RQ2
 asks whether Shapley \emph{recovers} known structure --- a validation of the
-estimator against a defensible ground truth.
+estimator against a predeclared qualitative expectation.
 
 \paragraph{Corpora}
 Three real datasets spanning a $36\times$ density range
@@ -659,7 +687,10 @@ candidate list (Section~\ref{sec:preconditions}).
 
 \paragraph{Protocol}
 Leave-last-out temporal split where timestamps exist; ties broken by
-(timestamp, record index). Seeds $\{42,43,44\}$. Wilcoxon signed-rank for
+(timestamp, record index). The main study uses seeds $\{42,43,44\}$; the
+seed-interval and equivalence analyses of Section~\ref{sec:segments} use ten
+seeds ($42$--$51$), which is what the two-level bootstrap resamples over.
+Wilcoxon signed-rank for
 paired $\NDCG$, permutation tests (10\,000 shuffles) for gaps and
 heterogeneity, Holm--Bonferroni with family size \emph{and composition}
 declared, Cohen's $d_z$ throughout.
@@ -730,20 +761,31 @@ corpus's catalogue, against $17\%$ elsewhere, so the raise is justified by
 consistency rather than by outcome. Recall improved to $0.450$. The robustness
 sweep then measured the curve directly:
 $N_{\max}=5\,811 \to 0.418$, $11\,623 \to 0.450$, $23\,246 \to 0.471$. Doubling
-the pool buys $+0.021$. Extrapolating that logarithm, recall reaches only
-$0.522$ at $N_{\max}=82\,134$ --- \emph{ranking the entire catalogue} --- and
-the $0.60$ crossing sits at $N_{\max}\approx 624\,000$, some $7.6\times$ more
-items than exist.
+the pool buys $+0.021$.
 
-The gate is therefore unreachable on Gowalla at any pool size, and the binding
-constraint is not the pool: it is the coverage of the five base scorers'
-top-lists. This is worth stating plainly because it locates a boundary on the
-method rather than on the implementation. Fixed-candidate attribution requires
-that a union of source top-$N$ lists can cover a usable fraction of held-out
-interactions; on an $82$k-venue check-in corpus with $0.075\%$ density, five
-scorers cannot. A practitioner can check this condition before adopting the
-method, and we would rather report where it fails than select corpora where it
-does not.
+We are deliberately careful about what this does and does not establish. Recall
+is \emph{not} bounded below one: every unseen item receives a finite score from
+every source, so setting $N_{\max}$ to the catalogue size makes $C_u$ the whole
+eligible catalogue and recall approaches one by construction. We verified this
+on MovieLens, where $N_{\max}=3\,533$ yields recall $0.9995$. An earlier version
+of this manuscript extrapolated the logarithmic fit beyond the sampled range
+and concluded that Gowalla's gate was unreachable at any pool size. That
+conclusion was wrong --- the logarithm describes the curve locally and cannot
+hold asymptotically --- and we withdraw it.
+
+What the measurements do establish is a cost. On Gowalla, clearing $0.60$ would
+require a candidate set large enough that the fixed-candidate design stops
+being a retrieval-plus-ranking decomposition and becomes full-catalogue
+ranking, at which point the game no longer models the two-stage architecture it
+was built to explain, and the $32$ coalition refits become correspondingly
+expensive. The practical statement is therefore about affordability and design
+validity rather than impossibility: on a corpus this sparse, the candidate pool
+needed for a usable recall ceiling is a large fraction of the catalogue, and a
+practitioner should check that ratio before adopting a fixed-candidate game.
+Quantifying where that tradeoff becomes unacceptable, and whether recall rises
+fast enough in the unsampled region between $23\,246$ and $82\,134$ to change
+the assessment, requires a full-catalogue sweep we have not run.
+
 
 \paragraph{What the ceiling restriction means}
 Both affected corpora are retained for \emph{relative} comparisons --- the
@@ -769,13 +811,15 @@ in the main text because $v$ is fitted: exactness is a property of the
 aggregation, not of the attribution end to end.}\label{fig:shares}
 \end{figure}
 
-\section{Validation Against Constructed Ground Truth}\label{sec:recovery}
+\section{Validation Against Known Axiomatic Constraints}\label{sec:recovery}
 
 An attribution method should be judged by whether it returns the right answer,
 not only by whether its output looks plausible. Yet on observational data the
 right answer is unknown, which is why attribution methods are so rarely
-validated directly. This section supplies the missing ground truth by
-\emph{construction}, on real corpora, and shows that SignalShap recovers it.
+validated directly. This section supplies a known \emph{axiomatic constraint}
+by construction, on real corpora, and shows that SignalShap satisfies it. We
+avoid the term ground truth: duplicate injection fixes what the attribution
+must satisfy, not what the correct magnitudes are.
 
 \paragraph{Design}
 We inject a near-duplicate of an existing source,
@@ -863,6 +907,108 @@ As $\eta$ grows the duplicate becomes a noisier copy and exact redundancy
 weakens. LOO becomes non-zero but erratic in sign, which is the behaviour
 Lemma~\ref{lem:eps}(i) describes for $\varepsilon$-redundancy.
 
+\section{Validating the Aggregation}\label{sec:validating}
+
+\subsection{Analytic games with known Shapley vectors}\label{sec:analytic}
+
+Duplicate injection tests symmetry, but symmetry alone does not validate
+\emph{magnitudes}: a method that halved every value would still pass it. We
+therefore also evaluate six analytic games whose Shapley vector is known in
+closed form, chosen to span the structures our real games might exhibit
+(Table~\ref{tab:analytic}). These are unit tests of the aggregation, not
+evidence about recommender data; they establish that the enumeration in
+Equation~(4) is implemented correctly, which is a precondition for interpreting
+anything computed with it.
+
+\begin{table}[t]
+\caption{Analytic games with closed-form Shapley vectors. All six are
+reproduced with zero error, which validates magnitudes, the null-player axiom,
+and the handling of negative contributions --- none of which the symmetry
+diagnostic can detect.}
+\label{tab:analytic}
+\begin{tabular}{@{}llll@{}}
+\toprule
+Game & Structure tested & Expected $\varphi$ & Max error \\
+\midrule
+Additive     & no interaction        & $(3, 2, 1)$    & $0$ \\
+Substitutes  & exact redundancy      & $(2, 2, 1)$    & $0$ \\
+Complements  & positive interaction  & $(3, 3, 2)$    & $0$ \\
+Null player  & null-player axiom     & $(3, 2, 0)$    & $0$ \\
+Harmful      & negative contribution & $(5, -2)$      & $0$ \\
+Unanimity    & pure complementarity  & $(3, 3, 3)$    & $0$ \\
+\botrule
+\end{tabular}
+\end{table}
+
+The null-player and harmful games matter most for this paper. Our fitted games
+are non-monotone and produce negative $\varphi_g$ (Section~\ref{sec:results}),
+so it is necessary to establish that a negative value is a faithful computation
+rather than an artefact of the implementation; the harmful game confirms that
+$-2$ is recovered exactly. The null-player game confirms that a source
+contributing nothing receives exactly zero, which is the property the
+structural audit of Section~\ref{sec:setup} relies on.
+
+\subsection{Alternative values and pairwise interactions}\label{sec:alternatives}
+
+\paragraph{Other semivalues}
+The Shapley value is one member of a family. We also compute the Banzhaf value,
+which weights every coalition equally rather than by permutation count, and a
+uniform semivalue. On MovieLens all three induce the \emph{same} source
+ordering (Kendall $\tau = 1.00$ between Shapley and Banzhaf, same top source),
+so the conclusions of Section~\ref{sec:results} do not depend on the choice
+among these values. Banzhaf does not satisfy efficiency, so its values do not
+sum to $v(\G)$ and only the induced ordering is comparable.
+
+\paragraph{Pairwise interactions}
+Main-effect values cannot by themselves distinguish a source of low value from
+a source whose value is absorbed by a redundant partner. We therefore compute
+the order-2 Shapley--Taylor interaction
+index~\citep{sundararajan2020shapleytaylor}. With $n$ players and order
+$k = 2$, singleton terms are the discrete derivative at the empty coalition,
+$\mathcal{I}_g = v(\{g\}) - v(\varnothing)$, and each pair $\{a,b\}$ receives
+%
+\begin{equation}
+\mathcal{I}_{ab} \;=\;
+\sum_{S \subseteq \G \setminus \{a,b\}}
+\frac{|S|!\,(n - |S| - 2)!}{(n-1)!}\;
+\bigl[\,v(S \cup \{a,b\}) - v(S \cup \{a\}) - v(S \cup \{b\}) + v(S)\,\bigr],
+\label{eq:taylor}
+\end{equation}
+%
+the averaged second-order discrete derivative. A negative $\mathcal{I}_{ab}$
+means the pair jointly contributes less than the sum of their separate
+contributions --- the signature of redundancy --- and a positive value
+indicates complementarity.
+
+\begin{table}[t]
+\caption{Order-2 Shapley--Taylor interaction indices on MovieLens-1M
+(seed 42). Negative entries indicate redundancy. The two most negative pairs
+are exactly the two overlaps declared in advance in
+Section~\ref{sec:setup}}
+\label{tab:taylor}
+\begin{tabular}{@{}lrlr@{}}
+\toprule
+Pair & $\mathcal{I}_{ab}$ & Pair & $\mathcal{I}_{ab}$ \\
+\midrule
+$cf|seq$  & $-0.0561$ & $ct|pop$  & $-0.0033$ \\
+$cf|pop$  & $-0.0256$ & $ct|seq$  & $+0.0008$ \\
+$pop|rec$ & $-0.0015$ & $ct|rec$  & $+0.0002$ \\
+$cf|rec$  & $-0.0013$ & $cf|ct$   & $+0.0023$ \\
+$rec|seq$ & $-0.0011$ & $pop|seq$ & $+0.0058$ \\
+\botrule
+\end{tabular}
+\end{table}
+
+Table~\ref{tab:taylor} localises the redundancy behind the MovieLens sign flip.
+The two most negative pairs are $cf|seq$ ($-0.056$) and $cf|pop$ ($-0.026$):
+collaborative filtering overlaps most with the sequential and popularity
+sources, which is why removing it from the grand coalition costs so little and
+why leave-one-out scores it below zero. We note that $pop|cf$ was declared as
+an expected overlap in advance (Section~\ref{sec:setup}), so this is
+recovery of known structure rather than discovery. The interaction values are
+reported for MovieLens only; extending them to the other corpora, and
+attaching uncertainty, is straightforward but not yet done.
+
 \section{Attribution on Real Systems}\label{sec:results}
 
 \begin{table}[t]
@@ -925,9 +1071,10 @@ removing. On Gowalla it falls on $pop$, at $12\%$ of $v(\G)$. On Amazon-VG it
 falls on $rec$, at $1\%$ of $v(\G)$, where both estimates are within noise of
 zero and the disagreement is real but inconsequential. A single-corpus reading
 of this paper would have concluded that collaborative filtering is the source
-ablation systematically misjudges. Three corpora do not support that: they
-support the weaker and more useful claim that redundancy-blind ablation
-misjudges \emph{some} source in every system, and does not announce which.
+ablation systematically undervalues. Three corpora do not support that: they
+support the weaker and more useful claim that the two rules diverge on
+\emph{some} source in every system, that the divergence tracks redundancy, and
+that neither rule announces in advance where it will occur.
 
 \paragraph{Mechanism}
 The account is \emph{qualitatively} the one Property~\ref{prop:loo} describes,
@@ -981,15 +1128,43 @@ Section~\ref{sec:setup}.}\label{fig:redundancy}
 Two questions separate here: whether attributions \emph{differ} across user
 segments, and whether exploiting that difference \emph{pays}.
 
+\paragraph{Segments and the weight map}
+An earlier version of this paper left both definitions implicit, which made the
+applied claim unreproducible. Segments are a $2\times2$ split on training
+behaviour only, computed before any test data is touched: activity (above or
+below the median interaction count) crossed with recency skew, the fraction of
+a user's interactions falling in the newer half of that user's own timespan,
+again split at the median. This yields four segments; users with no training
+interactions fall in the first.
+
+Segment attributions are mapped to fusion weights by a softmax with shrinkage
+toward the global profile. For segment $s$ and source $g$,
+%
+\begin{equation}
+q_{s,g} = \frac{\exp(\varphi_{s,g}/\tau)}{\sum_{h \in \G}\exp(\varphi_{s,h}/\tau)},
+\qquad
+a_{s,g} = (1-\rho)\,q_{s,g} + \rho\,q_{\mathrm{global},g}.
+\label{eq:fuse}
+\end{equation}
+%
+The softmax is not cosmetic. Our games are non-monotone, so $\varphi_{s,g}$ can
+be negative, and using raw values as weights would \emph{invert} a source's
+scores rather than down-weight it --- a qualitatively different operation from
+the one the attribution licenses. The temperature $\tau$ and shrinkage $\rho$
+are selected on the validation fold and frozen before any test evaluation.
+
+
 \paragraph{Heterogeneity is real, but only on the dense corpus}
 On MovieLens-1M, $7$ of $30$ segment-pair contrasts are significant at
-$\alpha = 0.05$ against $1.5$ expected by chance. On the three sparse corpora
-the counts are $2$, $1$, and $3$ of $30$ --- at or near the chance rate. We
-therefore claim segment heterogeneity for the dense setting only, and note that
-its absence on sparse data is a plausible reason the closed loop does not
-deliver. Figure~\ref{fig:segments} plots the per-segment profiles;
-near-coincident polygons on the sparse corpora are the visual form of that null
-result.
+$\alpha = 0.05$ uncorrected, against $1.5$ expected by chance. On the two
+sparse corpora the counts are $4$ of $30$ (Gowalla) and $5$ of $30$
+(Amazon-VG). These are above the chance rate but well below MovieLens, and
+after Holm correction within each corpus none of the three corpora retains a
+significant contrast --- a fact we state because the uncorrected counts alone
+would overstate the evidence. We therefore claim suggestive segment
+heterogeneity in the dense setting and no established heterogeneity on sparse
+data, and note that this is a plausible reason the closed loop does not
+deliver. Figure~\ref{fig:segments} plots the per-segment profiles.
 
 \begin{figure}[t]
 \centering
@@ -1214,17 +1389,36 @@ most valuable extension we can identify.
 The duplicate experiment verifies symmetry and efficiency on real fitted games.
 It does not establish absolute correctness of the magnitudes, and no experiment
 here does, because no independent ground-truth attribution exists for these
-systems. Analytic synthetic games with a fully known Shapley vector would go
-further, and we regard that as the natural complement to this work.
+systems. Analytic games with a fully known Shapley vector complement this and
+are reported in Section~\ref{sec:analytic}: all six reproduce exactly,
+including the null-player and harmful cases that the symmetry diagnostic cannot
+reach.
 
 \paragraph{Statistical conclusion validity}
-Three training seeds are too few to characterise model-level variability, and
-all users share the same fitted source models, so treating users as independent
+All users share the same fitted source models, so treating users as independent
 understates dependence. The fusion comparison against the globally tuned head
-is not merely underpowered: with $d_z = 0.006$ the honest framing requires a
-pre-specified smallest meaningful difference and an equivalence test, neither
-of which we conducted. We therefore make no claim of superiority over that
-baseline.
+is not merely underpowered: at $d_z = -0.003$ on MovieLens the user-level
+Wilcoxon test is the wrong instrument, because a large $n$ can render a
+practically empty difference significant. We therefore pre-specified a smallest
+meaningful difference of $0.002$ $\NDCG$ and report a two-level bootstrap over
+seeds and then users, together with a TOST equivalence test
+(Section~\ref{sec:segments}). The conclusion is equivalence, not superiority.
+
+Two limitations of that analysis remain. The main study uses three seeds and
+the revision analyses ten; ten outer clusters is adequate for a bootstrap but
+not generous, and we report intervals rather than point estimates throughout
+for that reason. And the hierarchical treatment is applied to the
+fusion-versus-global comparison, which is the one where the difference is
+small enough for dependence to matter; the comparisons against LightGCN,
+SASRec, uniform, and popularity are separated by one to two orders of magnitude
+and are reported with user-level tests, which we regard as sufficient for
+differences of that size but not as model-level inference.
+
+Amazon-VG is the one case where fusion beats the global head with a corrected
+$p$ below $0.05$ ($p = 0.019$). We do not present this as a positive result:
+$d_z = 0.014$, and $6\,951$ of $7\,120$ users are exact ties. It is a
+statistically detectable difference with no practical content, and reporting it
+otherwise would contradict the equivalence conclusion the same data support.
 
 \paragraph{Internal validity}
 Fusion weights are fitted on the validation fold and frozen before test
@@ -1268,8 +1462,11 @@ decisions than ablation --- we did run, as an end-to-end retirement simulation,
 and ablation won it on both corpora where we could run it
 (Section~\ref{sec:estimands}). We therefore claim credit allocation, not
 retirement guidance. Two corpora also fall below the candidate-recall gate, and
-on Gowalla we show that no pool size can lift it: that locates a sparsity
-boundary for fixed-candidate attribution rather than a shortfall of effort.
+on Gowalla lifting it would require a candidate pool approaching the whole
+catalogue, at which point the fixed-candidate game no longer models the
+two-stage architecture it was built for. That is a cost boundary on the design,
+not an impossibility, and we state it as such after withdrawing a stronger
+claim made in an earlier version.
 
 Future work: an attribution estimand aligned with retirement decisions rather
 than credit allocation, since the two demonstrably diverge; corpora dense
