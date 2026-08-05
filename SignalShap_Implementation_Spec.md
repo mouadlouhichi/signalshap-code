@@ -553,6 +553,7 @@ Preserved so that fixes are not silently reverted. Each entry is a **real error 
 | 14 | Eight-week timeline | Nine weeks, floor | §15 |
 | 15 | Monotone-repair $\varphi$ asserted without its payoff table | Full table shown, mechanically verified, doubles as the witness that $\tfrac12$ is unattainable | §3.2 |
 | 16 | $k$-core estimates presented in a table indistinguishable from measurements | Table flagged non-authoritative; measurement gated by CI and a Week-1 obligation | §6.2 |
+| 17 | `ct` and `rec` reported as null on `gowalla_ts` and `amazon_video_games` when they had in fact been given no input at all (timestamped loaders built their `Dataset` with `meta=None`, so `ct` was all-zero and `rec` collapsed to one content cluster; the two players' Shapley entries were bit-identical on both corpora) | Structural nulls separated from evidential ones by `scorers/audit.py`, which measures each source's ability to reorder the candidate slices before any coalition is scored; warns by default, fatal under `SIGNALSHAP_STRICT_DATA=1`; content supplied from Gowalla lat/lon (nested offset geo-cells) and the Amazon product-metadata dump | §4 |
 
 ---
 

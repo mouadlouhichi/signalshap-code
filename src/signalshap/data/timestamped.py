@@ -84,9 +84,54 @@ def load_gowalla_timestamped(path: Path | None = None, k_core: int = 10,
     df = pd.read_csv(f, sep="\t", header=None,
                      names=["user", "time", "lat", "lon", "item"])
     df["timestamp"] = _to_epoch_seconds(df["time"])
-    df = df[df["timestamp"] > 0][["user", "item", "timestamp"]]
+    df = df[df["timestamp"] > 0]
+    geo = df[["item", "lat", "lon"]].dropna()
+    df = df[["user", "item", "timestamp"]]
     df = _k_core(df, k_core)
-    return _prepare(df, "gowalla_ts", max_users, seed)
+    return _prepare(df, "gowalla_ts", max_users, seed,
+                    meta_source=lambda kept: _gowalla_meta(geo, kept))
+
+
+def _gowalla_meta(geo: pd.DataFrame, kept: pd.Series) -> pd.DataFrame:
+    """Content tags for Gowalla venues from their coordinates.
+
+    Gowalla has no item text, which previously left `ct` an all-zero matrix
+    and `rec` with a single content cluster -- both players structurally dead
+    (see scorers/audit.py). But the check-in file carries lat/lon, so venues do
+    have content: WHERE they are. We bin coordinates onto a nested grid and
+    emit one token per resolution, which gives TF-IDF a coarse-to-fine
+    geographic vocabulary: venues in the same neighbourhood share the fine
+    token, venues in the same metro share only the coarse one. That is the
+    natural notion of venue similarity for a location service, and it makes
+    `rec` mean "how recently did this user visit this area", which is a real
+    recency signal rather than a constant.
+
+    Grid steps are in degrees and fixed a priori (roughly 100 km / 10 km /
+    1 km near the equator); they are not tuned against any outcome.
+
+    Each resolution is emitted TWICE, on grids offset by half a step. A single
+    grid makes similarity discontinuous at cell edges: two venues 500 m apart
+    that straddle a boundary share no token at any resolution, which a unit
+    test caught on a pair either side of longitude -74.0. With the offset copy,
+    a boundary in one grid falls mid-cell in the other, so genuinely nearby
+    venues always agree on at least one token per resolution.
+    """
+    pt = geo.groupby("item")[["lat", "lon"]].median()
+    steps = ((1.0, "g1"), (0.1, "g2"), (0.01, "g3"))
+    tags = {}
+    for item, (lat, lon) in zip(pt.index, pt.to_numpy()):
+        toks = []
+        for step, label in steps:
+            for off, otag in ((0.0, "a"), (0.5, "b")):
+                toks.append(
+                    f"{label}{otag}_{int(np.floor(lat / step + off))}_"
+                    f"{int(np.floor(lon / step + off))}"
+                )
+        tags[item] = " ".join(toks)
+    return pd.DataFrame({
+        "item": kept.values,
+        "tags": [tags.get(i, "") for i in kept.values],
+    })
 
 
 # --------------------------------------------------------------------------- #
@@ -140,7 +185,62 @@ def load_amazon_timestamped(category: str = "Video_Games",
             df["timestamp"] = df["timestamp"] // 1000   # ms -> s
         df["timestamp"] = df["timestamp"].astype("int64")
     df = _k_core(df, k_core)
-    return _prepare(df, f"amazon_{category.lower()}", max_users, seed)
+    return _prepare(df, f"amazon_{category.lower()}", max_users, seed,
+                    meta_source=lambda kept: _amazon_meta(base, kept))
+
+
+def _amazon_meta(base: Path, kept: pd.Series) -> pd.DataFrame:
+    """Item tags from the Amazon product-metadata dump, when present.
+
+    Without this, `ct` is an all-zero matrix and `rec` collapses to one
+    cluster, so both players are structurally dead and their zero Shapley
+    values say nothing about content (see scorers/audit.py). The metadata file
+    is a separate download (``meta_<Category>.jsonl[.gz]``); if it is absent we
+    return empty tags and let the audit raise, rather than pretending the
+    corpus has no content signal.
+
+    Tokens are the category path plus the store/brand, lowercased and
+    whitespace-joined so the TF-IDF vectoriser's ``\\S+`` pattern treats each
+    as one term. Title words are deliberately excluded: they are mostly model
+    numbers and platform boilerplate, which inflate the vocabulary without
+    adding a content axis.
+    """
+    f = next((p for p in base.rglob("meta_*.jsonl*")), None)
+    if f is None:
+        f = next((p for p in base.rglob("*meta*.json*")), None)
+    if f is None:
+        return pd.DataFrame({"item": kept.values, "tags": ""})
+
+    want = set(kept.tolist())
+    rows: dict[str, str] = {}
+    for chunk in pd.read_json(f, lines=True, convert_dates=False,
+                              chunksize=50_000):
+        key = "parent_asin" if "parent_asin" in chunk else "asin"
+        if key not in chunk:
+            break
+        chunk = chunk[chunk[key].isin(want)]
+        for rec in chunk.to_dict("records"):
+            toks = []
+            cats = rec.get("categories") or rec.get("category") or []
+            if isinstance(cats, str):
+                cats = [cats]
+            for c in cats:
+                if isinstance(c, list):
+                    toks += [str(x) for x in c]
+                elif c is not None:
+                    toks.append(str(c))
+            for extra in ("store", "brand", "main_category"):
+                val = rec.get(extra)
+                if isinstance(val, str) and val.strip():
+                    toks.append(val)
+            clean = [t.strip().lower().replace(" ", "_") for t in toks if str(t).strip()]
+            if clean:
+                rows[rec[key]] = " ".join(clean)
+
+    return pd.DataFrame({
+        "item": kept.values,
+        "tags": [rows.get(i, "") for i in kept.values],
+    })
 
 
 # --------------------------------------------------------------------------- #
@@ -178,7 +278,7 @@ def load_lastfm_1k(path: Path | None = None, k_core: int = 10,
 
 
 def _prepare(df: pd.DataFrame, name: str, max_users: int | None,
-             seed: int) -> Dataset:
+             seed: int, meta_source=None) -> Dataset:
     if max_users:
         rng = np.random.default_rng(seed)
         uniq = df["user"].unique()
@@ -205,7 +305,17 @@ def _prepare(df: pd.DataFrame, name: str, max_users: int | None,
 
     df = df.sort_values(["user", "timestamp"], kind="mergesort").reset_index(drop=True)
     df["original_record_index"] = np.arange(len(df))
-    ds = _finalise(df[SCHEMA], name, None, synthetic=False)
+
+    # Build item metadata BEFORE _finalise reindexes, then relabel to the
+    # contiguous ids _reindex will assign (sorted order of the raw ids). Doing
+    # it after would silently misalign tags with items.
+    meta = None
+    if meta_source is not None:
+        kept = pd.Series(sorted(df["item"].unique()))
+        meta = meta_source(kept).copy()
+        meta["item"] = np.arange(len(kept))
+
+    ds = _finalise(df[SCHEMA], name, meta, synthetic=False)
     ds.no_timestamps = False           # the whole point of this module
     return ds
 

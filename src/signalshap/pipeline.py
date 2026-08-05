@@ -35,6 +35,7 @@ from .game.core import (
     SignalShapGame, check_efficiency, exact_shapley, monotonicity_audit,
     per_user_shapley,
 )
+from .scorers.audit import audit_players, enforce_player_audit
 from .scorers.base import mask_seen, train_all_scorers
 from .scorers.neural import lightgcn_scores, sasrec_scores
 from .segments.segments import (
@@ -75,6 +76,14 @@ class Experiment:
             self.scores, self.ds.n_users, self.n_max, self.cfg.max_growth_iters
         )
         self.timings["candidates"] = time.time() - t0
+
+        # A player with no usable input scores zero for structural reasons and
+        # is indistinguishable, downstream, from a player that is genuinely
+        # redundant. Catch it here, on the candidate slices the game actually
+        # ranks, rather than inferring it from a table of nulls.
+        self.player_audit = enforce_player_audit(
+            self.name, audit_players(self.scores, self.candidates)
+        )
 
         self.valid_items = _items_map(self.ds.valid)
         self.test_items = _items_map(self.ds.test)
@@ -458,6 +467,7 @@ class Experiment:
             "dataset": self.name, "seed": self.seed,
             "synthetic": self.ds.synthetic,
             "dataset_stats": self.ds.stats(),
+            "player_audit": self.player_audit,
             "timings_sec": self.timings,
             "e0a_candidates": self.e0a_candidate_diagnostics(),
             "e0b_monotonicity": self.e0b_monotonicity_audit(),
