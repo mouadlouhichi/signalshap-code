@@ -1,19 +1,19 @@
 {
-  "amazon_video_games": {
-    "users": 7120,
-    "items": 3516,
-    "interactions": 117468,
-    "density": 0.004692353414886682,
-    "train": 103228,
-    "valid": 7120,
-    "test": 7120,
+  "gowalla_ts": {
+    "users": 8865,
+    "items": 82134,
+    "interactions": 542970,
+    "density": 0.0007457171325451945,
+    "train": 525240,
+    "valid": 8865,
+    "test": 8865,
     "synthetic": false,
     "no_timestamps": false
   },
   "_meta": {
     "source": "measured",
-    "measured_at": "2026-08-05T08:36:49.118378+00:00",
-    "corpus_hash": "db694693e7e2dd6f",
+    "measured_at": "2026-08-05T12:22:42.155165+00:00",
+    "corpus_hash": "8b3de94b933c4a56",
     "synthetic": false
   }
 }
