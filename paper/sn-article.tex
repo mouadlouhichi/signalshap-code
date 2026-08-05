@@ -779,10 +779,11 @@ text: relative contrasts only.}
 \begin{tabular}{@{}lrrrrrrl@{}}
 \toprule
 Corpus & Users & Items & Density & $N_{\max}$ & Recall & Monot. & Prop.~\ref{prop:loo} \\
+ &  &  &  &  &  & (mat./raw) &  \\
 \midrule
-MovieLens-1M & 6\,038 & 3\,533  & $2.697\%$ & 600    & $0.748$ & $16/80$ & no \\
-Amazon-VG    & 7\,120 & 3\,516  & $0.469\%$ & 600    & $0.588^{\dagger}$ & $12/80$ & no \\
-Gowalla      & 8\,865 & 82\,134 & $0.075\%$ & 11\,623 & $0.450^{\dagger}$ & $13/80$ & no \\
+MovieLens-1M & 6\,038 & 3\,533  & $2.697\%$ & 600    & $0.748$ & $6$ / $17$ & no \\
+Amazon-VG    & 7\,120 & 3\,516  & $0.469\%$ & 600    & $0.588^{\dagger}$ & $4$ / $12$ & no \\
+Gowalla      & 8\,865 & 82\,134 & $0.075\%$ & 11\,623 & $0.450^{\dagger}$ & $6$ / $13$ & no \\
 \botrule
 \end{tabular}
 \smallskip
@@ -799,10 +800,20 @@ Property~\ref{prop:loo} does not apply as stated and a negative $\varphi_g$
 must be read as substantive rather than as numerical error. We regard this as a
 genuine finding about coalition-conditional refitting rather than an
 inconvenience: adding a source to a coalition can make the refitted ridge
-weights worse for some users, and with $\NDCG$ at a cutoff of ten this is
-visible in $12$--$16$ of the $80$ audited pairs. It is the reason the
-monotonicity hypothesis was made explicit in Section~\ref{sec:theory} instead
-of assumed.
+weights worse for some users.
+
+Table~\ref{tab:preconditions} reports two counts, and the distinction is not
+pedantry. The raw count is every audited pair with
+$v(S \cup \{g\}) < v(S)$; the material count keeps only those with
+$|v(S \cup \{g\}) - v(S)| > 10^{-3}$. Most violations are far below the scale
+of $v$ itself --- the median is $4.5\times10^{-4}$ against $v(\G) \approx 0.05$
+--- so the raw count is sensitive to floating-point ordering and is not a
+reproducible statistic. We learned this concretely: two machines running
+identical code on identical data reported $17$ and $23$ raw violations while
+both reported exactly $6$ material ones. The Property~\ref{prop:loo} argument
+depends on the material count, and it is what we quote. It is the reason the
+monotonicity hypothesis was made explicit in Section~\ref{sec:theory} rather
+than assumed.
 
 \paragraph{Candidate recall, and a limit we can locate}
 MovieLens clears the $0.60$ gate at $0.748$. Neither other corpus does, and the
@@ -1134,10 +1145,12 @@ Shapley recommend opposite decisions about some component of every hybrid we
 examined.
 
 \paragraph{What is not}
-Which source flips is corpus-specific, and so is how much it matters. On
-MovieLens the flip falls on $cf$ and the gap is $0.0205$, or $39\%$ of $v(\G)$
---- the second most valuable source in the system, scored by ablation as worth
-removing. On Gowalla it falls on $pop$, at $12\%$ of $v(\G)$. On Amazon-VG it
+Which source flips is corpus-specific, and so is how much it matters. On MovieLens two sources flip. The consequential one is $cf$: Shapley scores it
+$+0.01526$, the second most valuable source in the system, where ablation
+scores it $-0.00501$ and marks it as worth removing. The gap is $0.0203$, or
+$39\%$ of $v(\G)$. The other flip, $ct$, has both estimates within $10^{-3}$ of
+zero and is not a meaningful disagreement. The strongest source overall is
+$seq$ at $+0.02943$. On Gowalla it falls on $pop$, at $12\%$ of $v(\G)$. On Amazon-VG it
 falls on $rec$, at $1\%$ of $v(\G)$, where both estimates are within noise of
 zero and the disagreement is real but inconsequential. A single-corpus reading
 of this paper would have concluded that collaborative filtering is the source
@@ -1487,7 +1500,7 @@ are selected on the validation fold and frozen before any test evaluation.
 
 
 \paragraph{Heterogeneity is real, but only on the dense corpus}
-On MovieLens-1M, $7$ of $30$ segment-pair contrasts are significant at
+On MovieLens-1M, $10$ of $30$ segment-pair contrasts are significant at
 $\alpha = 0.05$ uncorrected, against $1.5$ expected by chance. On the two
 sparse corpora the counts are $4$ of $30$ (Gowalla) and $5$ of $30$
 (Amazon-VG). These are above the chance rate but well below MovieLens, and

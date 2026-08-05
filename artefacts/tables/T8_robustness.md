@@ -20,9 +20,9 @@
 | gowalla_ts         | rescale: identity | —                  | cf           | —                  |
 | gowalla_ts         | rescale: log1p    | —                  | cf           | —                  |
 | gowalla_ts         | rescale: rank     | —                  | ct           | —                  |
-| ml_1m              | $|C_u|$ = 300     | 0.566              | seq          | 0.05231            |
-| ml_1m              | $|C_u|$ = 600     | 0.748              | seq          | 0.05253            |
-| ml_1m              | $|C_u|$ = 1200    | 0.890              | seq          | 0.04891            |
+| ml_1m              | $|C_u|$ = 300     | 0.566              | seq          | 0.05203            |
+| ml_1m              | $|C_u|$ = 600     | 0.748              | seq          | 0.05150            |
+| ml_1m              | $|C_u|$ = 1200    | 0.890              | seq          | 0.05016            |
 | ml_1m              | $\lambda$ = 0.1   | —                  | seq          | —                  |
 | ml_1m              | $\lambda$ = 1.0   | —                  | seq          | —                  |
 | ml_1m              | $\lambda$ = 10.0  | —                  | seq          | —                  |

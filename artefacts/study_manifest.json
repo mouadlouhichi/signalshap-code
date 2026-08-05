@@ -1,19 +1,12 @@
 {
-  "generated_at": "2026-08-05T15:44:48.364563+00:00",
+  "generated_at": "2026-08-05T17:33:47.483352+00:00",
   "datasets": [
     "ml_1m"
   ],
   "seeds": [
     42,
     43,
-    44,
-    45,
-    46,
-    47,
-    48,
-    49,
-    50,
-    51
+    44
   ],
   "synthetic": false,
   "config": {
@@ -43,5 +36,14 @@
     "recall_gate": 0.6,
     "max_growth_iters": 10,
     "k_ndcg": 10
+  },
+  "environment": {
+    "python": "3.11.2",
+    "platform": "Linux-6.1.158+-x86_64-with-glibc2.36",
+    "machine": "x86_64",
+    "numpy": "2.4.6",
+    "scipy": "1.17.1",
+    "sklearn": "1.9.0",
+    "pandas": "3.0.5"
   }
 }

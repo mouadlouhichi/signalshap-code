@@ -124,17 +124,32 @@ def check() -> list[str]:
         v, pairs = m["violations"], m["pairs_checked"]
         if name != "ml_1m":
             continue    # other corpora legitimately differ; only ml_1m is quoted
-        # Scope to lines that actually concern MovieLens: the preconditions
-        # table row and any prose naming the corpus. A bare "n/80" search also
-        # matches the Yelp2018 (0/80) and Gowalla (10/80) rows, which are
-        # correct as they stand.
-        for line in tex.splitlines():
-            if "MovieLens" not in line:
-                continue
-            for q in re.findall(rf"\$?(\d+)\s*/\s*{pairs}\$?", line):
-                if int(q) != v:
-                    bad.append(f"monotonicity: paper says {q}/{pairs} for "
-                               f"MovieLens, artefact gives {v}/{pairs}")
+        # The table now reports "material / raw" per corpus. Check BOTH against
+        # the artefact, per corpus row, rather than pattern-matching "n/80":
+        # the raw count is not reproducible across machines (17 here, 23 on
+        # another box for the same data), so quoting it alone would be a
+        # promise the artefact cannot keep.
+        det = m.get("detail", [])
+        material = m.get(
+            "violations_material",
+            sum(1 for x in det if abs(x["delta"]) > m.get("material_threshold", 1e-3)),
+        )
+        if len(det) < v:
+            bad.append(f"{name}: monotonicity detail truncated "
+                       f"({len(det)} of {v}); material count not verifiable")
+        label = {"ml_1m": "MovieLens", "amazon_video_games": "Amazon-VG",
+                 "gowalla_ts": "Gowalla"}.get(name)
+        if label:
+            for line in tex.splitlines():
+                if not line.startswith(label):
+                    continue
+                cells = re.findall(r"\$(\d+)\$\s*/\s*\$(\d+)\$", line)
+                for mat_q, raw_q in cells:
+                    if int(mat_q) != material or int(raw_q) != v:
+                        bad.append(
+                            f"monotonicity {label}: paper says "
+                            f"{mat_q}/{raw_q} (material/raw), artefact gives "
+                            f"{material}/{v}")
 
     # 6. candidate recall quoted per corpus
     for name, r in res.items():
