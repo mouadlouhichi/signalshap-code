@@ -22,49 +22,14 @@ from signalshap.config import FrozenConfig, write_artefact  # noqa: E402
 from signalshap.data.timestamped import (  # noqa: E402
     TIMESTAMPED_LOADERS, temporal_validity_report)
 from signalshap.game.core import exact_shapley  # noqa: E402
+from signalshap.memory import (  # noqa: E402
+    check_fits, default_budget_gb, free_gb, scores_gb, size_corpus)
 from signalshap.pipeline import Experiment  # noqa: E402
 from signalshap.stats.tests import (  # noqa: E402
     hierarchical_bootstrap, rank_biserial, tost_equivalence)
 
 #: Players that require genuine interaction times.
 TEMPORAL_PLAYERS = ("rec", "seq", "pop")
-
-#: Peak resident memory is roughly this multiple of the five score matrices:
-#: the robustness sweep holds a second game alive while the neural baselines
-#: add two more dense matrices.
-PEAK_MULTIPLIER = 1.6
-
-
-def _free_gb() -> float:
-    """Available RAM in GB. Falls back to a conservative guess."""
-    import subprocess
-    try:                                    # macOS
-        vm = subprocess.check_output(["vm_stat"], text=True)
-        page = int(vm.split("page size of")[1].split("bytes")[0])
-        free = inactive = 0
-        for line in vm.splitlines():
-            if line.startswith("Pages free:"):
-                free = int(line.split(":")[1].strip().rstrip("."))
-            elif line.startswith("Pages inactive:"):
-                inactive = int(line.split(":")[1].strip().rstrip("."))
-        return (free + inactive) * page / 1e9
-    except Exception:
-        pass
-    try:                                    # Linux
-        with open("/proc/meminfo") as fh:
-            for line in fh:
-                if line.startswith("MemAvailable:"):
-                    return int(line.split()[1]) * 1024 / 1e9
-    except Exception:
-        pass
-    return 8.0
-
-
-def _fit_users(n_items: int, n_users: int, budget_gb: float) -> int:
-    """Largest user count whose score matrices fit the budget."""
-    cap = int(budget_gb * 1e9 / (PEAK_MULTIPLIER * 5 * n_items * 4))
-    return max(500, min(cap, n_users))
-
 
 def main() -> int:
     ap = argparse.ArgumentParser()
@@ -80,8 +45,8 @@ def main() -> int:
                          "so a large corpus downsizes instead of being killed.")
     a = ap.parse_args()
 
-    budget = a.budget_gb if a.budget_gb else max(4.0, 0.6 * _free_gb())
-    print(f"memory budget: {budget:.1f} GB (free: {_free_gb():.1f} GB)")
+    budget = default_budget_gb(a.budget_gb)
+    print(f"memory budget: {budget:.1f} GB (free: {free_gb():.1f} GB)")
 
     seeds = tuple(range(42, 42 + a.seeds))
     cfg = FrozenConfig.load()
@@ -94,33 +59,11 @@ def main() -> int:
 
         # --- gate 1: temporal validity, and size the corpus to memory -----
         if name in TIMESTAMPED_LOADERS:
-            # Load a probe to learn the catalogue size, then derive how many
-            # users actually fit. Gowalla is 53k x 122k, which needs ~207 GB
-            # for five score matrices -- it must be subsampled, not attempted.
-            # Probe with a SMALL cap purely to learn the catalogue size; the
-            # full corpus can be millions of rows and we only need n_items.
-            os.environ["SIGNALSHAP_MAX_USERS"] = str(a.max_users or 1500)
-            probe = TIMESTAMPED_LOADERS[name]()
-            # The probe's item count under-estimates the full catalogue, so
-            # scale it up: a larger user sample reaches more items. This is
-            # deliberately conservative -- over-estimating n_items yields a
-            # smaller, safer user cap.
-            est_items = max(probe.n_items * 3, probe.n_items)
-            n_users_fit = _fit_users(est_items, 10 ** 9, budget)
-            if a.max_users:
-                n_users_fit = min(n_users_fit, a.max_users)
-            os.environ["SIGNALSHAP_MAX_USERS"] = str(n_users_fit)
-            print(f"{name}: ~{est_items:,} items (est) -> "
-                  f"{n_users_fit:,} users fit a {budget:.0f} GB budget")
-            del probe
-
-            os.environ["SIGNALSHAP_MAX_USERS"] = str(n_users_fit)
+            size_corpus(name, TIMESTAMPED_LOADERS[name], budget, a.max_users)
             ds = TIMESTAMPED_LOADERS[name]()
-            print(f"{name}: loaded {ds.n_users:,} users x {ds.n_items:,} items "
-                  f"({5 * ds.n_users * ds.n_items * 4 / 1e9:.1f} GB of scores)")
-            if 5 * ds.n_users * ds.n_items * 4 / 1e9 > budget:
-                print(f"  SKIP: still exceeds the budget; lower --budget-gb "
-                      f"or pass --max-users")
+            ok, msg = check_fits(name, ds.n_users, ds.n_items, budget)
+            print(msg)
+            if not ok:
                 continue
             rep = temporal_validity_report(ds)
             print(f"{name}: temporally_valid={rep['temporally_valid']} "
