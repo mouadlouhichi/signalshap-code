@@ -1,7 +1,6 @@
 {
-  "generated_at": "2026-08-05T02:35:43.754164+00:00",
+  "generated_at": "2026-08-05T08:36:49.120986+00:00",
   "datasets": [
-    "gowalla_ts",
     "amazon_video_games"
   ],
   "seeds": [
@@ -17,8 +16,11 @@
       "amazon_book": 1000,
       "gowalla": 2500,
       "yelp2018": 5000,
-      "amazon_book_lgcn": 20000
+      "amazon_book_lgcn": 20000,
+      "gowalla_ts": 2500,
+      "amazon_video_games": 600
     },
+    "recall_ceiling_exempt": [],
     "ridge_lambda": 1.0,
     "v0_seed": 42,
     "seeds": [
