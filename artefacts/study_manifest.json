@@ -1,21 +1,23 @@
 {
-  "generated_at": "2026-08-02T16:53:31.571865+00:00",
+  "generated_at": "2026-08-05T02:35:43.754164+00:00",
   "datasets": [
-    "ml_1m",
-    "lastfm_2k",
-    "amazon_book"
+    "gowalla_ts",
+    "amazon_video_games"
   ],
   "seeds": [
     42,
     43,
     44
   ],
-  "synthetic": true,
+  "synthetic": false,
   "config": {
     "n_max": {
-      "ml_1m": 200,
+      "ml_1m": 600,
       "lastfm_2k": 500,
-      "amazon_book": 1000
+      "amazon_book": 1000,
+      "gowalla": 2500,
+      "yelp2018": 5000,
+      "amazon_book_lgcn": 20000
     },
     "ridge_lambda": 1.0,
     "v0_seed": 42,
