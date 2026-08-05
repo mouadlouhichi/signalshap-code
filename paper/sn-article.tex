@@ -88,33 +88,33 @@ Ranking-Stage Attribution of Sources in Hybrid Recommenders}
 Analysis (ENSIAS)}, \orgname{Mohammed V University in Rabat},
 \city{Rabat}, \country{Morocco}}
 
-\abstract{Hybrid recommender systems fuse several architecturally distinct
-signals --- collaborative filtering, content, popularity, recency, and
-sequential order --- and practitioners need to know how much each earns.
-We present \emph{SignalShap}, which recasts source attribution as a
-five-player cooperative game whose payoff is a fixed-candidate normalised
-discounted cumulative gain at rank~10 (NDCG@10) on a coalition-independent
-candidate set. With five players the Shapley value follows from exact
-enumeration of all $2^5=32$ coalitions, so the aggregation carries no sampling
-error.
+\abstract{Hybrid recommender systems fuse architecturally distinct signals ---
+collaborative filtering, content, popularity, recency, and sequential order ---
+and practitioners need to know how much each earns. We present
+\emph{SignalShap}, which recasts source attribution as a five-player
+cooperative game whose payoff is a fixed-candidate normalised discounted
+cumulative gain at rank~10 on a coalition-independent candidate set. With five
+players the Shapley value follows from exact enumeration of all $2^5=32$
+coalitions, so the aggregation carries no sampling error.
 
 We validate the implementation against constraints known in advance: duplicate
 injection makes a pair exchangeable, so symmetry requires equal credit, and
-SignalShap recovers this to numerical precision with efficiency to
-$6.9\times10^{-18}$. Six analytic games with closed-form Shapley vectors ---
-additive, substitute, complementary, null, and harmful sources --- are
-reproduced exactly, validating magnitudes rather than symmetry alone. These
-remain implementation checks, not evidence of correct magnitudes.
+SignalShap recovers this with efficiency to $6.9\times10^{-18}$. Six analytic
+games with closed-form Shapley vectors are reproduced exactly, validating
+magnitudes rather than symmetry alone.
 
-Two results bound the practical claim. On MovieLens-1M, leave-one-out reports
-collaborative filtering as harmful ($-0.0050$) where Shapley ranks it second
-most valuable ($+0.0155$); second-order Shapley--Taylor indices localise the
-redundancy driving this. But in an end-to-end retirement simulation
+Across three timestamped corpora spanning a $36\times$ density range, every
+system contains at least one source on which leave-one-out and Shapley disagree
+in \emph{sign}. Which source flips is corpus-specific: collaborative filtering
+on MovieLens-1M ($-0.0050$ against $+0.0155$), popularity on Gowalla, recency
+on Amazon. Shapley--Taylor indices localise the redundancy driving this.
+
+Two findings bound the practical claim. In an end-to-end retirement simulation
 leave-one-out predicts the true cost of removing a source \emph{better} than
-Shapley ($\tau=1.00$ versus $0.20$). The two answer different questions, and we
-claim credit allocation rather than retirement guidance. Fusion weights from validation-fold attributions beat LightGCN, SASRec,
-uniform, and popularity baselines at $p<0.001$, but not a tuned global head.
-Results use one corpus and three seeds; code is released.}
+Shapley ($\tau=1.00$ versus $0.20$ and $0.60$), so we claim credit allocation
+rather than retirement guidance. On Gowalla the candidate-recall gate proves
+unreachable at any pool size, locating a sparsity boundary for fixed-candidate
+attribution. Code and every backing artefact are released.}
 
 \keywords{Shapley value, cooperative game theory, recommender systems,
 explainable AI, credit assignment, hybrid recommendation}
@@ -180,15 +180,21 @@ and efficiency on real fitted games.
       attribution based on controlled duplicate injection, and evidence that
       SignalShap passes it. Duplication makes a pair exchangeable, so symmetry
       fixes a constraint the attribution must satisfy regardless of the data;
-      the method meets it to numerical precision on all four corpora
+      the method meets it to numerical precision
       (Section~\ref{sec:recovery}). We report the pair-sum shift as a
       diagnostic and note explicitly that Shapley credit is
       \emph{not} conserved under replication.
 \item \textbf{C3b.} Evidence that the credit SignalShap assigns is
       \emph{materially different} from what current practice reports, and in
-      the direction the redundancy structure predicts: on MovieLens-1M it identifies
-      collaborative filtering as the second most valuable source
-      ($+0.0152$) where ablation scores it below zero
+      the direction the redundancy structure predicts. On all three corpora at
+      least one source receives opposite signs from the two methods; the
+      largest case is MovieLens-1M, where collaborative filtering is the second
+      most valuable source ($+0.0155$) and ablation scores it below zero
+      ($-0.0050$), a gap of $39\%$ of the grand-coalition payoff. We report
+      that \emph{which} source flips varies by corpus --- popularity on
+      Gowalla, recency on Amazon-VG, the latter negligible in magnitude --- so
+      the claim is that ablation misjudges some source in every system, not
+      that it systematically misjudges a particular one
       (Section~\ref{sec:results}).
 \item \textbf{C4.} Per-user attribution that resolves behavioural segments on
       the dense corpus, showing the decomposition carries structure a global
@@ -615,15 +621,41 @@ asks whether Shapley \emph{recovers} known structure --- a validation of the
 estimator against a defensible ground truth.
 
 \paragraph{Corpora}
-Four real datasets spanning a $49\times$ density range
+Three real datasets spanning a $36\times$ density range
 (Table~\ref{tab:preconditions}): MovieLens-1M~\citep{harper2015movielens},
-Yelp2018, Gowalla, and Amazon-Book, the latter three from the standard LightGCN
-benchmark splits~\citep{he2020lightgcn} so that preprocessing matches published
-practice. Two protocol differences are disclosed rather than smoothed over: the
-LightGCN splits carry no timestamps, so the leave-last-out \emph{temporal}
-protocol applies to MovieLens only; and those three corpora are subsampled to
-fit a memory budget, with per-corpus scale derived from that budget rather than
-chosen.
+Gowalla check-ins~\citep{cho2011friendship}, and the Video Games category of
+the Amazon Reviews corpus~\citep{hou2024bridging}. All three carry genuine
+interaction timestamps, which is a requirement rather than a convenience: three
+of the five players ($rec$, $seq$, and the decay term of $pop$) are
+uninterpretable without them.
+
+We record a withdrawal. Earlier drafts of this work used the Yelp2018, Gowalla,
+and Amazon-Book splits distributed with LightGCN~\citep{he2020lightgcn}, chosen
+so that preprocessing would match published practice. Those splits discard
+timestamps, and our first runs substituted file order --- which is not a weak
+proxy for time but an arbitrary one. We replaced them with the original
+timestamped sources and report only the latter. The affected artefacts are
+retained in the repository, marked as a pilot, so the substitution is auditable
+rather than merely asserted.
+
+Gowalla and Amazon are subsampled to fit a memory budget, with per-corpus scale
+\emph{derived} from that budget rather than chosen: five dense score matrices at
+the full Gowalla size would require roughly $129$\,GB.
+
+\paragraph{Content for $ct$ and $rec$}
+Neither Gowalla nor Amazon ships item text in the form the $ct$ scorer expects,
+and our first runs on them left both players with no input at all. The
+consequence was not a visible crash but a silent one: $ct$ returned an
+all-zero matrix, $rec$ collapsed to a single content cluster, and both received
+Shapley values indistinguishable from zero. Read naively, two players looked
+empirically worthless when they had simply never been supplied. We therefore
+derive content from what each corpus does carry --- Gowalla venues from their
+coordinates, as nested geographic cells at roughly $100$, $10$, and $1$\,km
+(each emitted on two half-offset grids, so that venues either side of a cell
+boundary still share a token); Amazon items from the category path and store
+fields of the product-metadata dump. A structural audit now runs before any
+coalition is scored and refuses to proceed when a player cannot reorder any
+candidate list (Section~\ref{sec:preconditions}).
 
 \paragraph{Protocol}
 Leave-last-out temporal split where timestamps exist; ties broken by
@@ -646,34 +678,83 @@ game; only reporting is full-catalogue.
 \caption{Preconditions per corpus. Candidate recall bounds every ranking metric
 that follows; the monotonicity column decides whether Property~\ref{prop:loo}
 applies at all. Both must be inspected before any attribution number is
-interpreted. Density is computed as-used, never quoted from a source paper.}
+interpreted. Density is computed as-used, never quoted from a source paper.
+Corpora marked \emph{ceiling} are reported under the restriction stated in the
+text: relative contrasts only.}
 \label{tab:preconditions}
-\begin{tabular}{@{}lrrrrrl@{}}
+\begin{tabular}{@{}lrrrrrrl@{}}
 \toprule
-Corpus & Users & Items & Density & Recall & Monot. & Prop.~\ref{prop:loo} \\
+Corpus & Users & Items & Density & $N_{\max}$ & Recall & Monot. & Prop.~\ref{prop:loo} \\
 \midrule
-MovieLens-1M & 6\,038  & 3\,533  & $2.697\%$ & $0.748$ & $16/80$ & no  \\
-Yelp2018     & 19\,018 & 38\,048 & $0.105\%$ & $0.818$ & $0/80$  & \textbf{yes} \\
-Gowalla      & 5\,797  & 39\,005 & $0.072\%$ & $0.678$ & $10/80$ & no  \\
-Amazon-Book  & 7\,422  & 84\,348 & $0.055\%$ & $0.529$ & $10/80$ & no  \\
+MovieLens-1M & 6\,038 & 3\,533  & $2.697\%$ & 600    & $0.748$ & $16/80$ & no \\
+Amazon-VG    & 7\,120 & 3\,516  & $0.469\%$ & 600    & $0.588^{\dagger}$ & $12/80$ & no \\
+Gowalla      & 8\,865 & 82\,134 & $0.075\%$ & 11\,623 & $0.450^{\dagger}$ & $13/80$ & no \\
 \botrule
 \end{tabular}
+\smallskip
+\noindent\footnotesize $^{\dagger}$Below the $0.60$ gate; reported under the
+ceiling restriction described in this section (relative contrasts only).
 \end{table}
 
-Table~\ref{tab:preconditions} carries the two gates. On three of four corpora
-the fitted game is \textbf{non-monotone}, so Property~\ref{prop:loo} does not
-apply as stated and negative $\varphi_g$ must be read as substantive rather
-than as numerical error. We regard this as a genuine finding about
-coalition-conditional refitting, and it is the reason the monotonicity
-hypothesis was made explicit. Yelp2018 is the exception, with zero violations:
-there the property is formally applicable.
+Table~\ref{tab:preconditions} carries the two gates, and on this corpus set
+both bite.
 
-Amazon-Book falls below the $0.60$ recall floor at $N_{\max}=5000$. Raising
-$N_{\max}$ to $20\,000$ reaches $0.637$, but that is roughly a quarter of its
-$84$k catalogue --- proportionally far larger than any other corpus --- so for
-Amazon-Book the game sits closer to full-catalogue ranking than to the
-fixed-candidate design. We flag this rather than absorb it: attribution on that
-corpus is the least comparable of the four.
+\paragraph{Monotonicity}
+On all three corpora the fitted game is \textbf{non-monotone}, so
+Property~\ref{prop:loo} does not apply as stated and a negative $\varphi_g$
+must be read as substantive rather than as numerical error. We regard this as a
+genuine finding about coalition-conditional refitting rather than an
+inconvenience: adding a source to a coalition can make the refitted ridge
+weights worse for some users, and with $\NDCG$ at a cutoff of ten this is
+visible in $12$--$16$ of the $80$ audited pairs. It is the reason the
+monotonicity hypothesis was made explicit in Section~\ref{sec:theory} instead
+of assumed.
+
+\paragraph{Candidate recall, and a limit we can locate}
+MovieLens clears the $0.60$ gate at $0.748$. Neither other corpus does, and the
+two fail for different reasons that we did not treat alike.
+
+For Amazon-VG, recall is $0.588$ at $N_{\max}=600$. That value is $17.1\%$ of
+its catalogue, the same fraction MovieLens receives; a log fit to the measured
+recall curve puts the $0.60$ crossing at $N_{\max}\approx 634$. Raising
+$600 \to 800$ would clear the gate. We did not, and the reason is
+methodological rather than technical: $N_{\max}$ is pre-registered, and moving
+it by six percent of a threshold \emph{after} observing that threshold is
+selection on the very quantity the parameter gates. The corpus is retained
+under the ceiling restriction instead.
+
+For Gowalla the situation is qualitatively different, and more interesting. We
+did raise $N_{\max}$, from $2\,500$ to $11\,623$ --- the first value was
+inherited from a differently sized split and amounted to only $3.65\%$ of this
+corpus's catalogue, against $17\%$ elsewhere, so the raise is justified by
+consistency rather than by outcome. Recall improved to $0.450$. The robustness
+sweep then measured the curve directly:
+$N_{\max}=5\,811 \to 0.418$, $11\,623 \to 0.450$, $23\,246 \to 0.471$. Doubling
+the pool buys $+0.021$. Extrapolating that logarithm, recall reaches only
+$0.522$ at $N_{\max}=82\,134$ --- \emph{ranking the entire catalogue} --- and
+the $0.60$ crossing sits at $N_{\max}\approx 624\,000$, some $7.6\times$ more
+items than exist.
+
+The gate is therefore unreachable on Gowalla at any pool size, and the binding
+constraint is not the pool: it is the coverage of the five base scorers'
+top-lists. This is worth stating plainly because it locates a boundary on the
+method rather than on the implementation. Fixed-candidate attribution requires
+that a union of source top-$N$ lists can cover a usable fraction of held-out
+interactions; on an $82$k-venue check-in corpus with $0.075\%$ density, five
+scorers cannot. A practitioner can check this condition before adopting the
+method, and we would rather report where it fails than select corpora where it
+does not.
+
+\paragraph{What the ceiling restriction means}
+Both affected corpora are retained for \emph{relative} comparisons --- the
+LOO-versus-Shapley contrast of Section~\ref{sec:results}, which is a difference
+between two attributions computed on the same candidate sets --- and excluded
+from absolute $\NDCG$ comparison against the neural baselines, where a
+suppressed recall ceiling would flatter or penalise methods unequally. This
+follows the pre-registered fallback ladder. The restriction is enforced in
+code: an artefact whose gate failed is admitted only if its corpus appears in a
+declared exemption list, and it carries the restriction string into every table
+built from it.
 
 Per-source attributions with seed-based intervals appear in
 Figure~\ref{fig:shares}. Efficiency holds to machine precision on every corpus,
@@ -785,19 +866,32 @@ Lemma~\ref{lem:eps}(i) describes for $\varepsilon$-redundancy.
 \section{Attribution on Real Systems}\label{sec:results}
 
 \begin{table}[t]
-\caption{LOO versus Shapley on MovieLens-1M (seed 42). Two sources disagree in
-\emph{sign}. Full per-corpus values, seed means, and confidence intervals are
-in the artefact.}
+\caption{LOO versus Shapley on all three corpora (seed 42). Every corpus
+contains at least one source on which the two methods disagree in \emph{sign};
+the source that flips differs by corpus, and so does the magnitude. Seed means
+and confidence intervals are in the artefact.}
 \label{tab:loo}
-\begin{tabular}{@{}lrrrl@{}}
+\begin{tabular}{@{}llrrrl@{}}
 \toprule
-Source & LOO & Shapley $\varphi_g$ & Gap & \\
+Corpus & Source & LOO & Shapley $\varphi_g$ & Gap & \\
 \midrule
-$cf$  & $-0.00501$ & $+0.01547$ & $+0.02048$ & \textbf{sign flip} \\
-$ct$  & $+0.00083$ & $+0.00008$ & $-0.00075$ & \\
-$pop$ & $+0.00098$ & $+0.00664$ & $+0.00565$ & \\
-$rec$ & $+0.00044$ & $+0.00071$ & $+0.00027$ & \\
-$seq$ & $+0.01673$ & $+0.02964$ & $+0.01290$ & \\
+MovieLens-1M & $cf$  & $-0.00501$ & $+0.01547$ & $+0.02048$ & \textbf{sign flip} \\
+             & $ct$  & $+0.00083$ & $+0.00008$ & $-0.00075$ & \\
+             & $pop$ & $+0.00098$ & $+0.00664$ & $+0.00565$ & \\
+             & $rec$ & $+0.00044$ & $+0.00071$ & $+0.00027$ & \\
+             & $seq$ & $+0.01673$ & $+0.02964$ & $+0.01290$ & \\
+\midrule
+Amazon-VG    & $cf$  & $+0.00845$ & $+0.01952$ & $+0.01107$ & \\
+             & $ct$  & $+0.00002$ & $+0.00213$ & $+0.00211$ & \\
+             & $pop$ & $+0.00308$ & $+0.00183$ & $-0.00125$ & \\
+             & $rec$ & $+0.00023$ & $-0.00021$ & $-0.00043$ & \textbf{sign flip} \\
+             & $seq$ & $+0.00758$ & $+0.01935$ & $+0.01178$ & \\
+\midrule
+Gowalla      & $cf$  & $+0.00729$ & $+0.00712$ & $-0.00017$ & \\
+             & $ct$  & $+0.00528$ & $+0.00675$ & $+0.00147$ & \\
+             & $pop$ & $-0.00151$ & $+0.00057$ & $+0.00207$ & \textbf{sign flip} \\
+             & $rec$ & $+0.00001$ & $+0.00039$ & $+0.00038$ & \\
+             & $seq$ & $+0.00070$ & $+0.00214$ & $+0.00144$ & \\
 \botrule
 \end{tabular}
 \end{table}
@@ -812,35 +906,64 @@ zero.}\label{fig:scatter}
 \end{figure}
 
 Table~\ref{tab:loo} gives the per-source comparison and
-Figure~\ref{fig:scatter} plots it. The collaborative-filtering row is the one
-that matters. LOO scores $cf$ at
-$-0.0050$ --- it looks \emph{actively harmful}, and an engineer following the
-standard methodology would retire it. Shapley scores the same component at
-$+0.0155$, the second most valuable source in the system. The disagreement is
-not a matter of degree that careful reading would survive; the two methods
-recommend opposite actions.
+Figure~\ref{fig:scatter} plots it. The result replicates in kind on all three
+corpora and we are careful to say exactly what replicates.
 
-The mechanism is \emph{qualitatively} the one Property~\ref{prop:loo}
-describes, though we note the property does not formally apply here: the fitted
-MovieLens game is non-monotone ($16/80$ violations,
-Table~\ref{tab:preconditions}), so the theorem's positivity conclusion is not
-available and the account below is an interpretation rather than a
-theorem-backed prediction. On MovieLens the collaborative signal
-overlaps substantially with the sequential and popularity signals, so removing
-$cf$ from the \emph{grand} coalition costs almost nothing: the others absorb
-its role. Ablation observes only that single contrast. SignalShap averages
-$cf$'s contribution over all 16 coalitions in which it can appear, including
-those where no other source covers for it, and so recovers the value the
-overlap conceals.
+\paragraph{What is consistent}
+Every corpus contains at least one source on which LOO and Shapley disagree in
+sign --- that is, one method scores the source as contributing and the other as
+actively harmful. Since a sign determines an action (retain or remove), these
+are not differences of degree that careful reading would survive. Ablation and
+Shapley recommend opposite decisions about some component of every hybrid we
+examined.
 
-Measured redundancy is associated with the attribution shift at $r = 0.525$
-across the ten source pairs, in the direction the redundancy argument suggests.
-We are careful not to overstate this. Lemma~\ref{lem:eps} defines redundancy
-through \emph{coalition values}, whereas this statistic is a Kendall
+\paragraph{What is not}
+Which source flips is corpus-specific, and so is how much it matters. On
+MovieLens the flip falls on $cf$ and the gap is $0.0205$, or $39\%$ of $v(\G)$
+--- the second most valuable source in the system, scored by ablation as worth
+removing. On Gowalla it falls on $pop$, at $12\%$ of $v(\G)$. On Amazon-VG it
+falls on $rec$, at $1\%$ of $v(\G)$, where both estimates are within noise of
+zero and the disagreement is real but inconsequential. A single-corpus reading
+of this paper would have concluded that collaborative filtering is the source
+ablation systematically misjudges. Three corpora do not support that: they
+support the weaker and more useful claim that redundancy-blind ablation
+misjudges \emph{some} source in every system, and does not announce which.
+
+\paragraph{Mechanism}
+The account is \emph{qualitatively} the one Property~\ref{prop:loo} describes,
+though the property does not formally apply: all three fitted games are
+non-monotone (Table~\ref{tab:preconditions}), so the positivity conclusion is
+unavailable and what follows is interpretation rather than theorem. A source
+whose signal is covered by others costs little when removed from the
+\emph{grand} coalition, because the others absorb its role, and ablation
+observes only that single contrast. SignalShap averages the source's
+contribution over all $16$ coalitions in which it can appear, including those
+where nothing covers for it, and so recovers value that the overlap conceals.
+On MovieLens the collaborative signal overlaps with the sequential and
+popularity signals; on Gowalla it is the popularity signal that is covered, by
+a geographic content signal strong enough to rank second overall.
+
+\paragraph{Ranking stability}
+The per-corpus orderings are
+$seq \succ cf \succ pop \succ rec \succ ct$ (MovieLens),
+$cf \succ seq \succ ct \succ pop \succ rec$ (Amazon-VG), and
+$cf \succ ct \succ seq \succ pop \succ rec$ (Gowalla). Pairwise Kendall $\tau$
+between corpora is $0.20$, $0.40$, and $0.80$, none significant at $n=5$
+sources. We therefore make no cross-corpus consistency claim. An earlier
+version of this analysis reported $\tau$ between $0.60$ and $0.80$; that
+apparent agreement was an artefact of $ct$ and $rec$ having received no input
+on two corpora, which gave them identical near-zero values that agreed
+trivially. The corrected figures are lower and we report them in place of the
+finding they displaced.
+
+Measured redundancy is associated with the attribution shift at $r = 0.525$ on
+MovieLens across the ten source pairs, in the direction the redundancy argument
+suggests. We are careful not to overstate this. Lemma~\ref{lem:eps} defines
+redundancy through \emph{coalition values}, whereas this statistic is a Kendall
 correlation between per-user \emph{score vectors}; the two are related but not
 equivalent, and the lemma predicts no particular correlation coefficient. The
-observation is therefore consistent with the theory rather than a test of it,
-and with ten pairs it carries little inferential weight on its own.
+observation is consistent with the theory rather than a test of it, and with
+ten pairs it carries little inferential weight on its own.
 
 Figure~\ref{fig:redundancy} shows the pairwise structure directly.
 
@@ -950,26 +1073,30 @@ Section~\ref{sec:recovery} is \textbf{post-hoc in origin}: it was added because
 the observational comparison could not establish which attributor was correct.
 Its prediction was fixed by construction \emph{before} it was run.
 
-\paragraph{Temporal players are not interpretable on three of four corpora}
-This is the most serious limitation of the present protocol, and it is a
-protocol flaw rather than a reporting nuance. The three LightGCN splits carry
-no timestamps. We therefore substitute file order, which means the recency
-player, the time-decay term of the popularity player, and the sequential player
-operate on an ordering with no temporal meaning. Attributions for $rec$ and
-$seq$ on Yelp2018, Gowalla, and Amazon-Book should be read as
-\emph{uninterpretable} rather than as small: an arbitrary order can inflate or
-deflate a measured contribution, so they are not bounds in either direction. An
-earlier draft of this paper described them as lower bounds; that claim was
-unjustified and is withdrawn.
+\paragraph{Temporal semantics: a flaw we removed rather than disclosed}
+An earlier version of this protocol carried a serious defect, and we describe
+it because the fix changed the corpus set. The LightGCN splits we first used
+carry no timestamps, so the recency player, the time-decay term of the
+popularity player, and the sequential player were operating on file order ---
+an ordering with no temporal meaning at all. Attributions for $rec$ and $seq$
+on those corpora were not small, nor lower bounds as a still earlier draft
+claimed; they were uninterpretable, because an arbitrary order can inflate or
+deflate a measured contribution in either direction.
 
-The consequence for the cross-corpus comparison is that only the
-$cf$ and $ct$ players carry consistent semantics across all four datasets, and
-only MovieLens-1M supports the full five-source game as specified. The
-duplicate-injection diagnostics of Section~\ref{sec:recovery} are unaffected,
-since exchangeability of a clone does not depend on the semantics of the
-cloned source. A proper cross-density study requires timestamped corpora
-throughout, and we flag it as the primary requirement for the next version of
-this work.
+The remedy was not a caveat but a replacement. We rebuilt the study on corpora
+that carry genuine interaction times, verifying for each that timestamps span a
+plausible range and are not degenerate: Gowalla spans $596$ days with $99.2\%$
+distinct values, Amazon-VG spans $8\,360$ days with $97.4\%$. All five players
+now have the semantics the specification assigns them on all three corpora.
+
+Two residual limitations remain. First, the content signal for $ct$ and $rec$
+is derived rather than native on two corpora --- geographic cells for Gowalla,
+category and store strings for Amazon-VG --- so those players measure a
+defensible notion of item similarity, but not the curated metadata MovieLens
+provides. Second, the duplicate-injection diagnostics of
+Section~\ref{sec:recovery} were run before the replacement and are unaffected
+by it, since exchangeability of a clone does not depend on the semantics of the
+cloned source.
 
 \begin{figure}[t]
 \centering
@@ -980,17 +1107,13 @@ $v$; without it the cells are not comparable. The $\lambda$ panel is
 sensitivity only and is never used for selection.}\label{fig:robustness}
 \end{figure}
 
-\paragraph{Subsampling was a hardware constraint}
-Per-corpus user counts are derived from an available-memory budget rather than
-chosen. Subsamples are seeded and recorded. This reduces statistical power; it
-does not bias the intervention, whose prediction is fixed by construction
-independently of sample size.
-
 \paragraph{The full suite is uneven across corpora}
 Robustness sweeps (Figure~\ref{fig:robustness}), segment analysis, and fusion
-are strongest on MovieLens-1M.
-Amazon-Book required an unusually large candidate pool
-(Section~\ref{sec:preconditions}) and its attribution is the least comparable.
+are strongest on MovieLens-1M, the only corpus that clears the candidate-recall
+gate. Gowalla required a candidate pool of $11\,623$ items and still reaches
+only $0.450$ recall (Section~\ref{sec:preconditions}); its attribution is the
+least comparable of the three, and we report it for the relative
+LOO-versus-Shapley contrast only.
 
 \section{Which Estimand, and Does Attribution Predict Retirement Cost?}
 \label{sec:estimands}
@@ -1006,9 +1129,10 @@ masks it to $S$; $v_{\mathrm{e2e}}$ lets each coalition retrieve its own
 candidates and refit, so a removed source loses its retrieval role too. On
 MovieLens-1M all three rank $seq$ first and agree closely
 (Kendall $\tau = 1.00$ between refit and fixed heads, $0.80$ between either and
-end-to-end). The ranking-stage restriction is therefore consequential in
-principle but does not change the ordering here --- a scope limitation we can
-now quantify rather than merely declare.
+end-to-end); on Amazon-VG all three rank $cf$ first, with $\tau = 0.80$ between
+the refit head and each alternative. The ranking-stage restriction is therefore
+consequential in principle but does not change the top-ranked source on either
+corpus --- a scope limitation we can now quantify rather than merely declare.
 
 \paragraph{Retirement simulation, and a negative result}
 The stronger test is whether attribution predicts what removing a source
@@ -1019,7 +1143,8 @@ end-to-end NDCG@10 loss.
 \begin{table}[t]
 \caption{True cost of retiring each source on MovieLens-1M, measured
 end-to-end, against what each attribution method predicts. Negative loss means
-removal \emph{improved} the metric}
+removal \emph{improved} the metric. Amazon-VG reproduces the pattern
+($\tau = 1.00$ for LOO, $0.60$ for Shapley); its table is in the artefact}
 \label{tab:retirement}
 \begin{tabular}{@{}lrrrr@{}}
 \toprule
@@ -1042,6 +1167,14 @@ $seq$ & $+0.01569$ & $0.659$ & $+0.02964$ & $+0.01673$ \\
 ($\tau = 1.00$ against $0.20$), and it correctly identifies $cf$ as the
 cheapest source to retire, where Shapley selects $ct$. We report this plainly
 because it bounds the paper's practical claim.
+
+The finding replicates. On Amazon-VG the same experiment gives
+$\tau = 1.00$ for LOO against $0.60$ for Shapley; LOO again identifies the
+true cheapest source ($ct$) and Shapley again does not, selecting $rec$. Two
+corpora, the same direction, with LOO exact both times. This is not a
+MovieLens idiosyncrasy, and we would rather state it as a replicated limitation
+than as an isolated anomaly: \emph{a practitioner deciding which single source
+to switch off should use leave-one-out ablation, not SignalShap.}
 
 The result is also consistent with the theory rather than a contradiction of
 it. Removing $cf$ \emph{improves} end-to-end NDCG@10 by $0.00561$ while
@@ -1102,9 +1235,12 @@ as reference points under our protocol rather than as their attainable best.
 
 \paragraph{External validity}
 One subsample per corpus, drawn to fit a memory budget, means cross-corpus
-results may be sample-specific. Combined with the timestamp limitation above,
-the four corpora vary in density, protocol, metadata, and sampling
-simultaneously, so this is not a controlled density comparison.
+results may be sample-specific. The three corpora vary in density, catalogue
+size, metadata provenance, and sampling simultaneously, so this is not a
+controlled density comparison; the density ordering is clean --- $0.075\%$,
+$0.469\%$, $2.697\%$, a $36\times$ spread with no adjacent pair closer than
+$5.7\times$ --- but the corpora are not otherwise matched, and we do not
+attribute the differences between them to density alone.
 
 \section{Conclusion}\label{sec:conclusion}
 
@@ -1118,21 +1254,27 @@ rather than assuming it.
 The strongest evidence is the set of invariant checks. Injecting a duplicate
 into a real system creates a constraint that holds independently of the data ---
 exchangeable players must receive equal credit --- and SignalShap satisfies it
-to numerical precision on all four corpora, alongside efficiency to
-$6.9\times10^{-18}$. Attribution values are otherwise difficult to falsify by
+to numerical precision, alongside efficiency to
+$6.9\times10^{-18}$ across all three corpora. Attribution values are otherwise difficult to falsify by
 inspection, so establishing that the implementation realises its axioms on real
 fitted games is a meaningful, if bounded, form of validation. Under the same
 condition, ablation assigns zero credit to both substitutes.
 
-We are explicit about what remains open. These checks do not identify the
-absolute correct credit; the game measures ranking-stage rather than
-end-to-end contribution; and three of four corpora lack the timestamps its
-temporal players require. Establishing that Shapley credit leads to better
-subsystem decisions than ablation would require a retirement simulation we have
-not run, and we regard that as the decisive experiment for this line of work.
+We are explicit about what remains open, and about one question we answered
+against ourselves. These checks do not identify the absolute correct credit,
+and the game measures ranking-stage rather than end-to-end contribution. The
+decisive experiment --- whether Shapley credit leads to better subsystem
+decisions than ablation --- we did run, as an end-to-end retirement simulation,
+and ablation won it on both corpora where we could run it
+(Section~\ref{sec:estimands}). We therefore claim credit allocation, not
+retirement guidance. Two corpora also fall below the candidate-recall gate, and
+on Gowalla we show that no pool size can lift it: that locates a sparsity
+boundary for fixed-candidate attribution rather than a shortfall of effort.
 
-Future work: completing the robustness suite uniformly across corpora,
-privacy-bearing signals as players, cascade hybrids, and causal extensions of
+Future work: an attribution estimand aligned with retirement decisions rather
+than credit allocation, since the two demonstrably diverge; corpora dense
+enough for fixed-candidate retrieval to clear the recall gate;
+privacy-bearing signals as players; cascade hybrids; and causal extensions of
 source attribution.
 
 \backmatter
@@ -1158,9 +1300,9 @@ Not applicable.
       biological material. Public benchmarks are used under the licenses named
       in the artefact.
 \item \textbf{Data availability.} MovieLens-1M is used under the GroupLens
-      research-use license; the Gowalla, Yelp2018, and Amazon-Book splits are
-      the public LightGCN benchmark distributions. Code and artefacts will be
-      archived with a DOI at publication.
+      research-use license; Gowalla check-ins from the SNAP collection; and the
+      Video Games category of the Amazon Reviews 2023 corpus. All are public.
+      Code and artefacts will be archived with a DOI at publication.
 \item \textbf{Code availability.} Public repository, MIT license.
 \item \textbf{Author contributions.} \textbf{M.\ Louhichi:} conceptualisation,
       methodology, software, formal analysis, investigation, writing --- original
