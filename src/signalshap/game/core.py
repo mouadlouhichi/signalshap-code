@@ -15,6 +15,8 @@ from __future__ import annotations
 from itertools import combinations
 from math import factorial
 
+import hashlib
+
 import numpy as np
 
 from ..config import SOURCES
@@ -71,6 +73,29 @@ def ndcg_at_k(ranked: np.ndarray, target: int, k: int = 10) -> float:
 # --------------------------------------------------------------------------- #
 # Game construction
 # --------------------------------------------------------------------------- #
+
+
+def _hash_permute(items: np.ndarray, seed: int, user: int) -> np.ndarray:
+    """Deterministic pseudo-random permutation of `items`, keyed by (seed, user).
+
+    Sorts by a BLAKE2b digest of (seed, user, item). blake2b is used rather
+    than Python's builtin hash(), which is randomised per process by PYTHONHASHSEED
+    and would reintroduce exactly the nondeterminism this replaces. The digest
+    is truncated to 8 bytes and read as a uint64 sort key; collisions are broken
+    by item id so the result is a total order.
+    """
+    keys = np.empty(len(items), dtype=np.uint64)
+    prefix = seed.to_bytes(8, "little", signed=False)
+    ubytes = int(user).to_bytes(8, "little", signed=False)
+    for i, it in enumerate(items):
+        d = hashlib.blake2b(
+            prefix + ubytes + int(it).to_bytes(8, "little", signed=False),
+            digest_size=8,
+        ).digest()
+        keys[i] = int.from_bytes(d, "little")
+    # lexsort is stable and breaks digest ties by item id, giving a total order.
+    order = np.lexsort((items, keys))
+    return items[order]
 
 
 class SignalShapGame:
@@ -130,13 +155,34 @@ class SignalShapGame:
         Not a fresh draw whose expectation is taken. Under this reading
         v(empty) = 0 EXACTLY and PER USER, which Property 3 requires -- it
         needs per-user v(empty)=0, not merely on the mean.
+
+        The permutation is derived by HASHING (seed, user, item) rather than by
+        drawing from a NumPy Generator, for two reasons, both of which caused
+        real divergence:
+
+        1. NumPy guarantees Generator reproducibility only within a version
+           series. Two machines running identical code, identical config and
+           byte-identical candidate sets produced v0 = 0.005033 and 0.006731,
+           which propagated into every coalition value (v(G) 0.05253 vs
+           0.05030), shifted phi_ct across zero, and moved the monotonicity
+           count from 16/80 to 23/80. Nothing in the method depends on the
+           permutation coming from a particular RNG stream -- it only has to be
+           an arbitrary order fixed once -- so relying on one was a gratuitous
+           reproducibility hazard.
+        2. The previous implementation advanced a single Generator inside the
+           user loop, so each user's permutation depended on how many users
+           preceded it. Any change to eval_users membership -- a different
+           k-core, a user with an empty candidate set -- silently reshuffled the
+           baseline for every subsequent user.
+
+        Hashing fixes both: each user's order depends only on (seed, user), and
+        each item's rank only on (seed, user, item). The result is stable
+        across NumPy versions, platforms, Python builds, and user orderings.
         """
-        rng = np.random.default_rng(seed)
         out = {}
         for u in self.eval_users:
             c = self.candidates[u]
-            perm = c[rng.permutation(len(c))]
-            out[u] = ndcg_at_k(perm, self.test_items[u], self.k)
+            out[u] = ndcg_at_k(_hash_permute(c, seed, u), self.test_items[u], self.k)
         return out
 
     @property
@@ -313,11 +359,32 @@ def monotonicity_audit(v: dict[frozenset, float],
                     {"S": sorted(S), "g": g, "delta": float(delta)}
                 )
     n = len(sources)
+    mags = sorted(abs(x["delta"]) for x in violations)
+    # Stratify by magnitude. A bare count is NOT a stable statistic: most
+    # violations sit far below the scale of v itself (NDCG ~ 0.05), so a
+    # negligible numerical perturbation flips them across zero and changes the
+    # headline number. Two machines running identical code reported 16/80 and
+    # 23/80 for exactly this reason. The QUALITATIVE conclusion -- that the
+    # fitted game is non-monotone, so Property 2 does not apply -- rests on the
+    # violations that survive a meaningful threshold, and those are reported
+    # separately so a reader can see which is which.
+    strata = {f"gt_{t:g}": int(sum(1 for m in mags if m > t))
+              for t in (0.0, 1e-4, 1e-3, 1e-2)}
     return {
         "pairs_checked": n * 2 ** (n - 1),
         "violations": len(violations),
-        "max_magnitude": float(max((abs(x["delta"]) for x in violations), default=0.0)),
+        "violations_by_magnitude": strata,
+        "violations_material": strata["gt_0.001"],
+        "material_threshold": 1e-3,
+        "max_magnitude": float(max(mags, default=0.0)),
+        "median_magnitude": float(mags[len(mags) // 2]) if mags else 0.0,
         "sources_involved": sorted({x["g"] for x in violations}),
         "detail": violations[:20],
         "property2_applicable": len(violations) == 0,
+        "stability_note": (
+            "Report violations_material (|delta| > 1e-3) alongside the raw "
+            "count. The raw count is sensitive to floating-point ordering; the "
+            "material count is not, and it is what the Property 2 argument "
+            "actually depends on."
+        ),
     }

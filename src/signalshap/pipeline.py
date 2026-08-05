@@ -550,6 +550,24 @@ def run_multi_seed(name: str, cfg: FrozenConfig, seeds=(42, 43, 44),
     }
 
 
+def _environment() -> dict:
+    """Versions that can change numerical results. Recorded in every manifest."""
+    import platform
+    import sys
+
+    out = {
+        "python": sys.version.split()[0],
+        "platform": platform.platform(),
+        "machine": platform.machine(),
+    }
+    for mod in ("numpy", "scipy", "sklearn", "pandas"):
+        try:
+            out[mod] = __import__(mod).__version__
+        except Exception:                      # pragma: no cover - optional dep
+            out[mod] = "absent"
+    return out
+
+
 def run_full_study(datasets=("ml_1m", "lastfm_2k", "amazon_book"),
                    synthetic: bool = False, seeds=(42, 43, 44)) -> dict:
     """Run every dataset, write all artefacts, return the combined results."""
@@ -570,5 +588,12 @@ def run_full_study(datasets=("ml_1m", "lastfm_2k", "amazon_book"),
         "generated_at": datetime.now(timezone.utc).isoformat(),
         "datasets": list(datasets), "seeds": list(seeds),
         "synthetic": synthetic, "config": cfg.__dict__ | {"seeds": list(cfg.seeds)},
+        # Recorded because a version difference silently changed the results
+        # once: NumPy's Generator stream is reproducible only within a version
+        # series, and the empty-coalition baseline drew from it. The baseline is
+        # now hash-derived and version-independent, but the environment is
+        # recorded anyway so any future divergence is diagnosable rather than
+        # mysterious.
+        "environment": _environment(),
     })
     return {"results": out, "dataset_stats": stats}
