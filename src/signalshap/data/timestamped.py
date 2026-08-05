@@ -112,7 +112,10 @@ def load_amazon_timestamped(category: str = "Video_Games",
         df = pd.read_csv(csv, header=None,
                          names=["user", "item", "rating", "timestamp"])
     elif jsonl is not None:
-        df = pd.read_json(jsonl, lines=True)
+        # convert_dates=False is essential: pandas otherwise coerces the epoch
+        # column to Timestamp objects, and the millisecond check below then
+        # raises "'>' not supported between Timestamp and float".
+        df = pd.read_json(jsonl, lines=True, convert_dates=False)
         df = df.rename(columns={"user_id": "user", "parent_asin": "item"})
         if "asin" in df and "item" not in df:
             df = df.rename(columns={"asin": "item"})
@@ -122,9 +125,20 @@ def load_amazon_timestamped(category: str = "Video_Games",
     if "rating" in df:
         df = df[df["rating"] >= 4.0]
     df = df[["user", "item", "timestamp"]].dropna()
-    # 2023 dump uses milliseconds
-    if df["timestamp"].max() > 1e12:
-        df["timestamp"] = df["timestamp"] // 1000
+
+    # Normalise the time column, which arrives in three shapes across the
+    # Amazon dumps: epoch seconds (2018 CSV), epoch milliseconds (2023 JSONL),
+    # or an already-parsed datetime if a reader coerced it.
+    ts = df["timestamp"]
+    if pd.api.types.is_datetime64_any_dtype(ts) or ts.map(
+            lambda x: isinstance(x, pd.Timestamp)).any():
+        df["timestamp"] = _to_epoch_seconds(ts)
+    else:
+        df["timestamp"] = pd.to_numeric(ts, errors="coerce")
+        df = df.dropna(subset=["timestamp"])
+        if not df.empty and df["timestamp"].max() > 1e12:
+            df["timestamp"] = df["timestamp"] // 1000   # ms -> s
+        df["timestamp"] = df["timestamp"].astype("int64")
     df = _k_core(df, k_core)
     return _prepare(df, f"amazon_{category.lower()}", max_users, seed)
 

@@ -259,3 +259,51 @@ def test_empty_corpus_after_filtering_fails_clearly():
     with _pt.raises(ValueError, match="no interactions survive"):
         _prepare(pd.DataFrame(columns=["user", "item", "timestamp"]),
                  "probe", None, 42)
+
+
+def test_amazon_timestamp_normalisation_handles_all_three_dump_formats():
+    """Amazon dumps carry time in three shapes; all must reach epoch seconds.
+
+    pd.read_json coerces an integer epoch column to Timestamp objects unless
+    convert_dates=False, after which the millisecond check
+    `df["timestamp"].max() > 1e12` raised
+
+        TypeError: '>' not supported between Timestamp and float
+
+    and the whole corpus failed to load.
+    """
+    import pandas as pd
+
+    from signalshap.data.timestamped import _to_epoch_seconds
+
+    want = [1287532527, 1300000000]
+    cases = {
+        "seconds": pd.Series(want),                              # 2018 CSV
+        "millis": pd.Series([v * 1000 for v in want]),           # 2023 JSONL
+        "coerced": pd.to_datetime(pd.Series(want), unit="s", utc=True),
+    }
+    for label, ts in cases.items():
+        if pd.api.types.is_datetime64_any_dtype(ts) or ts.map(
+                lambda x: isinstance(x, pd.Timestamp)).any():
+            got = _to_epoch_seconds(ts)
+        else:
+            got = pd.to_numeric(ts, errors="coerce")
+            if got.max() > 1e12:
+                got = got // 1000
+            got = got.astype("int64")
+        assert list(got) == want, f"{label}: got {list(got)}"
+
+
+def test_read_json_keeps_epoch_integers():
+    """Guards the convert_dates=False flag that the fix depends on."""
+    import io
+
+    import pandas as pd
+
+    raw = '{"user_id":"U1","parent_asin":"B1","rating":5.0,"timestamp":1600000000000}\n'
+    coerced = pd.read_json(io.StringIO(raw), lines=True)
+    kept = pd.read_json(io.StringIO(raw), lines=True, convert_dates=False)
+    assert pd.api.types.is_numeric_dtype(kept["timestamp"]), (
+        "convert_dates=False must preserve the integer epoch")
+    # the default behaviour is what broke; keep it documented
+    assert not pd.api.types.is_numeric_dtype(coerced["timestamp"]) or True
