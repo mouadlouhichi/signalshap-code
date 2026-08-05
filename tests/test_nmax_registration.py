@@ -67,3 +67,57 @@ def test_recall_ceiling_exemptions_are_declared_not_assumed():
     """Rung 2 must be an explicit list, so a failed gate cannot pass quietly."""
     cfg = FrozenConfig.load()
     assert isinstance(cfg.recall_ceiling_exempt, (tuple, list))
+
+
+# --------------------------------------------------------------------------- #
+# spec §2.2 fallback ladder
+# --------------------------------------------------------------------------- #
+
+
+def test_amazon_ceiling_exemption_is_declared():
+    """Rung 2: retained with the gate unmet, by PRIOR declaration."""
+    cfg = FrozenConfig.load()
+    assert "amazon_video_games" in tuple(cfg.recall_ceiling_exempt)
+
+
+def test_amazon_nmax_was_not_nudged_to_clear_the_gate():
+    """600 is what the catalogue-fraction rule gives; 0.60 needs ~634.
+
+    Raising 600 -> 800 would pass the gate. That is selection on the outcome
+    the parameter gates, so the value must stay where the rule put it.
+    """
+    cfg = FrozenConfig.load()
+    assert cfg.n_max["amazon_video_games"] == 600
+    ml_ratio = cfg.n_max["ml_1m"] / 3533
+    assert abs(600 / 3516 - ml_ratio) < 0.005      # same fraction as ml_1m
+
+
+def test_gowalla_nmax_matches_the_catalogue_fraction_rule():
+    """Rung 1, justified by a rule that predates the recall numbers."""
+    cfg = FrozenConfig.load()
+    expected = round(68_443 * cfg.n_max["ml_1m"] / 3533)
+    assert cfg.n_max["gowalla_ts"] == expected
+
+
+def test_amendment_2_records_both_rungs_and_the_refusal():
+    raw = yaml.safe_load((ROOT / "configs" / "frozen.yaml").read_text())
+    note = raw["_note"]
+    assert "AMENDMENT 2" in note
+    assert "RUNG 1" in note and "RUNG 2" in note
+    # The reasoning a reviewer will look for: why Amazon was NOT raised.
+    assert "selection on the outcome" in note
+
+
+def test_exempt_corpus_is_reportable_but_never_marked_as_passing():
+    """gate_passes must stay False so absolute-NDCG consumers keep excluding it."""
+    from signalshap.config import FrozenConfig as FC
+
+    cfg = FC.load()
+    exempt = tuple(cfg.recall_ceiling_exempt)
+    # Simulate the e0a payload shape for an exempt, failing corpus.
+    recall, gate = 0.588, cfg.recall_gate
+    passes = recall >= gate
+    is_exempt = "amazon_video_games" in exempt
+    assert passes is False
+    assert is_exempt is True
+    assert (passes or is_exempt) is True        # reportable

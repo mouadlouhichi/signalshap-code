@@ -122,11 +122,35 @@ class Experiment:
         """Candidate recall + |C_u| distribution. THE ceiling on everything."""
         sizes = np.array([len(c) for c in self.candidates])
         recall = candidate_recall(self.candidates, self.test_items)
+        passes = bool(recall >= self.cfg.recall_gate)
+        # Spec §2.2 rung 2: a corpus may be retained with the gate knowingly
+        # unmet, but only by prior declaration in frozen.yaml, and never by
+        # pretending it passed. `gate_passes` stays FALSE so every consumer
+        # keeps excluding it from absolute-NDCG claims; `reportable` says the
+        # relative LOO-vs-Shapley contrast (C3) may still use it, which is far
+        # less ceiling-sensitive. The distinction is the whole point of the
+        # rung: a weaker claim beats a false one.
+        exempt = self.name in tuple(self.cfg.recall_ceiling_exempt)
         return {
             "dataset": self.name, "n_max": self.n_max,
             "candidate_recall": float(recall),
             "recall_gate": self.cfg.recall_gate,
-            "gate_passes": bool(recall >= self.cfg.recall_gate),
+            "gate_passes": passes,
+            "ceiling_exempt": exempt,
+            "reportable": bool(passes or exempt),
+            "reporting_restriction": (
+                None if passes else (
+                    "RUNG 2 (spec §2.2): recall gate unmet at the pre-registered "
+                    f"N_max={self.n_max}; recall={recall:.3f} < "
+                    f"{self.cfg.recall_gate}. Retained for the RELATIVE "
+                    "LOO-vs-Shapley contrast only. EXCLUDED from absolute-NDCG "
+                    "comparison against neural baselines. The ceiling must be "
+                    "stated wherever this corpus is reported."
+                ) if exempt else (
+                    "NOT REPORTABLE: recall gate failed and no rung-2 exemption "
+                    "is declared for this corpus in frozen.yaml."
+                )
+            ),
             "abs_size_mean": float(sizes.mean()), "abs_size_std": float(sizes.std()),
             "abs_size_min": int(sizes.min()), "abs_size_max": int(sizes.max()),
             "n_eval_users": len(self.game.eval_users),

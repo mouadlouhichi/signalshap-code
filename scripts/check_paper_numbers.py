@@ -37,12 +37,21 @@ def results(include_failed: bool = False) -> dict:
     out = {}
     for p in sorted(ART.glob("results_*.json")):
         blob = json.loads(p.read_text())
-        gate = (blob.get("e0a_candidates") or {}).get("gate_passes", True)
-        if not gate and not include_failed:
+        e0a = blob.get("e0a_candidates") or {}
+        # `reportable` -- not `gate_passes` -- is the admission test: spec §2.2
+        # rung 2 retains a corpus with the gate knowingly unmet, provided the
+        # exemption was DECLARED in frozen.yaml beforehand.
+        ok = e0a.get("reportable", e0a.get("gate_passes", True))
+        if not ok and not include_failed:
             print(f"  [skipped] {p.name}: recall gate FAILED "
-                  f"({blob['e0a_candidates']['candidate_recall']:.3f}) -- "
-                  f"not reportable under spec §2.2", file=sys.stderr)
+                  f"({e0a.get('candidate_recall', float('nan')):.3f}), no rung-2 "
+                  f"exemption declared -- not reportable under spec §2.2",
+                  file=sys.stderr)
             continue
+        if ok and not e0a.get("gate_passes", True):
+            print(f"  [rung 2] {p.name}: recall "
+                  f"{e0a['candidate_recall']:.3f} below gate, exemption "
+                  f"declared; relative contrasts only", file=sys.stderr)
         out[p.stem.replace("results_", "")] = blob
     return out
 

@@ -22,19 +22,27 @@ if __name__ == "__main__":
                          "recall gate. Never use for submission assets.")
     a = ap.parse_args()
 
-    results, skipped = {}, []
+    results, skipped, rung2 = {}, [], []
     for p in sorted(ARTEFACTS.glob("results_*.json")):
         name = p.stem.replace("results_", "")
         blob = read_artefact(p.name)
-        gate = (blob.get("e0a_candidates") or {}).get("gate_passes", True)
-        if not gate and not a.include_failed:
-            skipped.append((name, blob["e0a_candidates"]["candidate_recall"]))
+        e0a = blob.get("e0a_candidates") or {}
+        # Spec 2.2 rung 2: a DECLARED ceiling exemption is reportable for
+        # relative contrasts. gate_passes stays False either way.
+        ok = e0a.get("reportable", e0a.get("gate_passes", True))
+        if not ok and not a.include_failed:
+            skipped.append((name, e0a.get("candidate_recall", float("nan"))))
             continue
+        if ok and not e0a.get("gate_passes", True):
+            rung2.append((name, e0a["candidate_recall"]))
         results[name] = blob
 
     for name, recall in skipped:
-        print(f"  [skipped] {name}: recall gate FAILED ({recall:.3f}), "
-              f"not reportable under spec 2.2")
+        print(f"  [skipped] {name}: recall gate FAILED ({recall:.3f}), no "
+              f"rung-2 exemption declared, not reportable under spec 2.2")
+    for name, recall in rung2:
+        print(f"  [rung 2] {name}: recall {recall:.3f} below gate, exemption "
+              f"declared; RELATIVE contrasts only, excluded from absolute NDCG")
     if not results:
         raise SystemExit("no usable artefacts/results_*.json -- "
                          "run scripts/run_study.py first")
