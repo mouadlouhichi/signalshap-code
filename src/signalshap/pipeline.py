@@ -62,6 +62,24 @@ class Experiment:
         self.seed = seed
         self.timings: dict[str, float] = {}
 
+        # A missing entry must NEVER silently become a default. gowalla_ts and
+        # amazon_video_games were absent from frozen.yaml (the config listed
+        # `gowalla`, the loader registers `gowalla_ts`), so both ran at the old
+        # 200 fallback: Gowalla ranked a 68,443-item catalogue with 200
+        # candidates and returned 0.132 recall. The run completed and wrote
+        # plausible-looking artefacts. N_max is pre-registered per corpus
+        # (spec §2.2); an unregistered corpus is a specification error, not an
+        # occasion to guess.
+        if name not in self.cfg.n_max:
+            raise KeyError(
+                f"N_max is not pre-registered for '{name}'. Spec §2.2 requires "
+                f"a per-corpus value in configs/frozen.yaml; there is no safe "
+                f"default, because too small a candidate set silently caps "
+                f"recall and every downstream number with it. Registered: "
+                f"{sorted(self.cfg.n_max)}."
+            )
+        self.n_max = self.cfg.n_max[name]
+
         t0 = time.time()
         self.ds: Dataset = load_dataset(name, synthetic=synthetic, seed=seed)
         self.timings["load"] = time.time() - t0
@@ -70,7 +88,6 @@ class Experiment:
         self.scores = mask_seen(train_all_scorers(self.ds, seed=seed), self.ds)
         self.timings["scorers"] = time.time() - t0
 
-        self.n_max = self.cfg.n_max.get(name, 200)
         t0 = time.time()
         self.candidates = build_candidates(
             self.scores, self.ds.n_users, self.n_max, self.cfg.max_growth_iters

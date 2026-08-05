@@ -43,6 +43,9 @@ class FrozenConfig:
     n_max: dict[str, int] = field(
         default_factory=lambda: {"ml_1m": 200, "lastfm_2k": 500, "amazon_book": 1000}
     )
+    #: Spec §2.2 rung 2 -- corpora whose recall gate is knowingly unmet at the
+    #: largest affordable N_max. Reported as a disclosed ceiling, never hidden.
+    recall_ceiling_exempt: tuple[str, ...] = ()
     #: Spec §2.4 -- chosen once on an ML-1M pilot, then frozen. NEVER per-coalition.
     ridge_lambda: float = 1.0
     v0_seed: int = V0_SEED

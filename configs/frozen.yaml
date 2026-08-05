@@ -5,6 +5,8 @@ n_max:
   gowalla: 2500
   yelp2018: 5000
   amazon_book_lgcn: 20000
+  gowalla_ts: 2500
+  amazon_video_games: 600
 ridge_lambda: 1.0
 v0_seed: 42
 seeds:
@@ -16,6 +18,20 @@ seeds:
 recall_gate: 0.6
 max_growth_iters: 10
 k_ndcg: 10
-_note: "PRE-REGISTERED, spec \xA72.2/\xA72.4/\xA72.5. Frozen end of Week 1. lambda\
-  \ is NEVER tuned per coalition; n_max changes after E1 begins must be recorded in\
-  \ the artefact with date and reason."
+_note: 'PRE-REGISTERED, spec §2.2/§2.4/§2.5. Frozen end of Week 1. lambda is NEVER
+  tuned per coalition; n_max changes after E1 begins must be recorded in the artefact
+  with date and reason.
+
+
+  AMENDMENT 2026-08-05 (spec 2.2/2.4 traceability). Added n_max for gowalla_ts (2500)
+  and amazon_video_games (600). Reason: neither corpus had an entry -- the config
+  listed `gowalla` while the loader registers `gowalla_ts`, and amazon_video_games
+  was never added -- so both silently took the old 200 fallback and FAILED the recall
+  gate (0.132 and 0.349 against a 0.60 threshold). 200 was an unintended fallback,
+  not a chosen value; these are the first registered values for these corpora, not
+  a retuning of an existing one. gowalla_ts=2500 carries over the value already pre-registered
+  for the untimestamped `gowalla` split. amazon_video_games=600 matches ml_1m, whose
+  catalogue is nearly identical in size (3,533 vs 3,516 items). Both were fixed BEFORE
+  re-running and are not adjusted afterwards; if the gate is still unmet, spec 2.2
+  rung 2 applies and the ceiling is reported.'
+recall_ceiling_exempt: []
