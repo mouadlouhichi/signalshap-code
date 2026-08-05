@@ -1,13 +1,31 @@
 **T8 — Robustness matrix. CANDIDATE RECALL IS REPORTED PER CELL for the $|C_u|$ sweep: changing $|C_u|$ moves the recall ceiling and hence the level of $v$, so without it the cells are not comparable.**
 
-| Dataset   | Stress test       | Candidate recall   | Top source   | $v(\mathcal{G})$   |
-|:----------|:------------------|:-------------------|:-------------|:-------------------|
-| ml_1m     | $|C_u|$ = 300     | 0.566              | seq          | 0.05231            |
-| ml_1m     | $|C_u|$ = 600     | 0.748              | seq          | 0.05253            |
-| ml_1m     | $|C_u|$ = 1200    | 0.890              | seq          | 0.04891            |
-| ml_1m     | $\lambda$ = 0.1   | —                  | seq          | —                  |
-| ml_1m     | $\lambda$ = 1.0   | —                  | seq          | —                  |
-| ml_1m     | $\lambda$ = 10.0  | —                  | seq          | —                  |
-| ml_1m     | rescale: identity | —                  | seq          | —                  |
-| ml_1m     | rescale: log1p    | —                  | seq          | —                  |
-| ml_1m     | rescale: rank     | —                  | seq          | —                  |
+| Dataset            | Stress test       | Candidate recall   | Top source   | $v(\mathcal{G})$   |
+|:-------------------|:------------------|:-------------------|:-------------|:-------------------|
+| amazon_video_games | $|C_u|$ = 300     | 0.430              | seq          | 0.04052            |
+| amazon_video_games | $|C_u|$ = 600     | 0.588              | cf           | 0.04263            |
+| amazon_video_games | $|C_u|$ = 1200    | 0.750              | cf           | 0.04145            |
+| amazon_video_games | $\lambda$ = 0.1   | —                  | cf           | —                  |
+| amazon_video_games | $\lambda$ = 1.0   | —                  | cf           | —                  |
+| amazon_video_games | $\lambda$ = 10.0  | —                  | cf           | —                  |
+| amazon_video_games | rescale: identity | —                  | cf           | —                  |
+| amazon_video_games | rescale: log1p    | —                  | cf           | —                  |
+| amazon_video_games | rescale: rank     | —                  | seq          | —                  |
+| gowalla_ts         | $|C_u|$ = 5811    | 0.417              | cf           | 0.01661            |
+| gowalla_ts         | $|C_u|$ = 11623   | 0.450              | cf           | 0.01697            |
+| gowalla_ts         | $|C_u|$ = 23246   | 0.471              | cf           | 0.01784            |
+| gowalla_ts         | $\lambda$ = 0.1   | —                  | cf           | —                  |
+| gowalla_ts         | $\lambda$ = 1.0   | —                  | cf           | —                  |
+| gowalla_ts         | $\lambda$ = 10.0  | —                  | cf           | —                  |
+| gowalla_ts         | rescale: identity | —                  | cf           | —                  |
+| gowalla_ts         | rescale: log1p    | —                  | cf           | —                  |
+| gowalla_ts         | rescale: rank     | —                  | ct           | —                  |
+| ml_1m              | $|C_u|$ = 300     | 0.566              | seq          | 0.05231            |
+| ml_1m              | $|C_u|$ = 600     | 0.748              | seq          | 0.05253            |
+| ml_1m              | $|C_u|$ = 1200    | 0.890              | seq          | 0.04891            |
+| ml_1m              | $\lambda$ = 0.1   | —                  | seq          | —                  |
+| ml_1m              | $\lambda$ = 1.0   | —                  | seq          | —                  |
+| ml_1m              | $\lambda$ = 10.0  | —                  | seq          | —                  |
+| ml_1m              | rescale: identity | —                  | seq          | —                  |
+| ml_1m              | rescale: log1p    | —                  | seq          | —                  |
+| ml_1m              | rescale: rank     | —                  | seq          | —                  |

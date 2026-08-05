@@ -121,3 +121,42 @@ def test_exempt_corpus_is_reportable_but_never_marked_as_passing():
     assert passes is False
     assert is_exempt is True
     assert (passes or is_exempt) is True        # reportable
+
+
+def test_save_preserves_the_amendment_trail():
+    """save() must never regenerate _note from the default.
+
+    A run called FrozenConfig.save(), which rebuilt _note from a hardcoded
+    string, and amendments 1 and 2 -- the audit trail for every
+    post-registration N_max change -- were destroyed. The file still looked
+    well-formed. _note is provenance the code must only append to.
+    """
+    import shutil
+    import tempfile
+
+    src = ROOT / "configs" / "frozen.yaml"
+    with tempfile.TemporaryDirectory() as td:
+        tmp = Path(td) / "frozen.yaml"
+        shutil.copy(src, tmp)
+        before = yaml.safe_load(tmp.read_text())["_note"]
+        FrozenConfig.load(tmp).save(tmp)
+        after = yaml.safe_load(tmp.read_text())["_note"]
+    assert after == before
+    for marker in ("AMENDMENT 2026-08-05", "AMENDMENT 2", "AMENDMENT 3"):
+        assert marker in after, f"{marker} lost by save()"
+
+
+def test_gowalla_is_rung_2_after_rung_1_was_exhausted():
+    cfg = FrozenConfig.load()
+    assert "gowalla_ts" in tuple(cfg.recall_ceiling_exempt)
+    # N_max stays at the catalogue-fraction value; the measured curve IS the
+    # evidence for the ceiling, so lowering it back would discard the evidence.
+    assert cfg.n_max["gowalla_ts"] == 11623
+
+
+def test_amendment_3_records_that_the_gate_is_unreachable():
+    note = yaml.safe_load((ROOT / "configs" / "frozen.yaml").read_text())["_note"]
+    assert "AMENDMENT 3" in note
+    assert "UNREACHABLE" in note
+    # The specific arithmetic a reviewer will want: more items than exist.
+    assert "623,823" in note

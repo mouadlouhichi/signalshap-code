@@ -31,7 +31,7 @@ V0_SEED = 42
 RECALL_GATE = 0.60
 
 #: Spec §6.2: strict density ordering required by C3, sparsest first.
-DENSITY_ORDER = ("amazon_book", "lastfm_2k", "ml_1m")
+DENSITY_ORDER = ("gowalla_ts", "amazon_video_games", "ml_1m")
 DENSITY_MARGIN = 1.5
 
 
@@ -72,7 +72,20 @@ class FrozenConfig:
         path.parent.mkdir(parents=True, exist_ok=True)
         blob = asdict(self)
         blob["seeds"] = list(self.seeds)
-        blob["_note"] = (
+        # PRESERVE the existing note. It accumulates dated amendments that are
+        # the audit trail for every post-registration parameter change, and
+        # regenerating it from the default silently destroyed amendments 1 and
+        # 2 the first time a run happened to call save(). _note is provenance,
+        # not a field the code owns; only append to it, never overwrite.
+        note = None
+        target = path
+        if target.exists():
+            try:
+                prior = yaml.safe_load(target.read_text()) or {}
+                note = prior.get("_note")
+            except (yaml.YAMLError, OSError):
+                note = None
+        blob["_note"] = note or (
             "PRE-REGISTERED, spec §2.2/§2.4/§2.5. Frozen end of Week 1. "
             "lambda is NEVER tuned per coalition; n_max changes after E1 begins "
             "must be recorded in the artefact with date and reason."
@@ -91,3 +104,43 @@ def write_artefact(name: str, payload: dict) -> Path:
 
 def read_artefact(name: str) -> dict:
     return json.loads((ARTEFACTS / name).read_text())
+
+
+def admissible(name: str, e0a: dict, cfg: "FrozenConfig | None" = None) -> tuple[bool, str | None]:
+    """May this corpus appear in the manuscript, and under what restriction?
+
+    Spec §2.2 separates two things that a single boolean conflates:
+
+      * ``gate_passes`` -- did candidate recall clear 0.60? A fact about the
+        run, frozen at the moment it was written.
+      * admissibility -- may the numbers be reported? A *policy* decision,
+        governed by the rung-2 exemption list in ``frozen.yaml``.
+
+    Exemption is resolved from the LIVE config, never from the artefact. A run
+    predates the declaration that admits it: gowalla_ts was executed while only
+    amazon_video_games was exempt, so its artefact carries
+    ``reportable: false``. Trusting that stale field would have silently
+    dropped a corpus that policy now admits, and re-running a three-hour job to
+    change one boolean would be absurd. The artefact records measurements; the
+    config records decisions.
+
+    Returns ``(admissible, restriction)`` where restriction is None for a clean
+    pass and otherwise the sentence that must accompany the corpus wherever it
+    is reported.
+    """
+    cfg = cfg or FrozenConfig.load()
+    recall = e0a.get("candidate_recall")
+    if e0a.get("gate_passes", True):
+        return True, None
+    if name in tuple(cfg.recall_ceiling_exempt):
+        return True, (
+            f"RUNG 2 (spec §2.2): candidate recall {recall:.3f} < "
+            f"{cfg.recall_gate} at the pre-registered N_max="
+            f"{e0a.get('n_max')}. Retained for RELATIVE contrasts "
+            f"(LOO-vs-Shapley); EXCLUDED from absolute-NDCG comparison. The "
+            f"ceiling must be stated wherever this corpus is reported."
+        )
+    return False, (
+        f"NOT REPORTABLE: recall gate failed ({recall:.3f}) and no rung-2 "
+        f"exemption is declared for '{name}' in configs/frozen.yaml."
+    )

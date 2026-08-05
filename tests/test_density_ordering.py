@@ -24,17 +24,24 @@ import pytest
 
 # Strict ordering required by C3, sparsest first.
 #
-# Updated to the corpora actually used: the LightGCN benchmark splits replaced
-# the originally planned lastfm_2k / amazon_book (raw files unavailable). A
-# stale list here is worse than no test, because the guard SKIPS on unknown
-# names and reports green while guarding nothing.
-REQUIRED_ORDER = ("amazon_book_lgcn", "gowalla", "yelp2018", "ml_1m")
+# Updated to the corpora actually used. The LightGCN benchmark splits replaced
+# the originally planned lastfm_2k / amazon_book (raw files unavailable), and
+# were themselves withdrawn for carrying no timestamps -- three of five players
+# are uninterpretable without them. The study now runs on three REAL
+# timestamped corpora. A stale list here is worse than no test, because the
+# guard SKIPS on unknown names and reports green while guarding nothing: this
+# list named the withdrawn corpora for several commits, during which the
+# invariant silently guarded an empty set.
+REQUIRED_ORDER = ("gowalla_ts", "amazon_video_games", "ml_1m")
 
 # Each adjacent pair must differ by at least this factor, so the contrast is
 # reportable rather than a rounding artefact.
-# Relaxed from 1.5x: with four corpora the adjacent pairs are naturally closer
-# (measured gowalla/amazon_book = 1.31x). The invariant that matters for C3 is
-# the strict ORDERING plus a real end-to-end spread, both asserted below.
+# Relaxed from 1.5x when four corpora made adjacent pairs naturally close
+# (gowalla/amazon_book measured 1.31x). The three timestamped corpora are far
+# better separated -- measured 6.3x and 5.7x, a 36x end-to-end spread -- so the
+# threshold is no longer near-binding. Left at 1.25 rather than tightened to
+# fit the data: a margin chosen after seeing the measurements would test
+# nothing.
 MIN_MARGIN = 1.25
 
 STATS_PATH = os.environ.get(
@@ -76,17 +83,21 @@ def check_ordering(densities: dict[str, float], min_margin: float = MIN_MARGIN):
 # Unit tests on the invariant itself (always run, no data required).
 # --------------------------------------------------------------------------- #
 
-# Unfiltered plan of record: ordering holds comfortably.
-UNFILTERED = {"amazon_book_lgcn": 0.000547, "gowalla": 0.000719,
-              "yelp2018": 0.001046, "ml_1m": 0.026967}
+# Measured, as-used densities of the three timestamped corpora (artefacts/
+# dataset_stats.json). Ordering holds with a 36x end-to-end spread.
+UNFILTERED = {"gowalla_ts": 0.000746, "amazon_video_games": 0.004692,
+              "ml_1m": 0.026967}
 
-# Estimated post-k-core densities from the §4 hazard table.
-K5_CORE = {"amazon_book_lgcn": 0.00253, "gowalla": 0.000719,
-           "yelp2018": 0.001046, "ml_1m": 0.026967}
-K10_CORE = {"amazon_book_lgcn": 0.00764, "gowalla": 0.000719,
-            "yelp2018": 0.001046, "ml_1m": 0.026967}
-K20_CORE = {"amazon_book_lgcn": 0.02333, "gowalla": 0.000719,
-            "yelp2018": 0.001046, "ml_1m": 0.026967}
+# k-core hazard: filtering lifts the SPARSEST corpus fastest, because it
+# removes proportionally more of its long tail. Past a threshold that inverts
+# the ordering C3 depends on. These are the §6.2 hazard-table estimates
+# projected onto gowalla_ts, the corpus at risk here.
+K5_CORE = {"gowalla_ts": 0.00330, "amazon_video_games": 0.004692,
+           "ml_1m": 0.026967}
+K10_CORE = {"gowalla_ts": 0.00996, "amazon_video_games": 0.004692,
+            "ml_1m": 0.026967}
+K20_CORE = {"gowalla_ts": 0.03042, "amazon_video_games": 0.004692,
+            "ml_1m": 0.026967}
 
 
 def test_unfiltered_plan_satisfies_the_invariant():
@@ -104,21 +115,26 @@ def test_k20_core_inverts_the_ordering():
     assert any("ORDERING INVERTED" in p for p in check_ordering(K20_CORE))
 
 
-def test_k5_core_inverts_under_the_four_corpus_ordering():
-    """k=5 lifts amazon-book past BOTH gowalla and yelp2018 -- an inversion.
+def test_k5_core_is_survivable_on_the_timestamped_corpora():
+    """k=5 erodes the gowalla/amazon margin to 1.42x but does NOT break C3.
 
-    Under the original three-corpus list this only narrowed the margin; with
-    four corpora it reorders them outright, which is the more serious failure.
+    Worth pinning as a boundary: under the old four-corpus list k=5 inverted
+    the ordering outright, which is why rung 3 was demoted below rung 2 in
+    spec §2.2. The timestamped corpora are better separated (6.3x unfiltered),
+    so k=5 survives where it previously did not. The demotion still stands --
+    k>=10 inverts, as the two tests above show -- but the reason is now a
+    narrower one, and overstating it in a test would misrepresent the hazard.
     """
     problems = check_ordering(K5_CORE)
-    assert problems, "k=5 core must be rejected"
-    assert any("ORDERING INVERTED" in p for p in problems)
+    assert problems == [], f"k=5 should now be survivable, got {problems}"
+    ratio = K5_CORE["amazon_video_games"] / K5_CORE["gowalla_ts"]
+    assert 1.25 < ratio < 1.6, f"margin {ratio:.2f}x -- update the note above"
 
 
 def test_thin_margin_is_rejected_even_without_inversion():
     """The margin rule must still bite when the ORDER is correct but too tight."""
-    thin = {"amazon_book_lgcn": 0.000700, "gowalla": 0.000719,   # 1.03x
-            "yelp2018": 0.001046, "ml_1m": 0.026967}
+    thin = {"gowalla_ts": 0.004550, "amazon_video_games": 0.004692,  # 1.03x
+            "ml_1m": 0.026967}
     problems = check_ordering(thin)
     assert any("MARGIN TOO THIN" in p for p in problems)
     assert not any("ORDERING INVERTED" in p for p in problems)
@@ -127,13 +143,13 @@ def test_thin_margin_is_rejected_even_without_inversion():
 def test_measured_densities_clear_the_relaxed_margin():
     """The corpora actually used must satisfy the invariant as configured."""
     assert check_ordering(UNFILTERED) == []
-    spread = UNFILTERED["ml_1m"] / UNFILTERED["amazon_book_lgcn"]
+    spread = UNFILTERED["ml_1m"] / UNFILTERED["gowalla_ts"]
     assert spread > 20, f"end-to-end density spread {spread:.0f}x is too small for C3"
 
 
 def test_margin_rule_is_strict_about_ties():
-    tied = {"amazon_book_lgcn": 0.000719, "gowalla": 0.000719,
-            "yelp2018": 0.001046, "ml_1m": 0.026967}
+    tied = {"gowalla_ts": 0.004692, "amazon_video_games": 0.004692,
+            "ml_1m": 0.026967}
     assert any("ORDERING INVERTED" in p for p in check_ordering(tied))
 
 

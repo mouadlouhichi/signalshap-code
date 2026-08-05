@@ -1,2 +1,4 @@
 Dataset,$\sum_g \varphi_g$,$v(\mathcal{G})$,$|$error$|$,Passes,Sum of rounded $\varphi_g$,Rounded $v(\mathcal{G})$,Display-rounding artefact
+amazon_video_games,0.042629928976283586,0.042629928976283579,6.9e-18,yes,0.04262,0.04263,yes
+gowalla_ts,0.016970060495974652,0.016970060495974652,0.0e+00,yes,0.01697,0.01697,no
 MovieLens-1M,0.052531336623970942,0.052531336623970942,0.0e+00,yes,0.05254,0.05253,yes

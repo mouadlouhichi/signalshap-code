@@ -12,7 +12,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 warnings.filterwarnings("ignore")
 
-from signalshap.config import ARTEFACTS, read_artefact
+from signalshap.config import ARTEFACTS, admissible, read_artefact
 from signalshap.plots.assets import generate_all_assets
 
 if __name__ == "__main__":
@@ -27,14 +27,14 @@ if __name__ == "__main__":
         name = p.stem.replace("results_", "")
         blob = read_artefact(p.name)
         e0a = blob.get("e0a_candidates") or {}
-        # Spec 2.2 rung 2: a DECLARED ceiling exemption is reportable for
-        # relative contrasts. gate_passes stays False either way.
-        ok = e0a.get("reportable", e0a.get("gate_passes", True))
+        # Live config, not the artefact snapshot -- see signalshap.config.admissible.
+        ok, restriction = admissible(name, e0a)
         if not ok and not a.include_failed:
             skipped.append((name, e0a.get("candidate_recall", float("nan"))))
             continue
-        if ok and not e0a.get("gate_passes", True):
+        if restriction:
             rung2.append((name, e0a["candidate_recall"]))
+        blob["_reporting_restriction"] = restriction
         results[name] = blob
 
     for name, recall in skipped:

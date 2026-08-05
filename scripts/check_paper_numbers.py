@@ -15,6 +15,9 @@ import re
 import sys
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
+from signalshap.config import admissible  # noqa: E402
+
 ROOT = Path(__file__).resolve().parents[1]
 ART = ROOT / "artefacts"
 # The submission manuscript on the Springer template. The earlier working
@@ -37,21 +40,20 @@ def results(include_failed: bool = False) -> dict:
     out = {}
     for p in sorted(ART.glob("results_*.json")):
         blob = json.loads(p.read_text())
+        name = p.stem.replace("results_", "")
         e0a = blob.get("e0a_candidates") or {}
-        # `reportable` -- not `gate_passes` -- is the admission test: spec §2.2
-        # rung 2 retains a corpus with the gate knowingly unmet, provided the
-        # exemption was DECLARED in frozen.yaml beforehand.
-        ok = e0a.get("reportable", e0a.get("gate_passes", True))
+        # Exemption is resolved from the LIVE config, not the artefact's own
+        # `reportable` field: gowalla_ts ran before it was declared, so its
+        # stale snapshot says false while policy now admits it.
+        ok, restriction = admissible(name, e0a)
         if not ok and not include_failed:
-            print(f"  [skipped] {p.name}: recall gate FAILED "
-                  f"({e0a.get('candidate_recall', float('nan')):.3f}), no rung-2 "
-                  f"exemption declared -- not reportable under spec §2.2",
-                  file=sys.stderr)
+            print(f"  [skipped] {p.name}: {restriction}", file=sys.stderr)
             continue
-        if ok and not e0a.get("gate_passes", True):
-            print(f"  [rung 2] {p.name}: recall "
-                  f"{e0a['candidate_recall']:.3f} below gate, exemption "
-                  f"declared; relative contrasts only", file=sys.stderr)
+        if restriction:
+            print(f"  [rung 2] {name}: recall {e0a['candidate_recall']:.3f} "
+                  f"below gate, exemption declared; relative contrasts only",
+                  file=sys.stderr)
+        blob["_reporting_restriction"] = restriction
         out[p.stem.replace("results_", "")] = blob
     return out
 

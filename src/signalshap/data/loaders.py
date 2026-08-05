@@ -11,6 +11,7 @@ records `synthetic: true`).
 from __future__ import annotations
 
 import hashlib
+import json
 import os
 import warnings
 from dataclasses import dataclass
@@ -20,7 +21,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-from ..config import PROCESSED, ROOT
+from ..config import ARTEFACTS, PROCESSED, ROOT
 
 RAW = ROOT / "data" / "raw"
 
@@ -435,8 +436,23 @@ def build_dataset_stats(datasets: dict[str, Dataset]) -> dict:
     tests/test_density_ordering.py -- the ordering invariant validates whatever
     densities it is handed and cannot tell a measurement from an estimate.
     """
-    blob = {name: ds.stats() for name, ds in datasets.items()}
+    # MERGE with any existing file rather than overwrite it. Running one corpus
+    # at a time -- which the memory budget forces, since two corpora cannot
+    # share a single SIGNALSHAP_MAX_USERS -- otherwise leaves this file holding
+    # only the last corpus run. That silently disarmed the density-ordering
+    # invariant (it skips when fewer than three corpora are present) and made
+    # T2 a one-row table, while the underlying runs were all fine.
+    blob: dict = {}
+    existing = ARTEFACTS / "dataset_stats.json"
+    if existing.exists():
+        try:
+            prior = json.loads(existing.read_text())
+            blob = {k: v for k, v in prior.items() if k != "_meta"}
+        except (json.JSONDecodeError, OSError):
+            blob = {}
+    blob.update({name: ds.stats() for name, ds in datasets.items()})
     blob["_meta"] = {
+        "corpora_in_this_run": sorted(datasets),
         "source": "measured",
         "measured_at": datetime.now(timezone.utc).isoformat(),
         "corpus_hash": hashlib.sha256(
