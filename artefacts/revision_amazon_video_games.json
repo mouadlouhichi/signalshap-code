@@ -1,0 +1,56 @@
+{
+  "n_seeds": 10,
+  "shapley_seed_ci": {
+    "cf": {
+      "mean": 0.019398327378183693,
+      "sd": 0.0007094437042838599,
+      "lo": 0.018431731310477484,
+      "hi": 0.02030453374451186
+    },
+    "ct": {
+      "mean": 5.7035120659432016e-05,
+      "sd": 0.00017824782147108116,
+      "lo": -0.00017901262404770155,
+      "hi": 0.0003044169866615913
+    },
+    "pop": {
+      "mean": 0.0004521990319985024,
+      "sd": 0.0001781222310256427,
+      "lo": 0.00018645626831254234,
+      "hi": 0.0006992555414839921
+    },
+    "rec": {
+      "mean": 5.7035120659432016e-05,
+      "sd": 0.00017824782147108116,
+      "lo": -0.00017901262404770155,
+      "hi": 0.0003044169866615913
+    },
+    "seq": {
+      "mean": 0.019834905428878544,
+      "sd": 0.00044152399342004196,
+      "lo": 0.019080784527893323,
+      "hi": 0.02040818810520511
+    }
+  },
+  "fuse_vs_global_hierarchical": {
+    "mean_diff": 6.498060231982866e-05,
+    "lo": -8.027006197789318e-05,
+    "hi": 0.0002359175836519776,
+    "n_seeds": 10,
+    "n_boot": 10000,
+    "excludes_zero": false,
+    "note": "Two-level bootstrap over seeds then users. Compare against the user-level Wilcoxon p: if the interval spans zero where Wilcoxon reports p<0.001, the discrepancy is pseudoreplication."
+  },
+  "fuse_vs_global_tost": {
+    "mean_diff": 0.00022149777535034382,
+    "margin": 0.002,
+    "p_tost": 1.5815715056852325e-19,
+    "equivalent": true,
+    "ci_90": [
+      -0.00010398739406904234,
+      0.00054698294476973
+    ],
+    "note": "Equivalent means we can reject a true difference larger than the margin; the margin must be pre-specified."
+  },
+  "rank_biserial": 0.23076923076923078
+}
