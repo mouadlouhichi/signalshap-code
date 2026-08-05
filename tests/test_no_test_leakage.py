@@ -68,3 +68,31 @@ def test_fusion_returns_frozen_weights():
     """Weights must be produced once, not refit per evaluated user."""
     src = _src(segments.signalshap_fuse_v2)
     assert "w_seg[segments[u]]" in src, "expected a frozen per-segment lookup"
+
+
+def test_coalition_heads_and_coalition_values_use_disjoint_folds():
+    """The reviewer's cross-fitting concern, checked at the source.
+
+    A reviewer suggested that coalition heads and the attribution that scores
+    them might share a validation fold, which would make v(S) in-sample and
+    optimistically biased even without test leakage. They do not: SignalShapGame
+    accumulates its Gram matrix from ``valid_items`` and evaluates NDCG in
+    ``v_per_user`` against ``test_items``. This test pins that separation, so a
+    future refactor cannot quietly introduce the bias.
+
+    Note the scope: this covers the MAIN attribution result. The
+    attribution-derived fusion weights of Appendix A are a separate path and
+    are a genuine instance of the concern; that experiment is reported as a
+    negative result rather than as a contribution.
+    """
+    import inspect
+
+    from signalshap.game import core
+
+    fit_src = inspect.getsource(core.SignalShapGame._gram)
+    eval_src = inspect.getsource(core.SignalShapGame.v_per_user)
+
+    assert "valid_items" in fit_src, "head must be fitted on the validation fold"
+    assert "test_items" not in fit_src, "TEST LEAKAGE: head fitted on test labels"
+    assert "test_items" in eval_src, "coalition value must be scored on test"
+    assert "valid_items" not in eval_src, "v(S) scored in-sample on the fit fold"

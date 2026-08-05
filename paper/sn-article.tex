@@ -18,6 +18,11 @@
 \usepackage{amssymb}
 \usepackage{graphicx}
 \usepackage{multirow}
+% The class loads neither; algorithm/algpseudocode are needed for the
+% pseudocode in Section 4 and do not clash with sn-jnl.cls (which defines no
+% `algorithm' float of its own).
+\usepackage{algorithm}
+\usepackage{algpseudocode}
 
 %% Architecture diagram (Fig. 1) is drawn in TikZ rather than embedded as a
 %% raster: it keeps lettering vector-sharp at any zoom, matches the body font
@@ -496,6 +501,81 @@ $v(S)$ is itself \emph{fitted}, so $\varphi_g$ carries estimation error. We
 write ``exact given the fitted $v$'' throughout, and report seed-based
 confidence intervals in the main text rather than an appendix. Efficiency, by
 contrast, holds exactly regardless of fit noise because it is structural.
+
+\section{Algorithm and Cost}\label{sec:algorithm}
+
+Algorithm~\ref{alg:signalshap} states the procedure end to end. Two details
+carry the correctness of everything downstream and are easy to get wrong. The
+candidate set is built \emph{once}, from all sources, and reused unchanged for
+every coalition (line~4): building it per coalition would make $v(S)$
+incomparable across the lattice, because a coalition would be scored on
+candidates it selected for itself. And the ridge head for each coalition is fit
+against \emph{validation} targets while $v(S)$ is scored against \emph{test}
+items (lines 9 and 12), so no coalition value is measured in-sample.
+
+\begin{algorithm}[t]
+\caption{Exact ranking-stage SignalShap}\label{alg:signalshap}
+\begin{algorithmic}[1]
+\Require train $\mathcal{D}_{\mathrm{tr}}$, validation $\mathcal{D}_{\mathrm{val}}$,
+         test $\mathcal{D}_{\mathrm{te}}$; sources $\G$; cap $N_{\max}$;
+         penalty $\lambda$; cutoff $K$; baseline seed
+\Ensure coalition values $v(S)$, source values $\varphi_g$, per-user $\varphi_g(u)$
+\State fit every source $g \in \G$ on $\mathcal{D}_{\mathrm{tr}}$ only
+\State score all eligible items per user; mask items seen in training
+\For{each user $u$}
+  \State $C_u \gets$ truncated union of per-source top-$N$ lists \Comment{once, all sources}
+  \State $Z_u \gets$ $z$-normalised source scores over $C_u$
+  \State $b_u \gets \NDCG_K$ of a frozen random permutation of $C_u$
+\EndFor
+\State $X^\top X,\; X^\top y \gets \sum_u |C_u|^{-1} Z_u^\top Z_u,\;
+        \sum_u |C_u|^{-1} Z_u^\top y_u$ \Comment{accumulate once}
+\For{each $S \subseteq \G$}
+  \If{$S = \varnothing$} $v(S) \gets 0$
+  \Else
+    \State $w^{(S)} \gets \bigl[(X^\top X)_{SS} + \lambda I\bigr]^{-1}(X^\top y)_S$
+           \Comment{slice, do not rebuild}
+    \State $v(S) \gets \operatorname{mean}_u\bigl[\NDCG_K(\mathrm{rank}(Z_u^{(S)} w^{(S)}),\,
+           \mathrm{test}_u) - b_u\bigr]$
+  \EndIf
+\EndFor
+\State $\varphi_g \gets \sum_{S \subseteq \G \setminus \{g\}}
+       \tfrac{|S|!\,(n-|S|-1)!}{n!}\,[v(S \cup \{g\}) - v(S)]$
+\State verify efficiency, per-user decomposition, and that no player is
+       structurally degenerate
+\end{algorithmic}
+\end{algorithm}
+
+\paragraph{Cost}
+Let $n = |\G|$, $m$ users, $N = |C_u|$, and $d$ the item-embedding dimension.
+Source training is the usual cost of the five components and is independent of
+the game. Candidate construction is $O(m\,n\,N\log N)$. The step that matters is
+line~8: accumulating the Gram matrix once costs $O(m N n^2)$, after which each
+of the $2^n$ coalitions is an $O(n^3)$ solve on a slice plus $O(mN\log N)$ to
+rank and score. Total is
+%
+\begin{equation}
+O\bigl(m N n^2 \;+\; 2^n\,(n^3 + mN\log N)\bigr).
+\label{eq:complexity}
+\end{equation}
+%
+The naive implementation rebuilds the design matrix per coalition, giving
+$O(2^n \cdot mNn^2)$; on MovieLens that difference was $81$ minutes against
+$40$ seconds. Memory is dominated not by the game but by the $n$ dense score
+matrices, $4mn|\mathcal{I}|$ bytes in single precision --- $129$\,GB at full
+Gowalla size, which is why the corpora are subsampled to a declared budget.
+
+The $2^n$ factor is the binding constraint on scaling. At $n = 5$ exhaustive
+enumeration costs $32$ refits and is unambiguously worth it; at $n = 20$ it
+would be $10^6$ and sampling becomes necessary, at which point the paper's
+central claim of an exact, variance-free aggregation no longer holds. We regard
+$n \lesssim 12$ as the practical range, which covers the architectural-source
+setting this paper addresses but not feature-level attribution.
+
+Measured wall-clock for the full E0--E8 pipeline on an Apple M4 with 48\,GB,
+single seed: MovieLens $163$\,s, Amazon-VG $71$\,s, Gowalla $943$\,s, of which
+the $32$ coalition evaluations are $13$, $10$, and $285$\,s respectively. The
+game itself is never the bottleneck; candidate construction and the neural
+reference baselines dominate.
 
 \section{Formal Properties}\label{sec:theory}
 
@@ -1304,8 +1384,19 @@ statistically detectable difference with no practical content, and reporting it
 otherwise would contradict the equivalence conclusion the same data support.
 
 \paragraph{Internal validity}
-Fusion weights are fitted on the validation fold and frozen before test
-evaluation, so the downstream comparison is not circular. Baseline tuning
+The coalition heads and the coalition values are fitted and evaluated on
+\emph{disjoint} folds: the ridge head for each $S$ is fitted against validation
+targets, and $v(S)$ is the NDCG of the resulting ranking against held-out test
+items. The main attribution result is therefore not in-sample, and a
+continuous-integration check asserts the separation so a refactor cannot
+reintroduce it. The attribution-derived fusion weights of
+Appendix~\ref{app:fusion} are a different matter: there the same validation
+fold supplies both the coalition heads and the attributions used to build the
+weights, which is an in-sample optimisation bias even though no test label is
+touched. Proper cross-fitting would be required to make that a positive claim.
+Since the measured outcome is equivalence with a simpler baseline, the bias
+works \emph{against} the conclusion we draw, and we report the experiment as a
+negative result rather than repairing it. Baseline tuning
 budgets for LightGCN and SASRec were modest and are not matched to the effort
 spent on our own pipeline; the absolute figures for those models should be read
 as reference points under our protocol rather than as their attainable best.
