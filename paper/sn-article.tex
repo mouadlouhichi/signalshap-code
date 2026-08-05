@@ -88,34 +88,32 @@ Ranking-Stage Attribution of Sources in Hybrid Recommenders}
 Analysis (ENSIAS)}, \orgname{Mohammed V University in Rabat},
 \city{Rabat}, \country{Morocco}}
 
-\abstract{Hybrid recommender systems fuse architecturally distinct signals ---
-collaborative filtering, content, popularity, recency, and sequential order ---
-and practitioners need to know how much each earns. We present
-\emph{SignalShap}, which recasts source attribution as a five-player
-cooperative game whose payoff is a fixed-candidate normalised discounted
+\abstract{Source ablation and Shapley attribution are often treated as
+competing estimates of the same quantity: how much a component of a hybrid
+recommender is worth. We show that they answer different questions, and that
+conflating them leads to the wrong instrument for the decision at hand.
+
+We present \emph{SignalShap}, which recasts source attribution as a five-player
+cooperative game --- collaborative filtering, content, popularity, recency, and
+sequential order --- whose payoff is a fixed-candidate normalised discounted
 cumulative gain at rank~10 on a coalition-independent candidate set. With five
 players the Shapley value follows from exact enumeration of all $2^5=32$
-coalitions, so the aggregation carries no sampling error.
-
-We validate the implementation against constraints known in advance: duplicate
-injection makes a pair exchangeable, so symmetry requires equal credit, and
-SignalShap recovers this with efficiency to $6.9\times10^{-18}$. Six analytic
-games with closed-form Shapley vectors are reproduced exactly, validating
-magnitudes rather than symmetry alone.
+coalitions, so the aggregation carries no sampling error. We validate the
+implementation against constraints known in advance: six analytic games with
+closed-form Shapley vectors reproduce exactly, duplicate injection recovers
+symmetry to numerical precision, and efficiency holds to
+$6.9\times10^{-18}$.
 
 Across three timestamped corpora spanning a $36\times$ density range, every
-system contains at least one source on which leave-one-out and Shapley disagree
-in \emph{sign}. Which source flips is corpus-specific: collaborative filtering
-on MovieLens-1M ($-0.0050$ against $+0.0155$), popularity on Gowalla, recency
-on Amazon. Shapley--Taylor indices localise the redundancy driving this.
-
-Two findings bound the practical claim. In an end-to-end retirement simulation
-leave-one-out predicts the true cost of removing a source \emph{better} than
-Shapley ($\tau=1.00$ versus $0.20$ and $0.60$), so we claim credit allocation
-rather than retirement guidance. Only one corpus clears our candidate-recall
-gate; on the sparsest, reaching it would require a candidate pool so large that
-the fixed-candidate design collapses into full-catalogue ranking. Code and
-every backing artefact are released.}
+system contains at least one source on which the two rules disagree in
+\emph{sign}, and which source diverges is corpus-specific. But in an end-to-end
+retirement simulation, leave-one-out predicts the true cost of removing a
+source \emph{better} than Shapley ($\tau=1.00$ against $0.20$ and $0.60$).
+SignalShap allocates the value of a declared ranking-stage game; leave-one-out
+estimates the effect of removal from the deployed system. We therefore claim
+credit allocation, not retirement guidance, and identify candidate recall as a
+necessary applicability test that only one of our three corpora passes. Code
+and every backing artefact are released.}
 
 \keywords{Shapley value, cooperative game theory, recommender systems,
 explainable AI, credit assignment, hybrid recommendation}
@@ -169,57 +167,44 @@ and efficiency on real fitted games.
 \subsection{Contributions}
 
 \begin{itemize}
-\item \textbf{C1.} A source-level cooperative game for hybrid recommendation,
-      with a coalition-independent candidate set that makes $v(S)$ comparable
-      across coalitions (Section~\ref{sec:game}).
-\item \textbf{C2.} Three standard Shapley properties instantiated for source
-      attribution, plus Lemma~\ref{lem:eps}. We show by counterexample that the
-      redundancy--positivity property is \textbf{false} without monotonicity,
-      and discharge that hypothesis with an empirical audit
-      (Section~\ref{sec:theory}).
-\item \textbf{C3 (primary).} A \emph{diagnostic protocol} for source
-      attribution based on controlled duplicate injection, and evidence that
-      SignalShap passes it. Duplication makes a pair exchangeable, so symmetry
-      fixes a constraint the attribution must satisfy regardless of the data;
-      the method meets it to numerical precision
-      (Section~\ref{sec:recovery}). We report the pair-sum shift as a
-      diagnostic and note explicitly that Shapley credit is
-      \emph{not} conserved under replication.
-\item \textbf{C3b.} Evidence that the credit SignalShap assigns is
-      \emph{materially different} from what current practice reports, and in
-      the direction the redundancy structure predicts. On all three corpora at
-      least one source receives opposite signs from the two methods; the
-      largest case is MovieLens-1M, where collaborative filtering is the second
-      most valuable source ($+0.0155$) and ablation scores it below zero
-      ($-0.0050$), a gap of $39\%$ of the grand-coalition payoff. We report
-      that \emph{which} source flips varies by corpus --- popularity on
-      Gowalla, recency on Amazon-VG, the latter negligible in magnitude --- so
-      the claim is that the two rules diverge on some source in every system,
-      not that ablation systematically undervalues a particular one
-      (Section~\ref{sec:results}).
-\item \textbf{C4.} Per-user attribution that resolves behavioural segments on
-      the dense corpus, showing the decomposition carries structure a global
-      summary discards (Section~\ref{sec:segments}).
-\item \textbf{C4b.} A comparison of three estimands (fixed head, refitted
-      head, end-to-end retrieval) and a retirement simulation showing that
-      leave-one-out, not Shapley, is the appropriate instrument for
-      single-source removal decisions (Section~\ref{sec:estimands}). This
-      narrows the paper's practical claim, and we regard stating it as part of
-      the contribution.
-\item \textbf{C5.} Fusion weights derived from these attributions beat
-      LightGCN, SASRec, uniform, and popularity baselines at $p<0.001$ ---
-      though we note the neural baselines received smaller tuning budgets
-      (Section~\ref{sec:threats}). Against a well-tuned global head there is
-      \emph{no} advantage: the difference is $-0.00005$ on MovieLens and a
-      pre-specified equivalence test concludes the two are equivalent within
-      $0.002$ $\NDCG$. Attribution-derived fusion is therefore not a
-      contribution of this paper, and we report the negative result rather than
-      the favourable framing of an earlier draft.
-\item \textbf{C6.} A reproducible artefact with a frozen configuration fixed
-      before the reported runs and CI-enforced invariants. We use ``frozen''
-      rather than ``pre-registered'': the configuration is version-controlled
-      and dated in the repository, but there is no external registration.
+\item \textbf{C1.} A precisely declared ranking-stage cooperative game over
+      heterogeneous recommender sources, with a coalition-independent candidate
+      set that makes $v(S)$ comparable across coalitions, a per-user
+      formulation, and exact enumeration for small source sets
+      (Section~\ref{sec:game}).
+\item \textbf{C2.} A formal characterisation of source allocation under
+      redundancy: efficiency and per-user decomposition, a counterexample
+      showing the redundancy--positivity property is \textbf{false} without
+      monotonicity, a corrected two-sided $\varepsilon$-substitutability
+      result, and the observation that Shapley credit is \emph{not} conserved
+      under replication (Section~\ref{sec:theory}).
+\item \textbf{C3.} A validation protocol for source attribution combining
+      analytic games with known Shapley vectors, controlled duplicate
+      injection, and efficiency, null-player, and additivity diagnostics
+      (Sections~\ref{sec:recovery} and~\ref{sec:validating}). These establish
+      that the aggregation is implemented correctly --- a precondition for
+      interpreting anything computed with it, and one the field rarely checks.
+\item \textbf{C4 (primary).} An empirical comparison of three estimands ---
+      refitted-head ranking-stage, fixed-head, and end-to-end retrieval ---
+      showing that Shapley allocation and leave-one-out removal cost answer
+      \emph{different questions}. On both corpora where an end-to-end ground
+      truth can be measured, leave-one-out predicts retirement cost better than
+      Shapley ($\tau = 1.00$ against $0.20$ and $0.60$). We pair this with
+      candidate recall as a necessary applicability test, and report where our
+      own method should not be used (Sections~\ref{sec:results}
+      and~\ref{sec:estimands}).
 \end{itemize}
+
+\paragraph{What this paper does not claim}
+We do not claim that attribution-derived fusion weights improve ranking
+quality: they are practically equivalent to a globally tuned head under a
+pre-specified margin, and we report that negative result in
+Appendix~\ref{app:fusion} rather than as a contribution. We make no
+state-of-the-art claim against LightGCN or SASRec; those models appear as
+contextual references only, and received smaller tuning budgets than a
+performance comparison would require. And we do not claim that the sign of an
+attribution prescribes retaining or removing a source --- Section~\ref{sec:estimands}
+shows it does not.
 
 \begin{figure}[t]
 \centering
@@ -307,7 +292,7 @@ for every coalition, so differences in $v(S)$ reflect fusion within $S$ rather
 than retrieval from a pool that favours it. Because $v(S)$ is evaluated on test
 interactions, the Shapley output is reported as diagnosis and is deliberately
 \emph{not} an input to the fusion weights (dotted arrow); that separation is
-what keeps the downstream comparison of Section~\ref{sec:segments}
+what keeps the downstream comparison of Appendix~\ref{app:fusion}
 non-circular}\label{fig:workflow}
 \end{figure}
 
@@ -321,10 +306,8 @@ non-circular}\label{fig:workflow}
 \item[RQ2] Does source-level Shapley attribution differ materially from
   leave-one-out ablation, and is the difference associated with measured
   redundancy between sources?
-\item[RQ3] Do per-user attributions vary across behavioural segments, or does
-  the global summary suffice?
-\item[RQ4] Do fusion weights derived from segment-level attributions improve
-  ranking quality relative to uniform, neural, and globally tuned baselines?
+\item[RQ3] Do the ranking-stage, fixed-head, and end-to-end estimands agree,
+  and which of them predicts the measured cost of retiring a source?
 \end{description}
 
 \paragraph{What is not in this paper} Graph-neural or Transformer players;
@@ -688,7 +671,7 @@ candidate list (Section~\ref{sec:preconditions}).
 \paragraph{Protocol}
 Leave-last-out temporal split where timestamps exist; ties broken by
 (timestamp, record index). The main study uses seeds $\{42,43,44\}$; the
-seed-interval and equivalence analyses of Section~\ref{sec:segments} use ten
+seed-interval and equivalence analyses of Appendix~\ref{app:fusion} use ten
 seeds ($42$--$51$), which is what the two-level bootstrap resamples over.
 Wilcoxon signed-rank for
 paired $\NDCG$, permutation tests (10\,000 shuffles) for gaps and
@@ -940,6 +923,13 @@ Unanimity    & pure complementarity  & $(3, 3, 3)$    & $0$ \\
 \end{tabular}
 \end{table}
 
+We additionally verify \emph{additivity}, the remaining uniqueness axiom that
+no other diagnostic here exercises: efficiency is a sum constraint, symmetry is
+covered by duplicate injection, and the null player has its own game. Summing
+an additive and a unanimity game --- structurally different, so the check is not
+vacuous --- gives $\varphi(v_1 + v_2) = \varphi(v_1) + \varphi(v_2)$ to
+$4.4\times10^{-16}$.
+
 The null-player and harmful games matter most for this paper. Our fitted games
 are non-monotone and produce negative $\varphi_g$ (Section~\ref{sec:results}),
 so it is necessary to establish that a negative value is a faithful computation
@@ -1123,113 +1113,6 @@ expected to overlap by construction, as stated in advance in
 Section~\ref{sec:setup}.}\label{fig:redundancy}
 \end{figure}
 
-\section{Segment-Level Attribution and Fusion}\label{sec:segments}
-
-Two questions separate here: whether attributions \emph{differ} across user
-segments, and whether exploiting that difference \emph{pays}.
-
-\paragraph{Segments and the weight map}
-An earlier version of this paper left both definitions implicit, which made the
-applied claim unreproducible. Segments are a $2\times2$ split on training
-behaviour only, computed before any test data is touched: activity (above or
-below the median interaction count) crossed with recency skew, the fraction of
-a user's interactions falling in the newer half of that user's own timespan,
-again split at the median. This yields four segments; users with no training
-interactions fall in the first.
-
-Segment attributions are mapped to fusion weights by a softmax with shrinkage
-toward the global profile. For segment $s$ and source $g$,
-%
-\begin{equation}
-q_{s,g} = \frac{\exp(\varphi_{s,g}/\tau)}{\sum_{h \in \G}\exp(\varphi_{s,h}/\tau)},
-\qquad
-a_{s,g} = (1-\rho)\,q_{s,g} + \rho\,q_{\mathrm{global},g}.
-\label{eq:fuse}
-\end{equation}
-%
-The softmax is not cosmetic. Our games are non-monotone, so $\varphi_{s,g}$ can
-be negative, and using raw values as weights would \emph{invert} a source's
-scores rather than down-weight it --- a qualitatively different operation from
-the one the attribution licenses. The temperature $\tau$ and shrinkage $\rho$
-are selected on the validation fold and frozen before any test evaluation.
-
-
-\paragraph{Heterogeneity is real, but only on the dense corpus}
-On MovieLens-1M, $7$ of $30$ segment-pair contrasts are significant at
-$\alpha = 0.05$ uncorrected, against $1.5$ expected by chance. On the two
-sparse corpora the counts are $4$ of $30$ (Gowalla) and $5$ of $30$
-(Amazon-VG). These are above the chance rate but well below MovieLens, and
-after Holm correction within each corpus none of the three corpora retains a
-significant contrast --- a fact we state because the uncorrected counts alone
-would overstate the evidence. We therefore claim suggestive segment
-heterogeneity in the dense setting and no established heterogeneity on sparse
-data, and note that this is a plausible reason the closed loop does not
-deliver. Figure~\ref{fig:segments} plots the per-segment profiles.
-
-\begin{figure}[t]
-\centering
-\includegraphics[width=\textwidth]{Fig5.png}
-\caption{Segment-level Shapley profiles. Near-coincident polygons indicate
-little heterogeneity to exploit, which is what we observe on the sparse
-corpora.}\label{fig:segments}
-\end{figure}
-
-\paragraph{Fusion weights never see test outcomes}
-Because the characteristic function of Section~\ref{sec:game} is evaluated on
-test interactions, deriving fusion weights from those same attributions would
-be circular. We avoid this: the fusion heads, the segment-specific weights, the
-choice of head family, and the shrinkage strength are all fitted on the
-\emph{validation} fold only, and are frozen before a single test evaluation.
-The Shapley values reported in Section~\ref{sec:results} are diagnostic output;
-they are not inputs to the weights. This separation is enforced in code and
-covered by the released test suite.
-
-\paragraph{Attribution-derived fusion is competitive}
-Weights derived from the segment-level attributions outperform every
-\emph{independent} comparator at Holm-corrected $p < 0.001$: uniform fusion
-($+0.0111$, $d_z = 0.092$), a popularity reference ($+0.0455$,
-$d_z = 0.233$), LightGCN~\citep{he2020lightgcn} ($+0.0299$, $d_z = 0.159$), and
-SASRec~\citep{kang2018sasrec} ($+0.0558$, $d_z = 0.286$), at
-$\NDCG = 0.06382$ (Figure~\ref{fig:fusion}).
-
-Against a globally tuned head of the same family ($\NDCG = 0.06388$) the
-difference is $-0.00005$ ($d_z = -0.003$, $p = 0.99$) --- indistinguishable from
-zero, and now marginally negative rather than marginally positive. Under the
-per-user normalisation of Eq.~\eqref{eq:head} the sign of this comparison
-changed while its magnitude stayed within noise, which is itself the clearest
-evidence that no effect is resolvable here. \textbf{We therefore make no claim
-of any advantage over a well-tuned global head}, and note that the comparisons
-against LightGCN and SASRec are conditional on tuning budgets that were not
-matched to our own pipeline.
-
-\begin{figure}[t]
-\centering
-\includegraphics[width=0.85\textwidth]{Fig6.png}
-\caption{Fusion comparison under the full-catalogue protocol. SignalShap-Fuse
-separates decisively from the neural and heuristic baselines but not from a
-well-tuned global head.}\label{fig:fusion}
-\end{figure}
-
-We now test this directly rather than describing it as underpowered. Because
-users share the same fitted source models and coalition heads, a user-level
-test conditions on one draw of the training procedure; we therefore use a
-two-level bootstrap that resamples seeds and then users within each seed. It
-gives a mean difference of $+0.00005$ with a 95\% interval of
-$[-0.00022, +0.00032]$, which spans zero.
-
-We also pre-specified a smallest meaningful difference of $0.002$ NDCG@10 and
-ran a two one-sided test. It rejects a true difference larger than that margin
-($p < 0.001$), so the two configurations are \textbf{statistically equivalent
-for practical purposes} --- a positive claim, and a stronger one than the
-absence of significance. The rank-biserial correlation is $+0.007$. We therefore make the claim the evidence supports: SignalShap
-attribution yields fusion weights competitive with strong neural baselines,
-and its advantage over a carefully tuned global head is not established at
-this scale.
-
-The contribution stands on the validation of Section~\ref{sec:recovery} and the
-attribution results of Section~\ref{sec:results}. Fusion demonstrates that the
-attributions are actionable; it is not the evidence that they are correct.
-
 \section{Limitations}\label{sec:limitations}
 
 \paragraph{Analytic and data-independent}
@@ -1402,7 +1285,7 @@ Wilcoxon test is the wrong instrument, because a large $n$ can render a
 practically empty difference significant. We therefore pre-specified a smallest
 meaningful difference of $0.002$ $\NDCG$ and report a two-level bootstrap over
 seeds and then users, together with a TOST equivalence test
-(Section~\ref{sec:segments}). The conclusion is equivalence, not superiority.
+(Appendix~\ref{app:fusion}). The conclusion is equivalence, not superiority.
 
 Two limitations of that analysis remain. The main study uses three seeds and
 the revision analyses ten; ten outer clusters is adequate for a bootstrap but
@@ -1473,6 +1356,121 @@ than credit allocation, since the two demonstrably diverge; corpora dense
 enough for fixed-candidate retrieval to clear the recall gate;
 privacy-bearing signals as players; cascade hybrids; and causal extensions of
 source attribution.
+
+\appendix
+
+\section{Attribution-Derived Fusion: A Negative Result}\label{app:fusion}
+
+This appendix reports an experiment that did not work. We include it because
+the natural next step after allocating credit is to \emph{use} that allocation,
+and a reader who asks whether attribution-derived weights help deserves the
+measured answer rather than silence. They do not.
+
+Two questions separate here: whether attributions \emph{differ} across user
+segments, and whether exploiting that difference \emph{pays}.
+
+\paragraph{Segments and the weight map}
+An earlier version of this paper left both definitions implicit, which made the
+applied claim unreproducible. Segments are a $2\times2$ split on training
+behaviour only, computed before any test data is touched: activity (above or
+below the median interaction count) crossed with recency skew, the fraction of
+a user's interactions falling in the newer half of that user's own timespan,
+again split at the median. This yields four segments; users with no training
+interactions fall in the first.
+
+Segment attributions are mapped to fusion weights by a softmax with shrinkage
+toward the global profile. For segment $s$ and source $g$,
+%
+\begin{equation}
+q_{s,g} = \frac{\exp(\varphi_{s,g}/\tau)}{\sum_{h \in \G}\exp(\varphi_{s,h}/\tau)},
+\qquad
+a_{s,g} = (1-\rho)\,q_{s,g} + \rho\,q_{\mathrm{global},g}.
+\label{eq:fuse}
+\end{equation}
+%
+The softmax is not cosmetic. Our games are non-monotone, so $\varphi_{s,g}$ can
+be negative, and using raw values as weights would \emph{invert} a source's
+scores rather than down-weight it --- a qualitatively different operation from
+the one the attribution licenses. The temperature $\tau$ and shrinkage $\rho$
+are selected on the validation fold and frozen before any test evaluation.
+
+
+\paragraph{Heterogeneity is real, but only on the dense corpus}
+On MovieLens-1M, $7$ of $30$ segment-pair contrasts are significant at
+$\alpha = 0.05$ uncorrected, against $1.5$ expected by chance. On the two
+sparse corpora the counts are $4$ of $30$ (Gowalla) and $5$ of $30$
+(Amazon-VG). These are above the chance rate but well below MovieLens, and
+after Holm correction within each corpus none of the three corpora retains a
+significant contrast --- a fact we state because the uncorrected counts alone
+would overstate the evidence. We therefore claim suggestive segment
+heterogeneity in the dense setting and no established heterogeneity on sparse
+data, and note that this is a plausible reason the closed loop does not
+deliver. Figure~\ref{fig:segments} plots the per-segment profiles.
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\textwidth]{Fig5.png}
+\caption{Segment-level Shapley profiles. Near-coincident polygons indicate
+little heterogeneity to exploit, which is what we observe on the sparse
+corpora.}\label{fig:segments}
+\end{figure}
+
+\paragraph{Fusion weights never see test outcomes}
+Because the characteristic function of Section~\ref{sec:game} is evaluated on
+test interactions, deriving fusion weights from those same attributions would
+be circular. We avoid this: the fusion heads, the segment-specific weights, the
+choice of head family, and the shrinkage strength are all fitted on the
+\emph{validation} fold only, and are frozen before a single test evaluation.
+The Shapley values reported in Section~\ref{sec:results} are diagnostic output;
+they are not inputs to the weights. This separation is enforced in code and
+covered by the released test suite.
+
+\paragraph{Attribution-derived fusion is competitive}
+Weights derived from the segment-level attributions outperform every
+\emph{independent} comparator at Holm-corrected $p < 0.001$: uniform fusion
+($+0.0111$, $d_z = 0.092$), a popularity reference ($+0.0455$,
+$d_z = 0.233$), LightGCN~\citep{he2020lightgcn} ($+0.0299$, $d_z = 0.159$), and
+SASRec~\citep{kang2018sasrec} ($+0.0558$, $d_z = 0.286$), at
+$\NDCG = 0.06382$ (Figure~\ref{fig:fusion}).
+
+Against a globally tuned head of the same family ($\NDCG = 0.06388$) the
+difference is $-0.00005$ ($d_z = -0.003$, $p = 0.99$) --- indistinguishable from
+zero, and now marginally negative rather than marginally positive. Under the
+per-user normalisation of Eq.~\eqref{eq:head} the sign of this comparison
+changed while its magnitude stayed within noise, which is itself the clearest
+evidence that no effect is resolvable here. \textbf{We therefore make no claim
+of any advantage over a well-tuned global head}, and note that the comparisons
+against LightGCN and SASRec are conditional on tuning budgets that were not
+matched to our own pipeline.
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=0.85\textwidth]{Fig6.png}
+\caption{Fusion comparison under the full-catalogue protocol. SignalShap-Fuse
+separates decisively from the neural and heuristic baselines but not from a
+well-tuned global head.}\label{fig:fusion}
+\end{figure}
+
+We now test this directly rather than describing it as underpowered. Because
+users share the same fitted source models and coalition heads, a user-level
+test conditions on one draw of the training procedure; we therefore use a
+two-level bootstrap that resamples seeds and then users within each seed. It
+gives a mean difference of $+0.00005$ with a 95\% interval of
+$[-0.00022, +0.00032]$, which spans zero.
+
+We also pre-specified a smallest meaningful difference of $0.002$ NDCG@10 and
+ran a two one-sided test. It rejects a true difference larger than that margin
+($p < 0.001$), so the two configurations are \textbf{statistically equivalent
+for practical purposes} --- a positive claim, and a stronger one than the
+absence of significance. The rank-biserial correlation is $+0.007$. We therefore make the claim the evidence supports: SignalShap
+attribution yields fusion weights competitive with strong neural baselines,
+and its advantage over a carefully tuned global head is not established at
+this scale.
+
+The contribution stands on the validation of Section~\ref{sec:recovery} and the
+attribution results of Section~\ref{sec:results}. Fusion demonstrates that the
+attributions are actionable; it is not the evidence that they are correct.
+
 
 \backmatter
 

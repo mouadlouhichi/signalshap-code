@@ -106,6 +106,47 @@ def unanimity_game(players: tuple[str, ...], total: F) -> tuple[dict, dict]:
     return v, {g: total / len(players) for g in players}
 
 
+def additivity_check(tol: float = 1e-12) -> dict:
+    """Verify phi(v1 + v2) = phi(v1) + phi(v2) on the same player set.
+
+    Additivity (linearity in the game) is one of the four axioms that make the
+    Shapley value unique, and it is the only one not exercised by any other
+    diagnostic here: efficiency is a sum constraint, symmetry is tested by
+    duplicate injection, and the null-player axiom has its own game. A
+    correct-looking implementation can satisfy all three and still mishandle
+    the superposition of two games, so it is checked explicitly.
+
+    The two summands are chosen to have different structure -- one additive,
+    one unanimity -- so their sum is neither.
+    """
+    from ..game.core import exact_shapley
+
+    players = ("p", "q", "r")
+    v1, e1 = additive_game({"p": F(3), "q": F(2), "r": F(1)})
+    v2, e2 = unanimity_game(players, F(9))
+    vsum = {S: v1[S] + v2[S] for S in v1}
+
+    f1 = exact_shapley({S: float(x) for S, x in v1.items()}, players)
+    f2 = exact_shapley({S: float(x) for S, x in v2.items()}, players)
+    fs = exact_shapley({S: float(x) for S, x in vsum.items()}, players)
+
+    errs = {g: abs(fs[g] - (f1[g] + f2[g])) for g in players}
+    expected = {g: float(F(e1[g]) + F(e2[g])) for g in players}
+    exact_errs = {g: abs(fs[g] - expected[g]) for g in players}
+    worst = max(max(errs.values()), max(exact_errs.values()))
+    return {
+        "games": ["additive", "unanimity"],
+        "phi_v1": f1, "phi_v2": f2, "phi_sum": fs,
+        "expected_sum": expected,
+        "max_abs_error": worst,
+        "passes": worst <= tol,
+        "note": (
+            "Additivity: phi(v1+v2) must equal phi(v1)+phi(v2). Checked both "
+            "against the summed empirical values and against the closed form."
+        ),
+    }
+
+
 # --------------------------------------------------------------------------- #
 # Suite
 # --------------------------------------------------------------------------- #
@@ -132,7 +173,7 @@ def validate_implementation(tol: float = 1e-12) -> dict:
     """
     from ..game.core import exact_shapley
 
-    results = {}
+    results = {"additivity": additivity_check(tol)}
     for name, (v, exact) in build_suite().items():
         players = tuple(sorted({p for S in v for p in S}))
         vf = {S: float(x) for S, x in v.items()}

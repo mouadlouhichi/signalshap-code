@@ -128,3 +128,37 @@ def test_prepare_relabels_meta_to_reindexed_item_ids():
     # raw ids sort as i0, i1, i10, i11, i2, ... -- position, not numeric order
     assert ds.item_meta["tags"].iloc[0] == "tag_" + sorted(df["item"].unique())[0]
     assert ds.item_meta["tags"].str.strip().astype(bool).all()
+
+
+# --------------------------------------------------------------------------- #
+# Shapley axioms not covered by the duplicate-injection diagnostic
+# --------------------------------------------------------------------------- #
+
+
+def test_additivity_axiom_holds():
+    """phi(v1+v2) = phi(v1)+phi(v2).
+
+    Additivity is one of the four axioms giving the Shapley value its
+    uniqueness, and the only one no other diagnostic exercises: efficiency is a
+    sum constraint, symmetry is covered by duplicate injection, and the
+    null player has its own analytic game. An implementation can pass all
+    three and still mishandle superposition.
+    """
+    from signalshap.experiments.synthetic_games import additivity_check
+
+    r = additivity_check()
+    assert r["passes"], r
+    assert r["max_abs_error"] < 1e-12
+    # The summands must have DIFFERENT structure, or the test is vacuous.
+    assert r["phi_v1"] != r["phi_v2"]
+
+
+def test_null_player_receives_exactly_zero():
+    from signalshap.experiments.synthetic_games import build_suite
+    from signalshap.game.core import exact_shapley
+
+    v, exact = build_suite()["null_player"]
+    players = tuple(sorted({p for S in v for p in S}))
+    got = exact_shapley({S: float(x) for S, x in v.items()}, players)
+    assert abs(got["null"]) < 1e-12
+    assert float(exact["null"]) == 0.0
