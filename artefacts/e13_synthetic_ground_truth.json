@@ -1,4 +1,33 @@
 {
+  "additivity": {
+    "games": [
+      "additive",
+      "unanimity"
+    ],
+    "phi_v1": {
+      "p": 3.0,
+      "q": 2.0,
+      "r": 1.0
+    },
+    "phi_v2": {
+      "p": 3.0,
+      "q": 3.0,
+      "r": 3.0
+    },
+    "phi_sum": {
+      "p": 6.0,
+      "q": 5.0,
+      "r": 3.9999999999999996
+    },
+    "expected_sum": {
+      "p": 6.0,
+      "q": 5.0,
+      "r": 4.0
+    },
+    "max_abs_error": 4.440892098500626e-16,
+    "passes": true,
+    "note": "Additivity: phi(v1+v2) must equal phi(v1)+phi(v2). Checked both against the summed empirical values and against the closed form."
+  },
   "additive": {
     "players": [
       "a",
@@ -119,6 +148,6 @@
   "_summary": {
     "n_games": 6,
     "all_pass": true,
-    "worst_error": 0.0
+    "worst_error": 4.440892098500626e-16
   }
 }

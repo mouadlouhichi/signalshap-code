@@ -33,11 +33,12 @@
     "no_timestamps": false
   },
   "_meta": {
+    "corpora_in_this_run": [
+      "ml_1m"
+    ],
     "source": "measured",
-    "measured_at": "2026-08-05T12:22:42.155165+00:00",
-    "corpus_hash": "8b3de94b933c4a56",
-    "synthetic": false,
-    "backfilled_at": "2026-08-05T13:04:31.283122+00:00",
-    "backfill_note": "Reconstructed from each corpus's own results_*.json dataset_stats block. Single-corpus runs previously overwrote this file, leaving only the last one; the values are identical to what an all-corpora run writes, since both come from Dataset.stats()."
+    "measured_at": "2026-08-05T15:44:48.357370+00:00",
+    "corpus_hash": "e73e0add9cd22120",
+    "synthetic": false
   }
 }
