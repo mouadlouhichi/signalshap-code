@@ -307,3 +307,41 @@ def test_read_json_keeps_epoch_integers():
         "convert_dates=False must preserve the integer epoch")
     # the default behaviour is what broke; keep it documented
     assert not pd.api.types.is_numeric_dtype(coerced["timestamp"]) or True
+
+
+# --------------------------------------------------------------------------- #
+# Friedman + Nemenyi (both reviewers asked for a multi-comparison test).
+# --------------------------------------------------------------------------- #
+
+
+def test_friedman_detects_a_clear_ordering():
+    from signalshap.stats.tests import friedman_nemenyi
+
+    r = friedman_nemenyi({"best": [0.9, 0.91, 0.89, 0.92],
+                          "mid": [0.5, 0.51, 0.49, 0.52],
+                          "worst": [0.1, 0.11, 0.09, 0.12]})
+    assert r["friedman_p"] < 0.05
+    assert r["mean_ranks"]["best"] < r["mean_ranks"]["worst"]
+
+
+def test_friedman_refuses_degenerate_input():
+    from signalshap.stats.tests import friedman_nemenyi
+
+    assert "error" in friedman_nemenyi({"a": [1.0], "b": [2.0]})
+
+
+def test_nemenyi_critical_difference_shrinks_with_more_blocks():
+    """CD ~ 1/sqrt(b): the reason three corpora separate nothing."""
+    from signalshap.stats.tests import friedman_nemenyi
+
+    few = friedman_nemenyi({m: [0.9, 0.5, 0.1] for m in ("a", "b", "c")})
+    many = friedman_nemenyi({m: [0.9, 0.5, 0.1] * 10 for m in ("a", "b", "c")})
+    assert many["critical_difference"] < few["critical_difference"]
+
+
+def test_nemenyi_does_not_extrapolate_its_table():
+    """Guessing a studentised-range constant would be silently wrong."""
+    from signalshap.stats.tests import friedman_nemenyi
+
+    r = friedman_nemenyi({f"m{i}": [0.5 + 0.01 * i] * 4 for i in range(12)})
+    assert r["critical_difference"] is None

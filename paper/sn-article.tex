@@ -1857,6 +1857,20 @@ differences quadratically and has no natural zero, and our values can be
 negative.}\label{fig:segments}
 \end{figure}
 
+\paragraph{A multi-comparison test the per-corpus tests cannot replace}
+Both reviewers noted that a Wilcoxon test per corpus establishes a difference
+on that corpus, not a ranking across corpora. We therefore add a Friedman
+omnibus over the six methods, blocked by corpus, with a Nemenyi post-hoc. The
+omnibus is significant ($\chi^2 = 14.24$, $p = 0.014$) and the mean ranks order
+the methods as one would expect --- SignalShap-Fuse $1.33$, globally tuned head
+$1.67$, uniform $3.00$, LightGCN $4.00$, popularity $5.33$, SASRec $5.67$ ---
+but with three blocks the critical difference is $4.35$ and \emph{no pair is
+separable}. We report this because it is the honest reading: our
+per-corpus $p < 0.001$ results against uniform and the neural references are
+real differences on those corpora, but they do not license a claim that the
+methods rank reliably across corpora. Three blocks is too few, and adding
+corpora, not seeds, is what would fix it.
+
 \paragraph{Fusion weights never see test outcomes}
 Because the characteristic function of Section~\ref{sec:game} is evaluated on
 test interactions, deriving fusion weights from those same attributions would

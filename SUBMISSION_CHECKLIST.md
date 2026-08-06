@@ -1,159 +1,57 @@
-# What you need to do
+# Submission checklist
 
-Everything runnable in a sandbox is done. This is what needs your machine, your
-data, or your judgement. Ordered by what blocks resubmission soonest.
+Status after the two Major-Revision reviews. Everything not marked **YOU** is done.
 
----
+## Resolved in the manuscript
 
-## 0. Read this first: one result changed the paper's claim
-
-The retirement simulation (E12) found that **leave-one-out predicts the true
-cost of removing a source better than Shapley** — rank agreement τ = 1.00
-versus 0.20 — and correctly picks `cf` as cheapest to retire where Shapley picks
-`ct`. Removing `cf` actually *improves* NDCG@10 by 0.0056 because it is largely
-redundant with `seq` and `pop`.
-
-This is not a refutation. The two methods answer different questions: LOO
-measures the grand-coalition quantity a single-source removal needs, Shapley
-measures average marginal credit. But it does mean **the paper can no longer
-claim retirement guidance**, and I have rewritten it to claim credit allocation
-only.
-
-If you disagree with that framing, this is the decision to revisit before
-anything else — it propagates to the title, abstract, and contributions.
-
----
-
-## 1. Re-run on real corpora (blocking, 3–6 h)
-
-The sandbox lost the raw benchmark files mid-session and the loader silently
-substituted synthetic data. I caught it (candidate recall jumped to 1.000),
-quarantined those runs in `artefacts/synthetic_pilot/`, and cut the paper back
-to **real MovieLens-1M only**. That makes the reviewer's "effectively one
-dataset" criticism literally true right now.
-
-```bash
-cd ~/signalshap-code && git pull
-bash scripts/fetch_benchmarks.sh        # Gowalla, Yelp2018, Amazon-Book
-# MovieLens-1M goes in data/raw/ml-1m/ separately
-
-python scripts/run_study.py             # E0–E8, all corpora
-python scripts/run_revision_experiments.py --dataset ml_1m   # E10–E13
-python scripts/make_assets.py
-python scripts/check_paper_numbers.py --strict
-```
-
-`run_revision_experiments.py` **aborts** if the loader falls back to synthetic
-data, so this failure cannot recur silently.
-
-- [ ] Four corpora present, all `synthetic: false`
-- [ ] `check_paper_numbers.py` clean after regenerating
-- [ ] Restore the four-corpus rows in Table 1 and the recovery table
-
----
-
-## 2. Ten or more seeds with hierarchical inference (blocking, ~4 h)
-
-Three seeds cannot characterise training variability, and users sharing a
-fitted model are not independent replicates. Both tools are implemented:
-
-```python
-from signalshap.stats.tests import hierarchical_bootstrap, tost_equivalence
-```
-
-`hierarchical_bootstrap` resamples seeds then users; `tost_equivalence` tests
-practical equivalence against a **pre-specified** margin.
-
-- [ ] Re-run with `SEEDS = tuple(range(42, 52))`
-- [ ] Report hierarchical CIs alongside the Wilcoxon p-values
-- [ ] **Pre-specify the smallest meaningful NDCG difference before looking**,
-      then run TOST against the global head
-
-Expect the hierarchical intervals to be wider than the current ones. That width
-is the honest answer, and reporting it is stronger than defending `p < 0.001`.
-
----
-
-## 3. Timestamped corpora (blocking for the temporal players)
-
-Three of five players (`rec`, `seq`, time-decayed `pop`) are uninterpretable on
-the LightGCN splits, which carry no timestamps. Either:
-
-- **(a)** swap in timestamped corpora — Amazon Reviews with timestamps, MIND,
-  or Last.fm-1K — and run the full five-source game; or
-- **(b)** run a reduced two-source game (`cf`, `ct`) on the untimestamped
-  corpora and say so.
-
-I'd take (a) for at least two corpora. (b) is defensible but concedes the
-cross-density comparison.
-
----
-
-## 4. Matched baseline tuning (~2 h)
-
-LightGCN and SASRec got modest, unequal budgets. Any reviewer will discount the
-`p < 0.001` wins until the budgets match.
-
-- [ ] Equal search space, trials, and early-stopping for all methods
-- [ ] Report the search space and selected values in a table
-
----
-
-## 5. Fill in what only you can supply (15 min)
-
-- [ ] **Funding statement** — still `[To be completed]`; `check_discover_ai.py`
-      flags it and it blocks submission
-- [ ] ORCID for the corresponding author
-- [ ] Verify co-author emails (I used plausible `um5.ac.ma` patterns)
-- [ ] Archive on Zenodo and insert the DOI — the reviewer asked for an
-      immutable artefact **at review time**, not at acceptance
-
----
-
-## 6. Compile and check (30 min)
-
-```bash
-cd paper && make          # runs both checkers, then pdflatex ×3
-make zip                  # flat bundle for Snapp
-```
-
-No TeX exists in the sandbox, so **the manuscript has never been compiled.** I
-validated statically — balanced environments, resolved refs and citations, every
-command checked against `sn-jnl.cls`, required packages present — and that caught
-three real errors (`\jyear` absent from the class, missing `amsmath`/`graphicx`,
-missing `multirow`). Expect one or two layout nudges on the first run; the TikZ
-figure's node spacing is the likeliest.
-
-`\tikzfigurefalse` reverts Figure 1 to the raster in one line if TikZ misbehaves.
-
----
-
-## What is already done
-
-| | |
+| Reviewer issue | Resolution |
 |---|---|
-| Lemma 1 | Rewritten two-sided with a complete proof; `O(ε)` removed |
-| Ridge duplication | Reviewer was right; redundancy now **measured** over 16 coalitions at both λ and λ=0 |
-| Per-user normalisation | Fixed in Eq. (3) and the code — this changed two published numbers |
-| Analytic ground truth | Six closed-form games, all exact (E13) |
-| Alternative values | Banzhaf, semivalues, Shapley–Taylor interactions (E10) |
-| Estimand comparison | Fixed vs refitted vs end-to-end heads (E11) |
-| Retirement simulation | E12 — the negative result above |
-| Fusion mapping | Explicit softmax with temperature and shrinkage |
-| Leakage | Verified absent, documented, and pinned by tests |
-| Springer compliance | 15 automated checks; only funding outstanding |
-| Tests | 43 passing, 2 skipped |
+| R1 #1 / R2 #3: +0.00021 shift between tables | Root-caused. Baseline is **not** invariant: `b_u` cancels only for non-empty `S`, and `w(0)=1/n`, so a baseline change shifts every φ by `-Δ/n`. Verified (seed 42 vs 999: predicted and observed +0.00015926, 8 dp). False invariance claim withdrawn; sensitivity reported; `φ_ct` disclaimed as sign-unstable. 3 regression tests. |
+| R1 #2: Algorithm 1 undefined `y_u`, `test_u` | Rewritten with explicit `y^val_u` / `y^te_u`, `I_{|S|}`, tie tolerance, empty coalition scored, per-user loop added. |
+| R1 #3: Appendix A unlabelled | `\appendix` + `\section{...}\label{app:fusion}`; CI test asserts a section follows `\appendix`. |
+| R2 #1: Eq. (8) is not Shapley–Taylor | Correct — it is Grabisch–Roubens (weights 0.25, 1/12, 1/12, 0.25 vs 0.4, 0.1, 1/15, 0.1). Relabelled + cited; computation retained and its lack of interaction efficiency stated. |
+| R2 #6: Table 4 caption false | Only `cf–pop` was pre-declared; `cf–seq` was not and `rec–ct` is positive. Corrected to partial recovery. |
+| R2 #9: source-order tie-break | Measured: 120 permutations, 1 identical, worst mean Jaccard **0.9966**. Disclosed with magnitude. |
+| R2 #10: analytic games undefined | Table 3 now gives every characteristic function explicitly. |
+| Both: hyperparameters (2/10) | New Table `hyper` — all five sources, game, fusion, both neural refs, protocol — plus preprocessing and exact subsampling. |
+| R1: missing Background / Discussion / roadmap / future work | All four added. |
+| Both: framing | Removed "build-or-retire", "pre-registered", "true loss", "Shapley shares", "misattribution", LOO-independence claim. Exact vs material monotonicity separated. |
+| Both: Friedman test | Added. Omnibus **p = 0.014**, but CD = 4.35 and **no pair separable** at 3 blocks. Reported as a limit on the fusion claim. |
+| R2: arithmetic | `2500/82134 = 3.04%` (was 3.65%), `11623/82134 = 14.2%` (was 17%). |
+| R1: figures colour / radar | All 7 figures monochrome (0 coloured pixels, CI-enforced); radar replaced with point-range. |
+| R2: missing references | + Grabisch–Roubens, Faith-Shap, KernelSHAP-IQ, negative interactions. |
 
----
+## YOU: needs a run (~10–14 h, unattended)
 
-## Honest assessment
+```bash
+git pull --rebase origin arena/019fc2ce-signalshap-code
+nohup python scripts/run_final_revision.py --budget-gb 24 > /tmp/final.log 2>&1 &
+tail -f /tmp/final.log
+```
 
-**Major Revision remains right.** The mathematical objections are resolved and
-the missing experiments now exist and run, which is real progress. But the
-empirical base is currently one corpus and three seeds, and E12 narrowed the
-practical claim. Items 1–4 are the difference between a defensible resubmission
-and a second round of the same criticisms.
+Four blocks, each writing its own artefact so a late crash keeps early results:
 
-The strongest remaining assets are the analytic validation (E13), the
-interaction indices localising redundancy, and the candour about E12 — reviewers
-reward a paper that reports the result that weakens its own framing.
+- `seeds` — 10-seed attribution on all three corpora. **The single most-repeated
+  demand in both reviews**: ten seeds previously went to the *negative* fusion
+  appendix while the central claims used three.
+- `lambda` — φ across λ ∈ [1e-5, 1e3]. Do the material sign flips survive
+  regularisation? If a flip disappears at some λ, that must be reported.
+- `friedman` — already run on existing artefacts; re-runs free.
+- `retire` — retirement over seeds, so τ = 1.00 gets an interval.
+
+Run a single block with e.g. `--only lambda`.
+
+## YOU: cannot be automated
+
+1. **First LaTeX compile.** Never done. `brew install --cask mactex-no-gui && cd paper && make`. Since we last spoke I added Background, Discussion, two tables, an algorithm rewrite, and `algorithm`/`algpseudocode`. Send the log either way.
+2. **Zenodo DOI, reserved now.** Both reviewers scored reproducibility down partly because the archive is promised "at acceptance"; R2 calls this out explicitly.
+3. **ORCIDs + affiliations + co-author email confirmation.**
+
+## Known open, deliberately
+
+- Only MovieLens clears the 0.60 recall gate. Adding a fourth dense timestamped
+  corpus is the highest-value experiment we have not run.
+- Neural baselines have unmatched tuning budgets; they are contextual
+  references and no SOTA claim is made.
+- Cross-fitting is absent from the fusion appendix. The bias works *against*
+  the negative conclusion, so it is disclosed rather than repaired.

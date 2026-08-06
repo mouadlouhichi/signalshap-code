@@ -225,3 +225,71 @@ def rank_biserial(a: np.ndarray, b: np.ndarray) -> float:
     if nz.size == 0:
         return 0.0
     return float((np.sum(nz > 0) - np.sum(nz < 0)) / nz.size)
+
+
+def friedman_nemenyi(scores: dict[str, list[float]], alpha: float = 0.05) -> dict:
+    """Friedman omnibus test with a Nemenyi post-hoc critical difference.
+
+    Both reviewers asked for a multi-comparison test across methods. The
+    Wilcoxon tests we report elsewhere are per-method-pair and per-corpus; they
+    establish that a difference exists on a given corpus, not that a method
+    ranks above another *across* corpora and seeds. Friedman ranks the methods
+    within each (corpus, seed) block and asks whether the mean ranks differ
+    more than chance; Nemenyi then gives the critical difference two mean ranks
+    must exceed to be separable.
+
+    Parameters
+    ----------
+    scores
+        method name -> list of scores, one per (corpus, seed) block, all
+        methods evaluated on the same blocks in the same order.
+
+    Notes
+    -----
+    Nemenyi's critical value is tabulated, not closed-form. We include the
+    studentised-range constants for the method counts we actually use and
+    refuse to guess beyond them, rather than silently interpolating.
+    """
+    from scipy import stats as sps
+
+    methods = sorted(scores)
+    mat = np.asarray([scores[m] for m in methods], dtype=float)   # k x b
+    k, b = mat.shape
+    if b < 2 or k < 3:
+        return {"error": f"Friedman needs >=3 methods and >=2 blocks, got {k}, {b}"}
+
+    # Rank within each block; rank 1 = best (highest score).
+    ranks = np.empty_like(mat)
+    for j in range(b):
+        ranks[:, j] = sps.rankdata(-mat[:, j])
+    mean_ranks = ranks.mean(axis=1)
+
+    stat, p = sps.friedmanchisquare(*[mat[i] for i in range(k)])
+
+    #: q_alpha for Nemenyi at alpha=0.05, indexed by number of methods.
+    Q05 = {3: 2.343, 4: 2.569, 5: 2.728, 6: 2.850, 7: 2.949, 8: 3.031}
+    cd = None
+    if alpha == 0.05 and k in Q05:
+        cd = Q05[k] * np.sqrt(k * (k + 1) / (6.0 * b))
+
+    out = {
+        "methods": methods,
+        "n_blocks": int(b),
+        "mean_ranks": {m: float(r) for m, r in zip(methods, mean_ranks)},
+        "friedman_statistic": float(stat),
+        "friedman_p": float(p),
+        "critical_difference": float(cd) if cd is not None else None,
+        "alpha": alpha,
+        "note": (
+            "Rank 1 is best. Two methods are separable only if their mean ranks "
+            "differ by more than the critical difference. With few blocks the "
+            "CD is wide, which is a property of the design, not a failure."
+        ),
+    }
+    if cd is not None:
+        out["separable_pairs"] = [
+            [methods[i], methods[j]]
+            for i in range(k) for j in range(i + 1, k)
+            if abs(mean_ranks[i] - mean_ranks[j]) > cd
+        ]
+    return out
