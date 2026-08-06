@@ -109,7 +109,7 @@ closed-form Shapley vectors reproduce exactly, duplicate injection recovers
 symmetry to numerical precision, and efficiency holds to
 $6.9\times10^{-18}$.
 
-Across three timestamped corpora spanning a $36\times$ density range, every
+Across three timestamped corpora spanning a $30\times$ density range, every
 system contains at least one source on which the two rules disagree in
 \emph{sign}, and which source diverges is corpus-specific. But in an end-to-end
 retirement simulation, leave-one-out predicts the true cost of removing a
@@ -712,7 +712,7 @@ asks whether Shapley \emph{recovers} known structure --- a validation of the
 estimator against a predeclared qualitative expectation.
 
 \paragraph{Corpora}
-Three real datasets spanning a $36\times$ density range
+Three real datasets spanning a $30\times$ density range
 (Table~\ref{tab:preconditions}): MovieLens-1M~\citep{harper2015movielens},
 Gowalla check-ins~\citep{cho2011friendship}, and the Video Games category of
 the Amazon Reviews corpus~\citep{hou2024bridging}. All three carry genuine
@@ -783,7 +783,7 @@ Corpus & Users & Items & Density & $N_{\max}$ & Recall & Monot. & Prop.~\ref{pro
 \midrule
 MovieLens-1M & 6\,038 & 3\,533  & $2.697\%$ & 600    & $0.748$ & $6$ / $17$ & no \\
 Amazon-VG    & 7\,120 & 3\,516  & $0.469\%$ & 600    & $0.588^{\dagger}$ & $4$ / $12$ & no \\
-Gowalla      & 8\,865 & 82\,134 & $0.075\%$ & 11\,623 & $0.450^{\dagger}$ & $6$ / $13$ & no \\
+Gowalla      & 5\,910 & 68\,443 & $0.089\%$ & 11\,623 & $0.453^{\dagger}$ & $6$ / $16$ & no \\
 \botrule
 \end{tabular}
 \smallskip
@@ -832,9 +832,9 @@ For Gowalla the situation is qualitatively different, and more interesting. We
 did raise $N_{\max}$, from $2\,500$ to $11\,623$ --- the first value was
 inherited from a differently sized split and amounted to only $3.65\%$ of this
 corpus's catalogue, against $17\%$ elsewhere, so the raise is justified by
-consistency rather than by outcome. Recall improved to $0.450$. The robustness
+consistency rather than by outcome. Recall improved to $0.453$. The robustness
 sweep then measured the curve directly:
-$N_{\max}=5\,811 \to 0.418$, $11\,623 \to 0.450$, $23\,246 \to 0.471$. Doubling
+$N_{\max}=5\,811 \to 0.416$, $11\,623 \to 0.453$, $23\,246 \to 0.471$. Doubling
 the pool buys $+0.021$.
 
 We are deliberately careful about what this does and does not establish. Recall
@@ -857,7 +857,7 @@ validity rather than impossibility: on a corpus this sparse, the candidate pool
 needed for a usable recall ceiling is a large fraction of the catalogue, and a
 practitioner should check that ratio before adopting a fixed-candidate game.
 Quantifying where that tradeoff becomes unacceptable, and whether recall rises
-fast enough in the unsampled region between $23\,246$ and $82\,134$ to change
+fast enough in the unsampled region between $23\,246$ and $68\,443$ to change
 the assessment, requires a full-catalogue sweep we have not run.
 
 
@@ -1093,32 +1093,33 @@ attaching uncertainty, is straightforward but not yet done.
 \section{Attribution on Real Systems}\label{sec:results}
 
 \begin{table}[t]
-\caption{LOO versus Shapley on all three corpora (seed 42). Every corpus
-contains at least one source on which the two methods disagree in \emph{sign};
-the source that flips differs by corpus, and so does the magnitude. Seed means
-and confidence intervals are in the artefact.}
+\caption{LOO versus Shapley on all three corpora (seed 42). Sign
+disagreements are marked \emph{material} when the gap exceeds $10^{-3}$, the
+same threshold used for monotonicity; negligible flips are those where both
+estimates sit within noise of zero. Two of three corpora contain a material
+disagreement. Seed means and confidence intervals are in the artefact.}
 \label{tab:loo}
 \begin{tabular}{@{}llrrrl@{}}
 \toprule
 Corpus & Source & LOO & Shapley $\varphi_g$ & Gap & \\
 \midrule
-MovieLens-1M & $cf$  & $-0.00501$ & $+0.01547$ & $+0.02048$ & \textbf{sign flip} \\
-             & $ct$  & $+0.00083$ & $+0.00008$ & $-0.00075$ & \\
-             & $pop$ & $+0.00098$ & $+0.00664$ & $+0.00565$ & \\
-             & $rec$ & $+0.00044$ & $+0.00071$ & $+0.00027$ & \\
-             & $seq$ & $+0.01673$ & $+0.02964$ & $+0.01290$ & \\
+MovieLens-1M & $cf$  & $-0.00501$ & $+0.01526$ & $+0.02027$ & \textbf{flip, material} \\
+             & $ct$  & $+0.00083$ & $-0.00013$ & $-0.00096$ & flip, negligible \\
+             & $pop$ & $+0.00098$ & $+0.00643$ & $+0.00545$ & \\
+             & $rec$ & $+0.00044$ & $+0.00051$ & $+0.00006$ & \\
+             & $seq$ & $+0.01673$ & $+0.02943$ & $+0.01270$ & \\
 \midrule
-Amazon-VG    & $cf$  & $+0.00845$ & $+0.01952$ & $+0.01107$ & \\
-             & $ct$  & $+0.00002$ & $+0.00213$ & $+0.00211$ & \\
-             & $pop$ & $+0.00308$ & $+0.00183$ & $-0.00125$ & \\
-             & $rec$ & $+0.00023$ & $-0.00021$ & $-0.00043$ & \textbf{sign flip} \\
-             & $seq$ & $+0.00758$ & $+0.01935$ & $+0.01178$ & \\
+Amazon-VG    & $cf$  & $+0.00845$ & $+0.01913$ & $+0.01069$ & \\
+             & $ct$  & $+0.00002$ & $+0.00174$ & $+0.00172$ & \\
+             & $pop$ & $+0.00308$ & $+0.00144$ & $-0.00164$ & \\
+             & $rec$ & $+0.00023$ & $-0.00059$ & $-0.00082$ & flip, negligible \\
+             & $seq$ & $+0.00758$ & $+0.01897$ & $+0.01139$ & \\
 \midrule
-Gowalla      & $cf$  & $+0.00729$ & $+0.00712$ & $-0.00017$ & \\
-             & $ct$  & $+0.00528$ & $+0.00675$ & $+0.00147$ & \\
-             & $pop$ & $-0.00151$ & $+0.00057$ & $+0.00207$ & \textbf{sign flip} \\
-             & $rec$ & $+0.00001$ & $+0.00039$ & $+0.00038$ & \\
-             & $seq$ & $+0.00070$ & $+0.00214$ & $+0.00144$ & \\
+Gowalla      & $cf$  & $+0.00503$ & $+0.00647$ & $+0.00143$ & \\
+             & $ct$  & $+0.00925$ & $+0.00952$ & $+0.00027$ & \\
+             & $pop$ & $-0.00118$ & $+0.00087$ & $+0.00204$ & \textbf{flip, material} \\
+             & $rec$ & $-0.00005$ & $+0.00035$ & $+0.00039$ & flip, negligible \\
+             & $seq$ & $+0.00393$ & $+0.00350$ & $-0.00043$ & \\
 \botrule
 \end{tabular}
 \end{table}
@@ -1136,28 +1137,30 @@ Table~\ref{tab:loo} gives the per-source comparison and
 Figure~\ref{fig:scatter} plots it. The result replicates in kind on all three
 corpora and we are careful to say exactly what replicates.
 
-\paragraph{What is consistent}
-Every corpus contains at least one source on which LOO and Shapley disagree in
-sign --- that is, one method scores the source as contributing and the other as
-actively harmful. Since a sign determines an action (retain or remove), these
-are not differences of degree that careful reading would survive. Ablation and
-Shapley recommend opposite decisions about some component of every hybrid we
-examined.
+\paragraph{What is consistent, and what is not}
+Two of the three corpora contain a \emph{material} sign disagreement --- one
+where the gap exceeds $10^{-3}$, the same threshold we apply to monotonicity.
+On MovieLens it is $cf$: Shapley scores it $+0.01526$, the second most valuable
+source in the system, where ablation scores it $-0.00501$ and marks it as worth
+removing. The gap is $0.0203$, or $39\%$ of $v(\G)$. On Gowalla it is $pop$, at
+$9.9\%$ of $v(\G)$: ablation scores the popularity signal negative where
+Shapley scores it positive.
 
-\paragraph{What is not}
-Which source flips is corpus-specific, and so is how much it matters. On MovieLens two sources flip. The consequential one is $cf$: Shapley scores it
-$+0.01526$, the second most valuable source in the system, where ablation
-scores it $-0.00501$ and marks it as worth removing. The gap is $0.0203$, or
-$39\%$ of $v(\G)$. The other flip, $ct$, has both estimates within $10^{-3}$ of
-zero and is not a meaningful disagreement. The strongest source overall is
-$seq$ at $+0.02943$. On Gowalla it falls on $pop$, at $12\%$ of $v(\G)$. On Amazon-VG it
-falls on $rec$, at $1\%$ of $v(\G)$, where both estimates are within noise of
-zero and the disagreement is real but inconsequential. A single-corpus reading
-of this paper would have concluded that collaborative filtering is the source
-ablation systematically undervalues. Three corpora do not support that: they
-support the weaker and more useful claim that the two rules diverge on
-\emph{some} source in every system, that the divergence tracks redundancy, and
-that neither rule announces in advance where it will occur.
+Amazon-VG has no material disagreement. Its only sign flip, on $rec$, is
+$0.0008$ --- both estimates within noise of zero. We state this plainly because
+an earlier version of this manuscript claimed that \emph{every} system contains
+a sign disagreement, and after correcting a reproducibility defect in the
+empty-coalition baseline (Section~\ref{sec:threats}) that claim no longer
+holds. The honest statement is weaker: material sign disagreement between the
+two rules occurs on some but not all systems, it is not rare, and nothing in
+either rule announces in advance whether a given system will exhibit it.
+
+The corollary is that a single-corpus reading would have been actively
+misleading. On MovieLens alone one would conclude that collaborative filtering
+is the source ablation systematically undervalues. Gowalla's material flip
+falls on $pop$ instead, and Amazon-VG has none. What generalises is the
+\emph{mechanism} --- disagreement tracks redundancy --- not the identity of the
+affected source or the guarantee that one exists.
 
 \paragraph{Mechanism}
 The account is \emph{qualitatively} the one Property~\ref{prop:loo} describes,
@@ -1177,9 +1180,9 @@ a geographic content signal strong enough to rank second overall.
 The per-corpus orderings are
 $seq \succ cf \succ pop \succ rec \succ ct$ (MovieLens),
 $cf \succ seq \succ ct \succ pop \succ rec$ (Amazon-VG), and
-$cf \succ ct \succ seq \succ pop \succ rec$ (Gowalla). Pairwise Kendall $\tau$
-between corpora is $0.20$, $0.40$, and $0.80$, none significant at $n=5$
-sources. We therefore make no cross-corpus consistency claim. An earlier
+$ct \succ cf \succ seq \succ pop \succ rec$ (Gowalla). Pairwise Kendall $\tau$
+between corpora is $0.40$ (MovieLens--Amazon), $0.00$ (MovieLens--Gowalla) and
+$0.60$ (Amazon--Gowalla), none significant at $n=5$ sources. We therefore make no cross-corpus consistency claim. An earlier
 version of this analysis reported $\tau$ between $0.60$ and $0.80$; that
 apparent agreement was an artefact of $ct$ and $rec$ having received no input
 on two corpora, which gave them identical near-zero values that agreed
@@ -1418,9 +1421,9 @@ as reference points under our protocol rather than as their attainable best.
 One subsample per corpus, drawn to fit a memory budget, means cross-corpus
 results may be sample-specific. The three corpora vary in density, catalogue
 size, metadata provenance, and sampling simultaneously, so this is not a
-controlled density comparison; the density ordering is clean --- $0.075\%$,
-$0.469\%$, $2.697\%$, a $36\times$ spread with no adjacent pair closer than
-$5.7\times$ --- but the corpora are not otherwise matched, and we do not
+controlled density comparison; the density ordering is clean --- $0.089\%$,
+$0.469\%$, $2.697\%$, a $30\times$ spread with no adjacent pair closer than
+$5.3\times$ --- but the corpora are not otherwise matched, and we do not
 attribute the differences between them to density alone.
 
 \section{Conclusion}\label{sec:conclusion}
