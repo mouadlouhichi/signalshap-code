@@ -1,12 +1,12 @@
 {
   "gowalla_ts": {
-    "users": 8865,
-    "items": 82134,
-    "interactions": 542970,
-    "density": 0.0007457171325451945,
-    "train": 525240,
-    "valid": 8865,
-    "test": 8865,
+    "users": 5910,
+    "items": 68443,
+    "interactions": 360121,
+    "density": 0.0008902908896018877,
+    "train": 348301,
+    "valid": 5910,
+    "test": 5910,
     "synthetic": false,
     "no_timestamps": false
   },
@@ -34,11 +34,11 @@
   },
   "_meta": {
     "corpora_in_this_run": [
-      "ml_1m"
+      "gowalla_ts"
     ],
     "source": "measured",
-    "measured_at": "2026-08-05T17:33:47.467326+00:00",
-    "corpus_hash": "e73e0add9cd22120",
+    "measured_at": "2026-08-05T22:54:55.328517+00:00",
+    "corpus_hash": "140a5cff30a00759",
     "synthetic": false
   }
 }
