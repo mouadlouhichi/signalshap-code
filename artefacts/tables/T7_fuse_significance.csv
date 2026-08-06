@@ -4,11 +4,11 @@ amazon_video_games,global,+0.00035,5686.5,0.0188,0.0188,+0.014
 amazon_video_games,popularity_reference,+0.04358,15979.0,0.0000,0.0000,+0.250
 amazon_video_games,lightgcn,+0.01483,97793.0,0.0000,0.0000,+0.096
 amazon_video_games,sasrec,+0.03487,44788.5,0.0000,0.0000,+0.199
-gowalla_ts,uniform,+0.00433,10229.0,0.0001,0.0002,+0.051
-gowalla_ts,global,+0.00000,0.0,1.0000,1.0000,+0.000
-gowalla_ts,popularity_reference,+0.01775,3095.0,0.0000,0.0000,+0.158
-gowalla_ts,lightgcn,+0.00967,12084.5,0.0000,0.0000,+0.083
-gowalla_ts,sasrec,+0.01876,2583.5,0.0000,0.0000,+0.162
+gowalla_ts,uniform,+0.00079,11217.5,0.0146,0.0293,+0.018
+gowalla_ts,global,+0.00009,521.5,0.4946,0.4946,+0.007
+gowalla_ts,popularity_reference,+0.01387,5783.0,0.0000,0.0000,+0.142
+gowalla_ts,lightgcn,+0.00412,27313.0,0.0001,0.0002,+0.043
+gowalla_ts,sasrec,+0.01411,6363.0,0.0000,0.0000,+0.137
 ml_1m,uniform,+0.01114,114382.0,0.0000,0.0000,+0.092
 ml_1m,global,-0.00005,5000.5,0.9918,0.9918,-0.003
 ml_1m,popularity_reference,+0.04553,78179.0,0.0000,0.0000,+0.233

@@ -11,14 +11,14 @@
 | amazon_video_games | rescale: identity | —                  | cf           | —                  |
 | amazon_video_games | rescale: log1p    | —                  | cf           | —                  |
 | amazon_video_games | rescale: rank     | —                  | seq          | —                  |
-| gowalla_ts         | $|C_u|$ = 5811    | 0.416              | ct           | 0.02029            |
-| gowalla_ts         | $|C_u|$ = 11623   | 0.453              | ct           | 0.02069            |
-| gowalla_ts         | $|C_u|$ = 23246   | 0.471              | ct           | 0.02141            |
-| gowalla_ts         | $\lambda$ = 0.1   | —                  | ct           | —                  |
-| gowalla_ts         | $\lambda$ = 1.0   | —                  | ct           | —                  |
-| gowalla_ts         | $\lambda$ = 10.0  | —                  | ct           | —                  |
-| gowalla_ts         | rescale: identity | —                  | ct           | —                  |
-| gowalla_ts         | rescale: log1p    | —                  | ct           | —                  |
+| gowalla_ts         | $|C_u|$ = 5811    | 0.417              | cf           | 0.01640            |
+| gowalla_ts         | $|C_u|$ = 11623   | 0.450              | cf           | 0.01695            |
+| gowalla_ts         | $|C_u|$ = 23246   | 0.471              | cf           | 0.01781            |
+| gowalla_ts         | $\lambda$ = 0.1   | —                  | cf           | —                  |
+| gowalla_ts         | $\lambda$ = 1.0   | —                  | cf           | —                  |
+| gowalla_ts         | $\lambda$ = 10.0  | —                  | cf           | —                  |
+| gowalla_ts         | rescale: identity | —                  | cf           | —                  |
+| gowalla_ts         | rescale: log1p    | —                  | cf           | —                  |
 | gowalla_ts         | rescale: rank     | —                  | ct           | —                  |
 | ml_1m              | $|C_u|$ = 300     | 0.566              | seq          | 0.05203            |
 | ml_1m              | $|C_u|$ = 600     | 0.748              | seq          | 0.05150            |

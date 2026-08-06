@@ -6,10 +6,10 @@
 | amazon_video_games | Globally-tuned fusion          |    0.0493 |      0.1372 |   0.0364 |
 | amazon_video_games | Popularity (full-catalog ref.) |    0.0061 |      0.0351 |   0.004  |
 | amazon_video_games | SignalShap-Fuse                |    0.0497 |      0.1372 |   0.0367 |
-| gowalla_ts         | Uniform fusion                 |    0.0166 |      0.0538 |   0.0114 |
-| gowalla_ts         | Globally-tuned fusion          |    0.0209 |      0.0582 |   0.0151 |
-| gowalla_ts         | Popularity (full-catalog ref.) |    0.0031 |      0.0096 |   0.002  |
-| gowalla_ts         | SignalShap-Fuse                |    0.0209 |      0.0582 |   0.0151 |
+| gowalla_ts         | Uniform fusion                 |    0.0165 |      0.0525 |   0.0113 |
+| gowalla_ts         | Globally-tuned fusion          |    0.0172 |      0.0537 |   0.0119 |
+| gowalla_ts         | Popularity (full-catalog ref.) |    0.0034 |      0.0124 |   0.0021 |
+| gowalla_ts         | SignalShap-Fuse                |    0.0173 |      0.0536 |   0.0119 |
 | ml_1m              | Uniform fusion                 |    0.0527 |      0.179  |   0.0365 |
 | ml_1m              | Globally-tuned fusion          |    0.0639 |      0.2103 |   0.044  |
 | ml_1m              | Popularity (full-catalog ref.) |    0.0183 |      0.0729 |   0.0119 |
