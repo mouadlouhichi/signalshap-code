@@ -161,3 +161,59 @@ def test_display_names_cover_the_study_corpora():
     for corpus in ("ml_1m", "gowalla_ts", "amazon_video_games"):
         assert corpus in DISPLAY, f"{corpus} would render as a raw identifier"
         assert "_" not in DISPLAY[corpus]
+
+
+# --------------------------------------------------------------------------- #
+# Language and framing constraints the reviewers required.
+# --------------------------------------------------------------------------- #
+
+REVIEWER_BANNED = {
+    "build-or-retire": "contradicts the paper's own retirement result",
+    "pre-registered": "no external registration exists; use 'frozen'",
+    "misattribution": "assumes Shapley is correct; no ground truth exists",
+    "true loss": "one observed realisation, not a population quantity",
+    "true cost": "one observed realisation, not a population quantity",
+    "Shapley shares": "values are not normalised shares",
+    "what practitioners actually want": "unsupported claim about practitioners",
+    "only when components contribute independently": "LOO is valid under dependence",
+}
+
+
+def test_reviewer_banned_phrases_are_absent():
+    from pathlib import Path
+
+    tex = (Path(__file__).resolve().parents[1] / "paper" / "sn-article.tex").read_text()
+    flat = " ".join(tex.lower().split())
+    for phrase, why in REVIEWER_BANNED.items():
+        assert phrase.lower() not in flat, f"'{phrase}' present: {why}"
+
+
+def test_required_structural_sections_exist():
+    """Reviewer 1 asked for standalone Background and Discussion sections."""
+    from pathlib import Path
+
+    tex = (Path(__file__).resolve().parents[1] / "paper" / "sn-article.tex").read_text()
+    for label in ("sec:background", "sec:discussion", "sec:hyperparams",
+                  "sec:algorithm", "app:fusion"):
+        assert f"\\label{{{label}}}" in tex, f"missing section {label}"
+
+
+def test_appendix_is_labelled():
+    """Reviewer 1 found Appendix A rendered with no heading at all."""
+    from pathlib import Path
+
+    tex = (Path(__file__).resolve().parents[1] / "paper" / "sn-article.tex").read_text()
+    assert "\\appendix" in tex
+    i = tex.index("\\appendix")
+    assert "\\section{" in tex[i:i + 400], "no \\section follows \\appendix"
+
+
+def test_interaction_index_named_consistently():
+    """Must not cite Shapley-Taylor for a Grabisch-Roubens computation."""
+    from pathlib import Path
+
+    tex = (Path(__file__).resolve().parents[1] / "paper" / "sn-article.tex").read_text()
+    i = tex.index("\\label{eq:taylor}")
+    window = tex[max(0, i - 2500):i]
+    assert "grabisch1999interaction" in window, \
+        "the interaction equation must cite Grabisch-Roubens"
