@@ -256,9 +256,30 @@ class SignalShapGame:
     # -- characteristic function ------------------------------------------- #
 
     def v_per_user(self, coalition: frozenset) -> dict[int, float]:
-        """Per-user v, needed for Property 3 and for paired statistics."""
-        if not coalition:
-            return {u: 0.0 for u in self.eval_users}
+        """Per-user v, needed for Property 3 and for paired statistics.
+
+        NOTE ON BASELINE SENSITIVITY. This implements Eq. (2) faithfully:
+        v_u(S) = NDCG(pi_u(S); y_u) - b_u for non-empty S, and v_u(empty) = 0
+        because ranking by the baseline permutation gives exactly b_u.
+
+        The manuscript previously claimed phi is invariant to b_u "since b_u
+        cancels in every marginal difference". That is FALSE, and two reviewers
+        derived it independently from the tables. b_u cancels in
+        v(S u {g}) - v(S) only when S is non-empty. For S = empty the marginal
+        is v({g}) - 0 = mean_u[NDCG_u({g}) - b_u], which retains the baseline.
+        Since the empty set carries Shapley weight w(0) = 1/n, changing the
+        baseline shifts EVERY phi_g by exactly -delta/n.
+
+        Verified numerically: re-running the identical game with v0_seed 999
+        instead of 42 changed v0 by -0.000796 and shifted all five MovieLens
+        phi by +0.00015926 = 0.000796/5, agreeing to eight decimals, and moved
+        phi_ct across zero.
+
+        The baseline is therefore a declared modelling choice that sets the
+        game's reference point, not a normalisation that washes out. Efficiency
+        is unaffected (sum phi = v(G), which shifts with it). We disclose the
+        sensitivity and report it rather than repeating the invariance claim.
+        """
         w = self._fit_weights(coalition)
         out = {}
         for u in self.eval_users:

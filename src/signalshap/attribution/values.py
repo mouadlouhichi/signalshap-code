@@ -9,7 +9,7 @@ the comparators needed to answer that:
     permutations; satisfies symmetry and dummy, but not efficiency.
   * **Weighted semivalues** -- the family containing both, parameterised by a
     distribution over coalition sizes.
-  * **Shapley--Taylor interaction index** (order 2) -- pairwise synergy and
+  * **Shapley interaction index** (Grabisch-Roubens, order 2) -- pairwise
     redundancy, which matters here because redundancy is the paper's whole
     motivation and main effects alone cannot express it.
 
@@ -72,7 +72,16 @@ def semivalue(v: dict, weights: dict[int, float] | None = None,
 
 def shapley_taylor_interaction(v: dict, sources: tuple[str, ...] = SOURCES,
                                order: int = 2) -> dict[str, float]:
-    """Shapley--Taylor interaction index of the given order.
+    """Grabisch-Roubens Shapley INTERACTION index, order 2.
+
+    NOT the Shapley-Taylor index, despite the legacy function name. A reviewer
+    caught the manuscript citing Shapley-Taylor while this coefficient --
+    |S|!(n-|S|-2)!/(n-1)! -- is Grabisch-Roubens. At n=5 the two weightings are
+    0.25, 1/12, 1/12, 0.25 here versus 0.4, 0.1, 1/15, 0.1 for Shapley-Taylor,
+    differing by up to 2.5x. Both are legitimate interaction indices; only the
+    label was wrong. Grabisch-Roubens does not satisfy interaction efficiency,
+    so pairwise terms do not sum with singletons to v(G); we use them only to
+    rank redundancy. The function name is kept for artefact compatibility.
 
     For order 2 the pairwise term quantifies whether two sources are
     complementary (positive) or redundant (negative) beyond their main

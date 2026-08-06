@@ -396,10 +396,13 @@ construction, coalition head, and baseline explicitly and treat them as
 declared modelling choices rather than as the canonical formulation.
 Alternative cooperative values --- Banzhaf and other
 semivalues~\citep{karczmarz2022banzhaf} --- and interaction-aware extensions
-such as the Shapley--Taylor index~\citep{sundararajan2020shapleytaylor} are
-natural comparators, and because redundancy between sources is central to our
-setting we evaluate both rather than deferring them
-(Section~\ref{sec:alternatives}).
+such as the Shapley interaction index~\citep{grabisch1999interaction} and the
+Shapley--Taylor index~\citep{sundararajan2020shapleytaylor} are natural
+comparators. Because redundancy between sources is central to our setting we
+evaluate Banzhaf, a uniform semivalue, and the Grabisch--Roubens interaction
+index rather than deferring them (Section~\ref{sec:alternatives}); we do not
+compute Shapley--Taylor, and Section~\ref{sec:alternatives} explains why the
+distinction matters.
 Replication sensitivity of Shapley allocations~\citep{han2022replication} is
 directly relevant to our duplicate-injection design and is discussed in
 Section~\ref{sec:recovery}.
@@ -491,10 +494,35 @@ are never used to fit $w^{(S)}$.
 
 The frozen permutation $\pi_u^{0}$ is drawn once under a fixed seed and reused
 for every coalition, user, and experiment; the empty-coalition ranking is
-defined to be that same permutation. Note that $\varphi_g$ is invariant to the
-baseline altogether, since $b_u$ cancels in every marginal difference
-$v_u(S\cup\{g\}) - v_u(S)$: it exists only so that efficiency reads
-$\sum_g \varphi_g = v(\G)$ rather than $v(\G) - v(\varnothing)$.
+defined to be that same permutation.
+
+\paragraph{The baseline is a modelling choice, not a normalisation}
+An earlier version of this manuscript asserted that $\varphi_g$ is invariant to
+$b_u$ because it cancels in every marginal difference. That is false, and we
+correct it here. The baseline cancels in $v_u(S\cup\{g\}) - v_u(S)$ only when
+$S \neq \varnothing$. For $S = \varnothing$ the marginal is
+$v(\{g\}) - 0 = \operatorname{mean}_u[\NDCG(\pi_u(\{g\}); y_u) - b_u]$, which
+retains it. Because the empty set carries Shapley weight $w(0) = 1/n$, changing
+the baseline shifts \emph{every} $\varphi_g$ by exactly $-\Delta/n$, where
+$\Delta$ is the change in the mean baseline.
+
+We verified this rather than reasoning about it: re-running the identical game
+with a different permutation seed changed the mean baseline by $-0.000796$ and
+shifted all five MovieLens values by $+0.00015926 = 0.000796/5$, agreeing to
+eight decimal places, and moved $\varphi_{ct}$ across zero. The same mechanism
+explains the constant offset between the attribution values reported in
+Section~\ref{sec:results} and those recomputed inside the retirement
+experiment of Section~\ref{sec:estimands}, whose games draw separate
+baselines.
+
+Three consequences. First, $b_u$ is a declared component of the game and must
+be reported with it, which we now do. Second, efficiency is unaffected:
+$\sum_g \varphi_g = v(\G)$ holds because $v(\G)$ shifts by the same amount.
+Third, and most importantly for how this paper should be read, source
+\emph{rankings} and the sign-disagreement analysis of
+Section~\ref{sec:results} are unchanged by a uniform shift only where the
+values are well separated; $\varphi_{ct}$ on MovieLens sits within $10^{-4}$ of
+zero and its sign is therefore not a stable finding. We rely on it nowhere.
 
 \paragraph{The regularisation strength is frozen}
 $\lambda$ is chosen once on a pilot and never tuned per coalition.
@@ -1061,11 +1089,19 @@ sum to $v(\G)$ and only the induced ordering is comparable.
 
 \paragraph{Pairwise interactions}
 Main-effect values cannot by themselves distinguish a source of low value from
-a source whose value is absorbed by a redundant partner. We therefore compute
-the order-2 Shapley--Taylor interaction
-index~\citep{sundararajan2020shapleytaylor}. With $n$ players and order
-$k = 2$, singleton terms are the discrete derivative at the empty coalition,
-$\mathcal{I}_g = v(\{g\}) - v(\varnothing)$, and each pair $\{a,b\}$ receives
+a source whose value is absorbed by a redundant partner. We therefore compute a
+pairwise interaction index: the classical \emph{Shapley interaction index} of
+Grabisch and Roubens~\citep{grabisch1999interaction}. We flag a correction
+here. An earlier version of this manuscript reported these values as the
+order-2 Shapley--Taylor index~\citep{sundararajan2020shapleytaylor} while
+computing the Grabisch--Roubens coefficient. The two are not
+interchangeable --- at $n=5$ their coalition weights differ by up to a factor of
+$2.5$ --- so the label was wrong even though the computation was a valid
+interaction index. We correct the label rather than the numbers, and note that
+Grabisch--Roubens does not satisfy Shapley--Taylor's interaction-efficiency
+axiom: the pairwise terms do not sum with the singletons to $v(\G)$. That is
+acceptable here because we use them only to \emph{rank} redundancy, which is
+all the argument requires. Each pair $\{a,b\}$ receives
 %
 \begin{equation}
 \mathcal{I}_{ab} \;=\;
@@ -1081,10 +1117,11 @@ contributions --- the signature of redundancy --- and a positive value
 indicates complementarity.
 
 \begin{table}[t]
-\caption{Order-2 Shapley--Taylor interaction indices on MovieLens-1M
-(seed 42). Negative entries indicate redundancy. The two most negative pairs
-are exactly the two overlaps declared in advance in
-Section~\ref{sec:setup}}
+\caption{Pairwise Shapley interaction indices (Grabisch--Roubens) on
+MovieLens-1M, seed 42. Negative entries indicate redundancy. One of the two
+most negative pairs, $cf$--$pop$, is a declared expected overlap; the other,
+$cf$--$seq$, is not, and the second declared overlap $rec$--$ct$ is slightly
+positive}
 \label{tab:taylor}
 \begin{tabular}{@{}lrlr@{}}
 \toprule
@@ -1103,9 +1140,11 @@ Table~\ref{tab:taylor} localises the redundancy behind the MovieLens sign flip.
 The two most negative pairs are $cf|seq$ ($-0.056$) and $cf|pop$ ($-0.026$):
 collaborative filtering overlaps most with the sequential and popularity
 sources, which is why removing it from the grand coalition costs so little and
-why leave-one-out scores it below zero. We note that $pop|cf$ was declared as
-an expected overlap in advance (Section~\ref{sec:setup}), so this is
-recovery of known structure rather than discovery. The interaction values are
+why leave-one-out scores it below zero. Only one of these, $cf|pop$, was
+declared in advance (Section~\ref{sec:setup}); $cf|seq$ was not, and the other
+declared overlap $rec|ct$ comes out slightly \emph{positive} at $+0.0002$. We
+therefore claim partial rather than complete recovery of the pre-declared
+structure, and note that an earlier version of this paper overstated it. The interaction values are
 reported for MovieLens only; extending them to the other corpora, and
 attaching uncertainty, is straightforward but not yet done.
 
@@ -1321,20 +1360,24 @@ fusion --- rebuilt candidates from the survivors, refitted, and measured the tru
 end-to-end NDCG@10 loss.
 
 \begin{table}[t]
-\caption{True cost of retiring each source on MovieLens-1M, measured
-end-to-end, against what each attribution method predicts. Negative loss means
-removal \emph{improved} the metric. Amazon-VG reproduces the pattern
+\caption{Observed cost of retiring each source on MovieLens-1M, measured
+end-to-end under the reported protocol. Negative loss means removal
+\emph{improved} the metric. The Shapley column is recomputed inside this
+experiment and is offset from Table~\ref{tab:loo} by a constant $+0.00038$ on
+every source, because the retirement game draws its own baseline permutation;
+see the note on baseline sensitivity in Section~\ref{sec:game}. Rankings, which
+are what the comparison uses, are unaffected. Amazon-VG reproduces the pattern
 ($\tau = 1.00$ for LOO, $0.60$ for Shapley); its table is in the artefact}
 \label{tab:retirement}
 \begin{tabular}{@{}lrrrr@{}}
 \toprule
-Source & True loss & Recall after & Shapley & LOO \\
+Source & Observed loss & Recall after & Shapley & LOO \\
 \midrule
-$cf$  & $-0.00561$ & $0.690$ & $+0.01547$ & $-0.00501$ \\
-$rec$ & $-0.00082$ & $0.782$ & $+0.00071$ & $+0.00044$ \\
-$ct$  & $+0.00002$ & $0.785$ & $+0.00008$ & $+0.00083$ \\
-$pop$ & $+0.00247$ & $0.723$ & $+0.00664$ & $+0.00098$ \\
-$seq$ & $+0.01569$ & $0.659$ & $+0.02964$ & $+0.01673$ \\
+$cf$   & $-0.00531$ & $0.690$ & $+0.01564$ & $-0.00501$ \\
+$rec$  & $-0.00062$ & $0.782$ & $+0.00088$ & $+0.00044$ \\
+$ct$   & $-0.00006$ & $0.785$ & $+0.00024$ & $+0.00083$ \\
+$pop$  & $+0.00262$ & $0.723$ & $+0.00680$ & $+0.00098$ \\
+$seq$  & $+0.01636$ & $0.659$ & $+0.02981$ & $+0.01673$ \\
 \midrule
 \multicolumn{2}{@{}l}{Rank agreement with true loss}
       & & $\tau = +0.20$ & $\tau = +1.00$ \\
@@ -1343,9 +1386,12 @@ $seq$ & $+0.01569$ & $0.659$ & $+0.02964$ & $+0.01673$ \\
 \end{table}
 
 \textbf{LOO predicts retirement cost better than Shapley
-(Table~\ref{tab:retirement}).} Its ranking matches the true loss exactly
-($\tau = 1.00$ against $0.20$), and it correctly identifies $cf$ as the
-cheapest source to retire, where Shapley selects $ct$. We report this plainly
+(Table~\ref{tab:retirement}).} Its ranking matches the observed loss exactly
+($\tau = 1.00$ against $0.20$; exact two-sided permutation $p = 0.017$ and
+$p = 0.82$ respectively at $n = 5$ sources), and it identifies $cf$ as the
+cheapest source to retire, where Shapley selects $ct$. We write
+\emph{observed} rather than \emph{true} loss throughout: this is one measured
+realisation under the reported protocol, not a population quantity. We report this plainly
 because it bounds the paper's practical claim.
 
 The finding replicates. On Amazon-VG the same experiment gives
@@ -1359,7 +1405,7 @@ to switch off should use leave-one-out ablation, not SignalShap.}
 The result is also consistent with the theory rather than a contradiction of
 it. Removing $cf$ \emph{improves} end-to-end NDCG@10 by $0.00561$ while
 dropping candidate recall from $0.748$ to $0.690$: the collaborative signal is
-substantially redundant with $seq$ and $pop$ --- the Shapley--Taylor interaction
+substantially redundant with $seq$ and $pop$ --- the pairwise interaction
 indices are $-0.056$ for $cf|seq$ and $-0.026$ for $cf|pop$, the two most
 negative pairs --- so in the grand coalition its scores add noise the others
 already cover. LOO measures exactly that grand-coalition quantity, which is
