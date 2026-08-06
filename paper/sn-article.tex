@@ -35,12 +35,19 @@
 \newif\iftikzfigure
 \tikzfiguretrue
 
-\definecolor{snSource}{HTML}{2E5EAA}
-\definecolor{snCand}{HTML}{D96C3F}
-\definecolor{snGame}{HTML}{57A773}
-\definecolor{snShap}{HTML}{9B5DE5}
-\definecolor{snFuse}{HTML}{C8963E}
-\definecolor{snGrey}{HTML}{4A4A4A}
+%% Monochrome palette. The diagram is printed black-only, so the distinction
+%% between pipeline stages is carried by FILL LEVEL and LINE STYLE rather than
+%% by hue. This is the convention in the game-theoretic XAI literature, it
+%% survives greyscale printing and photocopying, and it is colourblind-safe by
+%% construction -- a point the reviewer raised about the other figures.
+%% Fill levels are kept >=4 percentage points apart so they remain separable
+%% after halftoning.
+\definecolor{snSource}{gray}{0.00}
+\definecolor{snCand}{gray}{0.00}
+\definecolor{snGame}{gray}{0.00}
+\definecolor{snShap}{gray}{0.00}
+\definecolor{snFuse}{gray}{0.00}
+\definecolor{snGrey}{gray}{0.00}
 
 %% Springer requires figure lettering at 8-12pt. Note that sn-jnl.cls
 %% redefines the size macros: \tiny is 5pt and \footnotesize is 7pt, both of
@@ -50,17 +57,26 @@
 \newcommand{\snFigSub}{\fontsize{8}{9.5}\selectfont}
 
 \tikzset{
+  %% snbox takes a grey fill level as its argument: stages that produce the
+  %% paper's output (the game, the Shapley values) are drawn heavier than the
+  %% stages that merely prepare data, so the eye lands on them first.
   snbox/.style={
-    rounded corners=2pt, draw=#1, line width=0.7pt, fill=#1!7,
+    rounded corners=2pt, draw=black, line width=0.7pt, fill=black!#1,
     inner sep=4pt, align=center, font=\snFigMain, text width=32mm},
+  %% The estimand the paper is about: same geometry, heavier rule.
+  snboxmain/.style={
+    rounded corners=2pt, draw=black, line width=1.3pt, fill=black!#1,
+    inner sep=4pt, align=center, font=\snFigMain, text width=32mm},
+  %% Data folds: square corners, so fold vs pipeline stage is a SHAPE
+  %% distinction and not only a shading one.
   snfold/.style={
-    rounded corners=1pt, draw=snGrey!70, line width=0.5pt, fill=snGrey!5,
+    sharp corners, draw=black, line width=0.5pt, fill=white,
     inner sep=3pt, align=center, font=\snFigSub, text width=26mm},
-  snflow/.style={-{Stealth[length=4.5pt,width=3.5pt]}, draw=snGrey,
-    line width=0.7pt},
-  sndata/.style={-{Stealth[length=4.5pt,width=3.5pt]}, draw=snGrey!65,
-    line width=0.6pt, dashed, dash pattern=on 2.2pt off 1.6pt},
-  snlbl/.style={font=\snFigSub, inner sep=1.6pt, text=snGrey},
+  snflow/.style={-{Stealth[length=4.5pt,width=3.5pt]}, draw=black,
+    line width=0.8pt},
+  sndata/.style={-{Stealth[length=4.5pt,width=3.5pt]}, draw=black,
+    line width=0.5pt, dashed, dash pattern=on 2.2pt off 1.6pt},
+  snlbl/.style={font=\snFigSub, inner sep=1.6pt, text=black},
 }
 \graphicspath{{figures/}}
 
@@ -226,31 +242,31 @@ shows it does not.
 %% ------------------------------------------------------------------
 
 %% --- pipeline spine (centre) --------------------------------------
-\node[snbox=snSource] (src)
+\node[snbox=4] (src)
   {\textbf{Five sources}\\[1pt]
    $cf$\quad $ct$\quad $pop$\quad $rec$\quad $seq$\\[1pt]
    {\snFigSub trained once, cached}};
 
-\node[snbox=snCand, below=of src] (cand)
+\node[snbox=9, below=of src] (cand)
   {\textbf{Candidate set} $\Cu$\\[1pt]
    $\bigcup_g\ \text{top-}N_g^{(g)}(u)$\\[1pt]
    {\snFigSub identical for every coalition}};
 
-\node[snbox=snGame, below=of cand] (game)
+\node[snboxmain=16, below=of cand] (game)
   {\textbf{All $2^5=32$ coalitions}\\[1pt]
    head $w^{(S)}$, then
    $v(S)=\mathrm{mean}_u\, v_u(S)$};
 
-\node[snbox=snShap, below=of game] (shap)
+\node[snboxmain=16, below=of game] (shap)
   {\textbf{Exact Shapley}\\[1pt]
    $\varphi_g$ \ and \ $\varphi_g(u)$\\[1pt]
    {\snFigSub closed form, no sampling error}};
 
-\node[snbox=snShap, below=of shap] (diag)
+\node[snbox=9, below=of shap] (diag)
   {\textbf{Diagnosis}\\[1pt]
    {\snFigSub source credit, redundancy, segments}};
 
-\node[snbox=snFuse, below=of diag] (fuse)
+\node[snbox=0, below=of diag] (fuse)
   {\textbf{SignalShap-Fuse}\\[1pt]
    {\snFigSub segment weights, frozen before test}};
 
@@ -273,8 +289,11 @@ shows it does not.
   node[snlbl,left,pos=0.5,align=center]{fusion\\weights} (fuse.west);
 
 %% --- the separation that prevents circularity ---------------------
-\draw[{Stealth[length=4.5pt,width=3.5pt]}-, draw=snShap!75, line width=0.7pt,
-      dotted] (fuse.north) -- node[snlbl,right,text=snShap!85]{no path} (diag.south);
+%% Dotted, and the ONLY dotted edge in the figure, so the negative claim it
+%% encodes -- that Shapley output never reaches the fusion weights -- reads
+%% without colour.
+\draw[{Stealth[length=4.5pt,width=3.5pt]}-, draw=black, line width=0.7pt,
+      dotted] (fuse.north) -- node[snlbl,right]{no path} (diag.south);
 
 \node[snlbl, right=3mm of diag.east, anchor=west, align=left, text width=26mm]
   {reported only;\\not fed forward};
@@ -1524,9 +1543,12 @@ deliver. Figure~\ref{fig:segments} plots the per-segment profiles.
 \begin{figure}[t]
 \centering
 \includegraphics[width=\textwidth]{Fig5.png}
-\caption{Segment-level Shapley profiles. Near-coincident polygons indicate
-little heterogeneity to exploit, which is what we observe on the sparse
-corpora.}\label{fig:segments}
+\caption{Segment-level Shapley values, with segment sizes in the legend.
+Overlapping markers within a source indicate little heterogeneity to exploit.
+We use a shared linear axis rather than the radar chart of an earlier version:
+radar encodes magnitude as radius and therefore area, which exaggerates
+differences quadratically and has no natural zero, and our values can be
+negative.}\label{fig:segments}
 \end{figure}
 
 \paragraph{Fusion weights never see test outcomes}

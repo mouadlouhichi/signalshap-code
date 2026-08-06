@@ -113,3 +113,51 @@ def test_efficiency_is_structural_not_approximate():
         assert e["abs_error"] < 1e-15, (
             f"{name}: error {e['abs_error']:.1e} is too large to be float noise"
         )
+
+
+# --------------------------------------------------------------------------- #
+# Artwork must be black-only (Springer greyscale reproduction, colourblind
+# safety, and the game-theoretic XAI convention).
+# --------------------------------------------------------------------------- #
+
+
+def test_all_manuscript_figures_are_monochrome():
+    """No figure may rely on hue.
+
+    Source and segment identity is carried by grey level plus marker shape or
+    hatch, so every figure survives greyscale printing. A coloured pixel here
+    means an encoding regressed to hue.
+    """
+    from pathlib import Path
+
+    np = pytest.importorskip("numpy")
+    Image = pytest.importorskip("PIL.Image", reason="Pillow not installed")
+
+    figs = sorted((Path(__file__).resolve().parents[1] / "paper" / "figures")
+                  .glob("Fig*.png"))
+    assert figs, "no manuscript figures found"
+    for f in figs:
+        im = np.asarray(Image.open(f).convert("RGB")).astype(int)
+        coloured = ((im.max(axis=2) - im.min(axis=2)) > 12).mean()
+        assert coloured < 1e-4, f"{f.name} is {coloured:.2%} coloured"
+
+
+def test_palette_is_greyscale_and_separable():
+    from signalshap.plots.assets import PALETTE, SOURCE_HATCH, SOURCE_MARK
+
+    levels = sorted(float(v) for v in PALETTE.values())
+    assert all(0.0 <= v <= 1.0 for v in levels)
+    gaps = [b - a for a, b in zip(levels, levels[1:])]
+    assert min(gaps) >= 0.15, f"grey levels too close to survive halftoning: {gaps}"
+    # Shape and hatch must also disambiguate, since grey alone is weak.
+    assert len(set(SOURCE_MARK.values())) == len(SOURCE_MARK)
+    assert len(set(SOURCE_HATCH.values())) == len(SOURCE_HATCH)
+
+
+def test_display_names_cover_the_study_corpora():
+    """Raw loader ids leaked into figure legends and table rows once."""
+    from signalshap.plots.assets import DISPLAY
+
+    for corpus in ("ml_1m", "gowalla_ts", "amazon_video_games"):
+        assert corpus in DISPLAY, f"{corpus} would render as a raw identifier"
+        assert "_" not in DISPLAY[corpus]

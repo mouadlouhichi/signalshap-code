@@ -41,15 +41,36 @@ plt.rcParams.update({
     "axes.spines.right": False, "figure.autolayout": True,
 })
 
-PALETTE = {"cf": "#2E5EAA", "ct": "#D96C3F", "pop": "#57A773",
-           "rec": "#9B5DE5", "seq": "#E4B363"}
+# Monochrome throughout. Every figure in this paper is printed black-only, so
+# a source's identity must be carried by GREY LEVEL plus MARKER SHAPE, never by
+# hue alone. This is the convention in the game-theoretic XAI literature and it
+# has two practical consequences the reviewer asked for: the figures survive
+# greyscale reproduction, and they are colourblind-safe by construction.
+# Grey levels are spaced >=0.16 apart so adjacent bars stay distinguishable
+# after halftoning; the shapes disambiguate the rest.
+PALETTE = {"cf": "0.15", "ct": "0.35", "pop": "0.55",
+           "rec": "0.72", "seq": "0.88"}
+
+#: Per-source marker, so a source is identifiable in a scatter without colour.
+SOURCE_MARK = {"cf": "o", "ct": "s", "pop": "^", "rec": "D", "seq": "v"}
+
+#: Per-source hatch, so a source is identifiable in a bar chart without colour.
+SOURCE_HATCH = {"cf": "", "ct": "///", "pop": "...", "rec": "xxx", "seq": "\\\\"}
 
 #: Publication names. Internal identifiers (ml_1m, amazon_book_lgcn) are for
 #: filenames and JSON keys; artwork and tables use the corpus names a reader
 #: recognises.
-DISPLAY = {"ml_1m": "MovieLens-1M", "yelp2018": "Yelp2018",
-           "gowalla": "Gowalla", "amazon_book_lgcn": "Amazon-Book",
-           "lastfm_2k": "LastFM-2K", "amazon_book": "Amazon-Book"}
+DISPLAY = {"ml_1m": "MovieLens-1M",
+           # The timestamped corpora the study actually uses. These were
+           # missing, so raw loader identifiers ("gowalla_ts",
+           # "amazon_video_games") leaked into figure legends and table rows
+           # while the withdrawn LightGCN splits kept tidy names.
+           "gowalla_ts": "Gowalla", "amazon_video_games": "Amazon-VG",
+           # Withdrawn pilot corpora, retained so archived artefacts still
+           # render with readable names.
+           "yelp2018": "Yelp2018", "gowalla": "Gowalla (LightGCN)",
+           "amazon_book_lgcn": "Amazon-Book", "lastfm_2k": "LastFM-2K",
+           "amazon_book": "Amazon-Book"}
 
 
 def disp(name: str) -> str:
@@ -113,24 +134,32 @@ def fig1_workflow() -> Path:
     _dirs()
     fig, ax = plt.subplots(figsize=(11, 3.1))
     ax.axis("off")
+    # Monochrome, matching the TikZ version in the manuscript. Stage identity is
+    # carried by FILL LEVEL and LINE WEIGHT rather than hue, so the figure
+    # survives greyscale printing and is colourblind-safe by construction. The
+    # two stages that produce the paper's actual output -- the coalition game
+    # and the Shapley values -- are drawn with a heavier rule so the eye lands
+    # on them first. Fill levels stay >=5 percentage points apart to remain
+    # separable after halftoning.
     steps = [
-        ("5 signal\nsources", "#DCE6F5"),
-        ("union top-$N_g$\ncandidates $C_u$\n(coalition-independent)", "#FCE5D8"),
-        ("$2^5=32$\ncoalitions\n$v(S)$", "#DDF0E4"),
-        ("exact Shapley\n$\\varphi_g$", "#E9DCF7"),
-        ("segments +\nSignalShap-Fuse", "#F8EFD4"),
+        ("5 signal\nsources", 0.96, 1.1),
+        ("union top-$N_g$\ncandidates $C_u$\n(coalition-independent)", 0.91, 1.1),
+        ("$2^5=32$\ncoalitions\n$v(S)$", 0.84, 2.0),
+        ("exact Shapley\n$\\varphi_g$", 0.84, 2.0),
+        ("segments +\nSignalShap-Fuse", 1.00, 1.1),
     ]
-    for i, (txt, col) in enumerate(steps):
+    for i, (txt, shade, lw) in enumerate(steps):
         x = i * 2.15
-        ax.add_patch(plt.Rectangle((x, 0.3), 1.75, 1.1, facecolor=col,
-                                   edgecolor="#333", linewidth=1.1))
-        ax.text(x + 0.875, 0.85, txt, ha="center", va="center", fontsize=SN_FONT_MIN)
+        ax.add_patch(plt.Rectangle((x, 0.3), 1.75, 1.1, facecolor=str(shade),
+                                   edgecolor="black", linewidth=lw))
+        ax.text(x + 0.875, 0.85, txt, ha="center", va="center",
+                fontsize=SN_FONT_MIN, color="black")
         if i < len(steps) - 1:
             ax.annotate("", xy=(x + 2.1, 0.85), xytext=(x + 1.78, 0.85),
-                        arrowprops=dict(arrowstyle="->", lw=1.4, color="#333"))
+                        arrowprops=dict(arrowstyle="->", lw=1.4, color="black"))
     ax.text(5.4, 0.02, "candidate set is identical for every coalition — "
             "differences in $v(S)$ reflect fusion, not retrieval",
-            ha="center", fontsize=SN_FONT_MIN, style="italic", color="#555")
+            ha="center", fontsize=SN_FONT_MIN, style="italic", color="black")
     ax.set_xlim(-0.2, 11); ax.set_ylim(-0.1, 1.6)
     p = FIG / "F1_workflow.png"
     fig.savefig(p, bbox_inches="tight"); plt.close(fig)
@@ -149,9 +178,12 @@ def fig2_shapley_shares(results: dict) -> Path:
         ci = r.get("multi_seed", {}).get("ci", {})
         vals = [phi[g] for g in SOURCES]
         err = [ci.get(g, {}).get("std", 0.0) for g in SOURCES]
-        ax.bar(SOURCES, vals, yerr=err, capsize=3,
-               color=[PALETTE[g] for g in SOURCES], edgecolor="#333", linewidth=0.6)
-        ax.axhline(0, color="#333", lw=0.8)
+        bars = ax.bar(SOURCES, vals, yerr=err, capsize=3,
+                      color=[PALETTE[g] for g in SOURCES], edgecolor="black",
+                      linewidth=0.8, error_kw={"ecolor": "black"})
+        for bar, g in zip(bars, SOURCES):
+            bar.set_hatch(SOURCE_HATCH[g])
+        ax.axhline(0, color="black", lw=0.8)
         ax.set_title(f"{disp(name)}\n$v(\\mathcal{{G}})$="
                      f"{r['e1_source_share']['v_grand']:.4f}", fontsize=9)
         ax.set_xlabel("source")
@@ -165,24 +197,38 @@ def fig3_loo_vs_shapley(results: dict) -> Path:
     """F3: LOO vs Shapley scatter -- the empirical content of Property 2."""
     _dirs()
     fig, ax = plt.subplots(figsize=(5.2, 4.6))
-    marks = {"ml_1m": "o", "lastfm_2k": "s", "amazon_book": "^"}
+    # Source -> marker shape, corpus -> marker size. Neither encoding uses
+    # colour, so all 15 (corpus, source) points remain separable in greyscale.
+    # Largest marker for the corpus that carries the main claims, so the eye
+    # lands on MovieLens first. Sorting by name would put amazon_video_games
+    # first and invert the emphasis.
+    _order = [n for n in ("ml_1m", "amazon_video_games", "gowalla_ts")
+              if n in results] + [n for n in sorted(results)
+                                  if n not in ("ml_1m", "amazon_video_games",
+                                               "gowalla_ts")]
+    sizes = {n: s for n, s in zip(_order, (115, 62, 30, 30))}
     for name, r in results.items():
         e2 = r["e2_loo_vs_shapley"]
         for g in SOURCES:
-            ax.scatter(e2["loo"][g], e2["shapley"][g], s=85,
-                       marker=marks.get(name, "o"), color=PALETTE[g],
-                       edgecolor="#222", linewidth=0.7, zorder=3)
+            ax.scatter(e2["loo"][g], e2["shapley"][g], s=sizes.get(name, 70),
+                       marker=SOURCE_MARK[g], color=PALETTE[g],
+                       edgecolor="black", linewidth=0.7, zorder=3)
     lims = np.array(ax.get_xlim() + ax.get_ylim())
     lo, hi = lims.min(), lims.max()
-    ax.plot([lo, hi], [lo, hi], "--", color="#888", lw=1, zorder=1,
+    ax.plot([lo, hi], [lo, hi], "--", color="black", lw=1, zorder=1,
             label="LOO = Shapley")
+    ax.axhline(0, color="black", lw=0.5, zorder=1)
+    ax.axvline(0, color="black", lw=0.5, zorder=1)
     ax.set_xlabel("LOO attribution"); ax.set_ylabel("Shapley value $\\varphi_g$")
-    ax.set_title("F3 — LOO vs Shapley\n(points off the diagonal = LOO misattribution)",
+    ax.set_title("F3 — LOO vs Shapley\n(points off the diagonal: the two rules disagree)",
                  fontsize=10)
-    handles = [plt.Line2D([], [], marker="o", ls="", color=PALETTE[g], label=g)
+    handles = [plt.Line2D([], [], marker=SOURCE_MARK[g], ls="",
+                          color=PALETTE[g], mec="black", label=g)
                for g in SOURCES]
-    handles += [plt.Line2D([], [], marker=m, ls="", color="#555", label=n)
-                for n, m in marks.items() if n in results]
+    handles += [plt.Line2D([], [], marker="o", ls="", color="white",
+                           mec="black", ms=(sizes.get(n, 70) / 12) ** 0.5 * 2,
+                           label=DISPLAY.get(n, n))
+                for n in _order]
     ax.legend(handles=handles, fontsize=SN_FONT_MIN, ncol=2, loc="best")
     p = FIG / "F3_loo_vs_shapley.png"
     fig.savefig(p, bbox_inches="tight"); plt.close(fig)
@@ -202,14 +248,16 @@ def fig4_redundancy_heatmap(results: dict) -> Path:
             for j, b in enumerate(SOURCES):
                 if i < j:
                     M[i, j] = M[j, i] = tau.get(f"{a}|{b}", tau.get(f"{b}|{a}", 0.0))
-        im = ax.imshow(M, cmap="RdBu_r", vmin=-1, vmax=1)
+        # Greys rather than a diverging colour map. Sign is already legible
+        # from the printed cell values, so hue was redundant.
+        im = ax.imshow(M, cmap="Greys", vmin=-1, vmax=1)
         ax.set_xticks(range(len(SOURCES)), SOURCES, fontsize=8)
         ax.set_yticks(range(len(SOURCES)), SOURCES, fontsize=8)
         ax.set_title(disp(name), fontsize=9); ax.grid(False)
         for i in range(len(SOURCES)):
             for j in range(len(SOURCES)):
                 ax.text(j, i, f"{M[i, j]:.2f}", ha="center", va="center", fontsize=SN_FONT_MIN,
-                        color="white" if abs(M[i, j]) > 0.55 else "#222")
+                        color="white" if M[i, j] > 0.55 else "black")
     fig.colorbar(im, ax=axes.tolist(), shrink=0.8, label="Kendall $\\tau$")
     p = FIG / "F4_redundancy_heatmap.png"
     fig.savefig(p, bbox_inches="tight"); plt.close(fig)
@@ -217,28 +265,43 @@ def fig4_redundancy_heatmap(results: dict) -> Path:
 
 
 def fig5_segment_radar(results: dict) -> Path:
-    """F5: segment-level Shapley profiles (C4 heterogeneity)."""
+    """F5: segment-level Shapley profiles (C4 heterogeneity).
+
+    Point-range plot, not a radar chart. Radar encodes magnitude as radius and
+    therefore area, which exaggerates differences quadratically and makes
+    near-identical profiles look distinct; it also has no natural zero when
+    values can be negative, which ours can. A shared linear axis lets a reader
+    read the actual Shapley value per segment and see overlap honestly. The
+    name is kept for artefact continuity.
+
+    Monochrome: segments are distinguished by marker shape and grey level, so
+    the figure survives greyscale reproduction.
+    """
     _dirs()
     names = list(results)
-    fig, axes = plt.subplots(1, len(names), figsize=(3.6 * len(names), 3.6),
-                             subplot_kw=dict(polar=True))
-    fig.set_layout_engine("none")
+    fig, axes = plt.subplots(1, len(names), figsize=(3.3 * len(names), 3.4),
+                             sharey=True)
     axes = np.atleast_1d(axes)
-    ang = np.linspace(0, 2 * np.pi, len(SOURCES), endpoint=False)
-    ang = np.concatenate([ang, ang[:1]])
+    seg_mark = {s: m for s, m in zip(SEGMENT_NAMES, ("o", "s", "^", "D", "v"))}
+    seg_grey = {s: g for s, g in zip(SEGMENT_NAMES,
+                                     ("0.10", "0.35", "0.58", "0.78", "0.92"))}
+    xpos = np.arange(len(SOURCES))
     for ax, name in zip(axes, names):
         prof = results[name]["e3_segments"]["profiles"]
-        for seg in SEGMENT_NAMES:
-            if prof.get(seg, {}).get("n_users", 0) == 0:
-                continue
+        live = [s for s in SEGMENT_NAMES if prof.get(s, {}).get("n_users", 0)]
+        # Small horizontal offsets so coincident points remain countable.
+        offs = np.linspace(-0.22, 0.22, max(len(live), 1))
+        for seg, off in zip(live, offs):
             v = [prof[seg].get(g, 0.0) for g in SOURCES]
-            v = np.concatenate([v, v[:1]])
-            ax.plot(ang, v, lw=1.3, label=seg)
-            ax.fill(ang, v, alpha=0.08)
-        ax.set_xticks(ang[:-1], SOURCES, fontsize=SN_FONT_MIN)
-        ax.set_title(disp(name), fontsize=9, pad=14)
+            ax.plot(xpos + off, v, ls="none", marker=seg_mark[seg], ms=5,
+                    color=seg_grey[seg], mec="black", mew=0.6,
+                    label=f"{seg} (n={prof[seg]['n_users']:,})")
+        ax.axhline(0, color="black", lw=0.6)
+        ax.set_xticks(xpos, SOURCES, fontsize=SN_FONT_MIN)
+        ax.set_title(disp(name), fontsize=9)
         ax.tick_params(labelsize=SN_FONT_MIN)
-    axes[-1].legend(fontsize=SN_FONT_MIN, loc="upper right", bbox_to_anchor=(1.4, 1.15))
+    axes[0].set_ylabel("segment Shapley value $\\varphi_g$")
+    axes[-1].legend(fontsize=SN_FONT_MIN, loc="best", framealpha=0.9)
     p = FIG / "F5_segment_radar.png"
     fig.savefig(p, bbox_inches="tight"); plt.close(fig)
     return p
@@ -255,7 +318,9 @@ def fig6_fuse_gain(results: dict) -> Path:
     for i, (m, lab) in enumerate(zip(methods, labels)):
         vals = [results[n]["e4_signalshap_fuse"]["full_catalog"][m]["ndcg_at_10"]
                 for n in names]
-        b = ax.bar(x + (i - 1) * w, vals, w, label=lab, edgecolor="#333", linewidth=0.6)
+        b = ax.bar(x + (i - 1) * w, vals, w, label=lab, edgecolor="black",
+                   linewidth=0.8, color=str(0.25 + 0.3 * i),
+                   hatch=("", "///", "...")[i % 3])
         ax.bar_label(b, fmt="%.3f", fontsize=SN_FONT_MIN, padding=1.5)
     ax.set_xticks(x, [disp(n) for n in names]); ax.set_ylabel("NDCG@10 (full catalog)")
     ax.set_title("F6 — SignalShap-Fuse vs fusion baselines\n"
@@ -280,11 +345,12 @@ def fig7_robustness(results: dict) -> Path:
         for g in SOURCES:
             ax.plot([sweep[k]["n_max"] for k in keys],
                     [sweep[k]["shapley"][g] for k in keys],
-                    marker="o", ms=4, color=PALETTE[g], label=g, lw=1.2)
+                    marker=SOURCE_MARK[g], ms=4, color=PALETTE[g], mec="black",
+                    mew=0.5, label=g, lw=1.2)
         for k in keys:
             ax.annotate(f"r={sweep[k]['candidate_recall']:.2f}",
                         (sweep[k]["n_max"], ax.get_ylim()[0]), fontsize=SN_FONT_MIN,
-                        ha="center", va="bottom", color="#666")
+                        ha="center", va="bottom", color="black")
         ax.set_title(f"{disp(name)}: $|C_u|$ sweep", fontsize=9)
         ax.set_xlabel("$N_{max}$"); ax.set_ylabel("$\\varphi_g$" if j == 0 else "")
 
@@ -293,7 +359,8 @@ def fig7_robustness(results: dict) -> Path:
         lk = sorted(lam, key=lambda k: float(k.split("_")[1]))
         for g in SOURCES:
             ax.plot([float(k.split("_")[1]) for k in lk], [lam[k][g] for k in lk],
-                    marker="s", ms=4, color=PALETTE[g], lw=1.2)
+                    marker=SOURCE_MARK[g], ms=4, color=PALETTE[g], mec="black",
+                    mew=0.5, ls="--", lw=1.2)
         ax.set_xscale("log"); ax.set_title(f"{disp(name)}: $\\lambda$ sensitivity", fontsize=9)
         ax.set_xlabel("$\\lambda$ (frozen = 1.0)")
         ax.set_ylabel("$\\varphi_g$" if j == 0 else "")
