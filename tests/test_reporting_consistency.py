@@ -121,37 +121,43 @@ def test_efficiency_is_structural_not_approximate():
 # --------------------------------------------------------------------------- #
 
 
-def test_all_manuscript_figures_are_monochrome():
-    """No figure may rely on hue.
+def test_architecture_figure_is_monochrome():
+    """Fig 1 is the schematic and must be black-only.
 
-    Source and segment identity is carried by grey level plus marker shape or
-    hatch, so every figure survives greyscale printing. A coloured pixel here
-    means an encoding regressed to hue.
+    Data figures keep colour -- five sources across three corpora is more than
+    grey levels can carry -- but the architecture diagram follows the
+    game-theoretic XAI convention of a black-only schematic.
     """
     from pathlib import Path
 
     np = pytest.importorskip("numpy")
     Image = pytest.importorskip("PIL.Image", reason="Pillow not installed")
 
-    figs = sorted((Path(__file__).resolve().parents[1] / "paper" / "figures")
-                  .glob("Fig*.png"))
-    assert figs, "no manuscript figures found"
-    for f in figs:
-        im = np.asarray(Image.open(f).convert("RGB")).astype(int)
-        coloured = ((im.max(axis=2) - im.min(axis=2)) > 12).mean()
-        assert coloured < 1e-4, f"{f.name} is {coloured:.2%} coloured"
+    f = Path(__file__).resolve().parents[1] / "paper" / "figures" / "Fig1.png"
+    im = np.asarray(Image.open(f).convert("RGB")).astype(int)
+    coloured = ((im.max(axis=2) - im.min(axis=2)) > 12).mean()
+    assert coloured < 1e-4, f"Fig1 is {coloured:.2%} coloured; it must be black-only"
 
 
-def test_palette_is_greyscale_and_separable():
+def test_data_figures_stay_readable_without_colour():
+    """Colour may not be the ONLY channel: every source also gets a marker
+    and a hatch, so the data figures survive greyscale reproduction and
+    colour-vision deficiency."""
     from signalshap.plots.assets import PALETTE, SOURCE_HATCH, SOURCE_MARK
 
-    levels = sorted(float(v) for v in PALETTE.values())
-    assert all(0.0 <= v <= 1.0 for v in levels)
-    gaps = [b - a for a, b in zip(levels, levels[1:])]
-    assert min(gaps) >= 0.15, f"grey levels too close to survive halftoning: {gaps}"
-    # Shape and hatch must also disambiguate, since grey alone is weak.
+    assert set(PALETTE) == set(SOURCE_MARK) == set(SOURCE_HATCH)
     assert len(set(SOURCE_MARK.values())) == len(SOURCE_MARK)
     assert len(set(SOURCE_HATCH.values())) == len(SOURCE_HATCH)
+
+
+def test_palette_is_colourblind_safe():
+    """Okabe-Ito. Pinning the hexes stops a future edit reaching for red/green."""
+    from signalshap.plots.assets import PALETTE
+
+    okabe_ito = {"#0072B2", "#D55E00", "#009E73", "#CC79A7", "#E69F00",
+                 "#56B4E9", "#F0E442", "#999999", "#000000"}
+    for g, c in PALETTE.items():
+        assert c.upper() in okabe_ito, f"{g}={c} is outside the Okabe-Ito set"
 
 
 def test_display_names_cover_the_study_corpora():

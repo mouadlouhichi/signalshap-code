@@ -195,3 +195,65 @@ def test_interaction_index_is_grabisch_roubens_not_shapley_taylor():
     assert gr == pytest.approx([0.25, 1 / 12, 1 / 12, 0.25])
     assert st == pytest.approx([0.4, 0.1, 1 / 15, 0.1])
     assert max(abs(a - b) for a, b in zip(gr, st)) > 0.1, "indices must differ"
+
+
+# --------------------------------------------------------------------------- #
+# Deterministic expected-random baseline (reviewer Critical #2).
+# --------------------------------------------------------------------------- #
+
+
+def test_expected_random_ndcg_matches_closed_form():
+    import math
+
+    from signalshap.game.core import expected_random_ndcg
+
+    for n in (5, 200, 600, 3533):
+        want = sum(1 / math.log2(r + 1) for r in range(1, min(10, n) + 1)) / n
+        assert abs(expected_random_ndcg(n) - want) < 1e-15
+
+
+def test_expected_baseline_decreases_with_pool_size():
+    """A larger candidate pool makes a random hit rarer."""
+    from signalshap.game.core import expected_random_ndcg
+
+    vals = [expected_random_ndcg(n) for n in (200, 600, 3533, 11623)]
+    assert vals == sorted(vals, reverse=True)
+
+
+def test_expected_baseline_is_bounded_by_one():
+    from signalshap.game.core import expected_random_ndcg
+
+    assert expected_random_ndcg(1) <= 1.0 + 1e-12
+    assert expected_random_ndcg(0) == 0.0
+
+
+def test_expected_baseline_removes_seed_dependence():
+    """The whole point: phi must not move when the baseline seed changes.
+
+    Under the sampled baseline this shifted every phi by -delta/n and moved
+    phi_ct across zero. Under the expectation there is no draw to vary.
+    """
+    import inspect
+
+    import numpy as np
+
+    from signalshap.game.core import expected_random_ndcg
+
+    # The signature admits no seed: the value depends only on |C_u| and K.
+    assert "seed" not in inspect.signature(expected_random_ndcg).parameters
+
+    # And perturbing global RNG state cannot move it.
+    np.random.seed(1)
+    a = expected_random_ndcg(600)
+    np.random.seed(999)
+    _ = np.random.default_rng(7).permutation(500)
+    assert expected_random_ndcg(600) == a
+
+
+def test_game_defaults_to_the_deterministic_baseline():
+    import inspect
+
+    from signalshap.game.core import SignalShapGame
+
+    sig = inspect.signature(SignalShapGame.__init__)
+    assert sig.parameters["baseline"].default == "expected"

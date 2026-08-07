@@ -94,6 +94,9 @@
 \newcommand{\G}{\mathcal{G}}
 \newcommand{\Cu}{C_u}
 \newcommand{\NDCG}{\mathrm{NDCG@10}}
+%% The two LOO variants the paper must not conflate (reviewer Critical #1).
+\newcommand{\LOOr}{\mathrm{LOO}_{\mathrm{rank}}}
+\newcommand{\LOOe}{\mathrm{LOO}_{\mathrm{e2e}}}
 \newcommand{\LOO}{\mathrm{LOO}}
 
 \begin{document}
@@ -132,7 +135,7 @@ three systems contain a source on which the two rules disagree in \emph{sign}
 by a material margin, at every regularisation strength we tested. Yet in an
 end-to-end retirement simulation,
 leave-one-out predicts the observed cost of removal \emph{better} than Shapley
-on all three corpora and over ten seeds (mean rank agreement $0.96$--$1.00$
+on all three corpora and over ten seeds (mean rank agreement $0.94$--$1.00$
 against $0.20$--$0.80$), identifying the cheapest source to retire on
 $80$--$100\%$ of seeds against $0$--$30\%$. SignalShap allocates the value of a declared
 ranking-stage game; leave-one-out estimates the effect of removal. We therefore
@@ -222,7 +225,7 @@ and efficiency on real fitted games.
       showing that Shapley allocation and leave-one-out removal cost answer
       \emph{different questions}. Over ten seeds on all three corpora,
       leave-one-out predicts retirement cost better than Shapley (mean rank
-      agreement $0.96$--$1.00$ against $0.20$--$0.80$) and identifies the
+      agreement $0.94$--$1.00$ against $0.20$--$0.80$) and identifies the
       cheapest source to retire on $80$--$100\%$ of seeds against
       $0$--$30\%$. We pair this with
       candidate recall as a necessary applicability test, and report where our
@@ -280,9 +283,11 @@ shows it does not.
   {\textbf{Diagnosis}\\[1pt]
    {\snFigSub source credit, redundancy, segments}};
 
-\node[snbox=0, below=of diag] (fuse)
-  {\textbf{SignalShap-Fuse}\\[1pt]
-   {\snFigSub segment weights, frozen before test}};
+%% Dashed outline: this branch is the NEGATIVE appendix experiment, not part
+%% of the contribution. A reviewer asked for it to be visually demoted.
+\node[snbox=0, below=of diag, draw=black, dashed, line width=0.5pt] (fuse)
+  {\textbf{SignalShap-Fuse} {\snFigSub(Appendix A)}\\[1pt]
+   {\snFigSub segment weights; no gain over a tuned global head}};
 
 \draw[snflow] (src)  -- (cand);
 \draw[snflow] (cand) -- (game);
@@ -458,7 +463,7 @@ Section~\ref{sec:recovery}.
 \paragraph{Hybrid recommenders and ablation practice}
 Burke's taxonomy~\citep{burke2002hybrid} classifies hybridisation strategies;
 weighted and feature-combination hybrids dominate practice. Evaluation of
-component worth is near-universally by
+component worth is predominantly by
 ablation~\citep{zangerle2022evaluating}. Recent recommender XAI
 work~\citep{zhang2020explainable} explains \emph{recommendations}, not
 \emph{architectures}.
@@ -497,12 +502,32 @@ index~\citep{sundararajan2020shapleytaylor} use different coefficients and are
 \emph{not} interchangeable. We use the former and say so, having previously
 conflated the two.
 
-\paragraph{Leave-one-out}
-Leave-one-out ablation reports $\LOO(g) = v(\G) - v(\G\setminus\{g\})$: the
-single marginal contribution at the grand coalition. It is a valid estimand for
-the effect of removing $g$ while everything else remains, and it is not an
-approximation to the Shapley value; it is one of the $2^{n-1}$ terms the
-Shapley value averages.
+\paragraph{Leave-one-out, in two distinct forms}
+Leave-one-out ablation reports the single marginal contribution at the grand
+coalition, $v(\G) - v(\G\setminus\{g\})$. It is a valid estimand for the effect
+of removing $g$ while everything else remains, and it is not an approximation
+to the Shapley value; it is one of the $2^{n-1}$ terms the Shapley value
+averages.
+
+Which $v$ it is computed on matters, and conflating the two is easy. Write
+%
+\begin{equation}
+\LOOr(g) = v_{\mathrm{rank}}(\G) - v_{\mathrm{rank}}(\G\setminus\{g\}),
+\qquad
+\LOOe(g) = v_{\mathrm{e2e}}(\G) - v_{\mathrm{e2e}}(\G\setminus\{g\}).
+\label{eq:loo}
+\end{equation}
+%
+$\LOOr$ removes $g$ from the \emph{fusion head only}: the candidate set is still
+the one all five sources retrieved, so $g$ keeps its retrieval role. $\LOOe$
+removes $g$ from retrieval as well, rebuilding $\Cu$ from the survivors. The
+second is what actually happens when a source is switched off in production,
+and so $\LOOe$ \emph{equals} the observed single-source retirement loss by
+construction --- it is a definition, not a finding. $\LOOr$ is a different,
+cheaper quantity that requires no re-retrieval. The empirical question of
+Section~\ref{sec:estimands} is therefore whether the cheap ranking-stage
+quantity predicts the expensive end-to-end one, and whether it does so better
+than the ranking-stage Shapley value computed on the same game.
 
 \paragraph{Ranking-stage versus end-to-end games}
 A production recommender retrieves candidates and then ranks them. A
@@ -583,20 +608,31 @@ head fitted on the validation fold, and
 Let $y_{u,i} = \mathbb{1}[i = i_u^{\mathrm{test}}]$ for $i \in \Cu$ be the
 binary relevance vector, let $\pi_u(S)$ be the ranking of $\Cu$ induced by
 $\hat{s}_{u,\cdot}(S)$ under a deterministic tie rule (descending score, then
-ascending item index), and let $\pi_u^{0}$ be a frozen permutation of $\Cu$
-drawn once. Define the \emph{per-user} baseline and game
+ascending item index). Define the \emph{per-user} baseline and game
 \begin{equation}
-b_u = \NDCG(\pi_u^{0}; y_u), \qquad
+b_u = \mathbb{E}_{\pi \sim \mathcal{U}(\Cu)}\bigl[\NDCG(\pi; y_u)\bigr], \qquad
 v_u(S) = \NDCG(\pi_u(S); y_u) - b_u, \qquad
 v(S) = \frac{1}{|\mathcal{U}|}\sum_{u} v_u(S).
 \label{eq:game}
 \end{equation}
+The baseline is the \emph{expected} payoff of a uniformly random ranking, not a
+sampled one. With a single held-out item and $\mathrm{IDCG}=1$ it is available
+in closed form: the item is equally likely to land in any of the $|\Cu|$
+positions, so
+%
+\begin{equation}
+b_u \;=\; \frac{1}{|\Cu|}\sum_{r=1}^{\min(K,\,|\Cu|)}\frac{1}{\log_2(r+1)},
+\qquad\text{and } b_u = 0 \text{ if } i_u^{\mathrm{test}} \notin \Cu .
+\label{eq:baseline}
+\end{equation}
+%
 If $i_u^{\mathrm{test}} \notin \Cu$ then $y_u = \mathbf{0}$ and
-$\NDCG(\cdot\,; y_u) = 0$ for every ranking, so $v_u(S) = -b_u = 0$; such users
+$\NDCG(\cdot\,; y_u) = 0$ for every ranking, so $v_u(S) = 0$; such users
 contribute zero to every coalition and are the reason candidate recall bounds
-all downstream metrics. Because $v_u(\varnothing) = \NDCG(\pi_u^{0}; y_u) - b_u
-= 0$ \emph{for every user}, the empty coalition is zero per user and not merely
-on average, which is what Property~\ref{prop:decomp} requires.
+all downstream metrics. Because $v_u(\varnothing)$ is defined as the expected
+random payoff and $b_u$ is that same quantity, the empty coalition is zero per
+user and not merely on average, which is what Property~\ref{prop:decomp}
+requires.
 
 The coalition head is the ridge solution on the validation fold,
 \begin{equation}
@@ -613,37 +649,25 @@ size across users, and without it users with larger pools would dominate the
 fit. Weights are unconstrained and no intercept is fitted. Test interactions
 are never used to fit $w^{(S)}$.
 
-The frozen permutation $\pi_u^{0}$ is drawn once under a fixed seed and reused
-for every coalition, user, and experiment; the empty-coalition ranking is
-defined to be that same permutation.
+\paragraph{Why the baseline is an expectation and not a draw}
+Earlier versions of this work used a single seeded permutation as $\pi_u^0$.
+That was a mistake, and the reason is worth stating because it is easy to miss.
+The baseline cancels in $v_u(S\cup\{g\}) - v_u(S)$ whenever $S \neq \varnothing$,
+so it looks like a pure normalisation. It does not cancel at $S = \varnothing$:
+there the marginal is $v(\{g\}) - 0$, which retains $b_u$. Since the empty set
+carries Shapley weight $w(0) = 1/n$, changing the baseline shifts \emph{every}
+$\varphi_g$ by exactly $-\Delta/n$, where $\Delta$ is the change in the mean
+baseline.
 
-\paragraph{The baseline is a modelling choice, not a normalisation}
-An earlier version of this manuscript asserted that $\varphi_g$ is invariant to
-$b_u$ because it cancels in every marginal difference. That is false, and we
-correct it here. The baseline cancels in $v_u(S\cup\{g\}) - v_u(S)$ only when
-$S \neq \varnothing$. For $S = \varnothing$ the marginal is
-$v(\{g\}) - 0 = \operatorname{mean}_u[\NDCG(\pi_u(\{g\}); y_u) - b_u]$, which
-retains it. Because the empty set carries Shapley weight $w(0) = 1/n$, changing
-the baseline shifts \emph{every} $\varphi_g$ by exactly $-\Delta/n$, where
-$\Delta$ is the change in the mean baseline.
-
-We verified this rather than reasoning about it: re-running the identical game
-with a different permutation seed changed the mean baseline by $-0.000796$ and
+We verified this rather than reasoning about it. Re-running the identical game
+with a different permutation seed moved the mean baseline by $-0.000796$ and
 shifted all five MovieLens values by $+0.00015926 = 0.000796/5$, agreeing to
-eight decimal places, and moved $\varphi_{ct}$ across zero. The same mechanism
-explains the constant offset between the attribution values reported in
-Section~\ref{sec:results} and those recomputed inside the retirement
-experiment of Section~\ref{sec:estimands}, whose games draw separate
-baselines.
-
-Three consequences. First, $b_u$ is a declared component of the game and must
-be reported with it, which we now do. Second, efficiency is unaffected:
-$\sum_g \varphi_g = v(\G)$ holds because $v(\G)$ shifts by the same amount.
-Third, and most importantly for how this paper should be read, source
-\emph{rankings} and the sign-disagreement analysis of
-Section~\ref{sec:results} are unchanged by a uniform shift only where the
-values are well separated; $\varphi_{ct}$ on MovieLens sits within $10^{-4}$ of
-zero and its sign is therefore not a stable finding. We rely on it nowhere.
+eight decimal places --- and moved $\varphi_{ct}$ across zero. A sign-based
+finding must not depend on which permutation happened to be drawn, so
+Equation~(\ref{eq:baseline}) removes the draw entirely. Under the expectation,
+re-running with any seed reproduces every $\varphi_g$ to $0$ in exact
+arithmetic; we measure $0.00\text{e}{+}00$. Efficiency is unaffected either
+way, since $v(\G)$ shifts with the baseline.
 
 \paragraph{The regularisation strength is frozen}
 $\lambda$ is chosen once on a pilot and never tuned per coalition.
@@ -707,8 +731,13 @@ items (lines 9 and 12), so no coalition value is measured in-sample.
     \State $v_u(S) \gets \NDCG_K(\pi_u^{0};\, \mathbf{y}^{\mathrm{te}}_u) - b_u = 0$
            \ for all $u$
   \Else
-    \State $w^{(S)} \gets \bigl[A_{SS} + \lambda I_{|S|}\bigr]^{-1} c_S$
-           \Comment{slice $A$ and $c$; do not rebuild}
+    \If{$\lambda > 0$}
+      \State $w^{(S)} \gets \bigl[A_{SS} + \lambda I_{|S|}\bigr]^{-1} c_S$
+             \Comment{slice $A$ and $c$; do not rebuild}
+    \Else
+      \State $w^{(S)} \gets A_{SS}^{+} c_S$
+             \Comment{minimum-norm; $A_{SS}$ is singular under exact duplicates}
+    \EndIf
     \State $v_u(S) \gets \NDCG_K\bigl(\mathrm{rank}_\epsilon(Z_u^{(S)} w^{(S)});\,
            \mathbf{y}^{\mathrm{te}}_u\bigr) - b_u$ \ for all $u$
   \EndIf
@@ -1303,11 +1332,16 @@ structural audit of Section~\ref{sec:setup} relies on.
 \paragraph{Other semivalues}
 The Shapley value is one member of a family. We also compute the Banzhaf value,
 which weights every coalition equally rather than by permutation count, and a
-uniform semivalue. On MovieLens all three induce the \emph{same} source
-ordering (Kendall $\tau = 1.00$ between Shapley and Banzhaf, same top source),
-so the conclusions of Section~\ref{sec:results} do not depend on the choice
-among these values. Banzhaf does not satisfy efficiency, so its values do not
-sum to $v(\G)$ and only the induced ordering is comparable.
+uniform semivalue, whose weights are
+$\psi_i = \tfrac1n\sum_{k=0}^{n-1}\binom{n-1}{k}^{-1}
+ \sum_{|S|=k,\,S\subseteq\G\setminus\{i\}}[v(S\cup\{i\})-v(S)]$, i.e.\ equal
+weight on each coalition \emph{size} rather than on each coalition. On
+MovieLens all three induce the \emph{same} source ordering (Kendall
+$\tau = 1.00$ between Shapley and Banzhaf, same top source). We computed this
+on MovieLens only, so the claim is that the MovieLens conclusions are robust to
+the choice among these values; we do not extend it to the other two corpora,
+where it remains untested. Banzhaf does not satisfy efficiency, so its values
+do not sum to $v(\G)$ and only the induced ordering is comparable.
 
 \paragraph{Pairwise interactions}
 Main-effect values cannot by themselves distinguish a source of low value from
@@ -1460,9 +1494,12 @@ it. We report the larger run throughout.
 The corollary is that a single-corpus reading would have been actively
 misleading. On MovieLens alone one would conclude that collaborative filtering
 is the source ablation systematically undervalues. Gowalla's material flip
-falls on $pop$ instead, and Amazon-VG has none. What generalises is the
-\emph{mechanism} --- disagreement tracks redundancy --- not the identity of the
-affected source or the guarantee that one exists.
+falls on $pop$ instead, and Amazon-VG has none. The results are consistent
+with the
+\emph{mechanism} that disagreement tracks redundancy, though the interaction
+analysis supports that reading directly only on MovieLens. What certainly does
+not generalise is the identity of the affected source, or the guarantee that
+one exists at all.
 
 \paragraph{Mechanism}
 The account is \emph{qualitatively} the one Property~\ref{prop:loo} describes,
@@ -1522,7 +1559,7 @@ $\lambda$ tuning. These are mathematical and depend on no corpus.
 \paragraph{Scope was narrowed after the study began}
 This work was designed as a study contrasting attribution across densities. The
 \emph{hypotheses} were not changed to fit results: Properties~1--3 and
-Lemma~\ref{lem:eps} are stated as originally formulated, and both outcomes that went
+Lemma~\ref{lem:eps} are corrected during revision, and both outcomes that went
 against expectation --- the non-monotone fitted game and the inconclusive
 fusion comparison --- are reported rather than removed. The intervention of
 Section~\ref{sec:recovery} is \textbf{post-hoc in origin}: it was added because
@@ -1622,7 +1659,17 @@ $seq$  & $+0.01636$ & $0.659$ & $+0.02981$ & $+0.01673$ \\
 \end{tabular}
 \end{table}
 
-\textbf{LOO predicts retirement cost better than Shapley
+\paragraph{Which LOO is being tested}
+The LOO column of Table~\ref{tab:retirement} is $\LOOr$: it comes from the same
+fixed-candidate game as the Shapley column, so the comparison is like for like.
+It is \emph{not} $\LOOe$, which would equal the observed loss by construction
+(Equation~\ref{eq:loo}) and could not be evaluated as a predictor of it. The
+result below is therefore not the tautology it might appear to be. It says
+something more useful: a quantity computable \emph{without} re-running
+retrieval predicts the expensive end-to-end outcome well, and predicts it far
+better than the Shapley value of the same game.
+
+\textbf{$\LOOr$ predicts retirement cost better than Shapley
 (Table~\ref{tab:retirement}).} On seed 42 its ranking matches the observed loss
 exactly ($\tau = 1.00$ against $0.20$; exact two-sided permutation $p = 0.017$
 and $p = 0.82$ at $n = 5$ sources), and it identifies $cf$ as the cheapest
@@ -1635,7 +1682,7 @@ reported protocol, not a population quantity.
 every seed --- reporting it as such from a single run would have overstated
 it --- but it is close on all three corpora and beats Shapley on each. The last
 two columns give the fraction of seeds on which each rule identifies the
-genuinely cheapest source to retire}
+observed cheapest source to retire under this protocol}
 \label{tab:retire-seeds}
 \begin{tabular}{@{}lccrr@{}}
 \toprule
@@ -1656,12 +1703,12 @@ more measured. LOO's mean rank agreement is $0.96$, $0.94$ and $1.00$; Shapley's
 is $0.20$, $0.72$ and $0.80$. LOO is therefore \emph{not} perfect on every
 seed, and we correct the earlier claim that it was. It nevertheless dominates
 on every corpus, and the practical gap is starker than the correlations
-suggest: LOO identifies the genuinely cheapest source to retire on $100\%$,
+suggest: LOO identifies the observed cheapest source to retire on $100\%$,
 $80\%$ and $100\%$ of seeds, against $0\%$, $30\%$ and $0\%$ for Shapley. On two
 of three corpora Shapley never once picks the right source to switch off.
 
 The result is also consistent with the theory rather than a contradiction of
-it. Removing $cf$ \emph{improves} end-to-end NDCG@10 by $0.00561$ while
+it. Removing $cf$ \emph{improves} end-to-end NDCG@10 by $0.00531$ while
 dropping candidate recall from $0.748$ to $0.690$: the collaborative signal is
 substantially redundant with $seq$ and $pop$ --- the pairwise interaction
 indices are $-0.056$ for $cf|seq$ and $-0.026$ for $cf|pop$, the two most
@@ -1696,7 +1743,8 @@ and improvement potential, neither of which any attribution supplies}
 \toprule
 Decision & Appropriate quantity & Evidence \\
 \midrule
-Remove one deployed source & end-to-end LOO & $\tau = 0.96$--$1.00$, 10 seeds (Section~\ref{sec:estimands}) \\
+Remove one deployed source & $\LOOe$ (by definition); $\LOOr$ is an
+  effective proxy & $\tau = 0.94$--$1.00$, 10 seeds (Section~\ref{sec:estimands}) \\
 Divide credit for current quality & Shapley or a declared semivalue & efficiency, symmetry (Section~\ref{sec:recovery}) \\
 Locate redundancy between sources & pairwise interaction index & Table~\ref{tab:taylor} \\
 Decide where to invest next & \emph{not established} & requires cost and headroom \\
@@ -1730,7 +1778,7 @@ $\tau = 1.00$ is $0.017$, so a single corpus and a single seed would be
 suggestive rather than conclusive; three corpora and ten seeds make it
 substantially stronger. The decision-level figures are more striking than the
 correlations: on MovieLens and Gowalla, Shapley never once selects the
-genuinely cheapest source to retire. It remains a result about five-source
+observed cheapest source to retire. It remains a result about five-source
 hybrids under one deployment protocol, and we would not extrapolate it to
 systems with many more components, where the grand coalition is a less special
 point in the lattice.
@@ -1835,7 +1883,7 @@ against ourselves. These checks do not identify the absolute correct credit,
 and the game measures ranking-stage rather than end-to-end contribution. The
 decisive experiment --- whether Shapley credit leads to better subsystem
 decisions than ablation --- we did run, as an end-to-end retirement simulation,
-and ablation won it on both corpora where we could run it
+and ablation won it on all three corpora
 (Section~\ref{sec:estimands}). We therefore claim credit allocation, not
 retirement guidance. Two corpora also fall below the candidate-recall gate, and
 on Gowalla lifting it would require a candidate pool approaching the whole
@@ -1922,19 +1970,25 @@ differences quadratically and has no natural zero, and our values can be
 negative.}\label{fig:segments}
 \end{figure}
 
-\paragraph{A multi-comparison test the per-corpus tests cannot replace}
-Both reviewers noted that a Wilcoxon test per corpus establishes a difference
-on that corpus, not a ranking across corpora. We therefore add a Friedman
-omnibus over the six methods, blocked by corpus, with a Nemenyi post-hoc. The
-omnibus is significant ($\chi^2 = 14.24$, $p = 0.014$) and the mean ranks order
-the methods as one would expect --- SignalShap-Fuse $1.33$, globally tuned head
-$1.67$, uniform $3.00$, LightGCN $4.00$, popularity $5.33$, SASRec $5.67$ ---
-but with three blocks the critical difference is $4.35$ and \emph{no pair is
-separable}. We report this because it is the honest reading: our
-per-corpus $p < 0.001$ results against uniform and the neural references are
-real differences on those corpora, but they do not license a claim that the
-methods rank reliably across corpora. Three blocks is too few, and adding
-corpora, not seeds, is what would fix it.
+\paragraph{A multi-comparison test, and why it must be read narrowly}
+A Wilcoxon test per corpus establishes a difference on that corpus, not a
+ranking across corpora, so we add a Friedman omnibus over the six methods
+blocked by corpus, with a Nemenyi post-hoc. The omnibus is significant
+($\chi^2 = 14.24$, $p = 0.014$) and the mean ranks order the methods as one
+would expect --- SignalShap-Fuse $1.33$, globally tuned head $1.67$, uniform
+$3.00$, LightGCN $4.00$, popularity $5.33$, SASRec $5.67$ --- but with three
+blocks the critical difference is $4.35$ and \emph{no pair is separable}.
+
+Two caveats, the second of which we flag against our own analysis. First, three
+blocks is too few; adding corpora, not seeds, is what would fix it. Second, and
+more seriously, this test pools absolute $\NDCG$ across all three corpora,
+including the two that Section~\ref{sec:preconditions} excludes from absolute
+comparison against the neural references because they fail the recall gate.
+That is inconsistent with our own stated policy. We keep the test only because
+its conclusion is negative --- nothing separates --- so it cannot manufacture a
+claim the gate was meant to prevent; a positive result here would have had to
+be discarded. Readers should treat the mean ranks as descriptive and the
+per-corpus tests of Section~\ref{sec:results} as the reportable statistics.
 
 \paragraph{Fusion weights never see test outcomes}
 Because the characteristic function of Section~\ref{sec:game} is evaluated on
@@ -1967,9 +2021,12 @@ matched to our own pipeline.
 \begin{figure}[t]
 \centering
 \includegraphics[width=0.85\textwidth]{Fig6.png}
-\caption{Fusion comparison under the full-catalogue protocol. SignalShap-Fuse
-separates decisively from the neural and heuristic baselines but not from a
-well-tuned global head.}\label{fig:fusion}
+\caption{Fusion comparison under the full-catalogue protocol, showing every
+comparator named in the text. SignalShap-Fuse and the globally tuned head are
+visually indistinguishable on all three corpora, which is the point of this
+appendix. The neural and heuristic references are lower, but they received
+smaller tuning budgets and two of the three corpora fail the recall gate, so
+no ranking claim is made against them.}\label{fig:fusion}
 \end{figure}
 
 We now test this directly rather than describing it as underpowered. Because
@@ -1984,7 +2041,7 @@ ran a two one-sided test. It rejects a true difference larger than that margin
 ($p < 0.001$), so the two configurations are \textbf{statistically equivalent
 for practical purposes} --- a positive claim, and a stronger one than the
 absence of significance. The rank-biserial correlation is $+0.007$. We therefore make the claim the evidence supports: SignalShap
-attribution yields fusion weights competitive with strong neural baselines,
+attribution yields fusion weights no better than a tuned global head,
 and its advantage over a carefully tuned global head is not established at
 this scale.
 

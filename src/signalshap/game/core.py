@@ -75,6 +75,31 @@ def ndcg_at_k(ranked: np.ndarray, target: int, k: int = 10) -> float:
 # --------------------------------------------------------------------------- #
 
 
+def expected_random_ndcg(n_candidates: int, k: int = 10) -> float:
+    """E[NDCG@k] of a uniformly random ranking with ONE relevant item.
+
+    The held-out item is equally likely to occupy any of the |C_u| positions,
+    and IDCG = 1, so
+
+        E[NDCG@k] = (1/|C_u|) * sum_{r=1}^{min(k,|C_u|)} 1/log2(r+1).
+
+    This replaces the sampled permutation as the empty-coalition anchor. The
+    sampled version was a single Monte-Carlo draw, and because the baseline
+    enters only the empty-to-singleton marginal it shifted every phi_g by
+    -Delta/n -- enough to move a near-zero source across zero. A reviewer
+    correctly objected that a sign-based finding should not depend on which
+    permutation happened to be drawn. The expectation removes that degree of
+    freedom entirely: it is deterministic, closed-form, identical on every
+    machine, and needs no seed.
+    """
+    import math
+
+    if n_candidates <= 0:
+        return 0.0
+    return sum(1.0 / math.log2(r + 1)
+               for r in range(1, min(k, n_candidates) + 1)) / n_candidates
+
+
 def _hash_permute(items: np.ndarray, seed: int, user: int) -> np.ndarray:
     """Deterministic pseudo-random permutation of `items`, keyed by (seed, user).
 
@@ -116,11 +141,14 @@ class SignalShapGame:
         k_ndcg: int = 10,
         v0_seed: int = 42,
         sources: tuple[str, ...] = SOURCES,
+        baseline: str = "expected",
     ) -> None:
         self.sources = tuple(g for g in sources if g in scores)
         self.k = k_ndcg
         self.lam = ridge_lambda
         self.candidates = candidates
+        #: "expected" (default, deterministic) or "sampled" (legacy, seeded).
+        self.baseline = baseline
         self.valid_items = valid_items
         self.test_items = test_items
 
@@ -182,7 +210,13 @@ class SignalShapGame:
         out = {}
         for u in self.eval_users:
             c = self.candidates[u]
-            out[u] = ndcg_at_k(_hash_permute(c, seed, u), self.test_items[u], self.k)
+            if self.baseline == "expected":
+                # Deterministic: no permutation is drawn at all.
+                out[u] = (expected_random_ndcg(len(c), self.k)
+                          if self.test_items[u] in set(c.tolist()) else 0.0)
+            else:
+                out[u] = ndcg_at_k(_hash_permute(c, seed, u),
+                                   self.test_items[u], self.k)
         return out
 
     @property

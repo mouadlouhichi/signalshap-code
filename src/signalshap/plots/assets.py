@@ -48,11 +48,21 @@ plt.rcParams.update({
 # greyscale reproduction, and they are colourblind-safe by construction.
 # Grey levels are spaced >=0.16 apart so adjacent bars stay distinguishable
 # after halftoning; the shapes disambiguate the rest.
-PALETTE = {"cf": "0.15", "ct": "0.35", "pop": "0.55",
-           "rec": "0.72", "seq": "0.88"}
+# Colour is restored for the DATA figures. Only the architecture diagram
+# (Fig 1) is black-only, matching the convention in the game-theoretic XAI
+# literature for schematics. Data plots keep colour because it carries
+# information here -- five sources across three corpora is a lot to encode --
+# but every source ALSO gets a distinct marker and hatch, so the figures stay
+# readable in greyscale and for colour-vision deficiency. The palette is
+# Okabe-Ito, which is colourblind-safe by construction.
+PALETTE = {"cf": "#0072B2", "ct": "#D55E00", "pop": "#009E73",
+           "rec": "#CC79A7", "seq": "#E69F00"}
 
 #: Per-source marker, so a source is identifiable in a scatter without colour.
 SOURCE_MARK = {"cf": "o", "ct": "s", "pop": "^", "rec": "D", "seq": "v"}
+
+#: Method colours for grouped bar charts (Okabe-Ito, colourblind-safe).
+BAR_COLOURS = ["#999999", "#E69F00", "#56B4E9", "#009E73", "#0072B2", "#D55E00"]
 
 #: Per-source hatch, so a source is identifiable in a bar chart without colour.
 SOURCE_HATCH = {"cf": "", "ct": "///", "pop": "...", "rec": "xxx", "seq": "\\\\"}
@@ -146,7 +156,7 @@ def fig1_workflow() -> Path:
         ("union top-$N_g$\ncandidates $C_u$\n(coalition-independent)", 0.91, 1.1),
         ("$2^5=32$\ncoalitions\n$v(S)$", 0.84, 2.0),
         ("exact Shapley\n$\\varphi_g$", 0.84, 2.0),
-        ("segments +\nSignalShap-Fuse", 1.00, 1.1),
+        ("segments +\nSignalShap-Fuse\n(Appendix A: no gain)", 1.00, 1.1),
     ]
     for i, (txt, shade, lw) in enumerate(steps):
         x = i * 2.15
@@ -240,6 +250,7 @@ def fig4_redundancy_heatmap(results: dict) -> Path:
     _dirs()
     names = list(results)
     fig, axes = plt.subplots(1, len(names), figsize=(3.5 * len(names), 3.2))
+    fig.set_layout_engine("none")       # we place the colorbar axes by hand
     axes = np.atleast_1d(axes)
     for ax, name in zip(axes, names):
         tau = results[name]["e2_loo_vs_shapley"]["kendall_tau"]
@@ -248,19 +259,26 @@ def fig4_redundancy_heatmap(results: dict) -> Path:
             for j, b in enumerate(SOURCES):
                 if i < j:
                     M[i, j] = M[j, i] = tau.get(f"{a}|{b}", tau.get(f"{b}|{a}", 0.0))
-        # Greys rather than a diverging colour map. Sign is already legible
-        # from the printed cell values, so hue was redundant.
-        im = ax.imshow(M, cmap="Greys", vmin=-1, vmax=1)
+        # Diverging map centred on zero: this quantity is signed, and a
+        # sequential greyscale hides the sign that the figure is about.
+        # RdBu is replaced by a colourblind-safe diverging alternative.
+        im = ax.imshow(M, cmap="PuOr_r", vmin=-1, vmax=1)
         ax.set_xticks(range(len(SOURCES)), SOURCES, fontsize=8)
         ax.set_yticks(range(len(SOURCES)), SOURCES, fontsize=8)
         ax.set_title(disp(name), fontsize=9); ax.grid(False)
         for i in range(len(SOURCES)):
             for j in range(len(SOURCES)):
                 ax.text(j, i, f"{M[i, j]:.2f}", ha="center", va="center", fontsize=SN_FONT_MIN,
-                        color="white" if M[i, j] > 0.55 else "black")
-    fig.colorbar(im, ax=axes.tolist(), shrink=0.8, label="Kendall $\\tau$")
+                        color="white" if abs(M[i, j]) > 0.6 else "black")
+    # Reserve space on the right and place the bar there, rather than letting
+    # colorbar() steal width from the last panel -- that produced a bar
+    # overlapping the matrix, which a reviewer flagged twice.
+    fig.subplots_adjust(right=0.88)
+    cax = fig.add_axes([0.90, 0.15, 0.015, 0.7])
+    fig.colorbar(im, cax=cax, label="Kendall $\\tau$")
     p = FIG / "F4_redundancy_heatmap.png"
-    fig.savefig(p, bbox_inches="tight"); plt.close(fig)
+    fig.savefig(p)                      # no bbox_inches: it would undo the axes
+    plt.close(fig)
     return p
 
 
@@ -311,16 +329,23 @@ def fig6_fuse_gain(results: dict) -> Path:
     """F6: SignalShap-Fuse lift, full-catalog protocol (spec §7)."""
     _dirs()
     names = list(results)
-    methods = ["uniform", "global", "signalshap_fuse"]
-    labels = ["uniform", "globally-tuned", "SignalShap-Fuse"]
+    # Every comparator the caption names must actually appear. A reviewer
+    # flagged twice that the caption claimed separation from neural and
+    # heuristic baselines while the chart showed only the three fusion
+    # variants.
+    methods = ["popularity_reference", "sasrec", "lightgcn",
+               "uniform", "global", "signalshap_fuse"]
+    labels = ["popularity", "SASRec", "LightGCN",
+              "uniform", "globally-tuned", "SignalShap-Fuse"]
     fig, ax = plt.subplots(figsize=(1.9 * len(names) + 3.2, 3.4))
-    w, x = 0.26, np.arange(len(names))
+    w, x = 0.8 / len(methods), np.arange(len(names))
     for i, (m, lab) in enumerate(zip(methods, labels)):
         vals = [results[n]["e4_signalshap_fuse"]["full_catalog"][m]["ndcg_at_10"]
                 for n in names]
-        b = ax.bar(x + (i - 1) * w, vals, w, label=lab, edgecolor="black",
-                   linewidth=0.8, color=str(0.25 + 0.3 * i),
-                   hatch=("", "///", "...")[i % 3])
+        off = (i - (len(methods) - 1) / 2) * w
+        b = ax.bar(x + off, vals, w, label=lab, edgecolor="black",
+                   linewidth=0.7, color=BAR_COLOURS[i % len(BAR_COLOURS)],
+                   hatch=("", "///", "...", "xxx", "\\\\", "")[i % 6])
         ax.bar_label(b, fmt="%.3f", fontsize=SN_FONT_MIN, padding=1.5)
     ax.set_xticks(x, [disp(n) for n in names]); ax.set_ylabel("NDCG@10 (full catalog)")
     ax.set_title("F6 — SignalShap-Fuse vs fusion baselines\n"
