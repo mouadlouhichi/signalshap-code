@@ -7,7 +7,7 @@
 #   make          build the PDF (checks numbers against artefacts first)
 #   make zip      flat submission bundle
 #   make clean    remove build products
-.PHONY: all check zip clean
+.PHONY: all check verify zip overleaf clean
 MAIN = sn-article
 FIGS = $(wildcard figures/*.png)
 
@@ -34,5 +34,20 @@ zip: $(MAIN).pdf
 	zip -q submission.zip $(MAIN).tex paper.bib sn-jnl.cls sn-basic.bst figures/*.png
 	@unzip -l submission.zip | tail -3
 
+# Source bundle for Overleaf. Deliberately does NOT depend on the PDF: the
+# whole point is to get the sources to a machine that HAS TeX.
+overleaf:
+	rm -f signalshap-overleaf.zip
+	zip -qr signalshap-overleaf.zip $(MAIN).tex paper.bib sn-jnl.cls sn-basic.bst figures/
+	@unzip -l signalshap-overleaf.zip | tail -3
+	@echo "upload signalshap-overleaf.zip to Overleaf; compiler = pdfLaTeX"
+
+# Everything verifiable without a TeX installation. Kept separate from `check`,
+# which is a soft pre-build gate; this one is strict and runs the test suite.
+verify:
+	cd .. && python3 scripts/check_paper_numbers.py --strict
+	cd .. && python3 scripts/check_discover_ai.py
+	cd .. && python3 -m pytest tests/ -q
+
 clean:
-	rm -f *.aux *.bbl *.blg *.log *.out *.spl $(MAIN).pdf submission.zip
+	rm -f *.aux *.bbl *.blg *.log *.out *.spl $(MAIN).pdf submission.zip signalshap-overleaf.zip

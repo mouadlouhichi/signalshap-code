@@ -13,3 +13,13 @@ data/raw/gowalla/
 data/raw/yelp2018/
 data/raw/amazon-book/
 data/raw/ml-1m/
+
+# Build artefacts of the paper (regenerate with `make overleaf` / `make zip`)
+paper/*.zip
+paper/*.aux
+paper/*.bbl
+paper/*.blg
+paper/*.log
+paper/*.out
+paper/*.spl
+paper/sn-article.pdf

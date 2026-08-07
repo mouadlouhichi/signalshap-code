@@ -101,7 +101,11 @@
 \title[Exact Ranking-Stage Source Attribution]{SignalShap: Exact
 Ranking-Stage Attribution of Sources in Hybrid Recommenders}
 
-\author*[1]{\fnm{Mouad} \sur{Louhichi}}\email{mouad\_louhichi@um5.ac.ma}
+%% ORCID is rendered as a plain hyperlink rather than via the class's
+%% \orcid{} macro: that macro does \includegraphics{Orcidlogo.eps}, and the
+%% logo file does not ship with the class. On Overleaf it would fail the
+%% compile with a missing-file error.
+\author*[1]{\fnm{Mouad} \sur{Louhichi}\,\href{https://orcid.org/0000-0002-6849-230X}{\textsuperscript{\fontsize{8}{9}\selectfont ORCID}}}\email{mouad\_louhichi@um5.ac.ma}
 \author[1]{\fnm{Redwane} \sur{Nesmaoui}}\email{redwane.nesmaoui@um5.ac.ma}
 \author[1]{\fnm{Mohamed} \sur{Lazaar}}\email{mohamed.lazaar@ensias.um5.ac.ma}
 
@@ -396,10 +400,26 @@ as ``almost entirely feature-level'' would be wrong; the correct statement is
 that component-level valuation exists and that this paper extends it to
 architectural sources in a ranking system.
 
+\paragraph{Shapley beyond supervised prediction}
+Shapley attribution has also been applied to unsupervised settings, where the
+absence of labels removes the natural payoff that classification or regression
+supplies. Our own earlier work~\citep{louhichi2025gametheory} attributes
+cluster structure to input features by pairing approximated Shapley values with
+multi-level clustering. That work shares this paper's premise --- that a
+cooperative game is a defensible way to divide credit in a model whose internals
+resist inspection --- but differs on every axis that matters here: the players
+are input features rather than trained source models, the payoff is cluster
+quality rather than ranking utility, and the values are approximated rather
+than enumerated exactly. The present paper moves the unit of analysis from
+features to architectural components, which is what makes exact enumeration
+affordable and what makes the retirement question meaningful in the first
+place: one can switch off a recommender source, but not a feature of a
+clustering.
+
 \paragraph{Shapley for ranking}
 A recent line develops Shapley attribution specifically for ranked outputs.
 RankSHAP~\citep{chowdhury2025rankshap} axiomatises feature attribution for
-learning-to-rank and evaluates against ranking metrics;
+learning-to-rank~\citep{burges2005learning} and evaluates against ranking metrics;
 RankingSHAP~\citep{heuss2025rankingshap} gives a listwise formulation;
 ShaRP~\citep{pliatsika2025sharp} defines games for score, rank, top-$k$, and
 pairwise-preference outcomes. Within recommendation, triplet
@@ -495,7 +515,8 @@ once. We define the former and measure both
 
 \paragraph{NDCG with one relevant item}
 Our protocol holds out a single interaction per user, so for a ranking
-$\pi_u$ with the held-out item at position $r$,
+$\pi_u$ with the held-out item at position $r$, the normalised discounted
+cumulative gain~\citep{jarvelin2002cumulated} reduces to a single term:
 $\NDCG(\pi_u; y_u) = 1/\log_2(r+1)$ if $r \le 10$ and $0$ otherwise, the ideal
 DCG being $1$. The metric is therefore a step function of rank, which is why
 coalition values move in discrete jumps and why near-ties require an explicit
@@ -857,7 +878,7 @@ to nonlinear monotone maps.
 \section{Experimental Setup}\label{sec:setup}
 
 \paragraph{Players}
-$cf$: implicit-feedback ALS, 64 factors. $ct$: TF-IDF cosine over item
+$cf$: implicit-feedback ALS~\citep{hu2008collaborative}, 64 factors. $ct$: TF-IDF cosine over item
 metadata. $pop$: time-decayed global frequency. $rec$: exponential recency over
 an item's content cluster. $seq$: item2vec, realised as SVD of the shifted PPMI
 co-occurrence matrix. Levy and Goldberg~\citep{levy2014neural} show that
@@ -877,7 +898,7 @@ estimator against a predeclared qualitative expectation.
 Three real datasets spanning a $36\times$ density range
 (Table~\ref{tab:preconditions}): MovieLens-1M~\citep{harper2015movielens},
 Gowalla check-ins~\citep{cho2011friendship}, and the Video Games category of
-the Amazon Reviews corpus~\citep{hou2024bridging}. All three carry genuine
+the Amazon Reviews corpus~\citep{hou2024bridging,ni2019justifying}. All three carry genuine
 interaction timestamps, which is a requirement rather than a convenience: three
 of the five players ($rec$, $seq$, and the decay term of $pop$) are
 uninterpretable without them.
@@ -915,9 +936,9 @@ Leave-last-out temporal split where timestamps exist; ties broken by
 (timestamp, record index). The main study uses seeds $\{42,43,44\}$; the
 seed-interval and equivalence analyses of Appendix~\ref{app:fusion} use ten
 seeds ($42$--$51$), which is what the two-level bootstrap resamples over.
-Wilcoxon signed-rank for
+Wilcoxon signed-rank~\citep{wilcoxon1945individual} for
 paired $\NDCG$, permutation tests (10\,000 shuffles) for gaps and
-heterogeneity, Holm--Bonferroni with family size \emph{and composition}
+heterogeneity, Holm--Bonferroni~\citep{holm1979simple} with family size \emph{and composition}
 declared, Cohen's $d_z$ throughout.
 
 \paragraph{Reporting protocol}
@@ -1871,8 +1892,11 @@ a_{s,g} = (1-\rho)\,q_{s,g} + \rho\,q_{\mathrm{global},g}.
 The softmax is not cosmetic. Our games are non-monotone, so $\varphi_{s,g}$ can
 be negative, and using raw values as weights would \emph{invert} a source's
 scores rather than down-weight it --- a qualitatively different operation from
-the one the attribution licenses. The temperature $\tau$ and shrinkage $\rho$
-are selected on the validation fold and frozen before any test evaluation.
+the one the attribution licenses. Shrinking a
+noisy per-segment estimate toward a pooled one is the classical
+variance-reduction trade~\citep{james1961estimation}. The temperature $\tau$
+and shrinkage $\rho$ are selected on the validation fold and frozen before any
+test evaluation.
 
 
 \paragraph{Heterogeneity is real, but only on the dense corpus}
