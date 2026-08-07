@@ -23,3 +23,5 @@ paper/*.log
 paper/*.out
 paper/*.spl
 paper/sn-article.pdf
+
+logs/
