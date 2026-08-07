@@ -17,7 +17,7 @@
     "uniform": 3.0
   },
   "friedman_statistic": 14.23809523809524,
-  "friedman_p": 0.014165683684850317,
+  "friedman_p": 0.014165683684850295,
   "critical_difference": 4.353446910208048,
   "alpha": 0.05,
   "note": "Rank 1 is best. Two methods are separable only if their mean ranks differ by more than the critical difference. With few blocks the CD is wide, which is a property of the design, not a failure.",

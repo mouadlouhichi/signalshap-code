@@ -1,0 +1,206 @@
+{
+  "ml_1m": {
+    "tau_shapley": {
+      "mean": 0.19999999999999998,
+      "lo": 0.19999999999999998,
+      "hi": 0.19999999999999998,
+      "n": 10
+    },
+    "tau_loo": {
+      "mean": 0.96,
+      "lo": 0.9077333333333333,
+      "hi": 1.0122666666666666,
+      "n": 10
+    },
+    "cheapest_true_shapley_loo": [
+      [
+        "cf",
+        "ct",
+        "cf"
+      ],
+      [
+        "cf",
+        "ct",
+        "cf"
+      ],
+      [
+        "cf",
+        "ct",
+        "cf"
+      ],
+      [
+        "cf",
+        "ct",
+        "cf"
+      ],
+      [
+        "cf",
+        "ct",
+        "cf"
+      ],
+      [
+        "cf",
+        "ct",
+        "cf"
+      ],
+      [
+        "cf",
+        "ct",
+        "cf"
+      ],
+      [
+        "cf",
+        "ct",
+        "cf"
+      ],
+      [
+        "cf",
+        "ct",
+        "cf"
+      ],
+      [
+        "cf",
+        "ct",
+        "cf"
+      ]
+    ],
+    "loo_correct_frac": 1.0,
+    "shapley_correct_frac": 0.0
+  },
+  "amazon_video_games": {
+    "tau_shapley": {
+      "mean": 0.72,
+      "lo": 0.6333255388120456,
+      "hi": 0.8066744611879544,
+      "n": 10
+    },
+    "tau_loo": {
+      "mean": 0.9399999999999998,
+      "lo": 0.8801210109192436,
+      "hi": 0.9998789890807561,
+      "n": 10
+    },
+    "cheapest_true_shapley_loo": [
+      [
+        "ct",
+        "rec",
+        "ct"
+      ],
+      [
+        "rec",
+        "rec",
+        "rec"
+      ],
+      [
+        "ct",
+        "rec",
+        "ct"
+      ],
+      [
+        "ct",
+        "rec",
+        "rec"
+      ],
+      [
+        "ct",
+        "rec",
+        "ct"
+      ],
+      [
+        "rec",
+        "rec",
+        "rec"
+      ],
+      [
+        "ct",
+        "rec",
+        "ct"
+      ],
+      [
+        "ct",
+        "rec",
+        "rec"
+      ],
+      [
+        "ct",
+        "rec",
+        "ct"
+      ],
+      [
+        "rec",
+        "rec",
+        "rec"
+      ]
+    ],
+    "loo_correct_frac": 0.8,
+    "shapley_correct_frac": 0.3
+  },
+  "gowalla_ts": {
+    "tau_shapley": {
+      "mean": 0.7999999999999999,
+      "lo": 0.7999999999999999,
+      "hi": 0.7999999999999999,
+      "n": 10
+    },
+    "tau_loo": {
+      "mean": 0.9999999999999998,
+      "lo": 0.9999999999999997,
+      "hi": 0.9999999999999999,
+      "n": 10
+    },
+    "cheapest_true_shapley_loo": [
+      [
+        "pop",
+        "rec",
+        "pop"
+      ],
+      [
+        "pop",
+        "rec",
+        "pop"
+      ],
+      [
+        "pop",
+        "rec",
+        "pop"
+      ],
+      [
+        "pop",
+        "rec",
+        "pop"
+      ],
+      [
+        "pop",
+        "rec",
+        "pop"
+      ],
+      [
+        "pop",
+        "rec",
+        "pop"
+      ],
+      [
+        "pop",
+        "rec",
+        "pop"
+      ],
+      [
+        "pop",
+        "rec",
+        "pop"
+      ],
+      [
+        "pop",
+        "rec",
+        "pop"
+      ],
+      [
+        "pop",
+        "rec",
+        "pop"
+      ]
+    ],
+    "loo_correct_frac": 1.0,
+    "shapley_correct_frac": 0.0
+  }
+}
