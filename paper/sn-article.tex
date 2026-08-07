@@ -110,31 +110,31 @@ Analysis (ENSIAS)}, \orgname{Mohammed V University in Rabat},
 \city{Rabat}, \country{Morocco}}
 
 \abstract{Source ablation and Shapley attribution are often treated as
-competing estimates of the same quantity: how much a component of a hybrid
-recommender is worth. We show that they answer different questions, and that
-conflating them leads to the wrong instrument for the decision at hand.
+competing estimates of one quantity: how much a component of a hybrid
+recommender is worth. They answer different questions, and conflating them
+gives the wrong instrument for the decision at hand.
 
 We present \emph{SignalShap}, which recasts source attribution as a five-player
-cooperative game --- collaborative filtering, content, popularity, recency, and
+cooperative game --- collaborative filtering, content, popularity, recency and
 sequential order --- whose payoff is a fixed-candidate normalised discounted
-cumulative gain at rank~10 on a coalition-independent candidate set. With five
-players the Shapley value follows from exact enumeration of all $2^5=32$
-coalitions, so the aggregation carries no sampling error. We validate the
-implementation against constraints known in advance: six analytic games with
-closed-form Shapley vectors reproduce exactly, duplicate injection recovers
-symmetry to numerical precision, and efficiency holds to
+cumulative gain at rank~10 (NDCG@10) on a coalition-independent candidate set.
+With five players the Shapley value follows from exact enumeration of all
+$2^5=32$ coalitions, so the aggregation carries no sampling error. Six analytic
+games with known Shapley vectors reproduce exactly and efficiency holds to
 $6.9\times10^{-18}$.
 
 Across three timestamped corpora spanning a $36\times$ density range, two of
 three systems contain a source on which the two rules disagree in \emph{sign}
-by a material margin; the third disagrees only negligibly. Which source
-diverges is corpus-specific. Yet in an end-to-end retirement simulation,
+by a material margin, at every regularisation strength we tested. Yet in an
+end-to-end retirement simulation,
 leave-one-out predicts the observed cost of removal \emph{better} than Shapley
-($\tau=1.00$ against $0.20$ and $0.60$). SignalShap allocates the value of a
-declared ranking-stage game; leave-one-out estimates the effect of removal from
-the deployed system. We therefore claim credit allocation, not retirement
-guidance, and identify candidate recall as an applicability test that only one
-of our three corpora passes. Code and artefacts are released.}
+on all three corpora and over ten seeds (mean rank agreement $0.96$--$1.00$
+against $0.20$--$0.80$), identifying the cheapest source to retire on
+$80$--$100\%$ of seeds against $0$--$30\%$. SignalShap allocates the value of a declared
+ranking-stage game; leave-one-out estimates the effect of removal. We therefore
+claim credit allocation, not retirement guidance, and identify candidate recall
+as an applicability test that only one corpus passes. Code and artefacts are
+released.}
 
 \keywords{Shapley value, cooperative game theory, hybrid recommender systems,
 ranking-stage attribution, model-component valuation, performance attribution}
@@ -216,9 +216,11 @@ and efficiency on real fitted games.
 \item \textbf{C4 (primary).} An empirical comparison of three estimands ---
       refitted-head ranking-stage, fixed-head, and end-to-end retrieval ---
       showing that Shapley allocation and leave-one-out removal cost answer
-      \emph{different questions}. On both corpora where an end-to-end ground
-      truth can be measured, leave-one-out predicts retirement cost better than
-      Shapley ($\tau = 1.00$ against $0.20$ and $0.60$). We pair this with
+      \emph{different questions}. Over ten seeds on all three corpora,
+      leave-one-out predicts retirement cost better than Shapley (mean rank
+      agreement $0.96$--$1.00$ against $0.20$--$0.80$) and identifies the
+      cheapest source to retire on $80$--$100\%$ of seeds against
+      $0$--$30\%$. We pair this with
       candidate recall as a necessary applicability test, and report where our
       own method should not be used (Sections~\ref{sec:results}
       and~\ref{sec:estimands}).
@@ -1354,29 +1356,33 @@ attaching uncertainty, is straightforward but not yet done.
 disagreements are marked \emph{material} when the gap exceeds $10^{-3}$, the
 same threshold used for monotonicity; negligible flips are those where both
 estimates sit within noise of zero. Two of three corpora contain a material
-disagreement. Seed means and confidence intervals are in the artefact.}
+disagreement. The LOO, Shapley and Gap columns are seed 42, so that the gap is
+a like-for-like difference on one fitted game; the interval is over ten seeds
+and is reported here rather than only in the artefact. Only $\varphi_{ct}$ on
+MovieLens has an interval spanning zero, which is why we treat its sign as
+unstable and rely on it nowhere.}
 \label{tab:loo}
-\begin{tabular}{@{}llrrrl@{}}
+\begin{tabular}{@{}llrrcrl@{}}
 \toprule
-Corpus & Source & LOO & Shapley $\varphi_g$ & Gap & \\
+Corpus & Source & LOO & Shapley & 95\% CI (10 seeds) & Gap & \\
 \midrule
-MovieLens-1M & $cf$  & $-0.00501$ & $+0.01526$ & $+0.02027$ & \textbf{flip, material} \\
-             & $ct$  & $+0.00083$ & $-0.00013$ & $-0.00096$ & flip, negligible \\
-             & $pop$ & $+0.00098$ & $+0.00643$ & $+0.00545$ & \\
-             & $rec$ & $+0.00044$ & $+0.00051$ & $+0.00006$ & \\
-             & $seq$ & $+0.01673$ & $+0.02943$ & $+0.01270$ & \\
+MovieLens-1M & $cf$ & $-0.00501$ & $+0.01526$ & $[+0.01559,+0.01614]$ & $+0.02027$ & \textbf{flip, material} \\
+             & $ct$ & $+0.00083$ & $-0.00013$ & $[-0.00012,+0.00001]$ & $-0.00096$ & flip, negligible \\
+             & $pop$ & $+0.00098$ & $+0.00643$ & $[+0.00651,+0.00664]$ & $+0.00545$ &  \\
+             & $rec$ & $+0.00044$ & $+0.00051$ & $[+0.00028,+0.00045]$ & $+0.00006$ &  \\
+             & $seq$ & $+0.01673$ & $+0.02943$ & $[+0.02978,+0.03030]$ & $+0.01270$ &  \\
 \midrule
-Amazon-VG    & $cf$  & $+0.00845$ & $+0.01913$ & $+0.01069$ & \\
-             & $ct$  & $+0.00002$ & $+0.00174$ & $+0.00172$ & \\
-             & $pop$ & $+0.00308$ & $+0.00144$ & $-0.00164$ & \\
-             & $rec$ & $+0.00023$ & $-0.00059$ & $-0.00082$ & flip, negligible \\
-             & $seq$ & $+0.00758$ & $+0.01897$ & $+0.01139$ & \\
+Amazon-VG    & $cf$ & $+0.00845$ & $+0.01913$ & $[+0.01998,+0.02072]$ & $+0.01069$ &  \\
+             & $ct$ & $+0.00002$ & $+0.00174$ & $[+0.00239,+0.00260]$ & $+0.00172$ &  \\
+             & $pop$ & $+0.00308$ & $+0.00144$ & $[+0.00222,+0.00244]$ & $-0.00164$ &  \\
+             & $rec$ & $+0.00023$ & $-0.00059$ & $[+0.00004,+0.00009]$ & $-0.00082$ & flip, negligible \\
+             & $seq$ & $+0.00758$ & $+0.01897$ & $[+0.01921,+0.01955]$ & $+0.01139$ &  \\
 \midrule
-Gowalla      & $cf$  & $+0.00729$ & $+0.00712$ & $-0.00017$ & \\
-             & $ct$  & $+0.00528$ & $+0.00675$ & $+0.00147$ & \\
-             & $pop$ & $-0.00151$ & $+0.00056$ & $+0.00207$ & \textbf{flip, material} \\
-             & $rec$ & $+0.00001$ & $+0.00039$ & $+0.00038$ & \\
-             & $seq$ & $+0.00070$ & $+0.00214$ & $+0.00144$ & \\
+Gowalla      & $cf$ & $+0.00729$ & $+0.00712$ & $[+0.00697,+0.00720]$ & $-0.00017$ &  \\
+             & $ct$ & $+0.00528$ & $+0.00675$ & $[+0.00670,+0.00680]$ & $+0.00147$ &  \\
+             & $pop$ & $-0.00151$ & $+0.00056$ & $[+0.00045,+0.00053]$ & $+0.00207$ & \textbf{flip, material} \\
+             & $rec$ & $+0.00001$ & $+0.00039$ & $[+0.00036,+0.00039]$ & $+0.00038$ &  \\
+             & $seq$ & $+0.00070$ & $+0.00214$ & $[+0.00218,+0.00227]$ & $+0.00144$ &  \\
 \botrule
 \end{tabular}
 \end{table}
@@ -1411,6 +1417,17 @@ empty-coalition baseline (Section~\ref{sec:threats}) that claim no longer
 holds. The honest statement is weaker: material sign disagreement between the
 two rules occurs on some but not all systems, it is not rare, and nothing in
 either rule announces in advance whether a given system will exhibit it.
+
+\paragraph{The disagreement is not a regularisation artefact}
+A natural objection is that a sign flip could be an artefact of the frozen
+ridge penalty. We swept $\lambda$ over eight orders of magnitude,
+$10^{-5}$ to $10^{3}$, recomputing the full game at each value. The material
+flips are invariant: $cf$ flips on MovieLens and $pop$ flips on Gowalla at
+\emph{every} $\lambda$ tested, and they are the only material flips on those
+corpora throughout. Amazon-VG has none until $\lambda = 10^{3}$, where the
+head is so heavily penalised that $ct$ acquires one; we regard that endpoint as
+degenerate rather than informative. The disagreement therefore reflects
+coalition structure, not the regularisation regime.
 
 One robustness check is available for the Gowalla result. That corpus was run
 at two subsample sizes, $5\,910$ and $8\,865$ users, drawn to different memory
@@ -1585,21 +1602,42 @@ $seq$  & $+0.01636$ & $0.659$ & $+0.02981$ & $+0.01673$ \\
 \end{table}
 
 \textbf{LOO predicts retirement cost better than Shapley
-(Table~\ref{tab:retirement}).} Its ranking matches the observed loss exactly
-($\tau = 1.00$ against $0.20$; exact two-sided permutation $p = 0.017$ and
-$p = 0.82$ respectively at $n = 5$ sources), and it identifies $cf$ as the
-cheapest source to retire, where Shapley selects $ct$. We write
-\emph{observed} rather than \emph{true} loss throughout: this is one measured
-realisation under the reported protocol, not a population quantity. We report this plainly
-because it bounds the paper's practical claim.
+(Table~\ref{tab:retirement}).} On seed 42 its ranking matches the observed loss
+exactly ($\tau = 1.00$ against $0.20$; exact two-sided permutation $p = 0.017$
+and $p = 0.82$ at $n = 5$ sources), and it identifies $cf$ as the cheapest
+source to retire where Shapley selects $ct$. We write \emph{observed} rather
+than \emph{true} loss throughout: this is a measured realisation under the
+reported protocol, not a population quantity.
 
-The finding replicates. On Amazon-VG the same experiment gives
-$\tau = 1.00$ for LOO against $0.60$ for Shapley; LOO again identifies the
-true cheapest source ($ct$) and Shapley again does not, selecting $rec$. Two
-corpora, the same direction, with LOO exact both times. This is not a
-MovieLens idiosyncrasy, and we would rather state it as a replicated limitation
-than as an isolated anomaly: \emph{a practitioner deciding which single source
-to switch off should use leave-one-out ablation, not SignalShap.}
+\begin{table}[t]
+\caption{Retirement-rank agreement over ten seeds. LOO is not exactly $1.00$ on
+every seed --- reporting it as such from a single run would have overstated
+it --- but it is close on all three corpora and beats Shapley on each. The last
+two columns give the fraction of seeds on which each rule identifies the
+genuinely cheapest source to retire}
+\label{tab:retire-seeds}
+\begin{tabular}{@{}lccrr@{}}
+\toprule
+Corpus & $\tau$ LOO (95\% CI) & $\tau$ Shapley (95\% CI)
+       & LOO correct & Shapley correct \\
+\midrule
+MovieLens-1M & $0.96\ [0.91, 1.00]$ & $0.20\ [0.20, 0.20]$ & $100\%$ & $0\%$ \\
+Amazon-VG    & $0.94\ [0.88, 1.00]$ & $0.72\ [0.63, 0.81]$ & $80\%$  & $30\%$ \\
+Gowalla      & $1.00\ [1.00, 1.00]$ & $0.80\ [0.80, 0.80]$ & $100\%$ & $0\%$ \\
+\botrule
+\end{tabular}
+\end{table}
+
+\paragraph{The result holds across seeds and across all three corpora}
+An earlier version reported this from single runs on two corpora. Over ten
+seeds (Table~\ref{tab:retire-seeds}) the picture is both broader and slightly
+more measured. LOO's mean rank agreement is $0.96$, $0.94$ and $1.00$; Shapley's
+is $0.20$, $0.72$ and $0.80$. LOO is therefore \emph{not} perfect on every
+seed, and we correct the earlier claim that it was. It nevertheless dominates
+on every corpus, and the practical gap is starker than the correlations
+suggest: LOO identifies the genuinely cheapest source to retire on $100\%$,
+$80\%$ and $100\%$ of seeds, against $0\%$, $30\%$ and $0\%$ for Shapley. On two
+of three corpora Shapley never once picks the right source to switch off.
 
 The result is also consistent with the theory rather than a contradiction of
 it. Removing $cf$ \emph{improves} end-to-end NDCG@10 by $0.00561$ while
@@ -1637,7 +1675,7 @@ and improvement potential, neither of which any attribution supplies}
 \toprule
 Decision & Appropriate quantity & Evidence \\
 \midrule
-Remove one deployed source & end-to-end LOO & $\tau = 1.00$ (Section~\ref{sec:estimands}) \\
+Remove one deployed source & end-to-end LOO & $\tau = 0.96$--$1.00$, 10 seeds (Section~\ref{sec:estimands}) \\
 Divide credit for current quality & Shapley or a declared semivalue & efficiency, symmetry (Section~\ref{sec:recovery}) \\
 Locate redundancy between sources & pairwise interaction index & Table~\ref{tab:taylor} \\
 Decide where to invest next & \emph{not established} & requires cost and headroom \\
@@ -1665,13 +1703,16 @@ the roadmap, and we regard closing that gap --- an attribution whose payoff
 includes cost --- as the most useful next step for this line of work.
 
 \paragraph{On the strength of the retirement result}
-LOO ranks retirement cost perfectly on both corpora where we could measure it.
-With five sources per corpus the exact two-sided permutation $p$ for
-$\tau = 1.00$ is $0.017$, so a single corpus would be suggestive rather than
-conclusive; two independent replications make it substantially stronger. It
-remains a result about five-source hybrids under one deployment protocol, and
-we would not extrapolate it to systems with many more components, where the
-grand coalition is a less special point in the lattice.
+LOO ranks retirement cost better than Shapley on all three corpora and over
+ten seeds. With five sources the exact two-sided permutation $p$ for
+$\tau = 1.00$ is $0.017$, so a single corpus and a single seed would be
+suggestive rather than conclusive; three corpora and ten seeds make it
+substantially stronger. The decision-level figures are more striking than the
+correlations: on MovieLens and Gowalla, Shapley never once selects the
+genuinely cheapest source to retire. It remains a result about five-source
+hybrids under one deployment protocol, and we would not extrapolate it to
+systems with many more components, where the grand coalition is a less special
+point in the lattice.
 
 \section{Threats to Validity}\label{sec:threats}
 

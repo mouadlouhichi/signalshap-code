@@ -345,3 +345,64 @@ def test_nemenyi_does_not_extrapolate_its_table():
 
     r = friedman_nemenyi({f"m{i}": [0.5 + 0.01 * i] * 4 for i in range(12)})
     assert r["critical_difference"] is None
+
+
+# --------------------------------------------------------------------------- #
+# The three final-revision artefacts must back the numbers now in the paper.
+# --------------------------------------------------------------------------- #
+
+
+def _art(name):
+    import json
+    from pathlib import Path
+
+    p = Path(__file__).resolve().parents[1] / "artefacts" / name
+    if not p.exists():
+        pytest.skip(f"{name} not built yet (scripts/run_final_revision.py)")
+    return json.loads(p.read_text())
+
+
+def test_ten_seed_cis_cover_all_three_corpora():
+    d = _art("final_seed_ci.json")
+    for c in ("ml_1m", "amazon_video_games", "gowalla_ts"):
+        assert d[c]["n_seeds"] == 10, f"{c} is not a ten-seed result"
+
+
+def test_only_ml1m_ct_has_an_interval_spanning_zero():
+    """The paper singles this out; if another CI opens up, the text is stale."""
+    d = _art("final_seed_ci.json")
+    spanning = [(c, g) for c, v in d.items() for g, ci in v["ci"].items()
+                if not ci["excludes_zero"]]
+    assert spanning == [("ml_1m", "ct")], spanning
+
+
+def test_material_flips_survive_the_lambda_sweep():
+    """C3b would be a regularisation artefact if these moved."""
+    d = _art("final_lambda_sweep.json")
+    for lam, row in d["ml_1m"].items():
+        assert row["material_flips"] == ["cf"], (lam, row["material_flips"])
+    for lam, row in d["gowalla_ts"].items():
+        assert row["material_flips"] == ["pop"], (lam, row["material_flips"])
+
+
+def test_amazon_gains_a_flip_only_at_the_extreme_penalty():
+    """Reported honestly in the paper rather than omitted."""
+    d = _art("final_lambda_sweep.json")["amazon_video_games"]
+    flips = {lam: row["material_flips"] for lam, row in d.items()}
+    assert flips["1000.0"] == ["ct"]
+    assert all(v == [] for k, v in flips.items() if k != "1000.0"), flips
+
+
+def test_loo_beats_shapley_at_retirement_on_every_corpus():
+    d = _art("final_retirement_seeds.json")
+    for c, v in d.items():
+        assert v["tau_loo"]["mean"] > v["tau_shapley"]["mean"], c
+        assert v["loo_correct_frac"] >= v["shapley_correct_frac"], c
+
+
+def test_loo_is_not_claimed_perfect():
+    """It is 0.94-1.00, not 1.00. The paper says so; this pins it."""
+    d = _art("final_retirement_seeds.json")
+    means = [v["tau_loo"]["mean"] for v in d.values()]
+    assert min(means) < 1.0, "if LOO were exactly 1.00 everywhere, reword the text"
+    assert min(means) > 0.9
