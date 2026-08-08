@@ -139,6 +139,29 @@ def test_architecture_figure_is_monochrome():
     assert coloured < 1e-4, f"Fig1 is {coloured:.2%} coloured; it must be black-only"
 
 
+def test_every_data_figure_actually_uses_colour():
+    """Fig 1 is black-only; the other six must NOT be.
+
+    Fig 5 (segments) was still greyscale after the palette change, because it
+    used its own local grey ramp rather than the shared palette. Four
+    overlapping segments per source are not separable by grey level at that
+    marker size.
+    """
+    from pathlib import Path
+
+    np = pytest.importorskip("numpy")
+    Image = pytest.importorskip("PIL.Image", reason="Pillow not installed")
+
+    figs = Path(__file__).resolve().parents[1] / "paper" / "figures"
+    for n in range(2, 8):
+        f = figs / f"Fig{n}.png"
+        if not f.exists():
+            continue
+        im = np.asarray(Image.open(f).convert("RGB")).astype(int)
+        coloured = ((im.max(axis=2) - im.min(axis=2)) > 12).mean()
+        assert coloured > 1e-3, f"Fig{n} is greyscale ({coloured:.4%})"
+
+
 def test_data_figures_stay_readable_without_colour():
     """Colour may not be the ONLY channel: every source also gets a marker
     and a hatch, so the data figures survive greyscale reproduction and

@@ -632,12 +632,16 @@ Let $y_{u,i} = \mathbb{1}[i = i_u^{\mathrm{test}}]$ for $i \in \Cu$ be the
 binary relevance vector, let $\pi_u(S)$ be the ranking of $\Cu$ induced by
 $\hat{s}_{u,\cdot}(S)$ under a deterministic tie rule (descending score, then
 ascending item index). Define the \emph{per-user} baseline and game
-\begin{equation}
-b_u = \mathbb{E}_{\pi \sim \mathcal{U}(\Cu)}\bigl[\NDCG(\pi; y_u)\bigr], \qquad
-v_u(S) = \NDCG(\pi_u(S); y_u) - b_u, \qquad
-v(S) = \frac{1}{|\mathcal{U}|}\sum_{u} v_u(S).
+%% Three definitions stacked, not run together with \qquad: on one line the
+%% \NDCG macro expands to NDCG@10 three times and the row overruns the text
+%% block. align keeps each definition on its own line and right-aligns the tag.
+\begin{align}
+b_u    &= \mathbb{E}_{\pi \sim \mathcal{U}(\Cu)}\bigl[\NDCG(\pi; y_u)\bigr],
+          \nonumber \\
+v_u(S) &= \NDCG(\pi_u(S); y_u) - b_u, \nonumber \\
+v(S)   &= \frac{1}{|\mathcal{U}|}\sum_{u} v_u(S).
 \label{eq:game}
-\end{equation}
+\end{align}
 The baseline is the \emph{expected} payoff of a uniformly random ranking, not a
 sampled one. With a single held-out item and $\mathrm{IDCG}=1$ it is available
 in closed form: the item is equally likely to land in any of the $|\Cu|$
@@ -1338,7 +1342,10 @@ validates magnitudes, the null-player axiom, and the handling of negative
 contributions --- none of which the symmetry diagnostic can detect. Additivity
 is verified separately by summing the additive and unanimity games.}
 \label{tab:analytic}
-\begin{tabular}{@{}lllc@{}}
+%% \small and a p{} column: the characteristic functions are long enough
+%% that `l' pushed this table past the text block.
+\small
+\begin{tabular}{@{}lp{0.44\textwidth}cc@{}}
 \toprule
 Game & Characteristic function $v(S)$ & Expected $\varphi$ & Max error \\
 \midrule
@@ -1729,10 +1736,11 @@ it --- but it is close on all three corpora and beats Shapley on each. The last
 two columns give the fraction of seeds on which each rule identifies the
 observed cheapest source to retire under this protocol}
 \label{tab:retire-seeds}
-\begin{tabular}{@{}lccrr@{}}
+\begin{tabular}{@{}lcccc@{}}
 \toprule
-Corpus & $\tau$ LOO (95\% CI) & $\tau$ Shapley (95\% CI)
-       & LOO correct & Shapley correct \\
+Corpus & $\tau$ $\LOOr$ & $\tau$ Shapley
+       & $\LOOr$ correct & Shapley correct \\
+       & (95\% CI) & (95\% CI) & & \\
 \midrule
 MovieLens-1M & $0.96\ [0.91, 1.00]$ & $0.20\ [0.20, 0.20]$ & $100\%$ & $0\%$ \\
 Amazon-VG    & $0.94\ [0.88, 1.00]$ & $0.76\ [0.68, 0.84]$ & $80\%$  & $50\%$ \\
@@ -1784,15 +1792,24 @@ defend from the evidence here.
 The last row is the one we cannot yet fill: allocating future effort needs cost
 and improvement potential, neither of which any attribution supplies}
 \label{tab:decisions}
-\begin{tabular}{@{}lll@{}}
+%% p{} columns, not l: the third column carries a sentence and `l' cannot
+%% wrap, so the row ran past the text block.
+\begin{tabular}{@{}p{0.30\textwidth}p{0.30\textwidth}p{0.32\textwidth}@{}}
 \toprule
 Decision & Appropriate quantity & Evidence \\
 \midrule
-Remove one deployed source & $\LOOe$ (by definition); $\LOOr$ is an
-  effective proxy & $\tau = 0.94$--$1.00$, 10 seeds (Section~\ref{sec:estimands}) \\
-Divide credit for current quality & Shapley or a declared semivalue & efficiency, symmetry (Section~\ref{sec:recovery}) \\
-Locate redundancy between sources & pairwise interaction index & Table~\ref{tab:taylor} \\
-Decide where to invest next & \emph{not established} & requires cost and headroom \\
+Remove one deployed source
+  & $\LOOe$ by definition; $\LOOr$ an effective proxy
+  & $\tau = 0.94$--$1.00$ over 10 seeds (Sec.~\ref{sec:estimands}) \\[2pt]
+Divide credit for current quality
+  & Shapley, or a declared semivalue
+  & efficiency and symmetry (Sec.~\ref{sec:recovery}) \\[2pt]
+Locate redundancy between sources
+  & pairwise interaction index
+  & Table~\ref{tab:taylor} \\[2pt]
+Decide where to invest next
+  & \emph{not established}
+  & would need cost and headroom, which $v$ does not contain \\
 \botrule
 \end{tabular}
 \end{table}

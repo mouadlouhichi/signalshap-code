@@ -61,6 +61,9 @@ PALETTE = {"cf": "#0072B2", "ct": "#D55E00", "pop": "#009E73",
 #: Per-source marker, so a source is identifiable in a scatter without colour.
 SOURCE_MARK = {"cf": "o", "ct": "s", "pop": "^", "rec": "D", "seq": "v"}
 
+#: Segment colours (Okabe-Ito, colourblind-safe), for the per-segment panels.
+SEGMENT_COLOURS = ["#0072B2", "#D55E00", "#009E73", "#CC79A7", "#E69F00"]
+
 #: Method colours for grouped bar charts (Okabe-Ito, colourblind-safe).
 BAR_COLOURS = ["#999999", "#E69F00", "#56B4E9", "#009E73", "#0072B2", "#D55E00"]
 
@@ -300,9 +303,11 @@ def fig5_segment_radar(results: dict) -> Path:
     fig, axes = plt.subplots(1, len(names), figsize=(3.3 * len(names), 3.4),
                              sharey=True)
     axes = np.atleast_1d(axes)
+    # Colour, like the other data figures -- four overlapping segments per
+    # source are hard to separate by grey level alone at this marker size.
+    # Shape still disambiguates, so the panel survives greyscale printing.
     seg_mark = {s: m for s, m in zip(SEGMENT_NAMES, ("o", "s", "^", "D", "v"))}
-    seg_grey = {s: g for s, g in zip(SEGMENT_NAMES,
-                                     ("0.10", "0.35", "0.58", "0.78", "0.92"))}
+    seg_grey = {s: c for s, c in zip(SEGMENT_NAMES, SEGMENT_COLOURS)}
     xpos = np.arange(len(SOURCES))
     for ax, name in zip(axes, names):
         prof = results[name]["e3_segments"]["profiles"]
