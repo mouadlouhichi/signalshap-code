@@ -39,7 +39,9 @@ import numpy as np  # noqa: E402
 
 from signalshap.config import FrozenConfig, write_artefact  # noqa: E402
 from signalshap.game.core import exact_shapley  # noqa: E402
-from signalshap.memory import default_budget_gb, size_corpus  # noqa: E402
+from signalshap.memory import (  # noqa: E402
+    check_paper_shape, default_budget_gb, size_corpus,
+)
 from signalshap.stats.tests import friedman_nemenyi  # noqa: E402
 
 CORPORA = ("ml_1m", "amazon_video_games", "gowalla_ts")
@@ -60,7 +62,7 @@ def _size(name, cfg, budget):
         size_corpus(name, LOADERS[name], budget, verbose=True)
 
 
-def block_seeds(cfg, budget, corpora, seeds, resume=True):
+def block_seeds(cfg, budget, corpora, seeds, resume=True, allow_resize=False):
     """10-seed attribution: per-seed phi, seed mean, and a 95% interval.
 
     Checkpoints after EVERY seed, and resumes from what is already on disk.
@@ -106,6 +108,15 @@ def block_seeds(cfg, budget, corpora, seeds, resume=True):
         for s in todo:
             t0 = time.time()
             e = _experiment(name, cfg, s)
+            ok, why = check_paper_shape(name, e.ds.n_users, e.ds.n_items)
+            if not ok and not allow_resize:
+                raise SystemExit(
+                    "REFUSING to overwrite the reported artefact.\n  " + why
+                    + "\n  Re-run with a larger --budget-gb, or pass "
+                      "--allow-resize to write to a separate file."
+                )
+            if not ok:
+                print(f"  [resized] {why.splitlines()[0]}", flush=True)
             per_seed[s] = exact_shapley(e.v)
             del e
             gc.collect()                     # 14.6 GB of score matrices per seed
@@ -113,7 +124,9 @@ def block_seeds(cfg, budget, corpora, seeds, resume=True):
             out[name] = {"n_seeds": len(per_seed),
                          "per_seed": {str(k): v for k, v in sorted(per_seed.items())},
                          "ci": _summarise(per_seed)}
-            write_artefact("final_seed_ci.json", out)
+            write_artefact(
+                "final_seed_ci_resized.json" if not ok else "final_seed_ci.json",
+                out)
             print(f"  {name} seed {s}: {time.time()-t0:.0f}s "
                   f"({len(per_seed)}/{len(seeds)} done, checkpointed)", flush=True)
         print(f"{name}: complete", flush=True)
@@ -221,6 +234,10 @@ def main() -> int:
     ap.add_argument("--budget-gb", type=float, default=None)
     ap.add_argument("--corpora", nargs="+", default=list(CORPORA))
     ap.add_argument("--seeds", type=int, default=10)
+    ap.add_argument("--allow-resize", action="store_true",
+                    help="permit a corpus smaller than the manuscript's, and "
+                         "write to *_resized.json instead of overwriting the "
+                         "reported artefact")
     ap.add_argument("--only", nargs="+",
                     choices=["seeds", "lambda", "friedman", "retire"],
                     default=["seeds", "lambda", "friedman", "retire"])
@@ -235,7 +252,7 @@ def main() -> int:
     t0 = time.time()
     if "seeds" in a.only:
         print("== 10-seed attribution ==", flush=True)
-        block_seeds(cfg, budget, a.corpora, seeds)
+        block_seeds(cfg, budget, a.corpora, seeds, allow_resize=a.allow_resize)
     if "lambda" in a.only:
         print("\n== lambda sweep ==", flush=True)
         block_lambda(cfg, budget, a.corpora)

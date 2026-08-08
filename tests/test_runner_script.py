@@ -131,7 +131,9 @@ def test_block_seeds_checkpoints_inside_the_seed_loop():
     body = FINAL.read_text()
     block = body[body.index("def block_seeds"):body.index("def block_lambda")]
     seed_loop = block.index("for s in todo:")
-    write = block.index('write_artefact("final_seed_ci.json"')
+    # The artefact name is now chosen at the call site (resized runs go to a
+    # separate file), so match the call rather than the literal filename.
+    write = block.index("write_artefact(")
     corpus_loop_end = block.index('print(f"{name}: complete"')
     assert seed_loop < write < corpus_loop_end, \
         "the checkpoint write must be inside the per-seed loop"

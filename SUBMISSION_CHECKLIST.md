@@ -67,7 +67,12 @@ raw data fits the sandbox):
 | Recall@10 / MRR@10 robustness | `metric_robustness_ml_1m.json`. All 32 coalitions re-scored under each metric; ordering identical, Kendall tau = 1.00 against NDCG for both |
 | Ten-seed interaction intervals | `interaction_seed_ci_ml_1m.json`. Table 7 now reports mean, 95% CI and negative-seed count for all 10 pairs; every pair keeps its sign 10/10. `cf|seq` = -0.0542, `cf|pop` = -0.0254 |
 
-Still not done, deliberately: repeated sparse-corpus subsamples, Amazon/Gowalla
+Repeated sparse-corpus subsampling is now **done** and was the reviewer's
+"highly desirable" item: Gowalla at 4,652 / 5,910 / 8,865 users. Ordering and
+signs hold at all three (tau = 1.00); magnitudes move up to 36% at the smallest.
+Reported in Section 11 as a limitation of the Gowalla point estimates.
+
+Still not done, deliberately: Amazon/Gowalla
 `LOO_rank` intervals, a full three-corpus regeneration under the symmetric
 candidate rule (cost is roughly the original study; ml_1m is done and
 reported). These need the machine with all three raw corpora.

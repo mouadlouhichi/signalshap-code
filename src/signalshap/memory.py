@@ -67,6 +67,34 @@ def scores_gb(n_users: int, n_items: int) -> float:
     return 5 * n_users * n_items * 4 / 1e9
 
 
+#: Corpus dimensions the manuscript's reported numbers were produced at. A run
+#: whose memory budget silently resizes one of these is measuring a DIFFERENT
+#: corpus, not reproducing this one. Learned the hard way: a 12.6 GB re-run
+#: admitted 4,652 of 8,865 Gowalla users and 59,597 of 82,134 items, moved the
+#: attributions by up to 36%, and overwrote the 24 GB artefact in place.
+PAPER_CORPUS_SHAPE = {
+    "ml_1m": (6038, 3533),
+    "amazon_video_games": (7120, 3516),
+    "gowalla_ts": (8865, 82134),
+}
+
+
+def check_paper_shape(name: str, n_users: int, n_items: int) -> tuple[bool, str]:
+    """Does this loaded corpus match the one the manuscript describes?"""
+    want = PAPER_CORPUS_SHAPE.get(name)
+    if want is None:
+        return True, ""
+    if (n_users, n_items) == want:
+        return True, ""
+    return False, (
+        f"{name}: loaded {n_users:,} x {n_items:,} but the manuscript reports "
+        f"{want[0]:,} x {want[1]:,}. The memory budget derives the user cap, so "
+        f"a smaller --budget-gb silently substitutes a different corpus. Results "
+        f"from this run are valid but are NOT comparable with the paper's tables; "
+        f"write them to a separate artefact. Gowalla needs about 24 GB."
+    )
+
+
 def size_corpus(name: str, loader, budget_gb: float,
                 max_users: int | None = None, probe_users: int = 1500,
                 verbose: bool = True) -> int:

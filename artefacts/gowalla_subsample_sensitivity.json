@@ -1,0 +1,81 @@
+{
+ "ml_1m": {
+  "main_24gb": {
+   "cf": 0.015744323070192228,
+   "ct": -0.00017622970871594435,
+   "pop": 0.006456147219860359,
+   "rec": 0.00024376159137854333,
+   "seq": 0.029921988758099087
+  },
+  "resample_12_6gb": {
+   "cf": 0.015733620232012843,
+   "ct": -0.00018346995752328556,
+   "pop": 0.0064527243778263995,
+   "rec": 0.0002438647803626371,
+   "seq": 0.029915045247015493
+  },
+  "kendall_tau": 0.9999999999999999,
+  "max_abs_diff": 1.070283817938486e-05,
+  "max_rel_diff_pct": 4.108415578789494,
+  "sign_agreement": true,
+  "top_source_main": "seq",
+  "top_source_resample": "seq"
+ },
+ "amazon_video_games": {
+  "main_24gb": {
+   "cf": 0.019794576813764377,
+   "ct": 0.0019458455996862235,
+   "pop": 0.0017792736675462484,
+   "rec": -0.000489751266805781,
+   "seq": 0.018829020277612962
+  },
+  "resample_12_6gb": {
+   "cf": 0.019799408168288037,
+   "ct": 0.001947808971141276,
+   "pop": 0.0017785160603606665,
+   "rec": -0.0004906798410300682,
+   "seq": 0.018828397822951815
+  },
+  "kendall_tau": 0.9999999999999999,
+  "max_abs_diff": 4.831354523660708e-06,
+  "max_rel_diff_pct": 0.18960118885317284,
+  "sign_agreement": true,
+  "top_source_main": "cf",
+  "top_source_resample": "cf"
+ },
+ "gowalla_ts": {
+  "main_24gb": {
+   "cf": 0.006416914480092096,
+   "ct": 0.009608428255430212,
+   "pop": 0.0009233847330649065,
+   "rec": 0.00034572106554256314,
+   "seq": 0.0036035233962047842
+  },
+  "resample_12_6gb": {
+   "cf": 0.005793777734772187,
+   "ct": 0.01309532994432854,
+   "pop": 0.0010735613381651619,
+   "rec": 0.00032921369186112944,
+   "seq": 0.004084691137716116
+  },
+  "kendall_tau": 0.9999999999999999,
+  "max_abs_diff": 0.003486901688898328,
+  "max_rel_diff_pct": 36.29003200318119,
+  "sign_agreement": true,
+  "top_source_main": "ct",
+  "top_source_resample": "ct"
+ },
+ "corpus_sizes": {
+  "main_24gb": {
+   "ml_1m": "6038 x 3533",
+   "amazon_video_games": "7120 x 3516",
+   "gowalla_ts": "8865 x 82134"
+  },
+  "resample_12_6gb": {
+   "ml_1m": "6038 x 3533",
+   "amazon_video_games": "7120 x 3516",
+   "gowalla_ts": "4652 x 59597"
+  }
+ },
+ "note": "Independent 10-seed re-run on the same machine under a 12.6 GB memory budget instead of 24 GB. The budget derives the user cap, so ml_1m and amazon_video_games are IDENTICAL corpora in both runs and reproduce to <0.3%, a genuine cross-run reproduction. Gowalla is NOT the same corpus: the smaller budget admits 4,652 of 8,865 users and 59,597 of 82,134 items, and N_max=11,623 is then 19.5% of the catalogue rather than 14.2%. Its magnitudes move by up to 36%. Ordering, signs and the top source are preserved on all three. Reported as subsample sensitivity, NOT merged into the main tables, because the paper describes the 8,865 x 82,134 corpus."
+}

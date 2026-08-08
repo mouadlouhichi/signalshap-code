@@ -97,3 +97,27 @@ def test_no_script_keeps_a_private_copy_of_the_sizing_math(script):
     assert "PEAK_MULTIPLIER =" not in src
     assert "def _fit_users" not in src
     assert "def _free_gb" not in src
+
+
+def test_paper_corpus_shape_guard_catches_a_resized_gowalla():
+    """A 12.6 GB budget silently substituted a different Gowalla and the
+    resulting artefact overwrote the reported one in place. The guard exists
+    so that can only happen deliberately, via --allow-resize."""
+    from signalshap.memory import check_paper_shape
+
+    ok, why = check_paper_shape("gowalla_ts", 4652, 59597)
+    assert not ok
+    assert "8,865" in why and "82,134" in why
+
+    assert check_paper_shape("gowalla_ts", 8865, 82134)[0]
+    assert check_paper_shape("ml_1m", 6038, 3533)[0]
+    # Unknown corpora are not policed.
+    assert check_paper_shape("some_new_corpus", 1, 1)[0]
+
+
+def test_budget_derives_the_paper_gowalla_only_near_24gb():
+    """Documents the budget that reproduces the manuscript's Gowalla."""
+    from signalshap.memory import fit_users
+
+    assert fit_users(82134, 12.6) < 5000      # the run that went wrong
+    assert fit_users(82134, 24.0) >= 8865     # the reported corpus

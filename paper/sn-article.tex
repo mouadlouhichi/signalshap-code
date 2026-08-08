@@ -1601,12 +1601,28 @@ head is so heavily penalised that $ct$ acquires one; we regard that endpoint as
 degenerate rather than informative. The disagreement therefore reflects
 coalition structure, not the regularisation regime.
 
-One robustness check is available for the Gowalla result. That corpus was run
-at two subsample sizes, $5\,910$ and $8\,865$ users, drawn to different memory
-budgets. The material $pop$ disagreement is present at both, at $9.9\%$ and
-$12.2\%$ of $v(\G)$ respectively, and $pop$ is the only material flip in each
-case. A $1.5\times$ change in corpus size therefore does not create or destroy
-it. We report the larger run throughout.
+Two robustness checks are available for the Gowalla result. The corpus was run
+at three subsample sizes, $4\,652$, $5\,910$ and $8\,865$ users, drawn to
+different memory budgets. The material $pop$ disagreement is present at all
+three, and $pop$ is the only material flip in each case: at the two larger
+sizes it is $9.9\%$ and $12.2\%$ of $v(\G)$. A $1.9\times$ change in corpus
+size therefore does not create or destroy it. We report the largest run
+throughout.
+
+The magnitudes, however, are \emph{not} stable, and we report this against our
+own convenience. A full ten-seed repetition at the smallest budget draws
+$4\,652$ of $8\,865$ users and $59\,597$ of $82\,134$ items, which also raises
+the frozen $N_{\max} = 11\,623$ from $14.2\%$ to $19.5\%$ of the catalogue.
+Under that resampling the Gowalla attributions move by up to $36\%$ in relative
+terms ($\varphi_{ct}$ from $0.00961$ to $0.01310$), while the source ordering,
+every sign, and the top source are unchanged (Kendall $\tau = 1.00$). The same
+repetition on MovieLens-1M and Amazon-VG, whose user caps are not budget-bound
+and whose corpora are therefore byte-identical across the two runs, reproduces
+to within $4.1\%$ and $0.2\%$ respectively, which is a genuine cross-run
+reproduction of those two corpora. The conclusion we draw is narrow: on the
+sparsest corpus the \emph{ordering} is robust to which half of the users is
+sampled, the \emph{magnitudes} are not, and Gowalla point estimates should be
+read accordingly.
 
 The corollary is that a single-corpus reading would have been actively
 misleading. On MovieLens alone one would conclude that collaborative filtering
