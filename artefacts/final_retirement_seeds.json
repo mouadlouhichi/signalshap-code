@@ -69,9 +69,9 @@
   },
   "amazon_video_games": {
     "tau_shapley": {
-      "mean": 0.72,
-      "lo": 0.6333255388120456,
-      "hi": 0.8066744611879544,
+      "mean": 0.7599999999999999,
+      "lo": 0.6816,
+      "hi": 0.8383999999999998,
       "n": 10
     },
     "tau_loo": {
@@ -97,7 +97,7 @@
         "ct"
       ],
       [
-        "ct",
+        "rec",
         "rec",
         "rec"
       ],
@@ -112,7 +112,7 @@
         "rec"
       ],
       [
-        "ct",
+        "rec",
         "rec",
         "ct"
       ],
@@ -133,7 +133,7 @@
       ]
     ],
     "loo_correct_frac": 0.8,
-    "shapley_correct_frac": 0.3
+    "shapley_correct_frac": 0.5
   },
   "gowalla_ts": {
     "tau_shapley": {

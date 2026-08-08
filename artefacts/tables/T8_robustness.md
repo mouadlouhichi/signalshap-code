@@ -2,27 +2,27 @@
 
 | Dataset            | Stress test       | Candidate recall   | Top source   | $v(\mathcal{G})$   |
 |:-------------------|:------------------|:-------------------|:-------------|:-------------------|
-| amazon_video_games | $|C_u|$ = 300     | 0.430              | seq          | 0.03970            |
-| amazon_video_games | $|C_u|$ = 600     | 0.588              | cf           | 0.04069            |
-| amazon_video_games | $|C_u|$ = 1200    | 0.750              | cf           | 0.04065            |
+| amazon_video_games | $|C_u|$ = 300     | 0.430              | seq          | 0.04017            |
+| amazon_video_games | $|C_u|$ = 600     | 0.588              | cf           | 0.04131            |
+| amazon_video_games | $|C_u|$ = 1200    | 0.750              | cf           | 0.04169            |
 | amazon_video_games | $\lambda$ = 0.1   | —                  | cf           | —                  |
 | amazon_video_games | $\lambda$ = 1.0   | —                  | cf           | —                  |
 | amazon_video_games | $\lambda$ = 10.0  | —                  | cf           | —                  |
 | amazon_video_games | rescale: identity | —                  | cf           | —                  |
 | amazon_video_games | rescale: log1p    | —                  | cf           | —                  |
 | amazon_video_games | rescale: rank     | —                  | seq          | —                  |
-| gowalla_ts         | $|C_u|$ = 5811    | 0.417              | cf           | 0.01640            |
-| gowalla_ts         | $|C_u|$ = 11623   | 0.450              | cf           | 0.01695            |
-| gowalla_ts         | $|C_u|$ = 23246   | 0.471              | cf           | 0.01781            |
+| gowalla_ts         | $|C_u|$ = 5811    | 0.417              | cf           | 0.01636            |
+| gowalla_ts         | $|C_u|$ = 11623   | 0.450              | cf           | 0.01690            |
+| gowalla_ts         | $|C_u|$ = 23246   | 0.471              | cf           | 0.01778            |
 | gowalla_ts         | $\lambda$ = 0.1   | —                  | cf           | —                  |
 | gowalla_ts         | $\lambda$ = 1.0   | —                  | cf           | —                  |
 | gowalla_ts         | $\lambda$ = 10.0  | —                  | cf           | —                  |
 | gowalla_ts         | rescale: identity | —                  | cf           | —                  |
 | gowalla_ts         | rescale: log1p    | —                  | cf           | —                  |
 | gowalla_ts         | rescale: rank     | —                  | ct           | —                  |
-| ml_1m              | $|C_u|$ = 300     | 0.566              | seq          | 0.05203            |
-| ml_1m              | $|C_u|$ = 600     | 0.748              | seq          | 0.05150            |
-| ml_1m              | $|C_u|$ = 1200    | 0.890              | seq          | 0.05016            |
+| ml_1m              | $|C_u|$ = 300     | 0.566              | seq          | 0.05236            |
+| ml_1m              | $|C_u|$ = 600     | 0.748              | seq          | 0.05136            |
+| ml_1m              | $|C_u|$ = 1200    | 0.891              | seq          | 0.05053            |
 | ml_1m              | $\lambda$ = 0.1   | —                  | seq          | —                  |
 | ml_1m              | $\lambda$ = 1.0   | —                  | seq          | —                  |
 | ml_1m              | $\lambda$ = 10.0  | —                  | seq          | —                  |
