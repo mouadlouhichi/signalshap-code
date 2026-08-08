@@ -310,3 +310,37 @@ def test_float_parameters_are_loosened():
     for cmd in ("topfraction", "bottomfraction", "textfraction",
                 "floatpagefraction"):
         assert cmd in tex, f"\\{cmd} not set; LaTeX defaults strand large floats"
+
+
+def test_no_em_dashes_in_rendered_text():
+    """House style: no em dashes. Colons, commas, parentheses or a full stop.
+
+    Only the rendered body is checked. ASCII rule lines inside LaTeX comments
+    (%% ------) are not typeset and are left alone.
+    """
+    import re
+    from pathlib import Path
+
+    raw = (Path(__file__).resolve().parents[1] / "paper" / "sn-article.tex").read_text()
+    body = "\n".join(l for l in raw.split("\n") if not re.match(r"\s*%", l))
+    assert "---" not in body, (
+        "em dash (---) in rendered text; use a colon, comma, parentheses "
+        "or a new sentence"
+    )
+    assert "\u2014" not in raw, "literal em dash character present"
+
+
+def test_en_dashes_are_only_ranges_and_compound_names():
+    """-- is fine for 0.94--1.00 and Grabisch--Roubens, not as punctuation."""
+    import re
+    from pathlib import Path
+
+    raw = (Path(__file__).resolve().parents[1] / "paper" / "sn-article.tex").read_text()
+    body = "\n".join(l for l in raw.split("\n") if not re.match(r"\s*%", l))
+    # Exclude the TikZ picture: there `--` is the path operator, not a dash.
+    i, j = body.find("\\begin{tikzpicture}"), body.find("\\end{tikzpicture}")
+    if i >= 0:
+        body = body[:i] + body[j:]
+    # A punctuation dash has whitespace on at least one side.
+    loose = re.findall(r"(?:\s--(?!-)|(?<!-)--\s)", body)
+    assert not loose, f"{len(loose)} en dash(es) used as punctuation: {loose[:3]}"
