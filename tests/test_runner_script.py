@@ -116,3 +116,53 @@ def test_validity_checker_survives_a_pre_fix_artefact():
     assert "KeyError" not in r.stderr, f"crashed instead of diagnosing: {r.stderr}"
     assert "v_empty ABSENT" in r.stdout
     assert "Property 1" in r.stdout
+
+
+# --------------------------------------------------------------------------- #
+# block_seeds must checkpoint and resume (the Gowalla 10-seed block died after
+# ~8 h of successful work and would otherwise have discarded all of it).
+# --------------------------------------------------------------------------- #
+
+FINAL = ROOT / "scripts" / "run_final_revision.py"
+
+
+def test_block_seeds_checkpoints_inside_the_seed_loop():
+    """Writing only after all 10 seeds means a crash at seed 9 loses 9 seeds."""
+    body = FINAL.read_text()
+    block = body[body.index("def block_seeds"):body.index("def block_lambda")]
+    seed_loop = block.index("for s in todo:")
+    write = block.index('write_artefact("final_seed_ci.json"')
+    corpus_loop_end = block.index('print(f"{name}: complete"')
+    assert seed_loop < write < corpus_loop_end, \
+        "the checkpoint write must be inside the per-seed loop"
+
+
+def test_block_seeds_resumes_from_disk():
+    body = FINAL.read_text()
+    block = body[body.index("def block_seeds"):body.index("def block_lambda")]
+    assert "resume" in block
+    assert "final_seed_ci.json" in block.split("for name in corpora")[0], \
+        "must read the existing checkpoint before starting"
+    assert "todo" in block, "must compute which seeds remain"
+
+
+def test_resume_arithmetic_skips_completed_and_continues_partial():
+    def todo_for(out, name, seeds):
+        prior = {int(k): v for k, v in
+                 (out.get(name, {}).get("per_seed") or {}).items()}
+        return [s for s in seeds if s not in prior]
+
+    seeds = list(range(42, 52))
+    complete = {"ml_1m": {"per_seed": {str(s): {} for s in seeds}}}
+    assert todo_for(complete, "ml_1m", seeds) == []
+    assert todo_for(complete, "gowalla_ts", seeds) == seeds
+
+    partial = {"gowalla_ts": {"per_seed": {str(s): {} for s in (42, 43, 44)}}}
+    assert todo_for(partial, "gowalla_ts", seeds) == list(range(45, 52))
+
+
+def test_block_seeds_frees_memory_between_seeds():
+    """Gowalla holds 14.6 GB of score matrices per seed."""
+    body = FINAL.read_text()
+    block = body[body.index("def block_seeds"):body.index("def block_lambda")]
+    assert "del e" in block and "gc.collect()" in block

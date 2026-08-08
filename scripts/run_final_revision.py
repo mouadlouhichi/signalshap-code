@@ -26,6 +26,7 @@ block does not lose an earlier one.
 from __future__ import annotations
 
 import argparse
+import gc
 import json
 import os
 import sys
@@ -59,32 +60,63 @@ def _size(name, cfg, budget):
         size_corpus(name, LOADERS[name], budget, verbose=True)
 
 
-def block_seeds(cfg, budget, corpora, seeds):
-    """10-seed attribution: per-seed phi, seed mean, and a 95% interval."""
+def block_seeds(cfg, budget, corpora, seeds, resume=True):
+    """10-seed attribution: per-seed phi, seed mean, and a 95% interval.
+
+    Checkpoints after EVERY seed, and resumes from what is already on disk.
+    The first version wrote only after all ten seeds of a corpus completed and
+    started from an empty dict, so a crash on the third corpus -- which is what
+    happened, Gowalla needing ~4 h and 14.6 GB per seed -- lost that corpus
+    entirely and would have forced a re-run of the eight hours that had already
+    succeeded.
+    """
     out = {}
+    if resume:
+        try:
+            out = json.loads((Path("artefacts") / "final_seed_ci.json").read_text())
+            done = {k: len(v.get("per_seed", {})) for k, v in out.items()}
+            if done:
+                print(f"  resuming; already have {done}", flush=True)
+        except (FileNotFoundError, json.JSONDecodeError):
+            out = {}
+
+    def _summarise(per_seed):
+        ci = {}
+        for g in SOURCES:
+            v = np.array([per_seed[s][g] for s in sorted(per_seed)], dtype=float)
+            se = v.std(ddof=1) / np.sqrt(len(v)) if len(v) > 1 else 0.0
+            lo, hi = v.mean() - 1.96 * se, v.mean() + 1.96 * se
+            ci[g] = {"mean": float(v.mean()),
+                     "sd": float(v.std(ddof=1)) if len(v) > 1 else 0.0,
+                     "lo": float(lo), "hi": float(hi),
+                     "excludes_zero": bool(lo * hi > 0)}
+        return ci
+
     for name in corpora:
+        prior = {int(k): v for k, v in
+                 (out.get(name, {}).get("per_seed") or {}).items()}
+        todo = [s for s in seeds if s not in prior]
+        if not todo:
+            print(f"  {name}: all {len(seeds)} seeds already present, skipping",
+                  flush=True)
+            continue
+
         _size(name, cfg, budget)
-        per_seed = {}
-        for s in seeds:
+        per_seed = dict(prior)
+        for s in todo:
             t0 = time.time()
             e = _experiment(name, cfg, s)
             per_seed[s] = exact_shapley(e.v)
-            print(f"  {name} seed {s}: {time.time()-t0:.0f}s", flush=True)
             del e
-        ci = {}
-        for g in SOURCES:
-            v = np.array([per_seed[s][g] for s in seeds], dtype=float)
-            se = v.std(ddof=1) / np.sqrt(len(v))
-            ci[g] = {"mean": float(v.mean()), "sd": float(v.std(ddof=1)),
-                     "lo": float(v.mean() - 1.96 * se),
-                     "hi": float(v.mean() + 1.96 * se),
-                     "excludes_zero": bool((v.mean() - 1.96 * se) *
-                                           (v.mean() + 1.96 * se) > 0)}
-        out[name] = {"n_seeds": len(seeds),
-                     "per_seed": {str(k): v for k, v in per_seed.items()},
-                     "ci": ci}
-        write_artefact("final_seed_ci.json", out)
-        print(f"{name}: written", flush=True)
+            gc.collect()                     # 14.6 GB of score matrices per seed
+            # Checkpoint immediately: a kill on the next seed keeps this one.
+            out[name] = {"n_seeds": len(per_seed),
+                         "per_seed": {str(k): v for k, v in sorted(per_seed.items())},
+                         "ci": _summarise(per_seed)}
+            write_artefact("final_seed_ci.json", out)
+            print(f"  {name} seed {s}: {time.time()-t0:.0f}s "
+                  f"({len(per_seed)}/{len(seeds)} done, checkpointed)", flush=True)
+        print(f"{name}: complete", flush=True)
     return out
 
 

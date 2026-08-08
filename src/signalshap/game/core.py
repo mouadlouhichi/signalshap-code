@@ -449,7 +449,12 @@ def monotonicity_audit(v: dict[frozenset, float],
         "max_magnitude": float(max(mags, default=0.0)),
         "median_magnitude": float(mags[len(mags) // 2]) if mags else 0.0,
         "sources_involved": sorted({x["g"] for x in violations}),
-        "detail": violations[:20],
+        # ALL violations, not a truncated 20. The magnitudes are the evidence
+        # for the material count the paper quotes, and at 80 audited pairs the
+        # full list is tiny. Truncation silently made that count unverifiable
+        # from the artefact -- check_paper_numbers.py now refuses to verify a
+        # material count when detail is shorter than the violation count.
+        "detail": violations,
         "property2_applicable": len(violations) == 0,
         "stability_note": (
             "Report violations_material (|delta| > 1e-3) alongside the raw "
