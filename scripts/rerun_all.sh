@@ -41,7 +41,7 @@ START=$SECONDS
 echo "budget ${BUDGET} GB | started $(date '+%H:%M:%S')"
 
 # 1. Core study, three seeds, one corpus at a time.
-run study_ml_1m      timeout 7200 python/run_study.py --datasets ml_1m \
+run study_ml_1m      python scripts/run_study.py --datasets ml_1m \
                        --seeds 42 43 44
 run study_amazon     python scripts/run_study.py --datasets amazon_video_games \
                        --budget-gb "$BUDGET" --seeds 42 43 44
