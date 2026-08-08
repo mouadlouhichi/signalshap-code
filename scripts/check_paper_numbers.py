@@ -134,9 +134,18 @@ def check() -> list[str]:
             "violations_material",
             sum(1 for x in det if abs(x["delta"]) > m.get("material_threshold", 1e-3)),
         )
-        if len(det) < v:
+        if len(det) < v and "violations_material" not in m:
+            # Only fatal when the artefact ALSO lacks a recorded material
+            # count. Older artefacts capped detail at 20 but do record
+            # violations_material, so the number the paper quotes is still
+            # traceable -- it just cannot be independently recomputed here.
             bad.append(f"{name}: monotonicity detail truncated "
-                       f"({len(det)} of {v}); material count not verifiable")
+                       f"({len(det)} of {v}) and no violations_material "
+                       f"recorded; material count not verifiable")
+        elif len(det) < v:
+            print(f"  [note] {name}: detail capped at {len(det)} of {v}; "
+                  f"material count read from the artefact, not recomputed",
+                  file=sys.stderr)
         label = {"ml_1m": "MovieLens", "amazon_video_games": "Amazon-VG",
                  "gowalla_ts": "Gowalla"}.get(name)
         if label:

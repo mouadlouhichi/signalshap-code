@@ -368,12 +368,19 @@ def test_ten_seed_cis_cover_all_three_corpora():
         assert d[c]["n_seeds"] == 10, f"{c} is not a ten-seed result"
 
 
-def test_only_ml1m_ct_has_an_interval_spanning_zero():
-    """The paper singles this out; if another CI opens up, the text is stale."""
+def test_no_interval_spans_zero_under_the_deterministic_baseline():
+    """Every source's sign is stable across seeds.
+
+    Under the sampled baseline phi_ct on MovieLens had an interval crossing
+    zero and its sign was not reportable. The deterministic expected-random
+    anchor removed that: all fifteen (corpus, source) intervals now exclude
+    zero, including the two near-zero cases the paper names. If a future run
+    reopens an interval, the Table 3 caption is stale and must say so.
+    """
     d = _art("final_seed_ci.json")
     spanning = [(c, g) for c, v in d.items() for g, ci in v["ci"].items()
                 if not ci["excludes_zero"]]
-    assert spanning == [("ml_1m", "ct")], spanning
+    assert spanning == [], f"intervals spanning zero: {spanning}"
 
 
 def test_material_flips_survive_the_lambda_sweep():

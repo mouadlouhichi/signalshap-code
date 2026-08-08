@@ -1,4 +1,4 @@
 Dataset,"Scorers (train once, s)",Candidates (s),32 coalitions (s),Total (s)
-amazon_video_games,4.84,6.54,9.82,72.22
-gowalla_ts,43.68,356.19,290.99,932.17
-ml_1m,6.41,5.25,8.63,76.78
+amazon_video_games,7.38,9.67,10.24,111.77
+gowalla_ts,57.67,554.02,386.98,1453.78
+ml_1m,9.06,9.70,16.31,156.20
