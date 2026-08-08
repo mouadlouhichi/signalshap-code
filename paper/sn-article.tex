@@ -2194,8 +2194,11 @@ Code, configuration, cached score matrices, and every artefact JSON backing the
 numbers reported here are available at
 \url{https://github.com/mouadlouhichi/signalshap-code}. The repository contains
 the frozen configuration, one command per table and figure, and a test suite
-covering the efficiency, symmetry, and monotonicity invariants. An immutable
-archived release with a DOI will be deposited at acceptance.
+covering the efficiency, symmetry, and monotonicity invariants. Every number
+reported here was produced at the tagged revision
+\texttt{discover-ai-submission}, which we cite in place of a version range so
+that the results can be reproduced against exactly the code that generated
+them.
 
 \bmhead{Acknowledgements}
 Not applicable.
@@ -2211,9 +2214,13 @@ Not applicable.
       in the artefact.
 \item \textbf{Data availability.} MovieLens-1M is used under the GroupLens
       research-use license; Gowalla check-ins from the SNAP collection; and the
-      Video Games category of the Amazon Reviews 2023 corpus. All are public.
-      Code and artefacts will be archived with a DOI at publication.
-\item \textbf{Code availability.} Public repository, MIT license.
+      Video Games category of the Amazon Reviews 2023 corpus. All are public
+      and none is redistributed by us: \texttt{scripts/fetch\_benchmarks.sh}
+      retrieves each from its original source under that source's own terms.
+      The artefact JSON backing every reported number is in the repository.
+\item \textbf{Code availability.} Public repository under the MIT license, at
+      \url{https://github.com/mouadlouhichi/signalshap-code}, commit
+      tag \texttt{discover-ai-submission}.
 \item \textbf{Author contributions.} \textbf{M.\ Louhichi:} conceptualisation,
       methodology, software, formal analysis, investigation, writing (original draft), visualisation. \textbf{R.\ Nesmaoui:} software, validation, data curation, writing (review and editing). \textbf{M.\ Lazaar:}
       supervision, methodology, resources, writing (review and editing). \item \textbf{Use of AI tools.} In line with Springer Nature's guidance on

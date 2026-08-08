@@ -53,8 +53,10 @@ player replication, correcting a claim we had previously made.
 every JSON backing a reported number are available at
 <https://github.com/mouadlouhichi/signalshap-code>. The repository provides one
 command per table and figure, and a test suite covering the efficiency,
-symmetry, monotonicity, and leakage-freedom invariants. An archived release
-with a DOI will be deposited at acceptance.
+symmetry, monotonicity, and leakage-freedom invariants. Every number in the
+manuscript was produced at the tagged revision `discover-ai-submission`,
+cited in the paper so that the
+results can be checked against exactly the code that generated them.
 
 **Declarations.** The work is original, is not under consideration elsewhere,
 and all authors have approved the submission. We declare no competing
