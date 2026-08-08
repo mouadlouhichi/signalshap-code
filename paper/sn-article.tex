@@ -1473,31 +1473,38 @@ means the pair jointly contributes less than the sum of their separate contribut
 
 \begin{table}[tbp]
 \caption{Pairwise Shapley interaction indices (Grabisch--Roubens) on
-MovieLens-1M, seed 42. Negative entries indicate redundancy. One of the two
-most negative pairs, $cf$--$pop$, is a declared expected overlap; the other,
-$cf$--$seq$, is not, and the second declared overlap $rec$--$ct$ is slightly
-positive}
+MovieLens-1M: ten-seed mean with a $95\%$ interval, and the number of the ten
+seeds on which the index is negative. Negative entries indicate redundancy.
+Every pair keeps its sign on $10/10$ seeds. One of the two most negative pairs,
+$cf$--$pop$, is a declared expected overlap; the other, $cf$--$seq$, is not,
+and the second declared overlap $rec$--$ct$ is slightly positive}
 \label{tab:taylor}
-\begin{tabular}{@{}lrlr@{}}
+\begin{tabular}{@{}lrcc@{}}
 \toprule
-Pair & $\mathcal{I}_{ab}$ & Pair & $\mathcal{I}_{ab}$ \\
+Pair & $\mathcal{I}_{ab}$ (10-seed mean) & $95\%$ CI & Neg.\ seeds \\
 \midrule
-$cf|seq$  & $-0.0561$ & $ct|pop$  & $-0.0033$ \\
-$cf|pop$  & $-0.0256$ & $ct|seq$  & $+0.0008$ \\
-$pop|rec$ & $-0.0015$ & $ct|rec$  & $+0.0002$ \\
-$cf|rec$  & $-0.0013$ & $cf|ct$   & $+0.0023$ \\
-$rec|seq$ & $-0.0011$ & $pop|seq$ & $+0.0058$ \\
+$cf|seq$  & $-0.0542$ & $[-0.0554, -0.0529]$ & $10/10$ \\
+$cf|pop$  & $-0.0254$ & $[-0.0256, -0.0252]$ & $10/10$ \\
+$ct|pop$  & $-0.0027$ & $[-0.0029, -0.0025]$ & $10/10$ \\
+$pop|rec$ & $-0.0017$ & $[-0.0019, -0.0016]$ & $10/10$ \\
+$cf|rec$  & $-0.0011$ & $[-0.0014, -0.0009]$ & $10/10$ \\
+$rec|seq$ & $-0.0011$ & $[-0.0014, -0.0009]$ & $10/10$ \\
+$ct|rec$  & $+0.0004$ & $[+0.0003, +0.0006]$ & $0/10$ \\
+$ct|seq$  & $+0.0012$ & $[+0.0009, +0.0014]$ & $0/10$ \\
+$cf|ct$   & $+0.0020$ & $[+0.0016, +0.0023]$ & $0/10$ \\
+$pop|seq$ & $+0.0059$ & $[+0.0056, +0.0061]$ & $0/10$ \\
 \botrule
 \end{tabular}
 \end{table}
 
 Table~\ref{tab:taylor} localises the redundancy behind the MovieLens sign flip.
-The two most negative pairs are $cf|seq$ ($-0.056$) and $cf|pop$ ($-0.026$):
+The two most negative pairs are $cf|seq$ ($-0.054$) and $cf|pop$ ($-0.025$),
+both stable in sign on all ten seeds:
 collaborative filtering overlaps most with the sequential and popularity
 sources, which is why removing it from the grand coalition costs so little and
 why leave-one-out scores it below zero. Only one of these, $cf|pop$, was
 declared in advance (Section~\ref{sec:setup}); $cf|seq$ was not, and the other
-declared overlap $rec|ct$ comes out slightly \emph{positive} at $+0.0002$. We
+declared overlap $rec|ct$ comes out slightly \emph{positive} at $+0.0004$. We
 therefore claim partial rather than complete recovery of the pre-declared
 structure, and note that an earlier version of this paper overstated it. The interaction values are
 reported for MovieLens only; extending them to the other corpora, and
@@ -1518,7 +1525,15 @@ by itself a statement about individual seeds, so we also counted directly: all
 fifteen source-by-corpus cells have the same sign on $10$ of $10$ seeds,
 including the two near-zero cases ($\varphi_{ct}$ on MovieLens, mean
 $-0.00018$, negative on $10/10$; $\varphi_{rec}$ on Amazon-VG, mean $-0.00049$,
-negative on $10/10$) whose signs were not stable under the sampled baseline.}
+negative on $10/10$) whose signs were not stable under the sampled baseline.
+The $\LOOr$ and gap columns are seed-42 point estimates; we have since computed
+ten-seed intervals for both on MovieLens-1M, where the material $cf$ case is
+stable in every respect ($\LOOr = -0.00477$, negative on $10/10$ seeds; gap
+$= +0.02033$, $[+0.01995, +0.02071]$, positive on $10/10$). The near-zero
+sources are not stable: $\LOOr(ct)$ is positive on only $7/10$ seeds and
+$\LOOr(rec)$ on $5/10$, so the two negligible flips on this corpus are seed
+noise and we do not interpret them. Amazon-VG and Gowalla intervals for
+$\LOOr$ are not yet computed.}
 \label{tab:loo}
 \begin{tabular}{@{}llrrcrl@{}}
 \toprule
@@ -1706,6 +1721,16 @@ $v$; without it the cells are not comparable. The $\lambda$ panel is
 sensitivity only and is never used for selection.}\label{fig:robustness}
 \end{figure}
 
+\paragraph{The ordering does not depend on the choice of ranking metric}
+NDCG@10 is the only metric in the characteristic function, so a reviewer asked
+whether the attributions are an artefact of it. We re-scored the same game with
+Recall@10 and with MRR@10 in place of NDCG@10 on MovieLens-1M (seed 42),
+recomputing all $32$ coalitions in each case. The induced source ordering is
+identical under all three (Kendall $\tau = 1.00$ against NDCG in both cases,
+$seq$ first and $cf$ second throughout). Magnitudes are not comparable, because
+the Recall and MRR games are not baseline-centred, so we report the ordering
+only. This is one corpus and one seed.
+
 \paragraph{The full suite is uneven across corpora}
 Robustness sweeps (Figure~\ref{fig:robustness}), segment analysis, and fusion
 are strongest on MovieLens-1M, the only corpus that clears the candidate-recall
@@ -1827,7 +1852,7 @@ $[24, 76]$, does not.
 The result is also consistent with the theory rather than a contradiction of
 it. Removing $cf$ \emph{improves} end-to-end NDCG@10 by $0.00542$ while
 dropping candidate recall from $0.748$ to $0.689$: the collaborative signal is
-substantially redundant with $seq$ and $pop$ (the pairwise interaction indices are $-0.056$ for $cf|seq$ and $-0.026$ for $cf|pop$, the two most negative pairs), so in the grand coalition its scores add noise the others
+substantially redundant with $seq$ and $pop$ (the pairwise interaction indices are $-0.054$ for $cf|seq$ and $-0.025$ for $cf|pop$, the two most negative pairs), so in the grand coalition its scores add noise the others
 already cover. $\LOOr$ measures the removal of $cf$ from the fixed-candidate
 ranking game, and $\LOOe$ measures it from retrieval and ranking together;
 the latter is the quantity a single-source retirement decision needs, and the

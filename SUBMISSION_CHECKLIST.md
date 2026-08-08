@@ -58,9 +58,19 @@ Run a single block with e.g. `--only lambda`.
 | Bibliography metadata ([11],[13],[15],[28],[31],[37]) | **Fixed** |
 | AI-use declaration | **Expanded** to Springer Nature's current wording |
 
-Not done, deliberately: repeated sparse-corpus subsamples, ten-seed interaction
-indices, Recall@10/MRR@10, a full three-corpus regeneration under the symmetric
-candidate rule (cost is roughly the original study; ml_1m is done and reported).
+Also closed after the first pass, all on MovieLens-1M (the only corpus whose
+raw data fits the sandbox):
+
+| Item | Result |
+|---|---|
+| Ten-seed CI for `LOO_rank` and for the Shapley-minus-LOO gap | `final_loo_gap_ci.json`. Gap on `cf` = +0.02033 [+0.01995, +0.02071], positive 10/10. **New finding:** `LOO_rank` sign is *not* seed-stable for the near-zero sources (`ct` 7/10, `rec` 5/10), so the two negligible flips are seed noise. Disclosed in the Table 6 caption |
+| Recall@10 / MRR@10 robustness | `metric_robustness_ml_1m.json`. All 32 coalitions re-scored under each metric; ordering identical, Kendall tau = 1.00 against NDCG for both |
+| Ten-seed interaction intervals | `interaction_seed_ci_ml_1m.json`. Table 7 now reports mean, 95% CI and negative-seed count for all 10 pairs; every pair keeps its sign 10/10. `cf|seq` = -0.0542, `cf|pop` = -0.0254 |
+
+Still not done, deliberately: repeated sparse-corpus subsamples, Amazon/Gowalla
+`LOO_rank` intervals, a full three-corpus regeneration under the symmetric
+candidate rule (cost is roughly the original study; ml_1m is done and
+reported). These need the machine with all three raw corpora.
 
 ## YOU: cannot be automated
 
