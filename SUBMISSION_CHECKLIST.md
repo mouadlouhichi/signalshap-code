@@ -41,6 +41,27 @@ Four blocks, each writing its own artefact so a late crash keeps early results:
 
 Run a single block with e.g. `--only lambda`.
 
+## Review round 3 (reviewer confirmed correct on both headline items)
+
+| Issue | Status |
+|---|---|
+| "Uniform semivalue" formula equals Shapley exactly | **Fixed.** Verified numerically: our artefact agreed to 0.0 in every coordinate. Replaced with binomial semivalues q = 0.25 / 0.75; efficiency claim about it withdrawn; regression tests added |
+| Sampled baseline still in Algorithm 1, Table 2, Table 7 | **Fixed.** Baseline seed and pi^0 removed; Table 7 regenerated from the deterministic-baseline artefact, where it is identical to Table 6 |
+| Abstract/C4 said 0-30%, Table 8 says 0/50/0 | **Fixed** to 0-50%, with Wilson intervals added |
+| Section 11 stale (0.01526 / -0.00501 / 0.0203 / 39%) | **Fixed** to 0.01545 / -0.00519 / 0.02064 / 40.2% |
+| Source-order-dependent truncation | **Fixed and measured.** Symmetric reciprocal-rank key is now the default; ml_1m ablation shows max abs delta phi = 2.8e-5, same ordering, same material flip. Disclosed that Tables 6-8 predate the switch |
+| Promised grand-coalition pool ablation missing | **Added** from the existing E8-a artefact: recall 0.748 to 0.807, v(G) +0.00411, phi_ct flips |
+| Grand-pool and lambda "bias theorems" | **Recast** as construct-design choices; Limitations no longer calls them data-independent mathematics |
+| Friedman test violating the recall gate | **Deleted** |
+| Ten-seed means as primary; sign frequencies | **Added** to Table 6 and Figure 2 (regenerated); all 15 cells are 10/10 sign-stable |
+| Complexity omitted full-catalogue scoring | **Fixed**: C_score and O(m n |I|) terms added |
+| Bibliography metadata ([11],[13],[15],[28],[31],[37]) | **Fixed** |
+| AI-use declaration | **Expanded** to Springer Nature's current wording |
+
+Not done, deliberately: repeated sparse-corpus subsamples, ten-seed interaction
+indices, Recall@10/MRR@10, a full three-corpus regeneration under the symmetric
+candidate rule (cost is roughly the original study; ml_1m is done and reported).
+
 ## YOU: cannot be automated
 
 1. **First LaTeX compile.** Never done. `brew install --cask mactex-no-gui && cd paper && make`. Since we last spoke I added Background, Discussion, two tables, an algorithm rewrite, and `algorithm`/`algpseudocode`. Send the log either way.

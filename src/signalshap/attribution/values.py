@@ -8,7 +8,15 @@ the comparators needed to answer that:
   * **Banzhaf value** -- uniform weight over coalitions rather than over
     permutations; satisfies symmetry and dummy, but not efficiency.
   * **Weighted semivalues** -- the family containing both, parameterised by a
-    distribution over coalition sizes.
+    distribution over coalition sizes. Note that the SIZE-UNIFORM member,
+    p_k = 1/n, IS the Shapley value: Shapley's permutation weight
+    |S|!(n-|S|-1)!/n! equals (1/n) / C(n-1,|S|), i.e. mass 1/n spread evenly
+    over the C(n-1,k) coalitions of each size. An earlier version of this
+    module and of the manuscript reported it as a distinct comparator; a
+    reviewer caught that, and the artefact confirmed it numerically (max
+    |phi - psi| = 0.0 on every source). The distinct comparators are now the
+    binomial semivalues p ~ Bin(n-1, q) with q != 0.5 alongside Banzhaf
+    (q = 0.5).
   * **Shapley interaction index** (Grabisch-Roubens, order 2) -- pairwise
     redundancy, which matters here because redundancy is the paper's whole
     motivation and main effects alone cannot express it.
@@ -70,6 +78,22 @@ def semivalue(v: dict, weights: dict[int, float] | None = None,
     return out
 
 
+def binomial_semivalue(v: dict, q: float,
+                       sources: tuple[str, ...] = SOURCES) -> dict[str, float]:
+    """Binomial (probabilistic) semivalue: each other player joins w.p. q.
+
+    Coalition-size mass p_k = C(n-1,k) q^k (1-q)^(n-1-k). q = 0.5 recovers
+    Banzhaf. q != 0.5 gives a value that is genuinely NOT Shapley: small q
+    weights small predecessor coalitions, so a source that is valuable alone
+    but redundant in company scores higher; large q does the reverse. This is
+    the robustness question the size-uniform "semivalue" was supposed to ask
+    but could not, because it is Shapley identically.
+    """
+    n = len(sources)
+    pk = {k: comb(n - 1, k) * q ** k * (1.0 - q) ** (n - 1 - k) for k in range(n)}
+    return semivalue(v, pk, sources)
+
+
 def shapley_taylor_interaction(v: dict, sources: tuple[str, ...] = SOURCES,
                                order: int = 2) -> dict[str, float]:
     """Grabisch-Roubens Shapley INTERACTION index, order 2.
@@ -123,7 +147,10 @@ def compare_values(v: dict, sources: tuple[str, ...] = SOURCES) -> dict:
     n = len(sources)
     shap = exact_shapley(v, sources)
     banz = banzhaf_value(v, sources)
-    semi = semivalue(v, {k: 1.0 / n for k in range(n)}, sources)
+    # p_k = 1/n is Shapley itself, kept only as an implementation check.
+    semi_uniform_is_shapley = semivalue(v, {k: 1.0 / n for k in range(n)}, sources)
+    semi_lo = binomial_semivalue(v, 0.25, sources)
+    semi_hi = binomial_semivalue(v, 0.75, sources)
 
     order = list(sources)
     s_vec = [shap[g] for g in order]
@@ -133,13 +160,29 @@ def compare_values(v: dict, sources: tuple[str, ...] = SOURCES) -> dict:
     return {
         "shapley": shap,
         "banzhaf": banz,
-        "semivalue_uniform": semi,
+        "semivalue_binomial_q025": semi_lo,
+        "semivalue_binomial_q075": semi_hi,
+        "semivalue_size_uniform": semi_uniform_is_shapley,
+        "size_uniform_equals_shapley_max_abs_diff": float(
+            max(abs(semi_uniform_is_shapley[g] - shap[g]) for g in sources)),
         "shapley_top": max(shap, key=shap.get),
         "banzhaf_top": max(banz, key=banz.get),
         "top_source_agrees": max(shap, key=shap.get) == max(banz, key=banz.get),
         "kendall_tau_shapley_banzhaf": float(tau) if np.isfinite(tau) else 0.0,
+        "kendall_tau_shapley_q025": float(
+            kendalltau(s_vec, [semi_lo[g] for g in order]).correlation),
+        "kendall_tau_shapley_q075": float(
+            kendalltau(s_vec, [semi_hi[g] for g in order]).correlation),
+        "top_source_all_values": sorted({
+            max(d, key=d.get) for d in (shap, banz, semi_lo, semi_hi)}),
+        "sums": {k: float(sum(d.values())) for k, d in
+                 (("shapley", shap), ("banzhaf", banz),
+                  ("q025", semi_lo), ("q075", semi_hi))},
         "note": (
             "Banzhaf does not satisfy efficiency, so its values do not sum to "
-            "v(G); only the induced ORDERING is comparable across values."
+            "v(G); only the induced ORDERING is comparable across values. The "
+            "size-uniform semivalue is Shapley identically (see the diff key), "
+            "so the distinct comparators are Banzhaf and the binomial "
+            "semivalues at q = 0.25 and q = 0.75."
         ),
     }

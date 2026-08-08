@@ -56,11 +56,15 @@ class Experiment:
     """Holds one dataset's prepared state and runs E0-E8 against it."""
 
     def __init__(self, name: str, cfg: FrozenConfig | None = None,
-                 seed: int = 42, synthetic: bool = False) -> None:
+                 seed: int = 42, synthetic: bool = False,
+                 symmetric_candidates: bool = True) -> None:
         self.name = name
         self.cfg = cfg or FrozenConfig.load()
         self.seed = seed
         self.timings: dict[str, float] = {}
+        #: Source-order-invariant candidate truncation (Section 4.1). False
+        #: reproduces the legacy order-dependent rule for the ablation.
+        self.symmetric_candidates = symmetric_candidates
 
         # A missing entry must NEVER silently become a default. gowalla_ts and
         # amazon_video_games were absent from frozen.yaml (the config listed
@@ -90,7 +94,8 @@ class Experiment:
 
         t0 = time.time()
         self.candidates = build_candidates(
-            self.scores, self.ds.n_users, self.n_max, self.cfg.max_growth_iters
+            self.scores, self.ds.n_users, self.n_max, self.cfg.max_growth_iters,
+            symmetric=symmetric_candidates,
         )
         self.timings["candidates"] = time.time() - t0
 

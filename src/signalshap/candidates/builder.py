@@ -34,12 +34,13 @@ def _topn(scores: np.ndarray, u: int, n: int) -> np.ndarray:
 
 def build_candidates_for_user(
     scores: dict[str, np.ndarray], u: int, n_max: int, max_iters: int = 10,
+    symmetric: bool = True,
 ) -> np.ndarray:
     """Proportional-growth union with deterministic truncation (spec §2.3).
 
-    Returns items sorted by (best per-source rank, source order, item index) --
-    the same key used for truncation, so the prefix property holds and the set
-    is reproducible across seeds and coalitions.
+    Returns items ordered by the truncation key itself, so the prefix property
+    holds and the set is reproducible across seeds and coalitions. With
+    `symmetric=True` that key is source-order invariant (see `_truncate`).
     """
     sources = [g for g in SOURCES if g in scores]
     n_g = {g: int(np.ceil(n_max / len(sources))) for g in sources}
@@ -56,7 +57,30 @@ def build_candidates_for_user(
         for g in sources:
             n_g[g] = min(n_g[g] + step, caps[g])
 
-    # Step 6: rank each candidate by its best position across sources.
+    return _truncate(lists, sources, n_max, symmetric)
+
+
+def _truncate(lists, sources, n_max, symmetric: bool) -> np.ndarray:
+    """Order the union and cut to n_max.
+
+    Two rules. `symmetric=True` (default) scores each item by the sum of
+    reciprocal ranks across the sources that retrieved it, then breaks ties on
+    item index. Every key is invariant under permuting the source list, so
+    relabelling the players cannot change the game. `symmetric=False` is the
+    legacy rule: best per-source rank, ties broken by position in SOURCES,
+    which made C_u depend on an arbitrary declaration order. It is retained so
+    the ablation can measure what that dependence cost.
+    """
+    if symmetric:
+        rr: dict[int, float] = {}
+        for g in sources:
+            for rank, item in enumerate(lists.get(g, [])):
+                rr[int(item)] = rr.get(int(item), 0.0) + 1.0 / (rank + 1)
+        if not rr:
+            return np.empty(0, dtype=np.int64)
+        ordered = sorted(rr.items(), key=lambda kv: (-kv[1], kv[0]))
+        return np.array([i for i, _ in ordered[:n_max]], dtype=np.int64)
+
     best: dict[int, tuple[int, int]] = {}
     for s_idx, g in enumerate(sources):
         for rank, item in enumerate(lists.get(g, [])):
@@ -71,9 +95,11 @@ def build_candidates_for_user(
 
 def build_candidates(
     scores: dict[str, np.ndarray], n_users: int, n_max: int, max_iters: int = 10,
+    symmetric: bool = True,
 ) -> list[np.ndarray]:
     return [
-        build_candidates_for_user(scores, u, n_max, max_iters) for u in range(n_users)
+        build_candidates_for_user(scores, u, n_max, max_iters, symmetric)
+        for u in range(n_users)
     ]
 
 

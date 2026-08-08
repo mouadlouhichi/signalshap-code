@@ -179,6 +179,20 @@ def fig1_workflow() -> Path:
     return p
 
 
+def _ten_seed_ci(name: str) -> dict | None:
+    """Ten-seed mean and 95% interval per source, if the artefact exists."""
+    import json
+    from pathlib import Path as _P
+    f = _P("artefacts") / "final_seed_ci.json"
+    if not f.exists():
+        return None
+    try:
+        d = json.loads(f.read_text()).get(name, {}).get("ci")
+    except (json.JSONDecodeError, OSError):
+        return None
+    return d if d and all(g in d for g in SOURCES) else None
+
+
 def fig2_shapley_shares(results: dict) -> Path:
     """F2: per-source Shapley shares with seed CIs (main text, spec §2.7)."""
     _dirs()
@@ -188,9 +202,18 @@ def fig2_shapley_shares(results: dict) -> Path:
     for ax, name in zip(axes, names):
         r = results[name]
         phi = r["e1_source_share"]["shapley"]
-        ci = r.get("multi_seed", {}).get("ci", {})
-        vals = [phi[g] for g in SOURCES]
-        err = [ci.get(g, {}).get("std", 0.0) for g in SOURCES]
+        # Prefer the ten-seed artefact over the three main-study seeds: the
+        # ten-seed run is the paper's primary uncertainty estimate, and
+        # plotting 1.96 SE from n = 3 understated it.
+        ten = _ten_seed_ci(name)
+        if ten:
+            vals = [ten[g]["mean"] for g in SOURCES]
+            err = [[ten[g]["mean"] - ten[g]["lo"] for g in SOURCES],
+                   [ten[g]["hi"] - ten[g]["mean"] for g in SOURCES]]
+        else:
+            ci = r.get("multi_seed", {}).get("ci", {})
+            vals = [phi[g] for g in SOURCES]
+            err = [ci.get(g, {}).get("std", 0.0) for g in SOURCES]
         bars = ax.bar(SOURCES, vals, yerr=err, capsize=3,
                       color=[PALETTE[g] for g in SOURCES], edgecolor="black",
                       linewidth=0.8, error_kw={"ecolor": "black"})
