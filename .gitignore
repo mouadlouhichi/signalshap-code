@@ -13,6 +13,11 @@ data/raw/gowalla/
 data/raw/yelp2018/
 data/raw/amazon-book/
 data/raw/ml-1m/
+# MovieLens is NOT redistributable: the GroupLens README states "The user may
+# not redistribute the data without separate permission." These files were
+# tracked in error from commit da51daa and are now untracked. Fetch them with
+# scripts/fetch_benchmarks.sh instead.
+data/ml-1m/
 
 # Build artefacts of the paper (regenerate with `make overleaf` / `make zip`)
 paper/*.zip
@@ -28,3 +33,4 @@ logs/
 
 paper/*.pdf
 sn-article.pdf
+signalshap-archive.zip

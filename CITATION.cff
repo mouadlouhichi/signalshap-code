@@ -1,0 +1,23 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite both the software and the paper."
+title: "SignalShap: Exact Ranking-Stage Attribution of Sources in Hybrid Recommenders (code and artefacts)"
+type: software
+license: MIT
+repository-code: "https://github.com/mouadlouhichi/signalshap-code"
+authors:
+  - family-names: Louhichi
+    given-names: Mouad
+    orcid: "https://orcid.org/0000-0002-6849-230X"
+    affiliation: "ENSIAS, Mohammed V University in Rabat"
+  - family-names: Nesmaoui
+    given-names: Rachid
+    affiliation: "ENSIAS, Mohammed V University in Rabat"
+  - family-names: Lazaar
+    given-names: Mohamed
+    affiliation: "ENSIAS, Mohammed V University in Rabat"
+keywords:
+  - Shapley value
+  - cooperative game theory
+  - hybrid recommender systems
+  - ranking-stage attribution
+  - explainable AI

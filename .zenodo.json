@@ -1,0 +1,37 @@
+{
+  "title": "SignalShap: Exact Ranking-Stage Attribution of Sources in Hybrid Recommenders (code and artefacts)",
+  "description": "Code, frozen configuration, and every artefact JSON backing the numbers in the manuscript 'SignalShap: Exact Ranking-Stage Attribution of Sources in Hybrid Recommenders'. Recasts hybrid-recommender source attribution as a five-player cooperative game with fixed-candidate NDCG@10 as the characteristic function, computed by exact enumeration over all 32 coalitions. Includes the analytic validation suite, the ten-seed retirement experiment, and the negative fusion result. Benchmark corpora are not redistributed; fetch scripts are provided.",
+  "upload_type": "software",
+  "license": "MIT",
+  "access_right": "open",
+  "creators": [
+    {
+      "name": "Louhichi, Mouad",
+      "orcid": "0000-0002-6849-230X",
+      "affiliation": "ENSIAS, Mohammed V University in Rabat, Morocco"
+    },
+    {
+      "name": "Nesmaoui, Rachid",
+      "affiliation": "ENSIAS, Mohammed V University in Rabat, Morocco"
+    },
+    {
+      "name": "Lazaar, Mohamed",
+      "affiliation": "ENSIAS, Mohammed V University in Rabat, Morocco"
+    }
+  ],
+  "keywords": [
+    "Shapley value",
+    "cooperative game theory",
+    "hybrid recommender systems",
+    "ranking-stage attribution",
+    "model-component valuation",
+    "explainable AI"
+  ],
+  "related_identifiers": [
+    {
+      "identifier": "https://github.com/mouadlouhichi/signalshap-code",
+      "relation": "isSupplementTo",
+      "scheme": "url"
+    }
+  ]
+}
