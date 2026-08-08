@@ -220,8 +220,18 @@ def fig2_shapley_shares(results: dict) -> Path:
         for bar, g in zip(bars, SOURCES):
             bar.set_hatch(SOURCE_HATCH[g])
         ax.axhline(0, color="black", lw=0.8)
-        ax.set_title(f"{disp(name)}\n$v(\\mathcal{{G}})$="
-                     f"{r['e1_source_share']['v_grand']:.4f}", fontsize=9)
+        # The panel label must be the grand value of the SAME aggregation
+        # level as the bars. Showing seed-42 v(G) above ten-seed bars made the
+        # figure appear to violate efficiency: by efficiency the bars sum to
+        # the ten-seed mean v(G), which differs from the seed-42 value (on
+        # Gowalla by 24%).
+        if ten:
+            vg = sum(ten[g]["mean"] for g in SOURCES)
+            lab = f"{disp(name)}\n$\\overline{{v(\\mathcal{{G}})}}$={vg:.4f} (10 seeds)"
+        else:
+            lab = (f"{disp(name)}\n$v(\\mathcal{{G}})$="
+                   f"{r['e1_source_share']['v_grand']:.4f}")
+        ax.set_title(lab, fontsize=9)
         ax.set_xlabel("source")
     axes[0].set_ylabel("Shapley value $\\varphi_g$")
     p = FIG / "F2_shapley_shares.png"
@@ -376,7 +386,11 @@ def fig6_fuse_gain(results: dict) -> Path:
                    hatch=("", "///", "...", "xxx", "\\\\", "")[i % 6])
         ax.bar_label(b, fmt="%.3f", fontsize=SN_FONT_MIN, padding=1.5)
     ax.set_xticks(x, [disp(n) for n in names]); ax.set_ylabel("NDCG@10 (full catalog)")
-    ax.set_title("F6 — SignalShap-Fuse vs fusion baselines\n"
+    # No internal figure number: the asset's F-number is its generation order,
+    # not its position in the paper, and printing "F6" on the panel that the
+    # manuscript labels Figure 7 confused a reviewer. The LaTeX caption is the
+    # single source of truth for numbering.
+    ax.set_title("SignalShap-Fuse vs fusion baselines\n"
                  "(full-catalog: items outside $C_u$ scored as misses)", fontsize=9.5)
     ax.legend(fontsize=8)
     p = FIG / "F6_fuse_gain.png"

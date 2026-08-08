@@ -38,6 +38,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 import numpy as np  # noqa: E402
 
 from signalshap.config import FrozenConfig, write_artefact  # noqa: E402
+from signalshap.attribution.baselines import loo_attribution  # noqa: E402
 from signalshap.game.core import exact_shapley  # noqa: E402
 from signalshap.memory import (  # noqa: E402
     check_paper_shape, default_budget_gb, size_corpus,
@@ -87,16 +88,31 @@ def block_seeds(cfg, budget, corpora, seeds, resume=True, allow_resize=False):
         for g in SOURCES:
             v = np.array([per_seed[s][g] for s in sorted(per_seed)], dtype=float)
             se = v.std(ddof=1) / np.sqrt(len(v)) if len(v) > 1 else 0.0
-            lo, hi = v.mean() - 1.96 * se, v.mean() + 1.96 * se
+            # t_{n-1}, not 1.96: with ten seeds the normal quantile is too
+            # narrow (t_9 = 2.262 against 1.96, a 15% wider interval).
+            try:
+                from scipy.stats import t as _t
+                crit = float(_t.ppf(0.975, len(v) - 1)) if len(v) > 1 else 0.0
+            except Exception:                            # noqa: BLE001
+                crit = 1.96
+            lo, hi = v.mean() - crit * se, v.mean() + crit * se
             ci[g] = {"mean": float(v.mean()),
                      "sd": float(v.std(ddof=1)) if len(v) > 1 else 0.0,
                      "lo": float(lo), "hi": float(hi),
+                     "t_crit": crit,
+                     "n_positive": int((v > 0).sum()),
+                     "n_negative": int((v < 0).sum()),
+                     "sign_stable": bool((v > 0).all() or (v < 0).all()),
                      "excludes_zero": bool(lo * hi > 0)}
         return ci
 
     for name in corpora:
         prior = {int(k): v for k, v in
                  (out.get(name, {}).get("per_seed") or {}).items()}
+        prior_loo = {int(k): v for k, v in
+                     (out.get(name, {}).get("per_seed_loo") or {}).items()}
+        prior_gap = {int(k): v for k, v in
+                     (out.get(name, {}).get("per_seed_gap") or {}).items()}
         todo = [s for s in seeds if s not in prior]
         if not todo:
             print(f"  {name}: all {len(seeds)} seeds already present, skipping",
@@ -105,6 +121,7 @@ def block_seeds(cfg, budget, corpora, seeds, resume=True, allow_resize=False):
 
         _size(name, cfg, budget)
         per_seed = dict(prior)
+        per_seed_loo, per_seed_gap = dict(prior_loo), dict(prior_gap)
         for s in todo:
             t0 = time.time()
             e = _experiment(name, cfg, s)
@@ -117,13 +134,26 @@ def block_seeds(cfg, budget, corpora, seeds, resume=True, allow_resize=False):
                 )
             if not ok:
                 print(f"  [resized] {why.splitlines()[0]}", flush=True)
-            per_seed[s] = exact_shapley(e.v)
+            phi = exact_shapley(e.v)
+            loo = loo_attribution(e.v)
+            per_seed[s] = phi
+            # LOO_rank and the Shapley-minus-LOO gap carried no interval on
+            # any corpus but MovieLens; RQ2's central claim is about that gap,
+            # so it needs the same seed-level treatment everywhere.
+            per_seed_loo[s] = loo
+            per_seed_gap[s] = {g: phi[g] - loo[g] for g in SOURCES}
             del e
             gc.collect()                     # 14.6 GB of score matrices per seed
             # Checkpoint immediately: a kill on the next seed keeps this one.
-            out[name] = {"n_seeds": len(per_seed),
-                         "per_seed": {str(k): v for k, v in sorted(per_seed.items())},
-                         "ci": _summarise(per_seed)}
+            out[name] = {
+                "n_seeds": len(per_seed),
+                "per_seed": {str(k): v for k, v in sorted(per_seed.items())},
+                "per_seed_loo": {str(k): v for k, v in sorted(per_seed_loo.items())},
+                "per_seed_gap": {str(k): v for k, v in sorted(per_seed_gap.items())},
+                "ci": _summarise(per_seed),
+                "loo_ci": _summarise(per_seed_loo) if per_seed_loo else {},
+                "gap_ci": _summarise(per_seed_gap) if per_seed_gap else {},
+            }
             write_artefact(
                 "final_seed_ci_resized.json" if not ok else "final_seed_ci.json",
                 out)
@@ -220,7 +250,41 @@ def block_retire(cfg, budget, corpora, seeds):
             se = a.std(ddof=1) / np.sqrt(len(a)) if len(a) > 1 else 0.0
             return {"mean": float(a.mean()), "lo": float(a.mean() - 1.96 * se),
                     "hi": float(a.mean() + 1.96 * se), "n": int(len(a))}
+        # PAIRED comparison. Two separate intervals do not test the
+        # difference: tau_LOO and tau_Shapley are computed on the SAME seed
+        # against the SAME observed loss, so they are paired and the paired
+        # contrast is both the correct test and far tighter.
+        d = np.asarray(taus_loo, float) - np.asarray(taus_sh, float)
+        boot = None
+        if len(d) > 1:
+            rng = np.random.default_rng(0)
+            idx = rng.integers(0, len(d), size=(10000, len(d)))
+            means = d[idx].mean(axis=1)
+            boot = [float(np.percentile(means, 2.5)),
+                    float(np.percentile(means, 97.5))]
+        try:
+            from scipy.stats import wilcoxon
+            wp = float(wilcoxon(d).pvalue) if len(set(d.tolist())) > 1 else 1.0
+        except Exception:                                # noqa: BLE001
+            wp = float("nan")
+        paired = {
+            "delta_tau_per_seed": [float(x) for x in d],
+            "mean": float(d.mean()),
+            "sd": float(d.std(ddof=1)) if len(d) > 1 else 0.0,
+            "bootstrap_ci95": boot,
+            "n_seeds_loo_better": int((d > 0).sum()),
+            "n_seeds_equal": int((d == 0).sum()),
+            "n_seeds_shapley_better": int((d < 0).sum()),
+            "wilcoxon_p": wp,
+            "note": ("Paired by seed: both correlations score the SAME observed "
+                     "retirement loss on the SAME fitted game, so the seed is a "
+                     "block. Percentile bootstrap over 10,000 resamples; with "
+                     "n=10 read it as indicative."),
+        }
         out[name] = {"tau_shapley": _ci(taus_sh), "tau_loo": _ci(taus_loo),
+                     "tau_shapley_per_seed": [float(x) for x in taus_sh],
+                     "tau_loo_per_seed": [float(x) for x in taus_loo],
+                     "paired_delta_tau": paired,
                      "cheapest_true_shapley_loo": cheapest,
                      "loo_correct_frac": float(np.mean([c[0] == c[2] for c in cheapest])),
                      "shapley_correct_frac": float(np.mean([c[0] == c[1] for c in cheapest]))}

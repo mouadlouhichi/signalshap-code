@@ -378,8 +378,10 @@ def test_no_interval_spans_zero_under_the_deterministic_baseline():
     reopens an interval, the Table 3 caption is stale and must say so.
     """
     d = _art("final_seed_ci.json")
-    spanning = [(c, g) for c, v in d.items() for g, ci in v["ci"].items()
-                if not ci["excludes_zero"]]
+    # Skip top-level metadata keys (e.g. "_note_ci"): the artefact carries
+    # documentation alongside the per-corpus blocks.
+    spanning = [(c, g) for c, v in d.items() if isinstance(v, dict) and "ci" in v
+                for g, ci in v["ci"].items() if not ci["excludes_zero"]]
     assert spanning == [], f"intervals spanning zero: {spanning}"
 
 

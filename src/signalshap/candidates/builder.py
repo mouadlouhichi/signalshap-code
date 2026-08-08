@@ -119,6 +119,28 @@ def grand_coalition_candidates(
     return [_topn(fused, u, n_max) for u in range(n_users)]
 
 
+def validation_recall(candidates: list[np.ndarray],
+                      valid_items: dict[int, int]) -> dict:
+    """Pr[val_u in C_u], and how many users fit the head on negatives only.
+
+    The coalition head is fitted against the validation indicator. When the
+    validation item is not retrieved into C_u that target vector is all zero,
+    so the user contributes to the Gram matrix but nothing to the right-hand
+    side. A reviewer asked for the size of this effect; it was previously
+    neither measured nor reported.
+    """
+    n = hit = 0
+    for u, it in valid_items.items():
+        if u >= len(candidates) or not len(candidates[u]):
+            continue
+        n += 1
+        hit += int(it in set(candidates[u].tolist()))
+    return {"validation_recall": (hit / n) if n else 0.0,
+            "users_scored": n,
+            "users_with_positive": hit,
+            "users_negatives_only": n - hit}
+
+
 def candidate_recall(candidates: list[np.ndarray], test_items: dict[int, int]) -> float:
     """Pr[test_u in C_u] -- the ceiling on every ranking metric (spec §2.2)."""
     if not test_items:

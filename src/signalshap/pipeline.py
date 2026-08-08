@@ -26,6 +26,7 @@ from .attribution.baselines import (
 )
 from .candidates.builder import (
     build_candidates, candidate_recall, grand_coalition_candidates,
+    validation_recall,
 )
 from .config import SOURCES, FrozenConfig, write_artefact
 from .data.loaders import Dataset, build_dataset_stats, load_dataset
@@ -136,9 +137,15 @@ class Experiment:
         # less ceiling-sensitive. The distinction is the whole point of the
         # rung: a weaker claim beats a false one.
         exempt = self.name in tuple(self.cfg.recall_ceiling_exempt)
+        # The head is fitted on the VALIDATION indicator, so validation recall
+        # bounds the fit the way test recall bounds the metric. Reported
+        # because a reviewer pointed out that users whose validation positive
+        # is unretrieved contribute an all-zero target.
+        vrec = validation_recall(self.candidates, self.valid_items)
         return {
             "dataset": self.name, "n_max": self.n_max,
             "candidate_recall": float(recall),
+            **vrec,
             "recall_gate": self.cfg.recall_gate,
             "gate_passes": passes,
             "ceiling_exempt": exempt,

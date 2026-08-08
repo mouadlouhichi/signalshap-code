@@ -77,6 +77,35 @@ Still not done, deliberately: Amazon/Gowalla
 candidate rule (cost is roughly the original study; ml_1m is done and
 reported). These need the machine with all three raw corpora.
 
+## Review round 4
+
+| Issue | Severity | Status |
+|---|---|---|
+| v(G) = 0.05190 vs 0.05136 | Critical | **Explained.** Difference is 5.4e-4 = the documented arm64/x86-64 residual. Paired sets relabelled as within-platform; `artefacts/PROVENANCE.md` maps every object to artefact/platform/rule/seeds |
+| Validation event not in test history | Critical | **Audited and named.** Reviewer read the code correctly. Bias is one-sided and conservative (can only lower NDCG); now documented as a two-step-ahead frozen-state protocol, in Algorithm 1 and Limitations |
+| Validation positives outside C_u | High | **Measured.** `validation_recall()` added and wired in; policy (retain) stated with its rationale |
+| Figure 2 mixed seed-42 v(G) with 10-seed bars | High | **Fixed and regenerated** |
+| Figure 6 segment count 6,035 vs 6,038 | High | **Explained in caption** (3 users have empty candidate sets) |
+| Stale "uncertainty not yet done" | High | **Deleted** |
+| Paired Delta tau absent | High | **Added** where recoverable: ml_1m +0.76 [+0.70,+0.82], gowalla +0.20. Amazon not reconstructable; runner now stores per-seed tau |
+| 1.96 SE at n=10 | Medium | **All seed intervals recomputed with t_9.** No conclusion changed |
+| Interaction CIs, Table 5 | High | Recomputed with t_9; CI construction stated |
+| `NDCG@10K`, `E[NDCG@1010]` | Low | **Fixed** via `\NDCGat{}`; regression test added |
+| Fig 7 internal "F6" label | Low | **Removed** |
+| Refs [13] pages, [15] DOI | Low | **Corrected** to 809--818 and 10.1145/3726302.3729971 |
+| Intro LOO scoping, "correctly reports", "ablation won it", "approaching the whole catalogue", appendix heading | Medium | **All rewritten** |
+| General semivalue equation, rec clustering, initial N_g, PPMI k_s=1, random-state | Medium | **Added to Background / Table 2** |
+
+**Not done: the full three-corpus regeneration under the symmetric candidate
+rule.** This is the reviewer's Critical #1 and it needs your machine. Everything
+else is closed. Run:
+
+    python scripts/run_final_revision.py --only seeds retire --budget-gb 24
+
+That now also emits per-seed LOO, gap, tau and the paired bootstrap on all three
+corpora, closing the remaining High items in one pass. Send me the artefacts and
+I will regenerate Tables 6-8, Figures 2-3 and the prose.
+
 ## YOU: cannot be automated
 
 1. **First LaTeX compile.** Never done. `brew install --cask mactex-no-gui && cd paper && make`. Since we last spoke I added Background, Discussion, two tables, an algorithm rewrite, and `algorithm`/`algpseudocode`. Send the log either way.

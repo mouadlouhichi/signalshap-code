@@ -284,94 +284,104 @@
    "cf": {
     "mean": -0.004769601785442818,
     "sd": 0.0010220911359754001,
-    "lo": -0.005403100434769239,
-    "hi": -0.004136103136116396,
+    "lo": -0.005500761738094222,
+    "hi": -0.004038441832791413,
     "n_positive": 0,
     "n_seeds": 10,
-    "excludes_zero": true
+    "excludes_zero": true,
+    "t_crit": 2.262157162798205
    },
    "ct": {
     "mean": 0.0004762792889002658,
     "sd": 0.00046218204536638605,
-    "lo": 0.00018981588932962787,
-    "hi": 0.0007627426884709038,
+    "lo": 0.00014565417093177454,
+    "hi": 0.0008069044068687571,
     "n_positive": 7,
     "n_seeds": 10,
-    "excludes_zero": true
+    "excludes_zero": true,
+    "t_crit": 2.262157162798205
    },
    "pop": {
     "mean": 0.0006367676426223753,
     "sd": 0.00030733815983369634,
-    "lo": 0.00044627747761834144,
-    "hi": 0.0008272578076264092,
+    "lo": 0.0004169111675170247,
+    "hi": 0.000856624117727726,
     "n_positive": 10,
     "n_seeds": 10,
-    "excludes_zero": true
+    "excludes_zero": true,
+    "t_crit": 2.262157162798205
    },
    "rec": {
     "mean": 2.19989890433564e-06,
     "sd": 0.0003904380899111511,
-    "lo": -0.0002397961363790142,
-    "hi": 0.0002441959341876855,
+    "lo": -0.00027710268506760154,
+    "hi": 0.00028150248287627286,
     "n_positive": 5,
     "n_seeds": 10,
-    "excludes_zero": false
+    "excludes_zero": false,
+    "t_crit": 2.262157162798205
    },
    "seq": {
     "mean": 0.01734649473039444,
     "sd": 0.000969732542176685,
-    "lo": 0.01674544827371957,
-    "hi": 0.01794754118706931,
+    "lo": 0.01665278985940386,
+    "hi": 0.01804019960138502,
     "n_positive": 10,
     "n_seeds": 10,
-    "excludes_zero": true
+    "excludes_zero": true,
+    "t_crit": 2.262157162798205
    }
   },
   "gap_ci": {
    "cf": {
     "mean": 0.02033273883760552,
     "sd": 0.0006116008481020562,
-    "lo": 0.019953664704622457,
-    "hi": 0.02071181297058858,
+    "lo": 0.0198952259472182,
+    "hi": 0.02077025172799284,
     "n_positive": 10,
     "n_seeds": 10,
-    "excludes_zero": true
+    "excludes_zero": true,
+    "t_crit": 2.262157162798205
    },
    "ct": {
     "mean": -0.0006691649699256826,
     "sd": 0.00038426214654774466,
-    "lo": -0.0009073331158542336,
-    "hi": -0.0004309968239971316,
+    "lo": -0.0009440495501617233,
+    "hi": -0.0003942803896896419,
     "n_positive": 0,
     "n_seeds": 10,
-    "excludes_zero": true
+    "excludes_zero": true,
+    "t_crit": 2.262157162798205
    },
    "pop": {
     "mean": 0.005837122219324924,
     "sd": 0.00025505865551208435,
-    "lo": 0.005679035226806668,
-    "hi": 0.00599520921184318,
+    "lo": 0.005654664248676762,
+    "hi": 0.006019580189973086,
     "n_positive": 10,
     "n_seeds": 10,
-    "excludes_zero": true
+    "excludes_zero": true,
+    "t_crit": 2.262157162798205
    },
    "rec": {
     "mean": 0.0004872731235501653,
     "sd": 0.00030961821808177806,
-    "lo": 0.0002953697638028203,
-    "hi": 0.0006791764832975104,
+    "lo": 0.00026578559303103405,
+    "hi": 0.0007087606540692966,
     "n_positive": 9,
     "n_seeds": 10,
-    "excludes_zero": true
+    "excludes_zero": true,
+    "t_crit": 2.262157162798205
    },
    "seq": {
     "mean": 0.012557915463957157,
     "sd": 0.0006206344326215976,
-    "lo": 0.012173242257280687,
-    "hi": 0.012942588670633626,
+    "lo": 0.012113940336498112,
+    "hi": 0.013001890591416201,
     "n_positive": 10,
     "n_seeds": 10,
-    "excludes_zero": true
+    "excludes_zero": true,
+    "t_crit": 2.262157162798205
    }
   },
   "note": "Ten-seed intervals for LOO_rank and for the Shapley-minus-LOO gap, which previously had none. n_positive is the direct count of seeds with a positive value, reported because an interval for the mean is not a sign-stability count. MovieLens-1M only: the sandbox lacks the Amazon and Gowalla raw corpora."

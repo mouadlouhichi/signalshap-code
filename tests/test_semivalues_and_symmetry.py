@@ -110,3 +110,32 @@ def test_legacy_rule_is_order_dependent_so_the_test_above_has_teeth(
         not np.array_equal(ref, _build(monkeypatch, scores, perm, n_max, False))
         for perm in permutations(SRC)
     )
+
+
+def test_validation_recall_counts_negatives_only_users():
+    """The head is fitted on the validation indicator, so a user whose
+    validation positive is not retrieved contributes an all-zero target. A
+    reviewer asked how many such users there are; nothing measured it."""
+    from signalshap.candidates.builder import validation_recall
+
+    cands = [np.array([1, 2, 3]), np.array([4, 5]), np.array([], dtype=np.int64)]
+    valid = {0: 2, 1: 99, 2: 7}          # hit, miss, empty candidate set
+    r = validation_recall(cands, valid)
+    assert r["users_scored"] == 2        # the empty-candidate user is skipped
+    assert r["users_with_positive"] == 1
+    assert r["users_negatives_only"] == 1
+    assert abs(r["validation_recall"] - 0.5) < 1e-12
+
+
+def test_ndcg_macro_does_not_double_print_the_cutoff():
+    """\\NDCG already expands to NDCG@10, so \\NDCG_K rendered 'NDCG@10K'."""
+    from pathlib import Path
+
+    tex = Path(__file__).resolve().parents[1] / "paper" / "sn-article.tex"
+    if not tex.exists():
+        import pytest
+        pytest.skip("paper not present")
+    body = tex.read_text()
+    assert r"\NDCG_K" not in body
+    assert r"\NDCG_{10}" not in body
+    assert r"\newcommand{\NDCGat}" in body
