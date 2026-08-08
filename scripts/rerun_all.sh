@@ -43,6 +43,16 @@ echo "budget ${BUDGET} GB | started $(date '+%H:%M:%S')"
 # 1. Core study, three seeds, one corpus at a time.
 run study_ml_1m      python scripts/run_study.py --datasets ml_1m \
                        --seeds 42 43 44
+
+# Gate the remaining ~12 hours on the fastest corpus. If ml_1m comes back
+# invalid the code is wrong, and every later stage would inherit the same
+# defect -- better to stop after 11 minutes than after half a day.
+if ! python scripts/check_run_valid.py ml_1m; then
+  echo
+  echo 'ml_1m is INVALID -- stopping before the long stages.'
+  echo 'Fix the cause and re-run; nothing after this point would be usable.'
+  exit 1
+fi
 run study_amazon     python scripts/run_study.py --datasets amazon_video_games \
                        --budget-gb "$BUDGET" --seeds 42 43 44
 run study_gowalla    python scripts/run_study.py --datasets gowalla_ts \

@@ -73,3 +73,46 @@ def test_runner_does_not_abort_on_first_failure():
 def test_strict_data_is_enforced():
     """A missing corpus must be a hard error, never a synthetic fallback."""
     assert "SIGNALSHAP_STRICT_DATA=1" in SCRIPT.read_text()
+
+
+def test_runner_gates_the_long_stages_on_ml1m():
+    """A 12-hour run must not proceed past an invalid 11-minute corpus."""
+    body = SCRIPT.read_text()
+    i_check = body.index("check_run_valid.py ml_1m")
+    i_gowalla = body.index("--datasets gowalla_ts")
+    i_final = body.index("run_final_revision.py")
+    assert i_check < i_gowalla, "validity gate must precede the Gowalla stage"
+    assert i_check < i_final, "validity gate must precede the final-revision stage"
+    assert "exit 1" in body[i_check:i_check + 400], "gate must actually abort"
+
+
+def test_validity_checker_survives_a_pre_fix_artefact():
+    """It must diagnose a missing v_empty, not raise KeyError on it.
+
+    The obvious one-liner crashed on exactly the artefact it was meant to
+    reject, which reads as a broken tool rather than a broken run.
+    """
+    import json
+    import subprocess
+    import tempfile
+
+    with tempfile.TemporaryDirectory() as td:
+        art = Path(td) / "artefacts"
+        art.mkdir()
+        (art / "results_ml_1m.json").write_text(json.dumps({
+            "e1_source_share": {                    # no v_empty: pre-fix shape
+                "efficiency": {"abs_error": 7.4e-4, "passes": False},
+            },
+            "e0a_candidates": {"candidate_recall": 0.748, "gate_passes": True},
+        }))
+        script = art.parent / "check.py"
+        script.write_text(
+            SCRIPT.parent.joinpath("check_run_valid.py").read_text()
+            .replace('Path(__file__).resolve().parents[1] / "artefacts"',
+                     f'Path({str(art)!r})'))
+        r = subprocess.run(["python3", str(script), "ml_1m"],
+                           capture_output=True, text=True)
+    assert r.returncode == 1, "must report failure"
+    assert "KeyError" not in r.stderr, f"crashed instead of diagnosing: {r.stderr}"
+    assert "v_empty ABSENT" in r.stdout
+    assert "Property 1" in r.stdout
