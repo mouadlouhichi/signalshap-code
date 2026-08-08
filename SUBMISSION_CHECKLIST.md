@@ -75,8 +75,37 @@ reported). These need the machine with all three raw corpora.
 ## YOU: cannot be automated
 
 1. **First LaTeX compile.** Never done. `brew install --cask mactex-no-gui && cd paper && make`. Since we last spoke I added Background, Discussion, two tables, an algorithm rewrite, and `algorithm`/`algpseudocode`. Send the log either way.
-2. **Zenodo DOI, reserved now.** Both reviewers scored reproducibility down partly because the archive is promised "at acceptance"; R2 calls this out explicitly.
-3. **ORCIDs + affiliations + co-author email confirmation.**
+2. **Zenodo DOI, reserved now.** Everything on our side is ready; the account
+   action is yours. There is no technical blocker, and the reason it must be
+   *reserved* rather than minted at acceptance is that the DOI has to appear in
+   the manuscript we submit.
+
+   Use the **manual upload** route, not the GitHub integration: Zenodo cannot
+   pre-reserve a DOI through the GitHub webhook
+   (<https://support.zenodo.org/help/en-gb/24-github-integration/73-can-i-pre-reserved-a-doi-before-a-github-release>),
+   and a DOI that only exists after publication is exactly what the reviewers
+   objected to.
+
+   1. `make archive` -> `signalshap-archive.zip` (4.3 MB, built from a named
+      commit; raw corpora excluded).
+   2. New upload on zenodo.org. Under Digital Object Identifier answer **No**
+      to "Do you already have a DOI?", then click **Get a DOI now!**. This
+      reserves it without publishing. Do not delete the draft afterwards: the
+      reserved DOI is lost with it.
+   3. Metadata is prefilled by `.zenodo.json` if you use the API; through the
+      web form, copy the fields from that file (upload type *software*,
+      MIT, three creators, ORCID on the first).
+   4. Paste the reserved DOI into `paper/sn-article.tex` in **two** places, the
+      Supplementary information block and the Data availability declaration,
+      replacing "will be deposited at acceptance".
+   5. Re-run `make archive` so the zip contains the commit that cites the DOI,
+      replace the file on the Zenodo draft, then **Publish**.
+
+   Note the ordering constraint: the archive must contain the DOI that names
+   the archive, which is only possible because the DOI is reserved first. Both reviewers scored reproducibility down partly because the archive is promised "at acceptance"; R2 calls this out explicitly.
+3. **ORCIDs + affiliations + co-author email confirmation.** Only Louhichi has
+   an ORCID in the manuscript and in `.zenodo.json`; add Nesmaoui's and
+   Lazaar's if they have them.
 
 ## Known open, deliberately
 
