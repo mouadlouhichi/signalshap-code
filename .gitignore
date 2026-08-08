@@ -25,3 +25,6 @@ paper/*.spl
 paper/sn-article.pdf
 
 logs/
+
+paper/*.pdf
+sn-article.pdf

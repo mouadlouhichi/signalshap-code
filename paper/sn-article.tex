@@ -18,6 +18,12 @@
 \usepackage{amssymb}
 \usepackage{graphicx}
 \usepackage{multirow}
+%% amsthm is REQUIRED and was missing. sn-jnl.cls defines thmstyleone..four
+%% only inside \@ifpackageloaded{amsthm}{...}{}, so it configures those styles
+%% but never loads the package. Without this line the \theoremstyle and
+%% \newtheorem calls below fail, which is why the first compile needed it
+%% added by hand.
+\usepackage{amsthm}
 % The class loads neither; algorithm/algpseudocode are needed for the
 % pseudocode in Section 4 and do not clash with sn-jnl.cls (which defines no
 % `algorithm' float of its own).
@@ -79,6 +85,23 @@
   snlbl/.style={font=\snFigSub, inner sep=1.6pt, text=black},
 }
 \graphicspath{{figures/}}
+
+%% Float placement. Every float was [t] with no fallback and the defaults
+%% untouched, so any float that would not fit at the top of its page was
+%% deferred -- and because LaTeX keeps floats in order, one deferral stalled
+%% every later one. The whole backlog then flushed at \end{document}: all six
+%% data figures landed on pages 38-40 of a 40-page article.
+%%
+%% These values are the standard remedy: allow a float to occupy more of the
+%% page, require less text before one is placed, and let a float page be
+%% accepted when it is half full rather than only when nearly full.
+\renewcommand{\topfraction}{0.9}          % up to 90% of a page may be top floats
+\renewcommand{\bottomfraction}{0.8}       % and 80% bottom floats
+\renewcommand{\textfraction}{0.07}        % as little as 7% text is acceptable
+\renewcommand{\floatpagefraction}{0.6}    % a float page needs to be 60% full
+\setcounter{topnumber}{3}                 % up to 3 floats at the top
+\setcounter{bottomnumber}{2}
+\setcounter{totalnumber}{5}               % and 5 on one page in total
 
 \theoremstyle{thmstyleone}
 \newtheorem{theorem}{Theorem}
@@ -244,7 +267,7 @@ performance comparison would require. And we do not claim that the sign of an
 attribution prescribes retaining or removing a source --- Section~\ref{sec:estimands}
 shows it does not.
 
-\begin{figure}[t]
+\begin{figure}[tbp]
 \centering
 \iftikzfigure
 %% resizebox is a no-op while the picture fits; it guarantees the figure can
@@ -1000,7 +1023,7 @@ game; only reporting is full-catalogue.
 
 \section{Preconditions}\label{sec:preconditions}
 
-\begin{table}[t]
+\begin{table}[tbp]
 \caption{Preconditions per corpus. Candidate recall bounds every ranking metric
 that follows; the monotonicity column decides whether Property~\ref{prop:loo}
 applies at all. Both must be inspected before any attribution number is
@@ -1124,7 +1147,7 @@ Figure~\ref{fig:shares}. Efficiency holds to machine precision on every corpus,
 with worst-case
 $|\sum_g \varphi_g - v(\G)| = 6.9 \times 10^{-18}$.
 
-\begin{figure}[t]
+\begin{figure}[tbp]
 \centering
 \includegraphics[width=\textwidth]{Fig2.png}
 \caption{Per-source Shapley values with error bars spanning $\pm1.96$ standard
@@ -1142,7 +1165,7 @@ runs, the file records the date and the reason. We report them in the paper
 rather than only in the repository, because a frozen configuration is not a
 substitute for a stated one.
 
-\begin{table}[t]
+\begin{table}[tbp]
 \caption{Complete configuration. Values marked $\dagger$ were selected once on
 a MovieLens pilot and then frozen; the remainder are defaults never varied.
 $N_{\max}$ is the only per-corpus value}
@@ -1257,7 +1280,7 @@ $\varphi_{cf} = 0.01547$, a ratio of $1.43$. We therefore treat the pair sum as
 a \emph{diagnostic}, not a requirement, and the experiment as a symmetry and
 implementation check rather than as recovery of absolute credit.
 
-\begin{table}[t]
+\begin{table}[tbp]
 \caption{Duplicate-source diagnostics on MovieLens-1M (injected clone of $cf$,
 $\eta = 0$) at the frozen ridge penalty and at $\lambda = 0$.
 $\Delta_{\mathrm{red}}$ is the coalition-level redundancy deviation of
@@ -1307,7 +1330,7 @@ evidence about recommender data; they establish that the enumeration in
 Equation~(4) is implemented correctly, which is a precondition for interpreting
 anything computed with it.
 
-\begin{table}[t]
+\begin{table}[tbp]
 \caption{Analytic games with known Shapley vectors, each defined by an explicit
 characteristic function so the check is reproducible from the paper alone.
 $\mathbb{1}[\cdot]$ is the indicator. All six reproduce with zero error, which
@@ -1392,7 +1415,7 @@ means the pair jointly contributes less than the sum of their separate
 contributions --- the signature of redundancy --- and a positive value
 indicates complementarity.
 
-\begin{table}[t]
+\begin{table}[tbp]
 \caption{Pairwise Shapley interaction indices (Grabisch--Roubens) on
 MovieLens-1M, seed 42. Negative entries indicate redundancy. One of the two
 most negative pairs, $cf$--$pop$, is a declared expected overlap; the other,
@@ -1426,7 +1449,7 @@ attaching uncertainty, is straightforward but not yet done.
 
 \section{Attribution on Real Systems}\label{sec:results}
 
-\begin{table}[t]
+\begin{table}[tbp]
 \caption{LOO versus Shapley on all three corpora (seed 42). Sign
 disagreements are marked \emph{material} when the gap exceeds $10^{-3}$, the
 same threshold used for monotonicity; negligible flips are those where both
@@ -1464,7 +1487,7 @@ Gowalla      & $cf$ & $+0.00729$ & $+0.00711$ & $[+0.00632,+0.00652]$ & $-0.0001
 \end{tabular}
 \end{table}
 
-\begin{figure}[t]
+\begin{figure}[tbp]
 \centering
 \includegraphics[width=0.7\textwidth]{Fig3.png}
 \caption{SignalShap attribution against leave-one-out ablation. Points on the
@@ -1561,7 +1584,7 @@ ten pairs it carries little inferential weight on its own.
 
 Figure~\ref{fig:redundancy} shows the pairwise structure directly.
 
-\begin{figure}[t]
+\begin{figure}[tbp]
 \centering
 \includegraphics[width=\textwidth]{Fig4.png}
 \caption{Redundancy between sources, measured as Kendall $\tau$ between
@@ -1613,7 +1636,7 @@ Section~\ref{sec:recovery} were run before the replacement and are unaffected
 by it, since exchangeability of a clone does not depend on the semantics of the
 cloned source.
 
-\begin{figure}[t]
+\begin{figure}[tbp]
 \centering
 \includegraphics[width=\textwidth]{Fig7.png}
 \caption{Robustness. Candidate recall is annotated per cell of the $|\Cu|$
@@ -1655,7 +1678,7 @@ actually costs. We removed each source \emph{entirely} --- from retrieval and
 fusion --- rebuilt candidates from the survivors, refitted, and measured the true
 end-to-end NDCG@10 loss.
 
-\begin{table}[t]
+\begin{table}[tbp]
 \caption{Observed cost of retiring each source on MovieLens-1M, measured
 end-to-end under the reported protocol. Negative loss means removal
 \emph{improved} the metric. The Shapley column is recomputed inside this
@@ -1699,7 +1722,7 @@ source to retire where Shapley selects $ct$. We write \emph{observed} rather
 than \emph{true} loss throughout: this is a measured realisation under the
 reported protocol, not a population quantity.
 
-\begin{table}[t]
+\begin{table}[tbp]
 \caption{Retirement-rank agreement over ten seeds. LOO is not exactly $1.00$ on
 every seed --- reporting it as such from a single run would have overstated
 it --- but it is close on all three corpora and beats Shapley on each. The last
@@ -1756,7 +1779,7 @@ removal are different estimands, and that using one for the other's question
 gives the wrong answer. Table~\ref{tab:decisions} states the mapping we can
 defend from the evidence here.
 
-\begin{table}[t]
+\begin{table}[tbp]
 \caption{Which quantity supports which decision, on the evidence in this paper.
 The last row is the one we cannot yet fill: allocating future effort needs cost
 and improvement potential, neither of which any attribution supplies}
@@ -1981,7 +2004,7 @@ heterogeneity in the dense setting and no established heterogeneity on sparse
 data, and note that this is a plausible reason the closed loop does not
 deliver. Figure~\ref{fig:segments} plots the per-segment profiles.
 
-\begin{figure}[t]
+\begin{figure}[tbp]
 \centering
 \includegraphics[width=\textwidth]{Fig5.png}
 \caption{Segment-level Shapley values, with segment sizes in the legend.
@@ -2044,7 +2067,7 @@ of any advantage over a well-tuned global head}, and note that the comparisons
 against LightGCN and SASRec are conditional on tuning budgets that were not
 matched to our own pipeline.
 
-\begin{figure}[t]
+\begin{figure}[tbp]
 \centering
 \includegraphics[width=0.85\textwidth]{Fig6.png}
 \caption{Fusion comparison under the full-catalogue protocol, showing every

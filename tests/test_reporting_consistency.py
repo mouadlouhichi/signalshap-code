@@ -223,3 +223,67 @@ def test_interaction_index_named_consistently():
     window = tex[max(0, i - 2500):i]
     assert "grabisch1999interaction" in window, \
         "the interaction equation must cite Grabisch-Roubens"
+
+
+# --------------------------------------------------------------------------- #
+# Preamble and float placement (found by the first real compile).
+# --------------------------------------------------------------------------- #
+
+
+def _tex_no_comments():
+    import re
+    from pathlib import Path
+
+    raw = (Path(__file__).resolve().parents[1] / "paper" / "sn-article.tex").read_text()
+    return "\n".join(re.sub(r"(?<!\\)%.*$", "", ln) for ln in raw.split("\n"))
+
+
+def test_every_package_the_manuscript_needs_is_loaded():
+    """sn-jnl.cls loads almost nothing; a missing \\usepackage fails the compile.
+
+    amsthm was the one that bit us: the class defines thmstyleone..four inside
+    \\@ifpackageloaded{amsthm}{...}{}, so it configures those styles but never
+    loads the package, and our \\theoremstyle call failed on the first compile.
+    """
+    tex = _tex_no_comments()
+    needed = {
+        "amsmath": r"\bigl",          # also \bigcup, \varepsilon
+        "amssymb": r"\varnothing",
+        "graphicx": r"\includegraphics",
+        "amsthm": r"\theoremstyle",
+        "algorithm": r"\begin{algorithm}",
+        "algpseudocode": r"\begin{algorithmic}",
+        "tikz": r"\begin{tikzpicture}",
+    }
+    for pkg, marker in needed.items():
+        if marker in tex:
+            assert f"\\usepackage{{{pkg}}}" in tex or f"\\usepackage[" in tex, \
+                f"{marker} used but {pkg} never loaded"
+            assert f"usepackage{{{pkg}}}" in tex, f"{pkg} not loaded"
+
+
+def test_amsthm_loads_before_the_theorem_styles():
+    tex = _tex_no_comments()
+    assert tex.index("usepackage{amsthm}") < tex.index("theoremstyle{thmstyleone}")
+
+
+def test_no_float_is_top_only():
+    """[t] with no fallback stalls the float queue.
+
+    One float that cannot fit at the top of its page is deferred, LaTeX keeps
+    floats in order, so every later float is deferred too and the whole backlog
+    flushes at \\end{document}. That put all six data figures on pages 38-40 of
+    a 40-page article on the first compile.
+    """
+    import re
+
+    tex = _tex_no_comments()
+    bad = re.findall(r"\\begin\{(figure|table)\}\[t\]", tex)
+    assert not bad, f"{len(bad)} float(s) still [t]-only; use [tbp]"
+
+
+def test_float_parameters_are_loosened():
+    tex = _tex_no_comments()
+    for cmd in ("topfraction", "bottomfraction", "textfraction",
+                "floatpagefraction"):
+        assert cmd in tex, f"\\{cmd} not set; LaTeX defaults strand large floats"
