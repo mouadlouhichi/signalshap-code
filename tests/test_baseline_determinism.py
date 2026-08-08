@@ -257,3 +257,53 @@ def test_game_defaults_to_the_deterministic_baseline():
 
     sig = inspect.signature(SignalShapGame.__init__)
     assert sig.parameters["baseline"].default == "expected"
+
+
+def test_empty_coalition_is_exactly_zero_per_user():
+    """Property 3 needs v_u(empty) = 0 for EVERY user, not just on average.
+
+    Regression: the early return in v_per_user was lost in a refactor. The
+    empty coalition then fell through to the scoring path with an all-zero
+    weight vector, every candidate tied, lexsort ranked by item index, and the
+    "empty" coalition scored an arbitrary ranking -- v(empty) = -0.00147 on
+    MovieLens instead of 0. That propagated into every reported number and made
+    check_efficiency report a 7.4e-04 violation of Property 1. Cost a full
+    re-run of all three corpora.
+    """
+    import numpy as np
+
+    from signalshap.game.core import SignalShapGame
+
+    n_users, n_items = 12, 40
+    rng = np.random.default_rng(0)
+    scores = {g: rng.normal(size=(n_users, n_items)).astype(np.float32)
+              for g in ("cf", "ct", "pop", "rec", "seq")}
+    cands = [np.arange(n_items) for _ in range(n_users)]
+    items = {u: int(rng.integers(n_items)) for u in range(n_users)}
+
+    g = SignalShapGame(scores, cands, items, items)
+    per_user = g.v_per_user(frozenset())
+    assert per_user, "no eval users"
+    assert all(x == 0.0 for x in per_user.values()), "v_u(empty) must be 0 per user"
+    assert g.v(frozenset()) == 0.0
+
+
+def test_efficiency_holds_on_a_synthetic_game():
+    """sum phi must equal v(G) - v(empty), and v(empty) must be 0."""
+    import numpy as np
+
+    from signalshap.game.core import (SignalShapGame, check_efficiency,
+                                      exact_shapley)
+
+    rng = np.random.default_rng(3)
+    n_users, n_items = 15, 50
+    scores = {g: rng.normal(size=(n_users, n_items)).astype(np.float32)
+              for g in ("cf", "ct", "pop", "rec", "seq")}
+    cands = [np.arange(n_items) for _ in range(n_users)]
+    items = {u: int(rng.integers(n_items)) for u in range(n_users)}
+
+    g = SignalShapGame(scores, cands, items, items)
+    v = g.v_all()
+    eff = check_efficiency(exact_shapley(v), v)
+    assert eff["passes"], eff
+    assert eff["abs_error"] < 1e-12

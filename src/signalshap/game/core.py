@@ -311,9 +311,24 @@ class SignalShapGame:
 
         The baseline is therefore a declared modelling choice that sets the
         game's reference point, not a normalisation that washes out. Efficiency
-        is unaffected (sum phi = v(G), which shifts with it). We disclose the
-        sensitivity and report it rather than repeating the invariance claim.
+        is unaffected (sum phi = v(G) - v(empty)). We disclose the sensitivity
+        and report it rather than repeating the invariance claim.
         """
+        if not coalition:
+            # v_u(empty) = 0 EXACTLY, per Eq. (2) and Property 3.
+            #
+            # This early return is load-bearing and was briefly lost in a
+            # refactor, which cost a full re-run. Without it the empty
+            # coalition falls through to the scoring path below with an
+            # all-zero weight vector: every candidate then ties, lexsort breaks
+            # the tie by ascending item index, and the "empty" coalition is
+            # scored on an arbitrary-but-not-random ranking. On MovieLens that
+            # gave v(empty) = -0.00147 instead of 0, which propagates into
+            # every reported value and makes check_efficiency (which compares
+            # sum phi against v(G), not v(G) - v(empty)) report a 7.4e-04
+            # violation of Property 1.
+            return {u: 0.0 for u in self.eval_users}
+
         w = self._fit_weights(coalition)
         out = {}
         for u in self.eval_users:

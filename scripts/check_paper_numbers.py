@@ -157,6 +157,24 @@ def check() -> list[str]:
         if name == "ml_1m" and f"{rec:.3f}" not in tex:
             bad.append(f"ml_1m candidate recall {rec:.3f} not found in prose")
 
+    # 6b. HARD INVARIANTS. These are not paper/artefact agreement checks --
+    # they are properties the artefact must satisfy on its own. A broken
+    # invariant means the run is invalid, and no amount of prose agreement
+    # rescues it. Added after a refactor silently made v(empty) non-zero,
+    # which failed Property 1 on all three corpora while every other check
+    # stayed green.
+    for name, r in res.items():
+        eff = (r.get("e1_source_share") or {}).get("efficiency") or {}
+        if eff and not eff.get("passes", True):
+            bad.append(
+                f"INVALID RUN: {name} fails efficiency (Property 1), "
+                f"|sum phi - v(G)| = {eff.get('abs_error', float('nan')):.2e}"
+            )
+        v_empty = (r.get("e1_source_share") or {}).get("v_empty")
+        if v_empty is not None and abs(v_empty) > 1e-12:
+            bad.append(f"INVALID RUN: {name} has v(empty) = {v_empty:.2e}, "
+                       f"must be exactly 0 (Property 3)")
+
     # 7. self-contradiction guard
     #
     # A reviewer found five places where the manuscript asserted something in

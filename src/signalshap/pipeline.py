@@ -179,6 +179,9 @@ class Experiment:
         return {
             "dataset": self.name, "shapley": phi, "efficiency": eff,
             "v_grand": self.v[frozenset(SOURCES)], "v0": self.game.v0,
+            # Recorded so the checker can verify Property 3 from the artefact
+            # alone, rather than trusting that the code took the right branch.
+            "v_empty": self.v[frozenset()],
             "n_coalitions": len(self.v),
             "note": (
                 "EXACT GIVEN THE FITTED v: the 32-coalition aggregation has no "
