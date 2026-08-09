@@ -1,0 +1,124 @@
+{
+  "ml_1m": {
+    "temporal": {
+      "dataset": "ml_1m",
+      "seed": 42,
+      "frozen_two_step": {
+        "shapley": {
+          "cf": 0.015381831033907892,
+          "ct": 2.4768641547751004e-05,
+          "pop": 0.006478655122434057,
+          "rec": 0.0005308012954656567,
+          "seq": 0.029272592566372845
+        },
+        "v_grand": 0.0516886486597282,
+        "test_recall": 0.748135874067937
+      },
+      "refreshed_one_step": {
+        "shapley": {
+          "cf": 0.01889137813215117,
+          "ct": -2.034604002119881e-05,
+          "pop": 0.00696966038108289,
+          "rec": 0.0005104759031902721,
+          "seq": 0.04391175817194923
+        },
+        "v_grand": 0.07026292654835235,
+        "test_recall": 0.7791217895608947
+      },
+      "kendall_tau": 0.9999999999999999,
+      "max_abs_delta_phi": 0.014639165605576383,
+      "sign_agreement": false,
+      "top_frozen": "seq",
+      "top_refreshed": "seq",
+      "v_grand_direction": "refreshed higher",
+      "note": "Refreshed fits the head in the validation state (history = train) and scores coalitions in the test state (history = train + val, so the consumed validation item is masked and seq/rec/pop see it). v(G) is NOT ordered a priori between the two protocols: the refreshed state moves the source scores and the candidate set as well as removing the consumed item. This reports the observed direction only."
+    },
+    "validation_miss": {
+      "dataset": "ml_1m",
+      "seed": 42,
+      "validation_recall": 0.7985086992543496,
+      "users_scored": 6035,
+      "users_with_positive": 4819,
+      "users_negatives_only": 1216,
+      "shapley_retaining_misses": {
+        "cf": 0.015381831033907892,
+        "ct": 2.4768641547751004e-05,
+        "pop": 0.006478655122434057,
+        "rec": 0.0005308012954656567,
+        "seq": 0.029272592566372845
+      },
+      "shapley_dropping_misses": {
+        "cf": 0.01539774138391278,
+        "ct": 6.917503487945836e-07,
+        "pop": 0.006471345959521445,
+        "rec": 0.000527277033351101,
+        "seq": 0.029235562664858737
+      },
+      "kendall_tau": 0.9999999999999999,
+      "max_abs_delta_phi": 3.7029901514107344e-05,
+      "sign_agreement": true,
+      "note": "Users whose validation positive is outside C_u contribute a PSD block to A but nothing to c, which can rotate as well as shrink the ridge solution. The main study retains them; this measures what dropping them does."
+    }
+  },
+  "amazon_video_games": {
+    "temporal": {
+      "dataset": "amazon_video_games",
+      "seed": 42,
+      "frozen_two_step": {
+        "shapley": {
+          "cf": 0.01925088226901339,
+          "ct": 0.0018660855230795224,
+          "pop": 0.0015707097942888484,
+          "rec": -0.00048459907605341996,
+          "seq": 0.019099828942856452
+        },
+        "v_grand": 0.04130290745318479,
+        "test_recall": 0.5889044943820225
+      },
+      "refreshed_one_step": {
+        "shapley": {
+          "cf": 0.020338985609975088,
+          "ct": 0.002033372690078616,
+          "pop": 0.0020064402336430263,
+          "rec": -0.0005348850556919168,
+          "seq": 0.025180854495360165
+        },
+        "v_grand": 0.049024767973364976,
+        "test_recall": 0.6035112359550562
+      },
+      "kendall_tau": 0.7999999999999999,
+      "max_abs_delta_phi": 0.006081025552503713,
+      "sign_agreement": true,
+      "top_frozen": "cf",
+      "top_refreshed": "seq",
+      "v_grand_direction": "refreshed higher",
+      "note": "Refreshed fits the head in the validation state (history = train) and scores coalitions in the test state (history = train + val, so the consumed validation item is masked and seq/rec/pop see it). v(G) is NOT ordered a priori between the two protocols: the refreshed state moves the source scores and the candidate set as well as removing the consumed item. This reports the observed direction only."
+    },
+    "validation_miss": {
+      "dataset": "amazon_video_games",
+      "seed": 42,
+      "validation_recall": 0.6481741573033708,
+      "users_scored": 7120,
+      "users_with_positive": 4615,
+      "users_negatives_only": 2505,
+      "shapley_retaining_misses": {
+        "cf": 0.01925088226901339,
+        "ct": 0.0018660855230795224,
+        "pop": 0.0015707097942888484,
+        "rec": -0.00048459907605341996,
+        "seq": 0.019099828942856452
+      },
+      "shapley_dropping_misses": {
+        "cf": 0.01904471052945649,
+        "ct": 0.0018929616868592091,
+        "pop": 0.0015950828315289703,
+        "rec": -0.0004944532765343198,
+        "seq": 0.01917641506742743
+      },
+      "kendall_tau": 0.7999999999999999,
+      "max_abs_delta_phi": 0.00020617173955689988,
+      "sign_agreement": true,
+      "note": "Users whose validation positive is outside C_u contribute a PSD block to A but nothing to c, which can rotate as well as shrink the ridge solution. The main study retains them; this measures what dropping them does."
+    }
+  }
+}
