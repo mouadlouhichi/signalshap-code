@@ -913,14 +913,36 @@ is that this is a different protocol whose net effect we have not measured, and
 that the sources a refreshed state would most plausibly favour, $seq$ and
 $rec$, are precisely the ones whose values should be read with that in mind. A
 frozen-versus-refreshed sensitivity run is the experiment that would settle it.
-We ship that experiment (\texttt{scripts/run\_protocol\_sensitivity.py}) rather
-than leave it as a suggestion: it fits the head in the validation state,
-history $=$ train, and scores the coalitions in the test state, history $=$
-train $+$ $i_u^{\mathrm{val}}$, so the refreshed sources see the event and the
-consumed item is masked. On a synthetic pilot the refreshed protocol scores
-\emph{higher} rather than lower ($v(\G)$ $0.147 \to 0.165$) and moves two
-signs, which is the concrete reason the lower-bound claim had to go. We report
-the corpus results with the next full regeneration.
+We ran that experiment
+(\texttt{scripts/run\_protocol\_sensitivity.py}): it fits the head in the
+validation state, history $=$ train, and scores the coalitions in the test
+state, history $=$ train $+$ $i_u^{\mathrm{val}}$, so the refreshed sources see
+the event and the consumed item is masked.
+
+The effect is large. Refreshing raises $v(\G)$ from $0.05169$ to $0.07026$ on
+MovieLens-1M and from $0.04130$ to $0.04902$ on Amazon-VG, increases of $36\%$
+and $19\%$. On these two corpora the frozen values do therefore sit below the
+refreshed ones, which is the direction the withdrawn claim asserted. We still
+withdraw it, because it was asserted as a general property and it does not
+follow: two measurements agreeing with an argument do not repair an argument
+that ignores the accompanying changes to the source scores, to $\Cu$ and to
+$b_u$. What we can say is empirical and corpus-specific, not a bound. Candidate
+recall
+also rises, $0.748 \to 0.779$ and $0.589 \to 0.604$, because a refreshed
+history retrieves better. The gain is concentrated exactly where we predicted
+it would be: $\varphi_{seq}$ takes $+0.0146$ of the $+0.0186$ MovieLens
+increase and $+0.0061$ of the $+0.0077$ on Amazon-VG, since a sequential model
+denied the user's most recent event is the source most penalised by freezing.
+
+What survives is the ordering, and only mostly. On MovieLens the source ranking
+is identical under both protocols (Kendall $\tau = 1.00$), with the sole sign
+change on $\varphi_{ct}$ between $+0.00002$ and $-0.00002$, a magnitude the
+paper never interprets. On Amazon-VG the ranking moves ($\tau = 0.80$) and the
+top source changes from $cf$ to $seq$, because the two are close under both
+protocols ($0.01925$ against $0.01910$ frozen) and the refresh favours $seq$.
+We therefore do not claim that the Amazon-VG top source is protocol-invariant,
+and a reader interested in absolute values rather than in the
+allocation-versus-removal contrast should prefer a refreshed design.
 
 \paragraph{Validation positives outside the candidate set}
 The head is fitted on $\mathbf{y}^{\mathrm{val}}_u$, the indicator of
@@ -943,10 +965,16 @@ that user's source-score covariance, changing both the magnitude and the
 orientation of the coefficient vector. We therefore treat the retention policy
 as a declared choice whose sensitivity should be tested, not as a harmless one,
 and we report validation recall so that a reader can judge how many users it
-concerns. The same script refits with those users dropped, so the sensitivity
-of the attributions to the retention policy is measured rather than asserted;
-on the synthetic pilot the two policies agree to Kendall $\tau = 1.00$ with
-$\max_g|\Delta\varphi_g| = 5.0\times10^{-4}$.
+concerns: $0.799$ on MovieLens-1M, where $1\,216$ of $6\,035$ fitted users
+contribute negatives only, and $0.648$ on Amazon-VG, where $2\,505$ of
+$7\,120$ do. Those are large minorities, so the policy needed testing rather
+than defending. The same script refits with those users dropped. The
+attributions barely move: $\max_g|\Delta\varphi_g| = 3.7\times10^{-5}$ on
+MovieLens with an identical ordering, and $2.1\times10^{-4}$ on Amazon-VG,
+where the ordering shifts only among $ct$ and $pop$, which are separated by
+$3\times10^{-4}$. Every sign agrees under both policies on both corpora. The
+retention choice is therefore immaterial here, which we can now say from
+measurement rather than from an argument about bias.
 
 \begin{algorithm}[t]
 \caption{Exact ranking-stage SignalShap}\label{alg:signalshap}
@@ -1245,23 +1273,23 @@ interpreted. Density is computed as-used, never quoted from a source paper.
 Corpora marked \emph{ceiling} are reported under the restriction stated in the
 text: relative contrasts only. Recall here is \emph{test} candidate recall, the
 ceiling on the metric. The head is fitted against the validation indicator, so
-validation candidate recall bounds the fit in the same way. The released
-pipeline records it, together with the number of users whose validation
-positive is unretrieved, in every run artefact; the runs behind this table
-predate that instrumentation, so we state the policy here and report the
-measurement with the next full regeneration rather than quote a number we have
-not yet computed. Users whose validation item is unretrieved are kept, contributing to
+validation candidate recall bounds the fit in the same way; it is higher than
+test recall on both corpora where we measured it, because the validation item
+is one step closer to the training history. Gowalla's is not yet computed and
+is marked \emph{n/a}. Section~\ref{sec:algorithm} reports how many users
+contribute an all-zero fitting target as a result, and shows that dropping them
+changes no attribution materially. Users whose validation item is unretrieved are kept, contributing to
 the Gram matrix but not to its right-hand side
 (Section~\ref{sec:algorithm}).}
 \label{tab:preconditions}
-\begin{tabular}{@{}lrrrrrrl@{}}
+\begin{tabular}{@{}lrrrrrrrl@{}}
 \toprule
-Corpus & Users & Items & Density & $N_{\max}$ & Recall & Monot. & Prop.~\ref{prop:loo} \\
- &  &  &  &  &  & (mat./raw) &  \\
+Corpus & Users & Items & Density & $N_{\max}$ & Recall & Val.\ & Monot. & Prop.~\ref{prop:loo} \\
+ &  &  &  &  & (test) & recall & (mat./raw) &  \\
 \midrule
-MovieLens-1M & 6\,038 & 3\,533  & $2.697\%$ & 600    & $0.748$ & $7$ / $23$ & no \\
-Amazon-VG    & 7\,120 & 3\,516  & $0.469\%$ & 600    & $0.588^{\dagger}$ & $4$ / $12$ & no \\
-Gowalla      & 8\,865 & 82\,134 & $0.075\%$ & 11\,623 & $0.450^{\dagger}$ & $6$ / $13$ & no \\
+MovieLens-1M & 6\,038 & 3\,533  & $2.697\%$ & 600    & $0.748$ & $0.799$ & $7$ / $23$ & no \\
+Amazon-VG    & 7\,120 & 3\,516  & $0.469\%$ & 600    & $0.588^{\dagger}$ & $0.648$ & $4$ / $12$ & no \\
+Gowalla      & 8\,865 & 82\,134 & $0.075\%$ & 11\,623 & $0.450^{\dagger}$ & n/a & $6$ / $13$ & no \\
 \botrule
 \end{tabular}
 \smallskip
@@ -1911,11 +1939,19 @@ repository.
 
 \paragraph{Two-step-ahead evaluation from a frozen state}
 The protocol of Section~\ref{sec:algorithm} freezes the source state at the
-training fold, so the validation interaction is neither added to the history nor
-masked before test scoring. The direction of the resulting error is known and
-conservative, since an already-consumed but still rankable item can only
-displace the test item downward, but the magnitude is unmeasured and the
-sequential and recency sources are the ones most plausibly penalised.
+training fold, so the validation interaction is neither added to the history
+nor masked before test scoring. We measured the cost rather than reasoning
+about it, and it is substantial: a refreshed one-step-ahead protocol raises
+$v(\G)$ by $36\%$ on MovieLens-1M and $19\%$ on Amazon-VG, most of it accruing
+to $seq$. The absolute coalition values reported here are therefore specific to
+the frozen protocol and understate what these sources achieve with a current
+history. The source ordering is unchanged on MovieLens but not on Amazon-VG,
+where the leading pair exchanges. An earlier version of this manuscript claimed
+the frozen values were a lower bound on the refreshed ones. The measurement
+agrees with that direction on both corpora, but the claim was still unsound as
+stated, since it ignored the simultaneous changes to the source scores, the
+candidate set and the baseline; and it distracted from the finding that
+actually matters, which is the ordering instability on Amazon-VG.
 
 \paragraph{Scope was narrowed after the study began}
 This work was designed as a study contrasting attribution across densities. The

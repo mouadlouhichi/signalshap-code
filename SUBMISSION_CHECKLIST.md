@@ -111,23 +111,39 @@ Two findings corrected the paper rather than confirming it:
 - **`phi_ct` on MovieLens is negative on 9/10 seeds, not 10/10.** Table 6 now
   carries a per-source sign column naming both exceptions.
 
-## What is still open
+## Protocol sensitivity landed (commit d4a2f3d)
 
-**Nothing that needs my hands.** All 15 mandatory items from review round 4 are
-closed. Remaining items, in the order they would cost the paper:
+Both mandatory experiments ran on MovieLens-1M and Amazon-VG.
+
+**Temporal state.** Refreshing to a one-step-ahead protocol raises v(G) by 36%
+(ml_1m) and 19% (amazon), almost all of it accruing to `seq`, exactly the source
+we predicted freezing penalises. Ordering holds on MovieLens (tau = 1.00) but
+NOT on Amazon, where the top source moves cf -> seq because the pair is
+separated by 0.00015. Now reported as a limitation on absolute values and on
+the Amazon ordering.
+
+Note on direction: the measurement agrees with the withdrawn "lower bound"
+claim. That does not reinstate it. The claim was unsound as an argument, since
+it ignored the simultaneous changes to source scores, C_u and b_u; two
+corpora agreeing is evidence, not a bound. I briefly wrote the opposite of the
+data in the first draft of this paragraph and corrected it.
+
+**Validation misses.** Real recall at last: 0.799 (ml_1m, 1,216 of 6,035 users
+fit on negatives only) and 0.648 (amazon, 2,505 of 7,120). Large minorities, so
+the policy mattered. Dropping them moves nothing: max abs delta phi = 3.7e-5
+and 2.1e-4, all signs agree. Table 1 now carries validation recall.
+
+## What is still open
 
 | # | Item | Who | Cost |
 |---|---|---|---|
-| 1 | **Overleaf compile, never verified.** Five rounds. Last confirmed compile had all six data figures on pages 38-40 of 40 | you | 5 min |
-| 2 | Validation candidate recall: code emits it, no run has populated it yet. **Paper no longer promises the number** (states the policy, defers the measurement), so this is safe to submit as-is | you | included in any rerun |
-| 3 | Four single-seed diagnostics still use the legacy candidate rule (Table 3, estimand comparison, semivalues, interactions). Labelled in the text; each is a structural check | you | ~1 h |
-| 4 | Only MovieLens clears the 0.60 recall gate | either | new corpus |
-| 5 | Interaction indices and metric robustness are MovieLens-only | you | ~2 h |
+| 1 | **Overleaf compile, still never verified.** Six rounds | you | 5 min |
+| 2 | Gowalla protocol sensitivity + validation recall (the run covered two corpora) | you | ~1 h |
+| 3 | Four single-seed diagnostics still on the legacy candidate rule, each labelled in the text | you | ~1 h |
+| 4 | Only MovieLens clears the 0.60 gate; interactions and metric robustness are MovieLens-only | needs a new corpus |
 
-Item 2 was a live risk: the paper claimed validation recall was reported when
-no artefact contained it. I have cut the claim back to the policy plus a
-deferred measurement, so nothing unsupported ships. If you rerun anyway the
-number appears automatically and I will put it in Table 1.
+Nothing in 2-4 is unsupported in the manuscript: each is disclosed in our own
+words. Item 1 is the only thing blocking submission.
 
 ## YOU: cannot be automated
 

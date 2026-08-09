@@ -46,6 +46,8 @@ reported sign are unaffected. See spec provenance entry 36.
 | Grand-pool ablation (Sec 4.1) | `results_ml_1m.json` `e8_appendix_b` | M4 | legacy | 42 |
 | Gowalla subsampling (Sec 11) | `gowalla_subsample_sensitivity.json` | M4 | sym vs sym | 42-51 |
 | Metric robustness (Sec 11) | `metric_robustness_ml_1m.json` | x86 | legacy | 42 |
+| Temporal + validation-miss sensitivity (Sec 5) | `protocol_sensitivity.json` | M4 | sym | 42 |
+| Validation recall, Table 1 | `protocol_sensitivity.json` | M4 | sym | 42 |
 | LOO/gap intervals, ml_1m only (superseded) | `final_loo_gap_ci.json` | x86 | legacy | 42-51 |
 
 ## Status after commit 600fd98
