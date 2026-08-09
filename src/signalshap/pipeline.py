@@ -144,6 +144,12 @@ class Experiment:
         vrec = validation_recall(self.candidates, self.valid_items)
         return {
             "dataset": self.name, "n_max": self.n_max,
+            # Stamp the rule into the artefact. Three different v(G) values for
+            # nominally the same game reached a reviewer because nothing on
+            # disk said which candidate construction produced them.
+            "candidate_rule": ("symmetric_reciprocal_rank"
+                               if self.symmetric_candidates
+                               else "legacy_best_rank_source_order"),
             "candidate_recall": float(recall),
             **vrec,
             "recall_gate": self.cfg.recall_gate,

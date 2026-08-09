@@ -404,7 +404,11 @@ def test_amazon_gains_a_flip_only_at_the_extreme_penalty():
 
 def test_loo_beats_shapley_at_retirement_on_every_corpus():
     d = _art("final_retirement_seeds.json")
+    # Skip top-level metadata keys such as "_candidate_rule": artefacts carry
+    # provenance strings alongside the per-corpus blocks.
     for c, v in d.items():
+        if not isinstance(v, dict) or "tau_loo" not in v:
+            continue
         assert v["tau_loo"]["mean"] > v["tau_shapley"]["mean"], c
         assert v["loo_correct_frac"] >= v["shapley_correct_frac"], c
 
@@ -412,6 +416,7 @@ def test_loo_beats_shapley_at_retirement_on_every_corpus():
 def test_loo_is_not_claimed_perfect():
     """It is 0.94-1.00, not 1.00. The paper says so; this pins it."""
     d = _art("final_retirement_seeds.json")
-    means = [v["tau_loo"]["mean"] for v in d.values()]
+    means = [v["tau_loo"]["mean"] for v in d.values()
+             if isinstance(v, dict) and "tau_loo" in v]
     assert min(means) < 1.0, "if LOO were exactly 1.00 everywhere, reword the text"
     assert min(means) > 0.9

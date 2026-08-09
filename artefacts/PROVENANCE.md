@@ -34,17 +34,17 @@ reported sign are unaffected. See spec provenance entry 36.
 | Table 3 duplicates | `e9_recovery_ml_1m.json` | M4 | legacy | 42 |
 | Table 4 analytic games | `e13_synthetic_ground_truth.json` | any | n/a | n/a |
 | Table 5 interactions | `interaction_seed_ci_ml_1m.json` | x86 | legacy | 42-51 |
-| Table 6 LOO vs Shapley | `final_seed_ci.json` | M4 | legacy | 42-51 (all columns) |
+| Table 6 LOO vs Shapley | `final_seed_ci.json` | M4 | **sym** | 42-51 (all columns) |
 | Table 7 retirement | `e12_retirement_ml_1m.json` | M4 | legacy | 42 |
-| Table 8 retirement seeds | `final_retirement_seeds.json` | M4 | legacy | 42-51 |
-| Paired delta tau (Sec 13) | `final_retirement_seeds.json` `paired_delta_tau` | M4 | legacy | 42-51 |
-| Figure 2 | `final_seed_ci.json` | M4 | legacy | 42-51 |
-| LOO/gap intervals, all corpora | `final_seed_ci.json` `loo_ci`/`gap_ci` | M4 | legacy | 42-51 |
+| Table 8 retirement seeds | `final_retirement_seeds.json` | M4 | **sym** | 42-51 |
+| Paired delta tau (Sec 13) | `final_retirement_seeds.json` `paired_delta_tau` | M4 | **sym** | 42-51 |
+| Figure 2 | `final_seed_ci.json` | M4 | **sym** | 42-51 |
+| LOO/gap intervals, all corpora | `final_seed_ci.json` `loo_ci`/`gap_ci` | M4 | **sym** | 42-51 |
 | Figure 3 | `results_*.json` | M4 | legacy | 42 |
 | Semivalues (Sec 10.2) | `e10_values_ml_1m.json` | x86 | legacy | 42 |
 | Candidate-rule ablation (Sec 4.1) | `candidate_rule_ablation_ml_1m.json` | x86 | both | 42 |
 | Grand-pool ablation (Sec 4.1) | `results_ml_1m.json` `e8_appendix_b` | M4 | legacy | 42 |
-| Gowalla subsampling (Sec 11) | `gowalla_subsample_sensitivity.json` | M4 | legacy | 42-51 |
+| Gowalla subsampling (Sec 11) | `gowalla_subsample_sensitivity.json` | M4 | sym vs sym | 42-51 |
 | Metric robustness (Sec 11) | `metric_robustness_ml_1m.json` | x86 | legacy | 42 |
 | LOO/gap intervals, ml_1m only (superseded) | `final_loo_gap_ci.json` | x86 | legacy | 42-51 |
 
@@ -65,18 +65,21 @@ Two findings from that run changed the paper rather than confirming it:
   caption asserted all fifteen cells were 10/10. Table 6 now carries a
   per-source sign column.
 
-## Known gap, disclosed in Section 4.1
+## Candidate-rule status
 
-Every reported result uses the `legacy` rule. The `sym` rule is the method of
-record and the code default, and the two were compared head to head on
-MovieLens (max abs delta phi = 2.8e-5, tau = 1.00, same material flip). A full
-three-corpus ten-seed regeneration under `sym` has not been run; it costs
-roughly the wall-clock of the original study, most of it Gowalla.
+**Closed for the inferential results.** Commit 600fd98 regenerated the ten-seed
+attribution and retirement study on all three corpora under `sym`, which is the
+method of record. Verified rather than assumed: `sym` was already the default
+in `builder.py` and `pipeline.py` at that commit, and ml_1m seed 42 differs
+from the previous legacy-key run by 2.7e-4, the scale of the rule change.
 
-To close it:
+**Still `legacy`, and labelled as such in the paper:**
 
-    python scripts/run_final_revision.py --only seeds retire --budget-gb 24
+| Object | Why it is acceptable | Why it is still flagged |
+|---|---|---|
+| Table 3 duplicate injection | Tests exact symmetry and exact-zero LOO, properties of the aggregation rather than of particular values | Not regenerated |
+| Estimand comparison (Sec 13) | Reports rank agreement between three games, all built the same way | Not regenerated |
+| Semivalues, interactions, metric robustness, candidate/grand-pool ablations | Single-seed x86 diagnostics, each labelled in the text | Not regenerated |
 
-Gowalla needs about 24 GB: the budget derives the user cap, and a smaller one
-silently substitutes a different corpus. `check_paper_shape()` now refuses to
-overwrite the reported artefact in that case.
+Artefacts now stamp `candidate_rule` themselves, so this table cannot silently
+drift again.

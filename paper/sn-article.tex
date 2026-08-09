@@ -648,14 +648,13 @@ larger than the effect being measured ($2.8\times10^{-5}$) is precisely why the
 comparison had to be run twice on one machine rather than read across tables. The reported conclusions are therefore unaffected by the change, and the game
 is order invariant by construction rather than approximately so.
 
-One disclosure. The symmetric key is the default in the released code, but the
-attribution tables in Sections~\ref{sec:results} and~\ref{sec:estimands} were
-produced under the legacy key, and we have regenerated only MovieLens-1M under
-the new one: a full three-corpus, ten-seed regeneration costs roughly the
-wall-clock of the original study, most of it Gowalla. We report the head-to-head
-comparison above on the corpus that carries the main claims rather than assert
-that the difference is negligible elsewhere, and the two artefacts are released
-side by side so the comparison can be checked.
+The ten-seed attribution and retirement results in
+Sections~\ref{sec:results} and~\ref{sec:estimands} were subsequently
+regenerated on all three corpora under this symmetric key, so the game the
+paper defines is the game its main results measure. Two single-seed
+diagnostics predate the change and are labelled where they appear: the
+duplicate-injection table and the estimand comparison. The artefacts under both
+keys are released side by side so the head-to-head above can be checked.
 
 This choice is load-bearing. The obvious alternative, drawing one candidate
 pool from the full fused scorer, is \emph{not aligned with the ranking-stage
@@ -848,10 +847,9 @@ plausibly favour, so this protocol is if anything unkind to them.
 \paragraph{Validation positives outside the candidate set}
 The head is fitted on $\mathbf{y}^{\mathrm{val}}_u$, the indicator of
 $i_u^{\mathrm{val}}$ within $C_u$. When the validation item is not retrieved,
-that vector is all zero and the user contributes negatives only. We report
-validation candidate recall alongside test recall in
-Table~\ref{tab:preconditions} so the size of this effect is visible rather than
-implicit, and we retain the all-zero users: dropping them would fit the head on
+that vector is all zero and the user contributes negatives only. The released pipeline records validation candidate recall alongside test recall
+so the size of this effect becomes visible rather than implicit, and we retain
+the all-zero users: dropping them would fit the head on
 a subpopulation selected for being easy to retrieve, which is a worse bias than
 the one it removes. The Gram accumulation in Equation~(\ref{eq:head}) is
 $|C_u|$-normalised, so such users contribute to $A$ but nothing to $c$, shrinking
@@ -1152,9 +1150,12 @@ interpreted. Density is computed as-used, never quoted from a source paper.
 Corpora marked \emph{ceiling} are reported under the restriction stated in the
 text: relative contrasts only. Recall here is \emph{test} candidate recall, the
 ceiling on the metric. The head is fitted against the validation indicator, so
-validation candidate recall bounds the fit in the same way; the released
-pipeline now records it in every run artefact, and we report it in the final
-version. Users whose validation item is unretrieved are kept, contributing to
+validation candidate recall bounds the fit in the same way. The released
+pipeline records it, together with the number of users whose validation
+positive is unretrieved, in every run artefact; the runs behind this table
+predate that instrumentation, so we state the policy here and report the
+measurement with the next full regeneration rather than quote a number we have
+not yet computed. Users whose validation item is unretrieved are kept, contributing to
 the Gram matrix but not to its right-hand side
 (Section~\ref{sec:algorithm}).}
 \label{tab:preconditions}
@@ -1795,20 +1796,19 @@ pool or the model-selection procedure. We support the first with a measurement
 on MovieLens (Section~\ref{sec:game}) and the second with the $\lambda$ sweep,
 which is evidence rather than proof.
 
-\paragraph{The reported results predate the final candidate rule}
-We state this as a limitation rather than an implementation footnote, because
-it is the largest gap between the method of record and the evidence. The
-source-symmetric truncation key of Section~\ref{sec:game} is the declared
-method and the released default, but every table in
-Sections~\ref{sec:results} and~\ref{sec:estimands} was produced under the
-superseded order-dependent key, and only MovieLens has been recomputed under
-both. On that corpus the two agree to $\max_g|\Delta\varphi_g| = 2.8\times
-10^{-5}$ with identical ordering, signs and material flip, which is why we
-consider the reported conclusions safe; it is not a substitute for regenerating
-Amazon-VG and Gowalla, which costs roughly the wall-clock of the original study
-and which we have not spent. A machine-readable map from every table and figure
-to the artefact, platform, candidate rule and seeds that produced it ships with
-the repository.
+\paragraph{Not every artefact comes from the final candidate rule}
+The ten-seed attribution and retirement results, which carry every inferential
+claim, were regenerated on all three corpora under the source-symmetric key of
+Section~\ref{sec:game}. Two single-seed diagnostics were not: the
+duplicate-injection experiment of Section~\ref{sec:recovery} and the estimand
+comparison of Section~\ref{sec:estimands} still come from the superseded
+order-dependent key. Both are structural checks whose conclusions are about
+exact symmetry and rank agreement rather than about particular values, and on
+MovieLens the two keys agree to $\max_g|\Delta\varphi_g| = 2.8\times10^{-5}$
+with identical ordering; we nonetheless flag them rather than imply the whole
+paper is single-key. A machine-readable map from every table and figure to the
+artefact, platform, candidate rule and seeds that produced it ships with the
+repository.
 
 \paragraph{Two-step-ahead evaluation from a frozen state}
 The protocol of Section~\ref{sec:algorithm} freezes the source state at the

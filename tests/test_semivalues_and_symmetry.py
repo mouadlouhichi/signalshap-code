@@ -139,3 +139,30 @@ def test_ndcg_macro_does_not_double_print_the_cutoff():
     assert r"\NDCG_K" not in body
     assert r"\NDCG_{10}" not in body
     assert r"\newcommand{\NDCGat}" in body
+
+
+def test_artefact_consumers_tolerate_metadata_keys():
+    """Provenance strings must not break code that iterates corpora.
+
+    Adding `_note_ci` and `_candidate_rule` at the top level of two artefacts
+    broke three separate tests that did `for c, v in d.items()` and indexed
+    straight into v. Rather than remove the metadata, which is what makes the
+    artefacts self-describing, consumers skip non-dict values. This pins that.
+    """
+    import json
+    from pathlib import Path
+
+    root = Path(__file__).resolve().parents[1] / "artefacts"
+    for fname in ("final_seed_ci.json", "final_retirement_seeds.json"):
+        f = root / fname
+        if not f.exists():
+            continue
+        d = json.loads(f.read_text())
+        meta = [k for k, v in d.items() if not isinstance(v, dict)]
+        assert meta, f"{fname} should carry provenance metadata"
+        corpora = [k for k, v in d.items() if isinstance(v, dict)]
+        assert corpora, f"{fname} should still have corpus blocks"
+        # Every corpus block must name the candidate rule, directly or at the
+        # top level, so no artefact is ambiguous about which game produced it.
+        assert "_candidate_rule" in d or all(
+            "candidate_rule" in d[c] for c in corpora), fname

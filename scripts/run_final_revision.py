@@ -146,6 +146,9 @@ def block_seeds(cfg, budget, corpora, seeds, resume=True, allow_resize=False):
             gc.collect()                     # 14.6 GB of score matrices per seed
             # Checkpoint immediately: a kill on the next seed keeps this one.
             out[name] = {
+                "candidate_rule": ("symmetric_reciprocal_rank"
+                                   if getattr(e, "symmetric_candidates", True)
+                                   else "legacy_best_rank_source_order"),
                 "n_seeds": len(per_seed),
                 "per_seed": {str(k): v for k, v in sorted(per_seed.items())},
                 "per_seed_loo": {str(k): v for k, v in sorted(per_seed_loo.items())},

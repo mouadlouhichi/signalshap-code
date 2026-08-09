@@ -96,32 +96,38 @@ reported). These need the machine with all three raw corpora.
 | Intro LOO scoping, "correctly reports", "ablation won it", "approaching the whole catalogue", appendix heading | Medium | **All rewritten** |
 | General semivalue equation, rec clustering, initial N_g, PPMI k_s=1, random-state | Medium | **Added to Background / Table 2** |
 
-### 24 GB ten-seed run landed (commit 600fd98)
+### 24 GB ten-seed run landed (commits 600fd98, c76e115)
 
-Budget guard held: Gowalla loaded at the correct 8,865 x 82,134. The run closed
-every remaining interval gap, and produced two corrections:
+Budget guard held: Gowalla loaded at the correct 8,865 x 82,134. **I checked
+the code at that commit and the run used the SYMMETRIC candidate rule**, not
+legacy as I first said. That closes the reviewer's Critical #1 for every
+inferential result. Corrected in the paper and in PROVENANCE.md.
 
-- **Gowalla's top source moved `ct` -> `cf`**, separated by only 0.00033, and
-  the 12.6 GB resampling exchanges them again. The paper now reports a near-tie
-  and drops the "content signal strong enough to rank second" reading.
-- **`phi_ct` on MovieLens is negative on 9/10 seeds, not 10/10.** The caption
-  had asserted all fifteen cells were sign-stable. Table 6 now carries a
-  per-source sign column and names the two exceptions.
+Two findings corrected the paper rather than confirming it:
 
-Both material flips survive with ten-seed gap intervals excluding zero, on all
-three corpora. Paired `delta tau` now exists everywhere: +0.76, +0.22, +0.20,
-Wilcoxon p = 0.002 and 0.004 (Gowalla degenerate, zero variance). Amazon
-retirement improved: tau 0.94 -> 0.96, cheapest-source 80% -> 90%.
+- **Gowalla's top source moved `ct` -> `cf`**, separated by 0.00033, and the
+  12.6 GB resampling exchanges them again. Now reported as a near-tie; the
+  "content signal strong enough to rank second" reading is gone.
+- **`phi_ct` on MovieLens is negative on 9/10 seeds, not 10/10.** Table 6 now
+  carries a per-source sign column naming both exceptions.
 
-**Still not done: the full three-corpus regeneration under the symmetric candidate
-rule.** This is the reviewer's Critical #1 and it needs your machine. Everything
-else is closed. Run:
+## What is still open
 
-    python scripts/run_final_revision.py --only seeds retire --budget-gb 24
+**Nothing that needs my hands.** All 15 mandatory items from review round 4 are
+closed. Remaining items, in the order they would cost the paper:
 
-That now also emits per-seed LOO, gap, tau and the paired bootstrap on all three
-corpora, closing the remaining High items in one pass. Send me the artefacts and
-I will regenerate Tables 6-8, Figures 2-3 and the prose.
+| # | Item | Who | Cost |
+|---|---|---|---|
+| 1 | **Overleaf compile, never verified.** Five rounds. Last confirmed compile had all six data figures on pages 38-40 of 40 | you | 5 min |
+| 2 | Validation candidate recall: code emits it, no run has populated it yet. **Paper no longer promises the number** (states the policy, defers the measurement), so this is safe to submit as-is | you | included in any rerun |
+| 3 | Four single-seed diagnostics still use the legacy candidate rule (Table 3, estimand comparison, semivalues, interactions). Labelled in the text; each is a structural check | you | ~1 h |
+| 4 | Only MovieLens clears the 0.60 recall gate | either | new corpus |
+| 5 | Interaction indices and metric robustness are MovieLens-only | you | ~2 h |
+
+Item 2 was a live risk: the paper claimed validation recall was reported when
+no artefact contained it. I have cut the claim back to the policy plus a
+deferred measurement, so nothing unsupported ships. If you rerun anyway the
+number appears automatically and I will put it in Table 1.
 
 ## YOU: cannot be automated
 
