@@ -239,6 +239,25 @@ def fig2_shapley_shares(results: dict) -> Path:
     return p
 
 
+def _ten_seed_loo_gap(name: str) -> dict | None:
+    """Ten-seed mean LOO and Shapley per source, if the artefact has them."""
+    import json
+    from pathlib import Path as _P
+    f = _P("artefacts") / "final_seed_ci.json"
+    if not f.exists():
+        return None
+    try:
+        d = json.loads(f.read_text()).get(name)
+    except (json.JSONDecodeError, OSError):
+        return None
+    if not isinstance(d, dict) or "loo_ci" not in d or "ci" not in d:
+        return None
+    if not all(g in d["loo_ci"] and g in d["ci"] for g in SOURCES):
+        return None
+    return {"loo": {g: d["loo_ci"][g]["mean"] for g in SOURCES},
+            "shapley": {g: d["ci"][g]["mean"] for g in SOURCES}}
+
+
 def fig3_loo_vs_shapley(results: dict) -> Path:
     """F3: LOO vs Shapley scatter -- the empirical content of Property 2."""
     _dirs()
@@ -254,7 +273,13 @@ def fig3_loo_vs_shapley(results: dict) -> Path:
                                                "gowalla_ts")]
     sizes = {n: s for n, s in zip(_order, (115, 62, 30, 30))}
     for name, r in results.items():
+        # Ten-seed means where the artefact has them, so this figure sits at
+        # the same aggregation level as the LOO-vs-Shapley table. It used to
+        # plot seed-42 points beneath ten-seed prose.
         e2 = r["e2_loo_vs_shapley"]
+        ten = _ten_seed_loo_gap(name)
+        if ten:
+            e2 = {"loo": ten["loo"], "shapley": ten["shapley"]}
         for g in SOURCES:
             ax.scatter(e2["loo"][g], e2["shapley"][g], s=sizes.get(name, 70),
                        marker=SOURCE_MARK[g], color=PALETTE[g],
@@ -266,7 +291,9 @@ def fig3_loo_vs_shapley(results: dict) -> Path:
     ax.axhline(0, color="black", lw=0.5, zorder=1)
     ax.axvline(0, color="black", lw=0.5, zorder=1)
     ax.set_xlabel("LOO attribution"); ax.set_ylabel("Shapley value $\\varphi_g$")
-    ax.set_title("F3 — LOO vs Shapley\n(points off the diagonal: the two rules disagree)",
+    # No internal figure number (asset order != paper order) and no em dash.
+    ax.set_title("Ranking-stage LOO vs Shapley, ten-seed means\n"
+                 "(points off the diagonal: the two rules disagree)",
                  fontsize=10)
     handles = [plt.Line2D([], [], marker=SOURCE_MARK[g], ls="",
                           color=PALETTE[g], mec="black", label=g)

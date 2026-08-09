@@ -249,10 +249,25 @@ def block_retire(cfg, budget, corpora, seeds):
         if not taus_sh:
             continue
         def _ci(a):
+            """Percentile bootstrap, not a t interval.
+
+            Kendall tau is bounded by 1 and takes few discrete values at n = 5
+            sources; a t interval on ten seeds produced [0.90, 1.02], which
+            lies outside the parameter's support. The bootstrap cannot leave
+            the convex hull of the observed values.
+            """
             a = np.asarray(a, float)
-            se = a.std(ddof=1) / np.sqrt(len(a)) if len(a) > 1 else 0.0
-            return {"mean": float(a.mean()), "lo": float(a.mean() - 1.96 * se),
-                    "hi": float(a.mean() + 1.96 * se), "n": int(len(a))}
+            if len(a) < 2:
+                return {"mean": float(a.mean()), "lo": float(a.mean()),
+                        "hi": float(a.mean()), "n": int(len(a))}
+            rng = np.random.default_rng(0)
+            idx = rng.integers(0, len(a), size=(10000, len(a)))
+            means = a[idx].mean(axis=1)
+            return {"mean": float(a.mean()),
+                    "lo": float(np.percentile(means, 2.5)),
+                    "hi": float(np.percentile(means, 97.5)),
+                    "n": int(len(a)),
+                    "ci_method": "percentile bootstrap, 10000 resamples"}
         # PAIRED comparison. Two separate intervals do not test the
         # difference: tau_LOO and tau_Shapley are computed on the SAME seed
         # against the SAME observed loss, so they are paired and the paired
@@ -265,9 +280,15 @@ def block_retire(cfg, budget, corpora, seeds):
             means = d[idx].mean(axis=1)
             boot = [float(np.percentile(means, 2.5)),
                     float(np.percentile(means, 97.5))]
+        # Do NOT special-case constant differences to p = 1. Ten identical
+        # POSITIVE differences are the strongest possible evidence, not the
+        # weakest: the signed-rank statistic is 0 and scipy returns
+        # p = 2/2^10 = 0.00195. An earlier guard here reported 1.0, which a
+        # reviewer correctly flagged as a wrong p-value. Only an all-zero
+        # difference vector is genuinely uninformative.
         try:
             from scipy.stats import wilcoxon
-            wp = float(wilcoxon(d).pvalue) if len(set(d.tolist())) > 1 else 1.0
+            wp = 1.0 if not np.any(d) else float(wilcoxon(d).pvalue)
         except Exception:                                # noqa: BLE001
             wp = float("nan")
         paired = {

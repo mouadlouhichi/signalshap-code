@@ -59,7 +59,7 @@ def coalition_retrieval_game(exp, coalition: frozenset, n_max: int) -> dict:
     coalition and is part of what the source contributes.
     """
     if not coalition:
-        return {"v": 0.0, "recall": 0.0}
+        return {"v": 0.0, "utility": 0.0, "recall": 0.0}
 
     sub_scores = {g: exp.scores[g] for g in coalition}
     cands = [
@@ -72,8 +72,14 @@ def coalition_retrieval_game(exp, coalition: frozenset, n_max: int) -> dict:
         v0_seed=exp.cfg.v0_seed, sources=tuple(sorted(coalition)),
     )
     return {
+        # v is baseline-centred; utility is raw NDCG. Retirement loss must be
+        # differenced on `utility`: each coalition retrieves its own candidate
+        # set, so |C_u| and hence b_u differ, and differencing `v` adds a
+        # baseline term that has nothing to do with the observed change.
         "v": game.v(frozenset(coalition)),
+        "utility": game.utility(frozenset(coalition)),
         "recall": float(candidate_recall(cands, exp.test_items)),
+        "mean_baseline": game.v0,
     }
 
 
@@ -168,12 +174,16 @@ def retirement_simulation(exp, verbose: bool = True) -> dict:
 
     full = coalition_retrieval_game(exp, frozenset(SOURCES), exp.n_max)
     losses, recall_after = {}, {}
+    losses_centred, baseline_shift = {}, {}
     for g in SOURCES:
         kept = frozenset(s for s in SOURCES if s != g)
         if verbose:
             print(f"    [retirement] removing {g}...", flush=True)
         r = coalition_retrieval_game(exp, kept, exp.n_max)
-        losses[g] = full["v"] - r["v"]          # true cost of retiring g
+        # RAW utilities, not baseline-centred values (reviewer, round 6).
+        losses[g] = full["utility"] - r["utility"]
+        losses_centred[g] = full["v"] - r["v"]
+        baseline_shift[g] = r["mean_baseline"] - full["mean_baseline"]
         recall_after[g] = r["recall"]
 
     phi = exact_shapley(exp.v)
@@ -189,8 +199,17 @@ def retirement_simulation(exp, verbose: bool = True) -> dict:
     return {
         "dataset": exp.name,
         "v_full_e2e": full["v"],
+        "utility_full_e2e": full["utility"],
         "recall_full": full["recall"],
         "true_retirement_loss": losses,
+        "retirement_loss_centred_legacy": losses_centred,
+        "baseline_shift_after_removal": baseline_shift,
+        "baseline_contamination_note": (
+            "true_retirement_loss now differences RAW utility. The legacy "
+            "column differences baseline-centred v and equals the raw loss "
+            "plus baseline_shift_after_removal, which is non-zero because "
+            "retiring a source changes |C_u| and hence the expected-random "
+            "baseline. Only the raw difference is the observed removal cost."),
         "recall_after_removal": recall_after,
         "shapley": phi,
         "loo": loo,

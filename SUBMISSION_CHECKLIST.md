@@ -133,17 +133,39 @@ fit on negatives only) and 0.648 (amazon, 2,505 of 7,120). Large minorities, so
 the policy mattered. Dropping them moves nothing: max abs delta phi = 3.7e-5
 and 2.1e-4, all signs agree. Table 1 now carries validation recall.
 
+## Review round 6
+
+| Issue | Sev | Status |
+|---|---|---|
+| LOO_e2e defined on baseline-centred v, not raw utility | Critical | **Real bug, fixed.** `utility()` added; retirement now differences raw NDCG. Contamination measured: <= 1.7e-4, tau = 1.00, no conclusion changes |
+| v_fixed / v_e2e empty coalition undefined | High | Both set to 0 explicitly |
+| Global-time causality unaudited | High | `audit_global_time.py` added; ~50% of pooled training events postdate the median test event. Now described as per-user chronological, not globally causal |
+| Gowalla Wilcoxon p = 1.0 | High | **Wrong, fixed.** Correct value is 0.0020, the strongest the test can give. Our guard was backwards |
+| Kendall t-intervals exceeding 1.0 | High | Replaced with percentile bootstrap everywhere |
+| Abstract/C4/Table 9 stale 0.94-1.00 and 80-100% | High | Updated to 0.96-1.00 and 90-100% |
+| "pop constant across candidate row" | High | Corrected: user-invariant, item-varying |
+| "only induced ordering matters" | High | Restricted to positive affine invariance |
+| Figure 3 stale seed-42 points | High | Regenerated from ten-seed means |
+| Table 7 "identical to Table 6" | High | Corrected: same game, seed-42 realisation |
+| Amazon rec gap 0.0008 | Med | 0.00063 |
+| "not rare" over three corpora | Med | Replaced with a corpus-limited statement |
+| "worth removing" for LOO_rank | Med | Now "improves the fixed-candidate ranking game" |
+| 32 coalitions vs 16 marginals | Med | Distinguished |
+| Duplicated fusion sentence | Low | Removed |
+| Table 5 "redundancy" wording | Low | "substitutive interaction under the declared game" |
+
 ## What is still open
 
 | # | Item | Who | Cost |
 |---|---|---|---|
-| 1 | **Overleaf compile, still never verified.** Six rounds | you | 5 min |
-| 2 | Gowalla protocol sensitivity + validation recall (the run covered two corpora) | you | ~1 h |
-| 3 | Four single-seed diagnostics still on the legacy candidate rule, each labelled in the text | you | ~1 h |
-| 4 | Only MovieLens clears the 0.60 gate; interactions and metric robustness are MovieLens-only | needs a new corpus |
+| 1 | **Overleaf compile, still never run.** Seven rounds | you | 5 min |
+| 2 | Gowalla validation recall + protocol sensitivity (the runs covered two corpora) | you | ~1 h |
+| 3 | Re-run retirement so the artefacts carry raw-utility losses on real corpora (the fix is measured on the pilot only) | you | ~1 h |
+| 4 | Global-time audit on real corpora (script ready) | you | minutes |
+| 5 | Only MovieLens clears the 0.60 gate; interactions MovieLens-only | needs a new corpus |
 
-Nothing in 2-4 is unsupported in the manuscript: each is disclosed in our own
-words. Item 1 is the only thing blocking submission.
+Items 2-4 are one command each and all three are disclosed honestly in the
+text as they stand. Item 1 is the only submission blocker.
 
 ## YOU: cannot be automated
 

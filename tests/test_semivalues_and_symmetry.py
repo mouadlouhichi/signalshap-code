@@ -205,3 +205,62 @@ def test_protocol_sensitivity_script_is_registered():
     tex = (root / "paper" / "sn-article.tex")
     if tex.exists():
         assert "run\\_protocol\\_sensitivity" in tex.read_text()
+
+
+def test_utility_is_raw_and_v_is_centred():
+    """Retirement loss must difference raw utility, not the centred game.
+
+    End to end each coalition retrieves its own candidates, so |C_u| and hence
+    the expected-random baseline differ between the full system and the
+    survivors. Differencing v() then carries a b(G\\{g}) - b(G) term that is not
+    part of the observed change. A reviewer derived this; the fix was to expose
+    utility() alongside v().
+    """
+    from signalshap.game.core import SignalShapGame
+
+    rng = np.random.default_rng(0)
+    n_items = 40
+    scores = {g: rng.normal(size=(3, n_items)).astype(np.float32) for g in SRC}
+    cands = [np.arange(n_items) for _ in range(3)]
+    valid = {u: int(rng.integers(n_items)) for u in range(3)}
+    test = {u: int(rng.integers(n_items)) for u in range(3)}
+    g = SignalShapGame(scores, cands, valid, test)
+
+    S = frozenset(SRC)
+    assert abs((g.utility(S) - g.v0) - g.v(S)) < 1e-9   # v = utility - baseline
+    assert g.utility(frozenset()) == 0.0
+    assert g.v0 > 0.0                                    # baseline is non-trivial
+    # The two differ by exactly the baseline, so they are not interchangeable.
+    assert abs(g.utility(S) - g.v(S)) > 1e-12
+
+
+def test_wilcoxon_on_constant_positive_differences_is_significant():
+    """Ten identical positive differences are the strongest signal, not the weakest.
+
+    Our runner special-cased constant difference vectors to p = 1.0. That is
+    backwards: the signed-rank statistic is 0 and the exact two-sided p is
+    2/2^10. Only an all-zero vector is uninformative.
+    """
+    from scipy.stats import wilcoxon
+
+    d = np.full(10, 0.20)
+    assert abs(float(wilcoxon(d).pvalue) - 2 / 2 ** 10) < 1e-9
+    assert float(wilcoxon(d).pvalue) < 0.01
+
+
+def test_kendall_tau_intervals_stay_inside_the_support():
+    """A t interval on ten bounded tau values produced [0.90, 1.02]."""
+    import json
+    from pathlib import Path
+
+    f = Path(__file__).resolve().parents[1] / "artefacts" / "final_retirement_seeds.json"
+    if not f.exists():
+        import pytest
+        pytest.skip("artefact absent")
+    d = json.loads(f.read_text())
+    for c, v in d.items():
+        if not isinstance(v, dict) or "tau_loo" not in v:
+            continue
+        for k in ("tau_loo", "tau_shapley"):
+            assert -1.0 <= v[k]["lo"] <= 1.0, (c, k)
+            assert -1.0 <= v[k]["hi"] <= 1.0, (c, k)

@@ -338,6 +338,29 @@ class SignalShapGame:
             out[u] = ndcg_at_k(ranked, self.test_items[u], self.k) - self._v0[u]
         return out
 
+    def utility(self, coalition: frozenset) -> float:
+        """RAW mean NDCG@k, with no baseline subtracted.
+
+        The end-to-end retirement experiment must difference THIS, not v().
+        Each coalition retrieves its own candidate set there, so |C_u| and
+        therefore b_u differ between the full system and the survivors; a
+        reviewer showed that v(G) - v(G\{g}) then carries a spurious
+        B(G\{g}) - B(G) term and is not the observed removal loss. In the main
+        fixed-candidate game the baseline is common to every coalition and
+        cancels in that difference, which is why v() is the right object there
+        and the wrong one here.
+        """
+        coalition = frozenset(coalition)
+        if not coalition:
+            return 0.0
+        w = self._fit_weights(coalition)
+        tot = 0.0
+        for u in self.eval_users:
+            s_u = self.feat[u] @ w
+            order = np.lexsort((self.candidates[u], -s_u))
+            tot += ndcg_at_k(self.candidates[u][order], self.test_items[u], self.k)
+        return tot / len(self.eval_users) if self.eval_users else 0.0
+
     def v(self, coalition: frozenset) -> float:
         """v(S) = mean per-user NDCG@10 - v_0, with v(empty) = 0 exactly."""
         coalition = frozenset(coalition)
