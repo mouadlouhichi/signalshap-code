@@ -96,7 +96,24 @@ reported). These need the machine with all three raw corpora.
 | Intro LOO scoping, "correctly reports", "ablation won it", "approaching the whole catalogue", appendix heading | Medium | **All rewritten** |
 | General semivalue equation, rec clustering, initial N_g, PPMI k_s=1, random-state | Medium | **Added to Background / Table 2** |
 
-**Not done: the full three-corpus regeneration under the symmetric candidate
+### 24 GB ten-seed run landed (commit 600fd98)
+
+Budget guard held: Gowalla loaded at the correct 8,865 x 82,134. The run closed
+every remaining interval gap, and produced two corrections:
+
+- **Gowalla's top source moved `ct` -> `cf`**, separated by only 0.00033, and
+  the 12.6 GB resampling exchanges them again. The paper now reports a near-tie
+  and drops the "content signal strong enough to rank second" reading.
+- **`phi_ct` on MovieLens is negative on 9/10 seeds, not 10/10.** The caption
+  had asserted all fifteen cells were sign-stable. Table 6 now carries a
+  per-source sign column and names the two exceptions.
+
+Both material flips survive with ten-seed gap intervals excluding zero, on all
+three corpora. Paired `delta tau` now exists everywhere: +0.76, +0.22, +0.20,
+Wilcoxon p = 0.002 and 0.004 (Gowalla degenerate, zero variance). Amazon
+retirement improved: tau 0.94 -> 0.96, cheapest-source 80% -> 90%.
+
+**Still not done: the full three-corpus regeneration under the symmetric candidate
 rule.** This is the reviewer's Critical #1 and it needs your machine. Everything
 else is closed. Run:
 

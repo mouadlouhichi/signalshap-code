@@ -34,17 +34,36 @@ reported sign are unaffected. See spec provenance entry 36.
 | Table 3 duplicates | `e9_recovery_ml_1m.json` | M4 | legacy | 42 |
 | Table 4 analytic games | `e13_synthetic_ground_truth.json` | any | n/a | n/a |
 | Table 5 interactions | `interaction_seed_ci_ml_1m.json` | x86 | legacy | 42-51 |
-| Table 6 LOO vs Shapley | `results_*.json` + `final_seed_ci.json` | M4 | legacy | 42 / 42-51 |
+| Table 6 LOO vs Shapley | `final_seed_ci.json` | M4 | legacy | 42-51 (all columns) |
 | Table 7 retirement | `e12_retirement_ml_1m.json` | M4 | legacy | 42 |
 | Table 8 retirement seeds | `final_retirement_seeds.json` | M4 | legacy | 42-51 |
+| Paired delta tau (Sec 13) | `final_retirement_seeds.json` `paired_delta_tau` | M4 | legacy | 42-51 |
 | Figure 2 | `final_seed_ci.json` | M4 | legacy | 42-51 |
+| LOO/gap intervals, all corpora | `final_seed_ci.json` `loo_ci`/`gap_ci` | M4 | legacy | 42-51 |
 | Figure 3 | `results_*.json` | M4 | legacy | 42 |
 | Semivalues (Sec 10.2) | `e10_values_ml_1m.json` | x86 | legacy | 42 |
 | Candidate-rule ablation (Sec 4.1) | `candidate_rule_ablation_ml_1m.json` | x86 | both | 42 |
 | Grand-pool ablation (Sec 4.1) | `results_ml_1m.json` `e8_appendix_b` | M4 | legacy | 42 |
 | Gowalla subsampling (Sec 11) | `gowalla_subsample_sensitivity.json` | M4 | legacy | 42-51 |
 | Metric robustness (Sec 11) | `metric_robustness_ml_1m.json` | x86 | legacy | 42 |
-| LOO/gap intervals (Sec 11) | `final_loo_gap_ci.json` | x86 | legacy | 42-51 |
+| LOO/gap intervals, ml_1m only (superseded) | `final_loo_gap_ci.json` | x86 | legacy | 42-51 |
+
+## Status after commit 600fd98
+
+The 24 GB ten-seed run closed the interval gaps: `final_seed_ci.json` now
+carries per-seed LOO and gap plus t_9 intervals and sign counts on all three
+corpora, and `final_retirement_seeds.json` carries per-seed tau and the paired
+bootstrap. Table 6 is now ten-seed throughout rather than mixing a seed-42
+point estimate with a ten-seed interval.
+
+Two findings from that run changed the paper rather than confirming it:
+
+- Gowalla's top source moved from `ct` to `cf`, and the two are separated by
+  only 0.00033. Under the 12.6 GB resampling they exchange again, so the paper
+  now reports a near-tie and makes no stable-top-source claim on that corpus.
+- `phi_ct` on MovieLens is negative on 9 of 10 seeds, not 10. The earlier
+  caption asserted all fifteen cells were 10/10. Table 6 now carries a
+  per-source sign column.
 
 ## Known gap, disclosed in Section 4.1
 
