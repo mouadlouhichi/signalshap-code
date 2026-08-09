@@ -4,13 +4,15 @@
    "mean": 0.19999999999999998,
    "lo": 0.19999999999999998,
    "hi": 0.19999999999999998,
-   "n": 10
+   "n": 10,
+   "t_crit": 2.262157162798205
   },
   "tau_loo": {
    "mean": 0.96,
-   "lo": 0.9077333333333333,
-   "hi": 1.0122666666666666,
-   "n": 10
+   "lo": 0.8996758089920478,
+   "hi": 1.0203241910079521,
+   "n": 10,
+   "t_crit": 2.262157162798205
   },
   "tau_shapley_per_seed": [
    0.19999999999999998,
@@ -119,15 +121,17 @@
  "amazon_video_games": {
   "tau_shapley": {
    "mean": 0.74,
-   "lo": 0.6801210109192437,
-   "hi": 0.7998789890807563,
-   "n": 10
+   "lo": 0.6708899571172713,
+   "hi": 0.8091100428827287,
+   "n": 10,
+   "t_crit": 2.262157162798205
   },
   "tau_loo": {
    "mean": 0.96,
-   "lo": 0.9077333333333333,
-   "hi": 1.0122666666666666,
-   "n": 10
+   "lo": 0.8996758089920478,
+   "hi": 1.0203241910079521,
+   "n": 10,
+   "t_crit": 2.262157162798205
   },
   "tau_shapley_per_seed": [
    0.6,
@@ -238,13 +242,15 @@
    "mean": 0.7999999999999999,
    "lo": 0.7999999999999999,
    "hi": 0.7999999999999999,
-   "n": 10
+   "n": 10,
+   "t_crit": 2.262157162798205
   },
   "tau_loo": {
    "mean": 0.9999999999999998,
    "lo": 0.9999999999999997,
    "hi": 0.9999999999999999,
-   "n": 10
+   "n": 10,
+   "t_crit": 2.262157162798205
   },
   "tau_shapley_per_seed": [
    0.7999999999999999,
@@ -351,5 +357,6 @@
   "shapley_correct_frac": 0.0
  },
  "_candidate_rule": "symmetric_reciprocal_rank",
- "_provenance": "Produced by commit 600fd98 on Apple M4 at --budget-gb 24, under the source-symmetric reciprocal-rank truncation key that Section 4.1 declares as the method of record. Verified against the previous legacy-key run: ml_1m seed 42 differs by max 2.7e-4, the scale of the rule change."
+ "_provenance": "Produced by commit 600fd98 on Apple M4 at --budget-gb 24, under the source-symmetric reciprocal-rank truncation key that Section 4.1 declares as the method of record. Verified against the previous legacy-key run: ml_1m seed 42 differs by max 2.7e-4, the scale of the rule change.",
+ "_ci_note": "tau intervals are mean +/- t_9*SE; paired delta uses a 10,000-resample percentile bootstrap and Wilcoxon signed-rank."
 }

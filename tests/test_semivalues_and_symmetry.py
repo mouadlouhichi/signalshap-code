@@ -166,3 +166,42 @@ def test_artefact_consumers_tolerate_metadata_keys():
         # top level, so no artefact is ambiguous about which game produced it.
         assert "_candidate_rule" in d or all(
             "candidate_rule" in d[c] for c in corpora), fname
+
+
+def test_validation_miss_can_rotate_the_ridge_solution():
+    """We claimed such users only shrink the weights. They can rotate them.
+
+    A validation-miss user adds a PSD block to A and nothing to c. For
+    w = (A + lam I)^-1 c that rescales eigendirections unevenly, so the
+    solution turns as well as shortens. The manuscript asserted the opposite.
+    """
+    lam = 1.0
+    Z1 = np.array([[1.0, 0.0], [0.0, 1.0], [1.0, 1.0]])
+    y1 = np.array([1.0, 0.0, 0.0])
+    A1, c1 = Z1.T @ Z1, Z1.T @ y1
+    w1 = np.linalg.solve(A1 + lam * np.eye(2), c1)
+
+    Zm = np.array([[3.0, 0.2], [2.5, 0.1]])       # miss user: no positive
+    w2 = np.linalg.solve(A1 + Zm.T @ Zm + lam * np.eye(2), c1)
+
+    cos = (w1 @ w2) / (np.linalg.norm(w1) * np.linalg.norm(w2))
+    angle = np.degrees(np.arccos(np.clip(cos, -1, 1)))
+    assert np.linalg.norm(w2) < np.linalg.norm(w1)   # it does shrink
+    assert angle > 1.0                               # but it also rotates
+
+
+def test_protocol_sensitivity_script_is_registered():
+    """The frozen-vs-refreshed experiment must ship, not just be promised."""
+    from pathlib import Path
+
+    root = Path(__file__).resolve().parents[1]
+    src = (root / "scripts" / "run_protocol_sensitivity.py")
+    assert src.exists()
+    body = src.read_text()
+    # Two states, not one refit on train+val: refitting everything masks the
+    # validation target and silently fits on an all-zero right-hand side.
+    assert "_two_state_game" in body
+    assert "history = train + val" in body or "train + val" in body
+    tex = (root / "paper" / "sn-article.tex")
+    if tex.exists():
+        assert "run\\_protocol\\_sensitivity" in tex.read_text()

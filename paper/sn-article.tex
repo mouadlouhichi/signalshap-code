@@ -592,6 +592,66 @@ tolerance.
 
 Let $\G = \{cf, ct, pop, rec, seq\}$ with $|\G| = 5$.
 
+\subsection{What each source computes}\label{sec:sources}
+
+A reviewer noted that naming the five players and listing their
+hyperparameters does not let anyone reimplement them. We therefore give the
+scoring function of each. Write $R \in \{0,1\}^{m \times |\mathcal{I}|}$ for the
+binarised training matrix, $\mathcal{H}_u$ for user $u$'s training history, and
+$t_{\max}$ for the latest training timestamp. All five are fitted on the
+training fold only and produce a dense score $s_g(u,i)$; every score is
+$z$-normalised per user over $\Cu$ before it enters the game, so only the
+induced ordering matters.
+%
+\begin{itemize}
+\item \textbf{$cf$, implicit-feedback ALS.} Alternating ridge solves for user
+      and item factors $x_u, y_i \in \mathbb{R}^{64}$ with confidence
+      $c_{ui} = 1 + \alpha r_{ui}$ at $\alpha = 1$, so observed entries carry
+      weight $2$ and unobserved entries weight $1$. Each half-step solves
+      $\bigl(Y^\top Y + \sum_{i \in \mathcal{H}_u} y_i y_i^\top + \rho I\bigr)
+      x_u = 2\sum_{i \in \mathcal{H}_u} y_i$ with $\rho = 0.1$, for $15$
+      iterations. Score $s_{cf}(u,i) = x_u^\top y_i$.
+
+\item \textbf{$ct$, TF--IDF content similarity.} Let $M \in
+      \mathbb{R}^{|\mathcal{I}| \times V}$ hold L2-normalised TF--IDF rows over
+      item text ($V = 5000$, tokens split on whitespace). The user profile is
+      the mean of consumed rows, renormalised:
+      $p_u = \bigl(|\mathcal{H}_u|^{-1}\sum_{i \in \mathcal{H}_u} M_i\bigr) /
+      \lVert \cdot \rVert_2$. Score $s_{ct}(u,i) = p_u^\top M_i$, a cosine
+      similarity. It is user-specific but time-invariant.
+
+\item \textbf{$pop$, time-decayed global popularity.} With half-life
+      $h = 180$ days, each training event of age $a$ days contributes
+      $2^{-a/h}$, where age is measured from $t_{\max}$:
+      $s_{pop}(u,i) = \log\bigl(1 + \sum_{(u',i,t) \in \mathcal{D}_{\mathrm{tr}}}
+      2^{-(t_{\max}-t)/(86400 h)}\bigr)$. It does not depend on $u$, so it is
+      constant across a user's candidate row and contributes only through
+      coalition interactions.
+
+\item \textbf{$rec$, recency over content clusters.} Items are assigned to one
+      of $20$ clusters by $\operatorname{argmax}$ over a $20$-component
+      truncated SVD of the item TF--IDF matrix ($V = 2000$). For cluster
+      $\kappa(i)$, let $\ell_{u\kappa}$ be the timestamp of $u$'s most recent
+      training interaction in that cluster. Then
+      $s_{rec}(u,i) = 2^{-(t_{\max}-\ell_{u\kappa(i)})/(86400 \cdot 30)}$ if
+      $\ell_{u\kappa(i)}$ exists and $0$ otherwise. It shares its input with
+      $ct$ by construction, which is the pre-declared overlap of
+      Section~\ref{sec:setup}.
+
+\item \textbf{$seq$, PPMI--SVD sequential embedding.} Within each user's
+      time-ordered history, all item pairs at distance $\le 5$ contribute to a
+      symmetric co-occurrence count $C$. With $\mathrm{PPMI}_{ij} =
+      \max\bigl(0, \log \frac{C_{ij}\sum C}{C_{i\cdot}C_{j\cdot}}\bigr)$, a
+      $64$-component truncated SVD gives L2-normalised item embeddings $e_i$.
+      The user vector is a recency-weighted mean of the last $5$ items,
+      weights $0.8^{k}$ for the $k$-th most recent, and
+      $s_{seq}(u,i) = \tilde{u}^\top e_i$.
+\end{itemize}
+%
+The $ct$--$rec$ pair is the declared content overlap and the $cf$--$pop$ pair
+the declared popularity overlap; both are stated before any attribution is
+computed.
+
 \subsection{Coalition-independent candidates}
 
 For user $u$ and source $g$, let $\text{top-}N_g^{(g)}(u)$ be that source's own
@@ -612,8 +672,10 @@ retrieved $i$; a source that did not contributes $0$, equivalently
 $1/\operatorname{rank}_g(i) \to 0$ as an unretrieved item's rank passes
 $N_g$. Both keys
 are invariant under permuting $\G$, so relabelling the players cannot change
-the game. All three components are seed-independent, so $\Cu$ is
-deterministic; the bound in~\eqref{eq:cand} holds by construction rather than
+the game. The key is invariant to permuting $\G$ and involves no randomness of its own, so
+$\Cu$ is deterministic \emph{conditional on the fitted source models}; those are
+trained with the experiment seed (Table~\ref{tab:hyper}), so $\Cu$ can differ
+across seeds through the scorers rather than through the construction. the bound in~\eqref{eq:cand} holds by construction rather than
 by assumption. Sources contribute equal depth, $N_g = N$ for all $g$, with $N$
 grown until the union reaches the cap.
 
@@ -832,28 +894,59 @@ otherwise.
 The choice is deliberate: refreshing the state between folds would make the
 head-fitting features and the evaluation features come from two different
 scorers, so a coalition difference $v(S \cup \{g\}) - v(S)$ would mix the
-contribution of $g$ with a change of source state. It is not free, though, and
-the cost falls in a known direction. Because $i_u^{\mathrm{val}}$ is already
-consumed but still rankable, it can occupy a top-$K$ slot and push the test item
-\emph{down}; it can never raise $\NDCG$. The protocol is therefore
-\emph{conservative}: every reported $v(S)$, including $v(\G)$, is a lower bound
-on what the same sources would score with a refreshed state, and no optimistic
-leakage is possible. The penalty applies to all $32$ coalitions alike, which is
-why we expect the attribution contrasts to be far less affected than the
-absolute values, but we have not measured that and do not claim it. The
-sequential and recency sources are the ones a refreshed state would most
-plausibly favour, so this protocol is if anything unkind to them.
+contribution of $g$ with a change of source state. It is not free. One
+consequence is directional and one is not, and an earlier version of this
+manuscript conflated them.
+
+The directional part: \emph{holding the source scores and $C_u$ fixed}, the
+already-consumed $i_u^{\mathrm{val}}$ can occupy a top-$K$ slot and push the
+test item down, so masking it could only preserve or improve the test item's
+rank. Within a fixed scoring state, then, this particular effect costs $\NDCG$
+rather than inflating it, and no optimistic leakage arises from it.
+
+That is \emph{not} a lower bound on a refreshed one-step-ahead evaluation, and
+we withdraw the claim that it is. Appending $i_u^{\mathrm{val}}$ to the history
+would also change the sequential and recency scores, could change $C_u$ through
+retrieval, and could change $b_u$ with it. None of those moves monotonically,
+so frozen and refreshed $v(S)$ are not ordered in general. The honest statement
+is that this is a different protocol whose net effect we have not measured, and
+that the sources a refreshed state would most plausibly favour, $seq$ and
+$rec$, are precisely the ones whose values should be read with that in mind. A
+frozen-versus-refreshed sensitivity run is the experiment that would settle it.
+We ship that experiment (\texttt{scripts/run\_protocol\_sensitivity.py}) rather
+than leave it as a suggestion: it fits the head in the validation state,
+history $=$ train, and scores the coalitions in the test state, history $=$
+train $+$ $i_u^{\mathrm{val}}$, so the refreshed sources see the event and the
+consumed item is masked. On a synthetic pilot the refreshed protocol scores
+\emph{higher} rather than lower ($v(\G)$ $0.147 \to 0.165$) and moves two
+signs, which is the concrete reason the lower-bound claim had to go. We report
+the corpus results with the next full regeneration.
 
 \paragraph{Validation positives outside the candidate set}
 The head is fitted on $\mathbf{y}^{\mathrm{val}}_u$, the indicator of
 $i_u^{\mathrm{val}}$ within $C_u$. When the validation item is not retrieved,
 that vector is all zero and the user contributes negatives only. The released pipeline records validation candidate recall alongside test recall
 so the size of this effect becomes visible rather than implicit, and we retain
-the all-zero users: dropping them would fit the head on
-a subpopulation selected for being easy to retrieve, which is a worse bias than
-the one it removes. The Gram accumulation in Equation~(\ref{eq:head}) is
-$|C_u|$-normalised, so such users contribute to $A$ but nothing to $c$, shrinking
-the fitted weights slightly rather than distorting their direction.
+the all-zero users: dropping them would fit the head on a subpopulation
+selected for being easy to retrieve, which is a worse bias than the one it
+removes.
+
+We must correct a statement made in an earlier version. Such a user contributes
+its positive-semidefinite block to $A$ but nothing to $c$, and we described that
+as shrinking the fitted weights without distorting their direction. That is
+false. For $w = (A + \lambda I)^{-1} c$ with $c$ unchanged, adding a PSD term to
+$A$ rescales the solution unevenly across eigendirections, so it can rotate $w$
+as well as shorten it; a two-source numerical example in the repository moves
+the weight vector by $12.8^{\circ}$ while shrinking its norm. The correct
+statement is that validation misses add regularisation in the directions of
+that user's source-score covariance, changing both the magnitude and the
+orientation of the coefficient vector. We therefore treat the retention policy
+as a declared choice whose sensitivity should be tested, not as a harmless one,
+and we report validation recall so that a reader can judge how many users it
+concerns. The same script refits with those users dropped, so the sensitivity
+of the attributions to the retention policy is measured rather than asserted;
+on the synthetic pilot the two policies agree to Kendall $\tau = 1.00$ with
+$\max_g|\Delta\varphi_g| = 5.0\times10^{-4}$.
 
 \begin{algorithm}[t]
 \caption{Exact ranking-stage SignalShap}\label{alg:signalshap}
@@ -1124,9 +1217,11 @@ Leave-last-out temporal split where timestamps exist; ties broken by
 that carries an interval: the attribution intervals and the retirement analysis
 of Sections~\ref{sec:results} and~\ref{sec:estimands}, and the equivalence
 analysis of Appendix~\ref{app:fusion}, which is what the two-level bootstrap
-resamples over. Single-run diagnostics that are illustrative rather than inferential (the
-interaction indices, the estimand comparison, the per-corpus robustness sweeps)
-are reported at seed $42$ and labelled as such.
+resamples over. The pairwise interaction indices of Section~\ref{sec:alternatives} also carry
+ten-seed means and intervals; an earlier version described them as a single-run
+diagnostic and that is no longer true. Diagnostics that remain illustrative
+rather than inferential, namely the estimand comparison and the per-corpus
+robustness sweeps, are reported at seed $42$ and labelled as such.
 Wilcoxon signed-rank~\citep{wilcoxon1945individual} for
 paired $\NDCG$, permutation tests (10\,000 shuffles) for gaps and
 heterogeneity, Holm--Bonferroni~\citep{holm1979simple} with family size \emph{and composition}
@@ -1270,7 +1365,7 @@ $|\sum_g \varphi_g - v(\G)| = 6.9 \times 10^{-18}$.
 \centering
 \includegraphics[width=\textwidth]{Fig2.png}
 \caption{Per-source Shapley values. Bars are the mean over ten seeds
-($42$--$51$) and the error bars span $\pm1.96$ standard errors over those ten,
+($42$--$51$) and the error bars span $\pm t_9\,\mathrm{SE}$ over those ten,
 matching the intervals reported in Section~\ref{sec:results}; an earlier
 version plotted three seeds, which
 understated the uncertainty. Intervals appear in the main text because $v$ is
@@ -1564,7 +1659,11 @@ all the argument requires. Each pair $\{a,b\}$ receives
 \end{equation}
 %
 the averaged second-order discrete derivative. A negative $\mathcal{I}_{ab}$
-means the pair jointly contributes less than the sum of their separate contributions, the signature of redundancy, and a positive value indicates complementarity.
+means the pair jointly contributes less than the sum of their separate
+contributions. We read that as negative, or substitutive, interaction
+\emph{under the declared game}, which is a game-theoretic statement and not a
+demonstration of causal redundancy; a positive value indicates complementarity
+in the same sense.
 
 \begin{table}[tbp]
 \caption{Pairwise Shapley interaction indices (Grabisch--Roubens) on
@@ -1885,9 +1984,19 @@ contact with the decision it motivates.
 \paragraph{Three estimands}
 Our main game refits the fusion head per coalition on a candidate set built
 from \emph{all} sources. Two alternatives isolate what that choice contributes:
-$v_{\mathrm{fixed}}$ holds the deployed grand-coalition head fixed and merely
-masks it to $S$; $v_{\mathrm{e2e}}$ lets each coalition retrieve its own
-candidates and refit, so a removed source loses its retrieval role too. On
+$v_{\mathrm{fixed}}$ holds the deployed grand-coalition head $w^{(\G)}$ fixed
+and merely masks it to $S$, so
+$v^{\mathrm{fixed}}_u(S) = \NDCGat{K}\bigl(\mathrm{rank}(Z_u^{(S)}
+w^{(\G)}_S);\, \mathbf{y}^{\mathrm{te}}_u\bigr) - b_u$ with the same $\Cu$
+throughout; no head is refitted. $v_{\mathrm{e2e}}$ lets each coalition
+retrieve its own candidates, so $\Cu$ becomes $C_u(S)$, built by
+Equation~(\ref{eq:cand}) from the sources in $S$ alone, and both the head and
+the baseline are recomputed on it:
+$v^{\mathrm{e2e}}_u(S) = \NDCGat{K}\bigl(\mathrm{rank}(Z_u^{(S)}(S)
+w^{(S)});\, \mathbf{y}^{\mathrm{te}}_u\bigr) - b_u(S)$. A removed source
+therefore loses its retrieval role too, and coalition values are no longer
+comparable across a fixed item set, which is exactly the property the main game
+is designed to preserve. On
 MovieLens-1M all three rank $seq$ first and agree closely
 (Kendall $\tau = 1.00$ between refit and fixed heads, $0.80$ between either and
 end-to-end); on Amazon-VG all three rank $cf$ first, with $\tau = 0.80$ between
@@ -1949,22 +2058,31 @@ reported protocol, not a population quantity.
 \caption{Retirement-rank agreement over ten seeds. LOO is not exactly $1.00$ on every seed, and reporting it as such from a single run would have overstated it, but it is close on all three corpora and beats Shapley on each. The last
 two columns give the fraction of seeds on which each rule identifies the
 observed cheapest source to retire under this protocol, with Wilson $95\%$
-intervals at $n = 10$. The $\tau$ intervals are normal-approximation intervals
-over the ten seed-level correlations, $\bar\tau \pm 1.96\,\mathrm{SE}$, and are
-degenerate where every seed returns the same value; with $n = 10$ they should
-be read as indicative}
+intervals at $n = 10$. The $\tau$ intervals are $\bar\tau \pm t_9\,\mathrm{SE}$
+over the ten seed-level correlations, matching the convention used everywhere
+else in the paper, and are degenerate where every seed returns the same value.
+$\Delta\tau$ is the seed-paired difference $\tau_{\LOOr} -
+\tau_{\text{Shapley}}$ with a percentile interval from $10\,000$ bootstrap
+resamples of the ten differences; Wilcoxon signed-rank gives $p = 0.002$
+(MovieLens) and $p = 0.004$ (Amazon-VG), while on Gowalla every difference is
+identical so the test has no rank variation to use and returns $p = 1.0$
+uninformatively. With $n = 10$ all intervals here are indicative rather than
+calibrated}
 \label{tab:retire-seeds}
-\begin{tabular}{@{}lcccc@{}}
+\begin{tabular}{@{}lccccc@{}}
 \toprule
-Corpus & $\tau$ $\LOOr$ & $\tau$ Shapley
+Corpus & $\tau$ $\LOOr$ & $\tau$ Shapley & Paired $\Delta\tau$
        & $\LOOr$ correct & Shapley correct \\
-       & (95\% CI) & (95\% CI) & & \\
+       & ($t_9$ CI) & ($t_9$ CI) & (bootstrap CI) & (Wilson) & (Wilson) \\
 \midrule
-MovieLens-1M & $0.96\ [0.91, 1.01]$ & $0.20\ [0.20, 0.20]$
+MovieLens-1M & $0.96\ [0.90, 1.02]$ & $0.20\ [0.20, 0.20]$
+             & $+0.76\ [+0.70, +0.80]$
              & $100\%\ [72, 100]$ & $0\%\ [0, 28]$ \\
-Amazon-VG    & $0.96\ [0.91, 1.01]$ & $0.74\ [0.68, 0.80]$
+Amazon-VG    & $0.96\ [0.90, 1.02]$ & $0.74\ [0.67, 0.81]$
+             & $+0.22\ [+0.16, +0.28]$
              & $90\%\ [60, 98]$   & $50\%\ [24, 76]$ \\
 Gowalla      & $1.00\ [1.00, 1.00]$ & $0.80\ [0.80, 0.80]$
+             & $+0.20\ [+0.20, +0.20]$
              & $100\%\ [72, 100]$ & $0\%\ [0, 28]$ \\
 \botrule
 \end{tabular}
@@ -2048,8 +2166,13 @@ Remove one deployed source
   & $\LOOe$ by definition; $\LOOr$ an effective proxy
   & $\tau = 0.94$--$1.00$ over 10 seeds (Sec.~\ref{sec:estimands}) \\[2pt]
 Divide credit for current quality
-  & Shapley, or a declared semivalue
+  & Shapley \emph{only}
   & efficiency and symmetry (Sec.~\ref{sec:recovery}) \\[2pt]
+Rank sources under a different
+coalition weighting
+  & a declared semivalue (Banzhaf, binomial)
+  & ordering agrees on MovieLens (Sec.~\ref{sec:alternatives}); these do
+    \emph{not} sum to $v(\G)$, so they rank rather than divide \\[2pt]
 Locate redundancy between sources
   & pairwise interaction index
   & Table~\ref{tab:taylor} \\[2pt]
@@ -2269,11 +2392,17 @@ deliver. Figure~\ref{fig:segments} plots the per-segment profiles.
 \begin{figure}[tbp]
 \centering
 \includegraphics[width=\textwidth]{Fig5.png}
-\caption{Segment-level Shapley values, with segment sizes in the legend. The
-four segments cover the $6\,035$ users the game evaluates, which is three fewer
-than the $6\,038$ in Table~\ref{tab:preconditions}: three users retrieve an
-empty candidate set and are therefore outside every $v(S)$, not excluded by the
-segmentation. Overlapping markers within a source indicate little heterogeneity
+\caption{Segment-level Shapley values, with segment sizes in each panel's own
+legend; the counts differ by corpus, and an earlier version showed a single
+shared legend carrying only Gowalla's. On MovieLens the four segments cover the
+$6\,035$ users the game evaluates, three fewer than the $6\,038$ in
+Table~\ref{tab:preconditions}: three users retrieve an empty candidate set and
+are therefore outside every $v(S)$, rather than being excluded by the
+segmentation. That can happen even though $pop$ scores the whole catalogue,
+because scores are masked at every item the user has already seen
+(Section~\ref{sec:algorithm}): a user whose training history covers all items
+that survive $10$-core filtering has no eligible candidate left. Amazon-VG and
+Gowalla have no such users, so their segments sum to the full corpus. Overlapping markers within a source indicate little heterogeneity
 to exploit.
 We use a shared linear axis rather than the radar chart of an earlier version:
 radar encodes magnitude as radius and therefore area, which exaggerates

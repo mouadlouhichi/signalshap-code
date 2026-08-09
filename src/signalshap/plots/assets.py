@@ -333,7 +333,10 @@ def fig5_segment_radar(results: dict) -> Path:
     """
     _dirs()
     names = list(results)
-    fig, axes = plt.subplots(1, len(names), figsize=(3.3 * len(names), 3.4),
+    # Larger panels rather than smaller type: sn-jnl caps artwork text at 8pt
+    # and SN_FONT_MIN is already there, so readability at journal-column width
+    # has to come from geometry. A reviewer found the six panels hard to read.
+    fig, axes = plt.subplots(1, len(names), figsize=(4.3 * len(names), 4.2),
                              sharey=True)
     axes = np.atleast_1d(axes)
     # Colour, like the other data figures -- four overlapping segments per
@@ -349,15 +352,18 @@ def fig5_segment_radar(results: dict) -> Path:
         offs = np.linspace(-0.22, 0.22, max(len(live), 1))
         for seg, off in zip(live, offs):
             v = [prof[seg].get(g, 0.0) for g in SOURCES]
-            ax.plot(xpos + off, v, ls="none", marker=seg_mark[seg], ms=5,
+            ax.plot(xpos + off, v, ls="none", marker=seg_mark[seg], ms=7,
                     color=seg_grey[seg], mec="black", mew=0.6,
                     label=f"{seg} (n={prof[seg]['n_users']:,})")
         ax.axhline(0, color="black", lw=0.6)
         ax.set_xticks(xpos, SOURCES, fontsize=SN_FONT_MIN)
         ax.set_title(disp(name), fontsize=9)
         ax.tick_params(labelsize=SN_FONT_MIN)
+        # One legend per panel: segment sizes differ by corpus, and a single
+        # shared legend showed only the last panel's counts while appearing to
+        # describe all three.
+        ax.legend(fontsize=SN_FONT_MIN, loc="best", framealpha=0.9)
     axes[0].set_ylabel("segment Shapley value $\\varphi_g$")
-    axes[-1].legend(fontsize=SN_FONT_MIN, loc="best", framealpha=0.9)
     p = FIG / "F5_segment_radar.png"
     fig.savefig(p, bbox_inches="tight"); plt.close(fig)
     return p
