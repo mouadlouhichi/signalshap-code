@@ -36,6 +36,9 @@ from signalshap.candidates.builder import (                 # noqa: E402
     build_candidates, candidate_recall, validation_recall,
 )
 from signalshap.config import SOURCES, FrozenConfig, write_artefact  # noqa: E402
+from signalshap.memory import (                            # noqa: E402
+    check_paper_shape, default_budget_gb, size_corpus,
+)
 from signalshap.game.core import SignalShapGame, exact_shapley       # noqa: E402
 from signalshap.scorers.base import mask_seen, train_all_scorers     # noqa: E402
 
@@ -120,6 +123,7 @@ def block_temporal(name, cfg, seed=42):
     phi_f = exact_shapley(v_f)
 
     v_r, cands_r, test_r = _two_state_game(ds, cfg, n_max, seed)
+    shape = (ds.n_users, ds.n_items)
     phi_r = exact_shapley(v_r)
 
     order = list(SOURCES)
@@ -127,7 +131,7 @@ def block_temporal(name, cfg, seed=42):
     b = [phi_r[g] for g in order]
     tau = kendalltau(a, b).correlation
     return {
-        "dataset": name, "seed": seed,
+        "dataset": name, "seed": seed, "corpus_shape": shape,
         "frozen_two_step": {"shapley": phi_f, "v_grand": v_f[G],
                             "test_recall": candidate_recall(cands_f, test_f)},
         "refreshed_one_step": {"shapley": phi_r, "v_grand": v_r[G],
@@ -185,6 +189,20 @@ def block_validation_miss(name, cfg, seed=42):
     }
 
 
+def _size(name: str, budget: float) -> None:
+    """Install the memory-derived user cap BEFORE loading a large corpus.
+
+    This was missing in the first version: --budget-gb was accepted and then
+    ignored, so a Gowalla run loaded the full 52,985 x 121,866 corpus instead
+    of the sized 8,865 x 82,134 and was killed. The flag looked honoured
+    because the argument parsed.
+    """
+    from signalshap.data.loaders import LOADERS, _register_timestamped
+    _register_timestamped()
+    if name in ("gowalla_ts", "amazon_video_games"):
+        size_corpus(name, LOADERS[name], budget, verbose=True)
+
+
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--corpora", nargs="+", default=["ml_1m"])
@@ -192,10 +210,19 @@ def main() -> int:
     ap.add_argument("--seed", type=int, default=42)
     a = ap.parse_args()
     cfg = FrozenConfig.load()
+    budget = default_budget_gb(a.budget_gb)
+    print(f"budget {budget:.1f} GB | corpora {a.corpora}", flush=True)
     out = {}
     for name in a.corpora:
+        _size(name, budget)
         print(f"== {name}: temporal state", flush=True)
-        out.setdefault(name, {})["temporal"] = block_temporal(name, cfg, a.seed)
+        t = block_temporal(name, cfg, a.seed)
+        shape = t.get("corpus_shape")
+        if shape:
+            ok, why = check_paper_shape(name, *shape)
+            if not ok:
+                raise SystemExit("REFUSING to report a resized corpus.\n  " + why)
+        out.setdefault(name, {})["temporal"] = t
         print(f"== {name}: validation misses", flush=True)
         out[name]["validation_miss"] = block_validation_miss(name, cfg, a.seed)
         write_artefact("protocol_sensitivity.json", out)

@@ -1273,9 +1273,14 @@ and is not globally time-blocked, a distinction a reviewer asked us to make
 explicit. Because every source is fitted on the pooled training fold, and
 because $pop$ decays relative to the latest \emph{global} training timestamp,
 training events belonging to other users can postdate a given user's held-out
-event. \texttt{scripts/audit\_global\_time.py} measures the exposure; on a
-pilot corpus roughly half of pooled training events postdate the median test
-event. This is the standard leave-last-out protocol in the recommender
+event. \texttt{scripts/audit\_global\_time.py} measures the exposure, and it is not
+small. Every test event on all three corpora precedes the global training
+$t_{\max}$, and the mean fraction of pooled training events that postdate a
+user's test event is $44.2\%$ on MovieLens-1M, $27.1\%$ on Amazon-VG and
+$19.4\%$ on Gowalla. The medians are lower on the sparser corpora ($43.6\%$,
+$18.1\%$, $5.7\%$), so the exposure is concentrated in early users rather than
+spread evenly, but the ninetieth percentiles reach $87.9\%$, $68.4\%$ and
+$61.4\%$. This is the standard leave-last-out protocol in the recommender
 literature and we keep it for comparability, but it means our numbers describe
 an offline per-user chronological evaluation rather than a globally causal
 deployment simulation, and the temporally sensitive sources ($pop$, $rec$,
@@ -2133,7 +2138,14 @@ end-to-end under the reported protocol, seed 42. Negative loss means removal
 Equation~(\ref{eq:baseline}) the ranking-stage columns are computed from the
 same game as Table~\ref{tab:loo}, though not numerically identical to it, since
 this table reports a seed-42 realisation while Table~\ref{tab:loo} reports
-ten-seed means; an earlier version
+ten-seed means. One caveat on the observed-loss column: it was produced before
+the raw-utility correction of Section~\ref{sec:background} and therefore
+differences the baseline-centred $v_{\mathrm{e2e}}$, which adds a term bounded
+by $1.7\times10^{-4}$ on our measurements. The ranking, the cheapest source and
+both $\tau$ values are unaffected, and the ten-seed retirement results in
+Table~\ref{tab:retire-seeds} do use the corrected definition; only the
+fourth and fifth decimals of this single-seed illustration are provisional. An
+earlier version
 reported a constant $+0.00038$ offset here, which was an artefact of the
 sampled baseline that version used and no longer exists. Amazon-VG reproduces
 the pattern ($\tau = 1.00$ for $\LOOr$, $0.60$ for Shapley); its table is in the

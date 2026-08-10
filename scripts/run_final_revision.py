@@ -239,6 +239,11 @@ def block_retire(cfg, budget, corpora, seeds):
                 print(f"  {name} seed {s}: retirement failed ({exc})", flush=True)
                 del e
                 continue
+            # Persist the per-corpus detail too, so the raw-utility columns
+            # reach disk. Previously only the summary was written and the
+            # e12_*.json files kept whatever an older run_study.py left there.
+            if s == seeds[0]:
+                write_artefact(f"e12_retirement_{name}.json", r)
             taus_sh.append(r["kendall_tau_shapley_vs_truth"])
             taus_loo.append(r["kendall_tau_loo_vs_truth"])
             cheapest.append([r["cheapest_to_retire_true"],
@@ -305,6 +310,12 @@ def block_retire(cfg, budget, corpora, seeds):
                      "block. Percentile bootstrap over 10,000 resamples; with "
                      "n=10 read it as indicative."),
         }
+        out["_candidate_rule"] = "symmetric_reciprocal_rank"
+        out["_provenance"] = (
+            "Retirement losses difference RAW utility (SignalShapGame.utility), "
+            "not the baseline-centred v: end to end each coalition retrieves its "
+            "own candidates, so the expected-random baseline moves when a source "
+            "is retired.")
         out[name] = {"tau_shapley": _ci(taus_sh), "tau_loo": _ci(taus_loo),
                      "tau_shapley_per_seed": [float(x) for x in taus_sh],
                      "tau_loo_per_seed": [float(x) for x in taus_loo],

@@ -1,41 +1,42 @@
 {
-  "dataset": "ml_1m",
-  "v_full_e2e": 0.051363772243696086,
-  "recall_full": 0.7483015741507871,
-  "true_retirement_loss": {
-    "cf": -0.005423728290338825,
-    "ct": -0.0007493052308078646,
-    "pop": 0.0017623144564177448,
-    "rec": -0.0013456961239313794,
-    "seq": 0.015775485806856004
-  },
-  "recall_after_removal": {
-    "cf": 0.6891466445733223,
-    "ct": 0.7832642916321458,
-    "pop": 0.7194697597348799,
-    "rec": 0.7822700911350455,
-    "seq": 0.6573322286661143
-  },
-  "shapley": {
-    "cf": 0.015451832278226767,
-    "ct": -8.521263825022287e-05,
-    "pop": 0.006369379596653198,
-    "rec": 0.00026062983437342643,
-    "seq": 0.029367143172692914
-  },
-  "loo": {
-    "cf": -0.005186418913549901,
-    "ct": 0.0004444057526257622,
-    "pop": 0.0006487208434817274,
-    "rec": -5.0977250878235514e-05,
-    "seq": 0.016345216332200534
-  },
-  "kendall_tau_shapley_vs_truth": 0.19999999999999998,
-  "kendall_tau_loo_vs_truth": 0.9999999999999999,
-  "cheapest_to_retire_true": "cf",
-  "cheapest_by_shapley": "ct",
-  "cheapest_by_loo": "cf",
-  "shapley_picks_correctly": false,
-  "loo_picks_correctly": true,
-  "note": "True loss is measured END-TO-END: the retired source is removed from retrieval as well as fusion. Attribution methods are scored by rank agreement with that loss, which is the operational question the paper's motivation raises."
+ "dataset": "ml_1m",
+ "v_full_e2e": 0.051363772243696086,
+ "recall_full": 0.7483015741507871,
+ "true_retirement_loss": {
+  "cf": -0.005423728290338825,
+  "ct": -0.0007493052308078646,
+  "pop": 0.0017623144564177448,
+  "rec": -0.0013456961239313794,
+  "seq": 0.015775485806856004
+ },
+ "recall_after_removal": {
+  "cf": 0.6891466445733223,
+  "ct": 0.7832642916321458,
+  "pop": 0.7194697597348799,
+  "rec": 0.7822700911350455,
+  "seq": 0.6573322286661143
+ },
+ "shapley": {
+  "cf": 0.015451832278226767,
+  "ct": -8.521263825022287e-05,
+  "pop": 0.006369379596653198,
+  "rec": 0.00026062983437342643,
+  "seq": 0.029367143172692914
+ },
+ "loo": {
+  "cf": -0.005186418913549901,
+  "ct": 0.0004444057526257622,
+  "pop": 0.0006487208434817274,
+  "rec": -5.0977250878235514e-05,
+  "seq": 0.016345216332200534
+ },
+ "kendall_tau_shapley_vs_truth": 0.19999999999999998,
+ "kendall_tau_loo_vs_truth": 0.9999999999999999,
+ "cheapest_to_retire_true": "cf",
+ "cheapest_by_shapley": "ct",
+ "cheapest_by_loo": "cf",
+ "shapley_picks_correctly": false,
+ "loo_picks_correctly": true,
+ "note": "True loss is measured END-TO-END: the retired source is removed from retrieval as well as fusion. Attribution methods are scored by rank agreement with that loss, which is the operational question the paper's motivation raises.",
+ "_stale_note": "Written by an older run_study.py: it predates the raw-utility fix, so its true_retirement_loss column differences the baseline-centred v rather than raw NDCG. The ten-seed summary in final_retirement_seeds.json IS current. Re-running `run_final_revision.py --only retire` now refreshes this file too."
 }
