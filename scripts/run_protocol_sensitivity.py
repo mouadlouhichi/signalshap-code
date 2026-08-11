@@ -212,7 +212,19 @@ def main() -> int:
     cfg = FrozenConfig.load()
     budget = default_budget_gb(a.budget_gb)
     print(f"budget {budget:.1f} GB | corpora {a.corpora}", flush=True)
-    out = {}
+    # Resume from what is already on disk. Starting from {} meant running one
+    # corpus silently deleted the others: a --corpora gowalla_ts pass wiped the
+    # ml_1m and amazon results. This is the same non-resumable bug that once
+    # cost eight hours in block_seeds, reintroduced here.
+    out: dict = {}
+    prior = Path("artefacts") / "protocol_sensitivity.json"
+    if prior.exists():
+        try:
+            out = json.loads(prior.read_text())
+            if out:
+                print(f"  resuming; already have {sorted(out)}", flush=True)
+        except (json.JSONDecodeError, OSError):
+            out = {}
     for name in a.corpora:
         _size(name, budget)
         print(f"== {name}: temporal state", flush=True)

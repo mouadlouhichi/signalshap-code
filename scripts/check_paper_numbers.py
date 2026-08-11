@@ -75,7 +75,17 @@ def check() -> list[str]:
 
     # 2. per-source LOO / Shapley for the reference corpus
     if "ml_1m" in res:
+        # Prefer the ten-seed artefact, which is what the tables now quote.
+        # results_*.json predates the symmetric candidate rule, so comparing
+        # the paper against it flagged a phantom drift in Shapley(seq).
         e2 = res["ml_1m"]["e2_loo_vs_shapley"]
+        _sc = ART / "final_seed_ci.json"
+        seed_ci = json.loads(_sc.read_text()) if _sc.exists() else None
+        if seed_ci and isinstance(seed_ci.get("ml_1m"), dict):
+            blk = seed_ci["ml_1m"]
+            if "ci" in blk and "loo_ci" in blk:
+                e2 = {"shapley": {g: blk["ci"][g]["mean"] for g in blk["ci"]},
+                      "loo": {g: blk["loo_ci"][g]["mean"] for g in blk["loo_ci"]}}
         for g in ("cf", "ct", "pop", "rec", "seq"):
             for label, val in (("LOO", e2["loo"][g]), ("Shapley", e2["shapley"][g])):
                 lit = f"{abs(val):.5f}"

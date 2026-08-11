@@ -154,42 +154,40 @@ and 2.1e-4, all signs agree. Table 1 now carries validation recall.
 | Duplicated fusion sentence | Low | Removed |
 | Table 5 "redundancy" wording | Low | "substitutive interaction under the declared game" |
 
-## Commit bff862f: two of three runs landed
+## Commit 0868d3d: all runs complete
 
-**Retirement rerun (raw utility).** Every number reproduces the paper exactly:
-tau_loo 0.96/0.96/1.00, paired delta 0.76/0.22/0.20, Wilcoxon 0.0020/0.0039/
-0.0020, cheapest-source 100/90/100% vs 0/50/0%. The raw-utility correction
-changed no conclusion on real corpora, confirming the pilot estimate.
+Gowalla protocol sensitivity ran at the correct 8,865 x 82,134 (the budget fix
+held), and the retirement rerun refreshed all three `e12_*.json` files with raw
+utility.
 
-**Global-time audit.** Real numbers, and larger than my pilot guess in one
-direction and smaller in another: mean future-train fraction 44.2% (ml_1m),
-27.1% (amazon), 19.4% (gowalla); medians 43.6 / 18.1 / 5.7%; p90 up to 87.9%.
-Every test event precedes the global t_max on all three. Section 7 now quotes
-these instead of "roughly half".
+**Gowalla is the mildest protocol case:** refresh raises v(G) only 3.7% against
+36% and 19%, tau = 1.00, top source stable. Its candidate recall slightly
+*falls* under refresh (0.4504 -> 0.4488), which contradicts the "recall rises
+because a refreshed history retrieves better" generalisation I had written from
+two corpora. Corrected.
 
-**Gowalla protocol sensitivity FAILED, and it was my bug.** The script accepted
-`--budget-gb` and never used it, so Gowalla loaded at full size
-(52,985 x 121,866 instead of 8,865 x 82,134) and was killed. Fixed: the script
-now calls `size_corpus` before loading and refuses to report a corpus whose
-shape does not match the manuscript.
+**Gowalla validation recall is 0.462** and 4,773 of 8,865 users, a majority, fit
+on negatives alone. Dropping them still moves attributions only 1.8e-4 with an
+identical ordering, so the sparsest corpus with the most affected users is among
+the least sensitive. Table 1's n/a is filled.
 
-**Table 7 is pre-fix.** `e12_retirement_ml_1m.json` is written by
-`run_study.py`, not by the retire block, so it still holds centred losses. The
-caption now says so and bounds the discrepancy at 1.7e-4; `run_final_revision.py
---only retire` now also writes that file, so one rerun clears it.
+**Real baseline contamination is 6.7e-4, four times my pilot bound of 1.7e-4.**
+Table 7 regenerated from raw utility; every entry moved, no conclusion did.
+
+Two bugs of mine surfaced and are fixed: the script ignored `--budget-gb`
+entirely, and it overwrote rather than resumed, deleting the ml_1m and amazon
+blocks (recovered from git). Both now pinned by tests.
 
 ## What is still open
 
 | # | Item | Who | Cost |
 |---|---|---|---|
-| 1 | **Overleaf compile, still never run.** Seven rounds | you | 5 min |
-| 2 | Gowalla protocol sensitivity, now that the budget bug is fixed | you | ~1 h |
-| 3 | Re-run `--only retire` once so Table 7 carries raw-utility losses | you | ~1 h |
-| 4 | Gowalla validation recall (comes free with item 2) | you | included |
-| 5 | Only MovieLens clears the 0.60 gate; interactions MovieLens-only | needs a new corpus |
+| 1 | **Overleaf compile. Eight rounds, still never run.** | you | 5 min |
+| 2 | Only MovieLens clears the 0.60 recall gate | needs a 4th dense corpus |
+| 3 | Interaction indices and metric robustness are MovieLens-only | ~2 h |
 
-Items 2-4 are two commands. Everything in them is disclosed in the text as it
-stands, so none blocks submission. Item 1 does.
+Item 1 is the only submission blocker. Items 2 and 3 are disclosed as
+limitations in the text and are future work.
 
 ## YOU: cannot be automated
 

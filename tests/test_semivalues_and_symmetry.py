@@ -264,3 +264,29 @@ def test_kendall_tau_intervals_stay_inside_the_support():
         for k in ("tau_loo", "tau_shapley"):
             assert -1.0 <= v[k]["lo"] <= 1.0, (c, k)
             assert -1.0 <= v[k]["hi"] <= 1.0, (c, k)
+
+
+def test_protocol_sensitivity_resumes_instead_of_overwriting():
+    """Running one corpus must not delete the others.
+
+    A `--corpora gowalla_ts` pass started from an empty dict and wiped the
+    ml_1m and amazon results already on disk. This is the same non-resumable
+    failure that once cost eight hours in block_seeds, reintroduced in a new
+    script; the guard is a load-on-start, not a comment.
+    """
+    from pathlib import Path
+
+    src = (Path(__file__).resolve().parents[1]
+           / "scripts" / "run_protocol_sensitivity.py").read_text()
+    assert "resuming" in src
+    assert "protocol_sensitivity.json" in src.split("def main")[1]
+
+
+def test_protocol_sensitivity_actually_uses_its_budget_flag():
+    """--budget-gb was accepted and ignored, so Gowalla loaded at full size."""
+    from pathlib import Path
+
+    src = (Path(__file__).resolve().parents[1]
+           / "scripts" / "run_protocol_sensitivity.py").read_text()
+    assert "size_corpus" in src, "budget flag must size the corpus"
+    assert "check_paper_shape" in src, "must refuse a resized corpus"

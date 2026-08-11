@@ -46,9 +46,9 @@ reported sign are unaffected. See spec provenance entry 36.
 | Grand-pool ablation (Sec 4.1) | `results_ml_1m.json` `e8_appendix_b` | M4 | legacy | 42 |
 | Gowalla subsampling (Sec 11) | `gowalla_subsample_sensitivity.json` | M4 | sym vs sym | 42-51 |
 | Metric robustness (Sec 11) | `metric_robustness_ml_1m.json` | x86 | legacy | 42 |
-| Temporal + validation-miss sensitivity (Sec 5) | `protocol_sensitivity.json` | M4 | sym | 42 (ml_1m, amazon only) |
+| Temporal + validation-miss sensitivity (Sec 5) | `protocol_sensitivity.json` | M4 | sym | 42 (all three corpora) |
 | Global-time audit (Sec 7) | `global_time_audit.json` | M4 | n/a | n/a |
-| Table 7 single-seed retirement | `e12_retirement_ml_1m.json` | M4 | legacy | 42, **pre raw-utility fix** |
+| Table 7 single-seed retirement | `e12_retirement_ml_1m.json` | M4 | **sym** | 42, raw utility |
 | Validation recall, Table 1 | `protocol_sensitivity.json` | M4 | sym | 42 |
 | LOO/gap intervals, ml_1m only (superseded) | `final_loo_gap_ci.json` | x86 | legacy | 42-51 |
 
