@@ -948,12 +948,10 @@ That is \emph{not} a lower bound on a refreshed one-step-ahead evaluation, and
 we withdraw the claim that it is. Appending $i_u^{\mathrm{val}}$ to the history
 would also change the sequential and recency scores, could change $C_u$ through
 retrieval, and could change $b_u$ with it. None of those moves monotonically,
-so frozen and refreshed $v(S)$ are not ordered in general. The honest statement
-is that this is a different protocol whose net effect we have not measured, and
-that the sources a refreshed state would most plausibly favour, $seq$ and
-$rec$, are precisely the ones whose values should be read with that in mind. A
-frozen-versus-refreshed sensitivity run is the experiment that would settle it.
-We ran that experiment
+so frozen and refreshed $v(S)$ are not ordered in general. This is a different
+protocol, and the sources a refreshed state would most plausibly favour, $seq$
+and $rec$, are precisely the ones whose values should be read with that in
+mind. Rather than leave the net effect as an argument, we measured it
 (\texttt{scripts/run\_protocol\_sensitivity.py}): it fits the head in the
 validation state, history $=$ train, and scores the coalitions in the test
 state, history $=$ train $+$ $i_u^{\mathrm{val}}$, so the refreshed sources see
@@ -2036,7 +2034,7 @@ and understate what these sources achieve with a current history. The source
 ordering is unchanged on MovieLens and Gowalla but not on Amazon-VG, where the
 leading pair exchanges. An earlier version of this manuscript claimed
 the frozen values were a lower bound on the refreshed ones. The measurement
-agrees with that direction on both corpora, but the claim was still unsound as
+agrees with that direction on all three corpora, but the claim was still unsound as
 stated, since it ignored the simultaneous changes to the source scores, the
 candidate set and the baseline; and it distracted from the finding that
 actually matters, which is the ordering instability on Amazon-VG.

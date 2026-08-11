@@ -212,11 +212,48 @@ is forced onto a float page.
 
 ## What is still open
 
-| # | Item | Who | Cost |
+Audited against the artefacts rather than from memory. Every inferential
+experiment now covers all three corpora:
+
+| experiment | ml_1m | amazon | gowalla |
 |---|---|---|---|
-| 1 | **The compile itself.** Everything statically checkable now passes; only a real pdfLaTeX run can confirm pagination | you | 5 min |
-| 2 | Only MovieLens clears the 0.60 recall gate | needs a 4th dense corpus |
-| 3 | Interaction indices and metric robustness are MovieLens-only | ~2 h |
+| 10-seed attribution | yes | yes | yes |
+| 10-seed LOO + gap CI | yes | yes | yes |
+| 10-seed retirement + paired delta-tau | yes | yes | yes |
+| temporal sensitivity | yes | yes | yes |
+| validation-miss + validation recall | yes | yes | yes |
+| global-time audit | yes | yes | yes |
+| raw-utility retirement | yes | yes | yes |
+
+Every headline number in the manuscript traces to an artefact (verified
+programmatically). Abstract 249 words, zero em dashes, no TODOs.
+
+### One blocker
+
+1. **The compile.** Everything statically checkable passes: macros resolve
+   against the class, environments balance, all nine tabulars match their
+   column specs, tikz styles and libraries are present, no figure exceeds
+   `topfraction`. Only a real pdfLaTeX run can confirm pagination, package
+   interactions and overfull boxes. Upload `paper/signalshap-overleaf.zip`,
+   compiler pdfLaTeX, and send the log plus which pages Figures 1-7 land on.
+
+### Known limitations, disclosed in the paper in our own words
+
+2. Only MovieLens clears the 0.60 recall gate. A fourth dense timestamped
+   corpus is the highest-value experiment we have not run.
+3. Interaction indices, Recall@10/MRR@10 robustness and the candidate-rule
+   ablation are MovieLens-only. Semivalues cover two corpora.
+4. Gowalla's full-catalogue recall sweep between 23,246 and 82,134 items is
+   unmeasured, so where the 0.60 crossing lies is unknown.
+5. The split is per-user chronological, not globally time-blocked; the exposure
+   is measured (44.2 / 27.1 / 19.4% mean future-train fraction) and reported.
+6. Neural baselines have unmatched tuning budgets and are contextual references
+   only; no SOTA claim is made.
+7. No immutable DOI archive (author declined Zenodo; a git tag is cited
+   instead). Both reviewers scored reproducibility down partly for this.
+
+Items 2-7 are limitations, not defects: each is stated in the manuscript with
+its magnitude. None is a barrier to submission.
 
 ## YOU: cannot be automated
 
