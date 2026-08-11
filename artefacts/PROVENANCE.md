@@ -77,13 +77,27 @@ method of record. Verified rather than assumed: `sym` was already the default
 in `builder.py` and `pipeline.py` at that commit, and ml_1m seed 42 differs
 from the previous legacy-key run by 2.7e-4, the scale of the rule change.
 
-**Still `legacy`, and labelled as such in the paper:**
+**Still `legacy`, and listed in the paper's Limitations:**
 
-| Object | Why it is acceptable | Why it is still flagged |
+| Object | Source | Why it is acceptable |
 |---|---|---|
-| Table 3 duplicate injection | Tests exact symmetry and exact-zero LOO, properties of the aggregation rather than of particular values | Not regenerated |
-| Estimand comparison (Sec 13) | Reports rank agreement between three games, all built the same way | Not regenerated |
-| Semivalues, interactions, metric robustness, candidate/grand-pool ablations | Single-seed x86 diagnostics, each labelled in the text | Not regenerated |
+| Table 1 recall + monotonicity | `results_*.json` | recall identical to 3 dp under both keys (0.748) |
+| Table 3 duplicate injection | `e9_recovery_ml_1m.json` | tests exact symmetry and exact-zero LOO, not values |
+| Estimand comparison (Sec 13) | `e11_estimands_*.json` | reports rank agreement between three games |
+| Segment profiles (Fig 5) | `results_*.json` `e3_segments` | descriptive, no inferential claim |
+| lambda + candidate-cap sweeps | `results_*.json` `e5_robustness` | reports direction of change, not level |
+| Grand-pool ablation | `results_ml_1m.json` `e8_appendix_b` | one-seed design argument |
+| Semivalues, interactions, metric robustness | x86 single-seed | each labelled in the text |
+
+To regenerate all of these under the symmetric key:
+
+    python scripts/run_study.py --datasets ml_1m --budget-gb 24
+    python scripts/run_study.py --datasets amazon_video_games --budget-gb 24
+    python scripts/run_study.py --datasets gowalla_ts --budget-gb 24
+
+That rewrites `results_*.json` and every e-block it contains. Expect Table 1's
+monotonicity integers to move by a count or two; the recall column and every
+ordering should not move.
 
 Artefacts now stamp `candidate_rule` themselves, so this table cannot silently
 drift again.

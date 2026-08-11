@@ -335,3 +335,20 @@ def test_latex_linter_detects_a_broken_table():
         assert "cells, spec has" in r.stdout
     finally:
         tex.write_text(original)
+
+
+def test_run_study_refuses_to_shrink_a_corpus_silently():
+    """Taking the smallest cap across corpora substitutes a different corpus.
+
+    run_study sized every corpus, then applied min(caps) to all of them via one
+    process-wide env var. A multi-corpus invocation would therefore have run
+    MovieLens at Gowalla's cap and overwritten results_ml_1m.json with numbers
+    from a corpus the manuscript does not describe.
+    """
+    from pathlib import Path
+
+    src = (Path(__file__).resolve().parents[1]
+           / "scripts" / "run_study.py").read_text()
+    assert "check_paper_shape" in src, "must verify the manuscript's shape"
+    assert "min(caps.values())" not in src, "must not silently shrink corpora"
+    assert "one at a time" in src

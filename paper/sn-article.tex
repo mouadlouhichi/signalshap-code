@@ -1999,16 +1999,23 @@ on MovieLens (Section~\ref{sec:game}) and the second with the $\lambda$ sweep,
 which is evidence rather than proof.
 
 \paragraph{Not every artefact comes from the final candidate rule}
-The ten-seed attribution and retirement results, which carry every inferential
-claim, were regenerated on all three corpora under the source-symmetric key of
-Section~\ref{sec:game}. Two single-seed diagnostics were not: the
-duplicate-injection experiment of Section~\ref{sec:recovery} and the estimand
-comparison of Section~\ref{sec:estimands} still come from the superseded
-order-dependent key. Both are structural checks whose conclusions are about
-exact symmetry and rank agreement rather than about particular values, and on
-MovieLens the two keys agree to $\max_g|\Delta\varphi_g| = 2.8\times10^{-5}$
-with identical ordering; we nonetheless flag them rather than imply the whole
-paper is single-key. A machine-readable map from every table and figure to the
+Everything that carries an inferential claim was regenerated on all three
+corpora under the source-symmetric key of Section~\ref{sec:game}: the ten-seed
+attributions, the $\LOOr$ and gap intervals, the retirement study with its
+paired contrast, the temporal and validation-miss sensitivity runs, and the
+global-time audit. A set of single-seed diagnostics was not, and we list them
+rather than let ``mostly regenerated'' stand in: the candidate-recall and
+monotonicity columns of Table~\ref{tab:preconditions}, the duplicate-injection
+experiment of Section~\ref{sec:recovery}, the segment profiles of
+Appendix~\ref{app:fusion}, the $\lambda$ and candidate-cap sweeps, the
+grand-pool ablation, and the estimand comparison of
+Section~\ref{sec:estimands}. These are structural or sensitivity checks whose
+conclusions concern orderings, exact symmetry and directions of change rather
+than particular values. On MovieLens, where we ran both keys head to head, they
+agree to $\max_g|\Delta\varphi_g| = 2.8\times10^{-5}$ with identical ordering
+and candidate recall equal to three decimals ($0.748$ under both), which is why
+Table~\ref{tab:preconditions} is unaffected at the precision it reports. We
+flag the set anyway rather than imply the whole paper is single-key. A machine-readable map from every table and figure to the
 artefact, platform, candidate rule and seeds that produced it ships with the
 repository.
 

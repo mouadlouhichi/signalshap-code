@@ -230,29 +230,47 @@ programmatically). Abstract 249 words, zero em dashes, no TODOs.
 
 ### One blocker
 
-1. **The compile.** Everything statically checkable passes: macros resolve
-   against the class, environments balance, all nine tabulars match their
-   column specs, tikz styles and libraries are present, no figure exceeds
-   `topfraction`. Only a real pdfLaTeX run can confirm pagination, package
-   interactions and overfull boxes. Upload `paper/signalshap-overleaf.zip`,
-   compiler pdfLaTeX, and send the log plus which pages Figures 1-7 land on.
+1. **The compile.** Everything statically checkable passes. Only a real
+   pdfLaTeX run can confirm pagination, package interactions and overfull
+   boxes. Upload `paper/signalshap-overleaf.zip`, compiler pdfLaTeX, send the
+   log plus which pages Figures 1-7 land on.
+
+### One optional run
+
+2. **Regenerate the legacy-key diagnostics.** Everything inferential is already
+   on the symmetric key. Still legacy: Table 1's recall and monotonicity
+   columns, duplicate injection, segment profiles, the lambda and candidate-cap
+   sweeps, the grand-pool ablation, and the estimand comparison. All are
+   structural or directional checks, and on MovieLens the two keys agree to
+   2.8e-5 with recall identical to three decimals, so Table 1 is unaffected at
+   the precision it reports. Listed in Limitations either way.
+
+   One corpus per invocation, because a combined run would apply the smallest
+   user cap to all three:
+
+       python scripts/run_study.py --datasets ml_1m --budget-gb 24
+       python scripts/run_study.py --datasets amazon_video_games --budget-gb 24
+       python scripts/run_study.py --datasets gowalla_ts --budget-gb 24
+
+   Expect the monotonicity integers to move by a count or two; recall and every
+   ordering should not.
 
 ### Known limitations, disclosed in the paper in our own words
 
-2. Only MovieLens clears the 0.60 recall gate. A fourth dense timestamped
+3. Only MovieLens clears the 0.60 recall gate. A fourth dense timestamped
    corpus is the highest-value experiment we have not run.
-3. Interaction indices, Recall@10/MRR@10 robustness and the candidate-rule
+4. Interaction indices, Recall@10/MRR@10 robustness and the candidate-rule
    ablation are MovieLens-only. Semivalues cover two corpora.
-4. Gowalla's full-catalogue recall sweep between 23,246 and 82,134 items is
+5. Gowalla's full-catalogue recall sweep between 23,246 and 82,134 items is
    unmeasured, so where the 0.60 crossing lies is unknown.
-5. The split is per-user chronological, not globally time-blocked; the exposure
+6. The split is per-user chronological, not globally time-blocked; the exposure
    is measured (44.2 / 27.1 / 19.4% mean future-train fraction) and reported.
-6. Neural baselines have unmatched tuning budgets and are contextual references
+7. Neural baselines have unmatched tuning budgets and are contextual references
    only; no SOTA claim is made.
-7. No immutable DOI archive (author declined Zenodo; a git tag is cited
+8. No immutable DOI archive (author declined Zenodo; a git tag is cited
    instead). Both reviewers scored reproducibility down partly for this.
 
-Items 2-7 are limitations, not defects: each is stated in the manuscript with
+Items 3-8 are limitations, not defects: each is stated in the manuscript with
 its magnitude. None is a barrier to submission.
 
 ## YOU: cannot be automated

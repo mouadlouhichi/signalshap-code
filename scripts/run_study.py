@@ -16,7 +16,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
 from signalshap.data.loaders import LOADERS, _register_timestamped  # noqa: E402
 from signalshap.memory import (  # noqa: E402
-    check_fits, default_budget_gb, free_gb, size_corpus)
+    check_fits, check_paper_shape, default_budget_gb, free_gb, size_corpus)
 from signalshap.pipeline import run_full_study  # noqa: E402
 
 if __name__ == "__main__":
@@ -50,18 +50,26 @@ if __name__ == "__main__":
             ds = loader()
             ok, msg = check_fits(name, ds.n_users, ds.n_items, budget)
             print("  " + msg)
+            shape_ok, why = check_paper_shape(name, ds.n_users, ds.n_items)
             del ds
             if not ok:
                 sys.exit(1)
+            if not shape_ok:
+                sys.exit("REFUSING to overwrite the reported artefacts.\n  "
+                         + why + "\n  Raise --budget-gb, or run one corpus at "
+                         "a time so each gets its own cap.")
             caps[name] = cap
         if len(set(caps.values())) > 1:
-            # One process-wide env var cannot hold two different caps, so run
-            # the corpora with the smallest; anything larger risks the OOM this
-            # sizing exists to prevent.
-            cap = min(caps.values())
-            print(f"\ncorpora need different caps {caps}; using the smallest "
-                  f"({cap:,}) for the whole run")
-            os.environ["SIGNALSHAP_MAX_USERS"] = str(cap)
+            # One process-wide env var cannot hold two different caps. Taking
+            # the smallest silently shrinks the other corpora, which is how a
+            # multi-corpus run would quietly substitute a different MovieLens.
+            # Refuse instead: the caller can run one corpus per invocation.
+            sys.exit(
+                f"corpora need different user caps {caps}. Running them "
+                f"together would apply the smallest to all of them and change "
+                f"the corpora the manuscript reports. Run them one at a time:\n"
+                + "\n".join(f"  python scripts/run_study.py --datasets {k} "
+                             f"--budget-gb {budget:.0f}" for k in caps))
 
     t0 = time.time()
     study = run_full_study(tuple(a.datasets), a.synthetic, tuple(a.seeds))
