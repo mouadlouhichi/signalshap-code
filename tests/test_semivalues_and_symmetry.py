@@ -290,3 +290,48 @@ def test_protocol_sensitivity_actually_uses_its_budget_flag():
            / "scripts" / "run_protocol_sensitivity.py").read_text()
     assert "size_corpus" in src, "budget flag must size the corpus"
     assert "check_paper_shape" in src, "must refuse a resized corpus"
+
+
+def test_latex_static_checks_pass():
+    """No TeX in CI, so lint the source for the errors that break a compile."""
+    import subprocess
+    import sys
+    from pathlib import Path
+
+    root = Path(__file__).resolve().parents[1]
+    script = root / "scripts" / "check_latex.py"
+    if not (root / "paper" / "sn-article.tex").exists():
+        import pytest
+        pytest.skip("paper absent")
+    r = subprocess.run([sys.executable, str(script)],
+                       capture_output=True, text=True, cwd=root)
+    assert r.returncode == 0, r.stdout + r.stderr
+
+
+def test_latex_linter_detects_a_broken_table():
+    """A linter that never fails is worse than none: prove it catches a fault."""
+    import re
+    import subprocess
+    import sys
+    import tempfile
+    from pathlib import Path
+
+    root = Path(__file__).resolve().parents[1]
+    tex = root / "paper" / "sn-article.tex"
+    if not tex.exists():
+        import pytest
+        pytest.skip("paper absent")
+    original = tex.read_text()
+    lines = original.split("\n")
+    hit = next((k for k, l in enumerate(lines)
+                if l.startswith("MovieLens-1M &")), None)
+    assert hit is not None
+    lines[hit] = lines[hit].replace("MovieLens-1M &", "MovieLens-1M & X &", 1)
+    try:
+        tex.write_text("\n".join(lines))
+        r = subprocess.run([sys.executable, str(root / "scripts" / "check_latex.py")],
+                           capture_output=True, text=True, cwd=root)
+        assert r.returncode == 1, "linter missed an extra table cell"
+        assert "cells, spec has" in r.stdout
+    finally:
+        tex.write_text(original)

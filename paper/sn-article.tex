@@ -102,6 +102,19 @@
 \setcounter{topnumber}{3}                 % up to 3 floats at the top
 \setcounter{bottomnumber}{2}
 \setcounter{totalnumber}{5}               % and 5 on one page in total
+%%
+%% Loosening the fractions lets LaTeX place a float; it does not stop a
+%% deferred float from migrating arbitrarily far forward. Once the queue backs
+%% up, every later float inherits the delay and they arrive together at the
+%% end of the document, which is what an earlier compile produced (all six
+%% data figures on pages 38-40 of 40). placeins drains the queue at every
+%% section boundary, so a float can be late within its section but cannot
+%% leave it.
+\usepackage[section]{placeins}
+%% \FloatBarrier flushes the whole pending-float queue, so the `algorithm'
+%% float registered by the algorithm package is covered too; no further
+%% patching of \section is needed, and adding some would double-patch what
+%% placeins already does at \AtBeginDocument.
 
 \theoremstyle{thmstyleone}
 \newtheorem{theorem}{Theorem}
@@ -1008,7 +1021,7 @@ choice is not load-bearing. The
 retention choice is therefore immaterial here, which we can now say from
 measurement rather than from an argument about bias.
 
-\begin{algorithm}[t]
+\begin{algorithm}[tbp]
 \caption{Exact ranking-stage SignalShap}\label{alg:signalshap}
 \begin{algorithmic}[1]
 \Require train $\mathcal{D}_{\mathrm{tr}}$, validation $\mathcal{D}_{\mathrm{val}}$,

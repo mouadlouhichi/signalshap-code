@@ -19,6 +19,7 @@ check:
 	  || echo "  (number check skipped: run from a full repo checkout)"
 	@python3 ../scripts/check_discover_ai.py 2>/dev/null \
 	  || echo "  (compliance check skipped: run from a full repo checkout)"
+	@python3 ../scripts/check_latex.py
 
 $(MAIN).pdf: $(MAIN).tex paper.bib sn-jnl.cls sn-basic.bst $(FIGS)
 	pdflatex -interaction=nonstopmode $(MAIN).tex

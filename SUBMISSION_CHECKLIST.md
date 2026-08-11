@@ -178,16 +178,45 @@ Two bugs of mine surfaced and are fixed: the script ignored `--budget-gb`
 entirely, and it overwrote rather than resumed, deleting the ml_1m and amazon
 blocks (recovered from git). Both now pinned by tests.
 
+## LaTeX hardening (no TeX available here)
+
+CTAN is unreachable from this sandbox and there is no TeX distribution, so I
+could not compile. Instead I wrote `scripts/check_latex.py`, which lints the
+source for the failures that actually cost a round trip, and verified it by
+injecting each fault and confirming it fires:
+
+| Check | Probe result |
+|---|---|
+| undefined control sequence | catches `\FakeMacroXYZ` |
+| unbalanced environment | catches a removed `\end{itemize}` |
+| tabular row vs column spec | catches an extra and a missing cell |
+| tikz style / library missing | catches a dropped `positioning`, `arrows` |
+| figure too tall for `topfraction` | measures every figure in mm |
+| sn-jnl traps | `\orcid`, `\jyear`, amsthm order, `\graphicspath` |
+| restrictive float specifier | catches `[h]`, `[t]` |
+
+Fixing the linter took three attempts, and each failure was instructive:
+splitting rows on two backslashes also cuts inside `6\,038`, and filtering out
+rows that start with `\midrule` silently exempted the first data row of every
+table. A linter that never fails is worse than none, so both probes are now
+pytest cases.
+
+**Float placement, the actual eight-round problem.** Loosening
+`topfraction` and friends lets LaTeX place a float but does nothing once the
+queue backs up: one deferred float delays every later one, which is how six
+figures ended up on pages 38-40 of 40. The fix is `\usepackage[section]{placeins}`,
+which drains the queue at each section boundary so a float can be late within
+its section but cannot leave it. The last `[t]` float, Algorithm 1, is now
+`[tbp]`. Measured every figure: the tallest is 46% of the text block, so none
+is forced onto a float page.
+
 ## What is still open
 
 | # | Item | Who | Cost |
 |---|---|---|---|
-| 1 | **Overleaf compile. Eight rounds, still never run.** | you | 5 min |
+| 1 | **The compile itself.** Everything statically checkable now passes; only a real pdfLaTeX run can confirm pagination | you | 5 min |
 | 2 | Only MovieLens clears the 0.60 recall gate | needs a 4th dense corpus |
 | 3 | Interaction indices and metric robustness are MovieLens-only | ~2 h |
-
-Item 1 is the only submission blocker. Items 2 and 3 are disclosed as
-limitations in the text and are future work.
 
 ## YOU: cannot be automated
 
