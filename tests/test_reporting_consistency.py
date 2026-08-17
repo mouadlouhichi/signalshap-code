@@ -344,3 +344,39 @@ def test_en_dashes_are_only_ranges_and_compound_names():
     # A punctuation dash has whitespace on at least one side.
     loose = re.findall(r"(?:\s--(?!-)|(?<!-)--\s)", body)
     assert not loose, f"{len(loose)} en dash(es) used as punctuation: {loose[:3]}"
+
+
+def test_no_rebuttal_prose_in_rendered_text():
+    """The article is not a response letter.
+
+    A reviewer counted 27 'earlier version' and 10 'reviewer' mentions and said
+    the manuscript read partly like a rebuttal. Self-corrections that carry
+    scientific content are kept, but phrased as statements about the method
+    rather than as revision history. LaTeX comments are exempt: they are not
+    typeset.
+    """
+    import re
+    from pathlib import Path
+
+    tex = Path(__file__).resolve().parents[1] / "paper" / "sn-article.tex"
+    if not tex.exists():
+        import pytest
+        pytest.skip("paper absent")
+    body = "\n".join(l for l in tex.read_text().split("\n")
+                     if not l.lstrip().startswith("%"))
+    for phrase in ("earlier version", "A reviewer", "a reviewer",
+                   "the reviewer", "previous version of this manuscript"):
+        assert phrase not in body, f"rebuttal prose in rendered text: {phrase!r}"
+
+
+def test_ppmi_is_not_described_as_shifted():
+    """k_s = 1 means log k_s = 0, so the model is plain PPMI-SVD."""
+    from pathlib import Path
+
+    tex = Path(__file__).resolve().parents[1] / "paper" / "sn-article.tex"
+    if not tex.exists():
+        import pytest
+        pytest.skip("paper absent")
+    body = tex.read_text()
+    assert "shifted-PPMI" not in body
+    assert "shifted PPMI" not in body

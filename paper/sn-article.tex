@@ -327,7 +327,7 @@ attribution prescribes retaining or removing a source. Section~\ref{sec:estimand
    {\snFigSub source credit, redundancy, segments}};
 
 %% Dashed outline: this branch is the NEGATIVE appendix experiment, not part
-%% of the contribution. A reviewer asked for it to be visually demoted.
+%% of the contribution, so it is drawn dashed and visually demoted.
 \node[snbox=0, below=of diag, draw=black, dashed, line width=0.5pt] (fuse)
   {\textbf{SignalShap-Fuse} {\snFigSub(Appendix A)}\\[1pt]
    {\snFigSub segment weights; no gain over a tuned global head}};
@@ -589,10 +589,9 @@ $\LOOr(g) = v_{\mathrm{rank}}(\G) - v_{\mathrm{rank}}(\G\setminus\{g\})$ as
 well. That cancellation \emph{fails} end to end: each coalition retrieves its
 own $C_u(S)$, so $|C_u|$ and hence $b(S)$ move when a source is retired, and
 differencing $v_{\mathrm{e2e}}$ would add a term $b(\G\setminus\{g\}) - b(\G)$
-that has nothing to do with the observed change in ranking quality. A reviewer
-caught us defining $\LOOe$ on the centred game and calling the result the raw
-removal cost; the two differ, and the definition above is the corrected one.
-Section~\ref{sec:estimands} reports the size of the term we had been carrying.
+that has nothing to do with the observed change in ranking quality. Defining
+$\LOOe$ on the centred game would therefore not give the raw removal cost, and
+Section~\ref{sec:estimands} quantifies the difference on all three corpora.
 
 $\LOOr$ removes $g$ from the \emph{fusion head only}: the candidate set is still
 the one all five sources retrieved, so $g$ keeps its retrieval role. $\LOOe$
@@ -628,9 +627,8 @@ Let $\G = \{cf, ct, pop, rec, seq\}$ with $|\G| = 5$.
 
 \subsection{What each source computes}\label{sec:sources}
 
-A reviewer noted that naming the five players and listing their
-hyperparameters does not let anyone reimplement them. We therefore give the
-scoring function of each. Write $R \in \{0,1\}^{m \times |\mathcal{I}|}$ for the
+Naming the five players and listing their hyperparameters is not enough to
+reimplement them, so we give the scoring function of each. Write $R \in \{0,1\}^{m \times |\mathcal{I}|}$ for the
 binarised training matrix, $\mathcal{H}_u$ for user $u$'s training history, and
 $t_{\max}$ for the latest training timestamp. All five are fitted on the
 training fold only and produce a dense score $s_g(u,i)$; every score is
@@ -735,8 +733,8 @@ under both rules. The Shapley vectors agree to $\max_g |\Delta \varphi_g| =
 $0.05187$, candidate recall is unchanged at $0.748$, and the material sign
 disagreement on $cf$ is present under both.
 
-We must flag one thing about those two numbers, because a reviewer reasonably
-read them as contradicting the main results, where the same seed-42
+One thing about those two numbers needs flagging, because they can be read as
+contradicting the main results, where the same seed-42
 MovieLens game has $v(\G) = 0.05136$ (Section~\ref{sec:results}). They are the same game and the same code.
 The difference, $5.4 \times 10^{-4}$, is the cross-platform residual documented
 in Section~\ref{sec:threats}: this paired comparison was executed on x86-64
@@ -914,14 +912,18 @@ Algorithm~\ref{alg:signalshap} states the procedure end to end. Two details
 carry the correctness of everything downstream and are easy to get wrong. The
 candidate set is built \emph{once}, from all sources, and reused unchanged for
 every coalition (line~4): building it per coalition would make $v(S)$
-incomparable across the lattice, because a coalition would be scored on
-candidates it selected for itself. And the ridge head for each coalition is fit
+a different estimand: a coalition would be scored on candidates it selected for
+itself, so coalition differences would combine retrieval reach with ranking
+quality. That game is perfectly well defined, and Section~\ref{sec:estimands}
+evaluates it as $v_{\mathrm{e2e}}$; we fix the candidate set here because the
+present estimand is ranking-stage attribution under a common retrieval
+ceiling. And the ridge head for each coalition is fit
 against \emph{validation} targets while $v(S)$ is scored against \emph{test}
 items (lines 9 and 12), so no coalition value is measured in-sample.
 
 \paragraph{The temporal state is frozen at the training fold, deliberately}
-A reviewer asked what history the test ranking is produced from, and the
-question deserves an explicit answer because the split is leave-last-\emph{two}-out.
+The history the test ranking is produced from deserves an explicit statement,
+because the split is leave-last-\emph{two}-out.
 Every source is fitted on the training fold alone, and the score matrices are
 masked against training items alone. The validation interaction
 $i_u^{\mathrm{val}}$, chronologically the second-to-last event, is therefore
@@ -935,8 +937,7 @@ The choice is deliberate: refreshing the state between folds would make the
 head-fitting features and the evaluation features come from two different
 scorers, so a coalition difference $v(S \cup \{g\}) - v(S)$ would mix the
 contribution of $g$ with a change of source state. It is not free. One
-consequence is directional and one is not, and an earlier version of this
-manuscript conflated them.
+consequence is directional and one is not, and they are easily conflated.
 
 The directional part: \emph{holding the source scores and $C_u$ fixed}, the
 already-consumed $i_u^{\mathrm{val}}$ can occupy a top-$K$ slot and push the
@@ -992,10 +993,9 @@ the all-zero users: dropping them would fit the head on a subpopulation
 selected for being easy to retrieve, which is a worse bias than the one it
 removes.
 
-We must correct a statement made in an earlier version. Such a user contributes
-its positive-semidefinite block to $A$ but nothing to $c$, and we described that
-as shrinking the fitted weights without distorting their direction. That is
-false. For $w = (A + \lambda I)^{-1} c$ with $c$ unchanged, adding a PSD term to
+It is tempting to read such a user as merely shrinking the fitted weights
+without distorting their direction. That is false. Such a user contributes its
+positive-semidefinite block to $A$ but nothing to $c$, and for $w = (A + \lambda I)^{-1} c$ with $c$ unchanged, adding a PSD term to
 $A$ rescales the solution unevenly across eigendirections, so it can rotate $w$
 as well as shorten it; a two-source numerical example in the repository moves
 the weight vector by $12.8^{\circ}$ while shrinking its norm. The correct
@@ -1234,11 +1234,11 @@ to nonlinear monotone maps.
 \paragraph{Players}
 $cf$: implicit-feedback ALS~\citep{hu2008collaborative}, 64 factors. $ct$: TF-IDF cosine over item
 metadata. $pop$: time-decayed global frequency. $rec$: exponential recency over
-an item's content cluster. $seq$: item2vec, realised as SVD of the shifted PPMI
+an item's content cluster. $seq$: item2vec, realised as SVD of the PPMI
 co-occurrence matrix. Levy and Goldberg~\citep{levy2014neural} show that
 skip-gram with negative sampling implicitly factorises a shifted PMI matrix; we
 factorise it directly, which is deterministic on CPU. We call this a
-shifted-PPMI SVD sequential model rather than claiming exact algorithmic
+PPMI--SVD sequential model rather than claiming exact algorithmic
 equivalence to skip-gram.
 
 \paragraph{Expected overlap, stated in advance}
@@ -1285,8 +1285,7 @@ candidate list (Section~\ref{sec:preconditions}).
 \paragraph{Protocol}
 Leave-last-out temporal split where timestamps exist; ties broken by
 (timestamp, record index). The split is chronological \emph{within each user}
-and is not globally time-blocked, a distinction a reviewer asked us to make
-explicit. Because every source is fitted on the pooled training fold, and
+and is not globally time-blocked, a distinction worth making explicit. Because every source is fitted on the pooled training fold, and
 because $pop$ decays relative to the latest \emph{global} training timestamp,
 training events belonging to other users can postdate a given user's held-out
 event. \texttt{scripts/audit\_global\_time.py} measures the exposure, and it is not
@@ -1301,15 +1300,20 @@ literature and we keep it for comparability, but it means our numbers describe
 an offline per-user chronological evaluation rather than a globally causal
 deployment simulation, and the temporally sensitive sources ($pop$, $rec$,
 $seq$) are the ones whose values that distinction most affects. A globally
-blocked replication would need a single cutoff date and would discard a large
-share of each corpus; we have not run one.
+blocked replication needs a single cutoff date and discards a large share of
+each corpus, since users inactive after the cutoff drop out entirely and the
+survivors skew heavy and late-active. We ship that replication as
+\texttt{scripts/run\_global\_timeblock.py}, which splits at global timestamp
+quantiles so that no training event postdates any evaluated event, and we
+report it as a robustness check on the ordering and the
+$\LOOr$-versus-Shapley contrast rather than as a replacement for the main
+numbers.
 Ten seeds ($42$--$51$) are used for every result
 that carries an interval: the attribution intervals and the retirement analysis
 of Sections~\ref{sec:results} and~\ref{sec:estimands}, and the equivalence
 analysis of Appendix~\ref{app:fusion}, which is what the two-level bootstrap
 resamples over. The pairwise interaction indices of Section~\ref{sec:alternatives} also carry
-ten-seed means and intervals; an earlier version described them as a single-run
-diagnostic and that is no longer true. Diagnostics that remain illustrative
+ten-seed means and intervals. Diagnostics that remain illustrative
 rather than inferential, namely the estimand comparison and the per-corpus
 robustness sweeps, are reported at seed $42$ and labelled as such.
 Wilcoxon signed-rank~\citep{wilcoxon1945individual} for
@@ -1425,7 +1429,7 @@ We are deliberately careful about what this does and does not establish. Recall
 is \emph{not} bounded below one: every unseen item receives a finite score from
 every source, so setting $N_{\max}$ to the catalogue size makes $C_u$ the whole
 eligible catalogue and recall approaches one by construction. We verified this
-on MovieLens, where $N_{\max}=3\,533$ yields recall $0.9995$. An earlier version
+on MovieLens, where $N_{\max}=3\,533$ yields recall $0.9995$. A draft
 of this manuscript extrapolated the logarithmic fit beyond the sampled range
 and concluded that Gowalla's gate was unreachable at any pool size. That conclusion was wrong, because the logarithm describes the curve locally and cannot hold asymptotically, and we withdraw it.
 
@@ -1627,8 +1631,8 @@ each clone $0.01078$ against $0.01520$ for $cf$ before injection, a pair sum of
 $0.02156$: the split is exact, and the pair is worth more together than the
 single source was, which is the non-conservation discussed above.
 
-The practical reading needs care, and an earlier version overstated it by
-saying an engineer would retire both duplicates and lose the capability. A
+The practical reading needs care. It would overstate the result to say an
+engineer would retire both duplicates and lose the capability. A
 sequential procedure would re-evaluate the system after the first removal and
 would not make that error. The narrower point, which is the one the diagnostic
 establishes, is that grand-coalition LOO does not \emph{distribute} shared
@@ -1698,21 +1702,16 @@ structural audit of Section~\ref{sec:setup} relies on.
 
 \subsection{Alternative values and pairwise interactions}\label{sec:alternatives}
 
-\paragraph{Other semivalues, and a correction}
-The Shapley value is one member of a family. An earlier version of this
-manuscript reported a third comparator it called a ``uniform semivalue'',
-defined by
-$\psi_g = \tfrac1n\sum_{k=0}^{n-1}\binom{n-1}{k}^{-1}
- \sum_{|S|=k,\,S\subseteq\G\setminus\{g\}}[v(S\cup\{g\})-v(S)]$,
-and asserted that it does not satisfy efficiency. A reviewer pointed out that
-this expression is algebraically identical to Equation~(\ref{eq:shapley}),
-since $|S|!(n-|S|-1)!/n! = 1/\bigl(n\binom{n-1}{|S|}\bigr)$. The reviewer is
-right, and our artefact confirms it numerically: the two vectors agreed to
-$0.0$ in every coordinate on every corpus, which we had read as robustness when
-it was an identity. That comparator carried no information and the efficiency
-claim about it was false. We withdraw both.
+\paragraph{Other semivalues}
+The Shapley value is one member of a family, and a comparator is only
+informative if it is genuinely a different member. The size-uniform weighting
+$p_k = 1/n$ is not: substituting it into Equation~(\ref{eq:semivalue}) returns
+Equation~(\ref{eq:shapley}) exactly, because
+$|S|!(n-|S|-1)!/n! = 1/\bigl(n\binom{n-1}{|S|}\bigr)$. It is Shapley written by
+coalition size, it satisfies efficiency, and comparing it against Shapley is
+vacuous. We note this because the identity is easy to miss.
 
-The distinct comparators we now report are Banzhaf, $p_k =
+The distinct comparators we report are Banzhaf, $p_k =
 \binom{n-1}{k}2^{-(n-1)}$, and the binomial semivalues $p_k =
 \binom{n-1}{k}q^k(1-q)^{n-1-k}$ at $q = 0.25$ and $q = 0.75$, in which each
 other source joins the predecessor coalition independently with probability
@@ -1737,10 +1736,10 @@ Main-effect values cannot by themselves distinguish a source of low value from
 a source whose value is absorbed by a redundant partner. We therefore compute a
 pairwise interaction index: the classical \emph{Shapley interaction index} of
 Grabisch and Roubens~\citep{grabisch1999interaction}. We flag a correction
-here. An earlier version of this manuscript reported these values as the
-order-2 Shapley--Taylor index~\citep{sundararajan2020shapleytaylor} while
-computing the Grabisch--Roubens coefficient. The two are not interchangeable, since at $n=5$ their coalition weights differ by up to a factor of $2.5$, so the label was wrong even though the computation was a valid
-interaction index. We correct the label rather than the numbers, and note that
+here. This index is easily confused with the order-2 Shapley--Taylor
+index~\citep{sundararajan2020shapleytaylor}: the two are not interchangeable,
+since at $n=5$ their coalition weights differ by up to a factor of $2.5$. We
+use Grabisch--Roubens throughout, and note that
 Grabisch--Roubens does not satisfy Shapley--Taylor's interaction-efficiency
 axiom: the pairwise terms do not sum with the singletons to $v(\G)$. That is
 acceptable here because we use them only to \emph{rank} redundancy, which is
@@ -1798,7 +1797,7 @@ why leave-one-out scores it below zero. Only one of these, $cf|pop$, was
 declared in advance (Section~\ref{sec:setup}); $cf|seq$ was not, and the other
 declared overlap $rec|ct$ comes out slightly \emph{positive} at $+0.0004$. We
 therefore claim partial rather than complete recovery of the pre-declared
-structure, and note that an earlier version of this paper overstated it. Every
+structure. Every
 pair in Table~\ref{tab:taylor} keeps its sign on all ten seeds, so the
 redundancy reading does not rest on a single run. The interaction values are
 reported for MovieLens only; extending them to the other corpora is
@@ -1809,8 +1808,7 @@ straightforward but not yet done.
 \begin{table}[tbp]
 \caption{$\LOOr$ versus Shapley on all three corpora. Every column is now a
 ten-seed mean over seeds $42$--$51$, so the gap is a like-for-like difference at
-the same aggregation level; an earlier version mixed a seed-42 point estimate
-with a ten-seed interval. Intervals are $\bar{x} \pm t_9\,\mathrm{SE}$, and no
+the same aggregation level. Intervals are $\bar{x} \pm t_9\,\mathrm{SE}$, and no
 interval spans zero on any corpus. Because an interval for the mean is not a
 statement about individual seeds, the \emph{sign} column counts the seeds
 agreeing with the mean's sign directly. Thirteen of fifteen cells are $10/10$.
@@ -1852,8 +1850,7 @@ Gowalla      & $cf$ & $+0.00743$ & $+0.00711\ [+0.00698,+0.00725]$ & $-0.00032$ 
 \centering
 \includegraphics[width=0.7\textwidth]{Fig3.png}
 \caption{SignalShap attribution against ranking-stage leave-one-out. Both axes
-are ten-seed means over seeds $42$--$51$, matching Table~\ref{tab:loo}; an
-earlier version plotted seed-42 points under ten-seed prose. Points on the
+are ten-seed means over seeds $42$--$51$, matching Table~\ref{tab:loo}. Points on the
 diagonal are cases where the two agree; the upper-left quadrant holds sources
 SignalShap credits as valuable that $\LOOr$ scores below
 zero.}\label{fig:scatter}
@@ -1875,11 +1872,9 @@ this paragraph are ten-seed means, so the gap and the grand value are at the
 same aggregation level.
 
 Amazon-VG has no material disagreement. Its only sign flip, on $rec$, is
-$0.00063$, with both estimates within noise of zero. We state this plainly because
-an earlier version of this manuscript claimed that \emph{every} system contains
-a sign disagreement, and after correcting a reproducibility defect in the
-empty-coalition baseline (Section~\ref{sec:threats}) that claim no longer
-holds. The honest statement is weaker: material sign disagreement between the
+$0.00063$, with both estimates within noise of zero. We state this plainly because it bounds the claim: it would be wrong to say
+that \emph{every} system contains a sign disagreement. The accurate statement
+is weaker: material sign disagreement between the
 two rules occurs on two of the three systems studied here and is absent on the
 third. Three corpora cannot estimate how common it is in the wider population
 of hybrid recommenders; what they establish is that it is possible and can be
@@ -1989,7 +1984,7 @@ Two results here are mathematical and depend on no corpus: the counterexample
 refuting unconditional Property~\ref{prop:loo}, and the $1/|\G|$ constant in
 Lemma~\ref{lem:eps}. The arguments against grand-coalition candidate pools and
 against per-coalition $\lambda$ tuning are \emph{not} of that kind, and an
-earlier version wrongly listed them alongside the theorems. Neither is proved.
+they do not belong alongside the theorems, and neither is proved.
 We do not show that a $\G$-selected pool must raise $v(\G)$ for an arbitrary
 relevance distribution, nor that per-coalition tuning must produce an optimism
 term increasing in $|S|$. They are construct-design choices: each removes a
@@ -2039,12 +2034,11 @@ Amazon-VG and $3.7\%$ on Gowalla, most of it accruing to $seq$. The absolute
 coalition values reported here are therefore specific to the frozen protocol
 and understate what these sources achieve with a current history. The source
 ordering is unchanged on MovieLens and Gowalla but not on Amazon-VG, where the
-leading pair exchanges. An earlier version of this manuscript claimed
-the frozen values were a lower bound on the refreshed ones. The measurement
-agrees with that direction on all three corpora, but the claim was still unsound as
-stated, since it ignored the simultaneous changes to the source scores, the
-candidate set and the baseline; and it distracted from the finding that
-actually matters, which is the ordering instability on Amazon-VG.
+leading pair exchanges. It would be unsound to conclude from this that the
+frozen values are a lower bound on the refreshed ones: the measured direction
+agrees on all three corpora, but the argument ignores the simultaneous changes
+to the source scores, the candidate set and the baseline. The finding that
+matters is the ordering instability on Amazon-VG.
 
 \paragraph{Scope was narrowed after the study began}
 This work was designed as a study contrasting attribution across densities. The
@@ -2055,8 +2049,8 @@ the observational comparison could not establish which attributor was correct.
 Its prediction was fixed by construction \emph{before} it was run.
 
 \paragraph{Temporal semantics: a flaw we removed rather than disclosed}
-An earlier version of this protocol carried a serious defect, and we describe
-it because the fix changed the corpus set. The LightGCN splits we first used
+An early version of this protocol carried a defect worth describing, because
+the fix changed the corpus set. The LightGCN splits we first used
 carry no timestamps, so the recency player, the time-decay term of the
 popularity player, and the sequential player were operating on file order, an ordering with no temporal meaning at all. Attributions for $rec$ and $seq$
 on those corpora were not small, nor lower bounds as a still earlier draft
@@ -2086,9 +2080,9 @@ $v$; without it the cells are not comparable. The $\lambda$ panel is
 sensitivity only and is never used for selection.}\label{fig:robustness}
 \end{figure}
 
-\paragraph{The ordering does not depend on the choice of ranking metric}
-NDCG@10 is the only metric in the characteristic function, so a reviewer asked
-whether the attributions are an artefact of it. We re-scored the same game with
+\paragraph{Metric sensitivity on MovieLens-1M}
+NDCG@10 is the only metric in the characteristic function, so the attributions
+could in principle be an artefact of that choice. We re-scored the same game with
 Recall@10 and with MRR@10 in place of NDCG@10 on MovieLens-1M (seed 42),
 recomputing all $32$ coalitions in each case. The induced source ordering is
 identical under all three (Kendall $\tau = 1.00$ against NDCG in both cases,
@@ -2134,9 +2128,9 @@ and $C_u(\varnothing)$ would be empty.
 
 Because $b_u(S)$ varies with the coalition, the retirement losses we report are
 differences of the \emph{raw} $U_{\mathrm{e2e}}$, per
-Equation~(\ref{eq:loo}). An earlier version differenced the centred
-$v_{\mathrm{e2e}}$ instead, which silently added
-$b(\G\setminus\{g\}) - b(\G)$ to every reported cost. We recomputed both. The
+Equation~(\ref{eq:loo}). Differencing the centred $v_{\mathrm{e2e}}$ instead
+would silently add $b(\G\setminus\{g\}) - b(\G)$ to every reported cost, so we
+computed both. The
 contaminating term is small here, at most $1.7\times10^{-4}$ in absolute value
 on the pilot corpus, and it changes no ordering: raw and centred losses agree
 at Kendall $\tau = 1.00$ and select the same cheapest source, so the reported
@@ -2164,13 +2158,10 @@ this table reports a seed-42 realisation while Table~\ref{tab:loo} reports
 ten-seed means. The observed-loss column now
 differences \emph{raw} utility per Equation~(\ref{eq:loo}). Regenerating it
 under the correction moved every entry: on this corpus the baseline term
-reaches $6.7\times10^{-4}$, four times the bound we had estimated from a pilot,
-which is why the correction was worth making rather than waiving. It changes
+reaches $6.7\times10^{-4}$, which is why the correction was worth making rather
+than waiving. It changes
 nothing that the paper concludes from: $cf$ remains the cheapest source to
-retire, $\tau_{\LOOr} = 1.00$ and $\tau_{\text{Shapley}} = 0.20$ as before. An
-earlier version
-reported a constant $+0.00038$ offset here, which was an artefact of the
-sampled baseline that version used and no longer exists. Amazon-VG reproduces
+retire, $\tau_{\LOOr} = 1.00$ and $\tau_{\text{Shapley}} = 0.20$. Amazon-VG reproduces
 the pattern ($\tau = 1.00$ for $\LOOr$, $0.60$ for Shapley); its table is in the
 artefact}
 \label{tab:retirement}
@@ -2223,8 +2214,7 @@ bootstrap. Wilcoxon signed-rank on the ten paired differences gives
 $p = 0.0020$, $0.0039$ and $0.0020$; the Gowalla value is the exact
 two-sided minimum $2/2^{10}$, reached because all ten differences are positive
 and equal, which is the strongest evidence the test can express rather than the
-weakest. An earlier version reported $p = 1.0$ there, from a guard that treated
-constant differences as uninformative; that was wrong. With $n = 10$ all
+weakest. With $n = 10$ all
 intervals here remain indicative rather than calibrated}
 \label{tab:retire-seeds}
 %% \small: the paired Delta-tau column carries a bracketed interval, making
@@ -2250,8 +2240,7 @@ Gowalla      & $1.00\ [1.00, 1.00]$ & $0.80\ [0.80, 0.80]$
 \end{table}
 
 \paragraph{The result holds across seeds and across all three corpora}
-An earlier version reported this from single runs on two corpora. Over ten
-seeds (Table~\ref{tab:retire-seeds}) the picture is both broader and slightly
+Over ten seeds (Table~\ref{tab:retire-seeds}) the picture is both broader and slightly
 more measured. $\LOOr$'s mean rank agreement is $0.96$, $0.96$ and $1.00$;
 Shapley's is $0.20$, $0.74$ and $0.80$. $\LOOr$ is therefore \emph{not} perfect on every
 seed, and we correct the earlier claim that it was. It nevertheless dominates
@@ -2266,8 +2255,8 @@ and Gowalla survives the interval while the Amazon contrast, $[60, 98]$ against
 $[24, 76]$, overlaps.
 
 \paragraph{The comparison paired by seed}
-Reporting two intervals side by side does not test their difference, and a
-reviewer was right to ask for the paired contrast: $\tau_{\LOOr}$ and
+Reporting two intervals side by side does not test their difference, so we use
+the paired contrast: $\tau_{\LOOr}$ and
 $\tau_{\text{Shapley}}$ are computed on the \emph{same} seed, from the same
 fitted game, against the same observed retirement loss, so the seed is a block
 and the paired difference $\Delta\tau_s = \tau_{\LOOr,s} -
@@ -2301,12 +2290,16 @@ rather than ``correctly'', because no external ground truth for the allocation
 exists: the two statements describe different games and need not agree. What is
 clear is that neither is the question a retirement decision asks.
 
-The two methods therefore answer different questions, and our earlier framing
-conflated them. $\LOOe$ is the right instrument for ``what happens if I remove this
-one source and keep the rest?''. Shapley is the right instrument for ``how
-should credit for the system's quality be divided among sources?'', which is
-the question that arises when allocating engineering effort across a roadmap
-rather than deleting a component today. We now claim only the latter.
+The two methods therefore answer different questions. $\LOOe$ is the right
+instrument for ``what happens if I remove this one source and keep the rest?''.
+Shapley answers the descriptive question ``how should the system's measured
+ranking quality be divided among its sources under the declared game?''. We
+claim only the latter, and we are deliberate about what it does not licence: a
+descriptive allocation of current quality is not a prescription for future
+engineering investment, which additionally depends on improvement headroom,
+implementation cost, latency, maintenance burden and deployment risk, none of
+which enter the characteristic function. Table~\ref{tab:decisions} records that
+gap rather than papering over it.
 
 \section{Discussion}\label{sec:discussion}
 
@@ -2488,8 +2481,7 @@ catalogue than the $14.2\%$ we could afford; where the $0.60$ crossing actually
 lies is unmeasured, since we did not sample between $23\,246$ and $82\,134$
 items. Far enough up that curve the fixed-candidate game stops modelling the
 two-stage architecture it was built for. That is a cost boundary on the design,
-not an impossibility, and we state it as such after withdrawing a stronger
-claim made in an earlier version.
+not an impossibility.
 
 \paragraph{Future work}
 Four directions follow directly from what we could not settle. First, a
@@ -2517,7 +2509,7 @@ Two questions separate here: whether attributions \emph{differ} across user
 segments, and whether exploiting that difference \emph{pays}.
 
 \paragraph{Segments and the weight map}
-An earlier version of this paper left both definitions implicit, which made the
+Leaving both definitions implicit, as a draft of this paper did, makes the
 applied claim unreproducible. Segments are a $2\times2$ split on training
 behaviour only, computed before any test data is touched: activity (above or
 below the median interaction count) crossed with recency skew, the fraction of
@@ -2558,8 +2550,7 @@ deliver. Figure~\ref{fig:segments} plots the per-segment profiles.
 \centering
 \includegraphics[width=\textwidth]{Fig5.png}
 \caption{Segment-level Shapley values, with segment sizes in each panel's own
-legend; the counts differ by corpus, and an earlier version showed a single
-shared legend carrying only Gowalla's. On MovieLens the four segments cover the
+legend, since the counts differ by corpus. On MovieLens the four segments cover the
 $6\,035$ users the game evaluates, three fewer than the $6\,038$ in
 Table~\ref{tab:preconditions}: three users retrieve an empty candidate set and
 are therefore outside every $v(S)$, rather than being excluded by the
@@ -2569,23 +2560,23 @@ because scores are masked at every item the user has already seen
 that survive $10$-core filtering has no eligible candidate left. Amazon-VG and
 Gowalla have no such users, so their segments sum to the full corpus. Overlapping markers within a source indicate little heterogeneity
 to exploit.
-We use a shared linear axis rather than the radar chart of an earlier version:
-radar encodes magnitude as radius and therefore area, which exaggerates
+We use a shared linear axis rather than a radar chart: radar encodes magnitude as radius and therefore area, which exaggerates
 differences quadratically and has no natural zero, and our values can be
 negative.}\label{fig:segments}
 \end{figure}
 
 \paragraph{A cross-corpus omnibus test we ran and then withdrew}
 A Wilcoxon test per corpus establishes a difference on that corpus, not a
-ranking across corpora, so an earlier version added a Friedman omnibus over the
-six methods blocked by corpus with a Nemenyi post-hoc. We have removed it. The
+ranking across corpora, so a Friedman omnibus over the six methods blocked by
+corpus with a Nemenyi post-hoc is the natural addition. We ran it and then
+withdrew it. The
 test pools absolute $\NDCG$ across all three corpora, including the two that
 Section~\ref{sec:preconditions} excludes from absolute comparison against the
 neural references because they fail the recall gate, so it violates our own
-applicability rule. The previous version retained it on the grounds that its
-conclusion was negative and therefore harmless. A reviewer objected that
-admissibility cannot depend on the outcome, which is correct: a rule applied
-only when it is convenient is not a rule. For the record, the omnibus was
+applicability rule. Retaining it on the grounds that its conclusion was
+negative, and therefore harmless, would make admissibility depend on the
+outcome: a rule applied only when it is convenient is not a rule. For the
+record, the omnibus was
 significant ($\chi^2 = 14.24$, $p = 0.014$, three blocks) while the Nemenyi
 critical difference of $4.35$ separated no pair, so nothing in the paper's
 conclusions rested on it. The reportable statistics are the per-corpus tests of

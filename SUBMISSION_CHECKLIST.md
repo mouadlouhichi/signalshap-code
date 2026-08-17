@@ -228,6 +228,39 @@ experiment now covers all three corpora:
 Every headline number in the manuscript traces to an artefact (verified
 programmatically). Abstract 249 words, zero em dashes, no TODOs.
 
+## Review round 7: Minor Revision
+
+All five mandatory items were editorial and needed no new experiments.
+
+| Item | Status |
+|---|---|
+| Roadmap/investment contradiction (p39) | **Fixed.** Shapley now stated as descriptive allocation of current quality, explicitly not a prescription for future investment. Prose and Table 9 agree |
+| Revision/reviewer-history prose | **Removed.** 23 "earlier version" and 13 "reviewer" mentions to zero in rendered text. Self-corrections kept where scientific, rephrased as statements about the method |
+| Overgeneralised metric heading | **Renamed** to "Metric sensitivity on MovieLens-1M" |
+| shifted-PPMI -> PPMI-SVD | **Fixed.** Verified against the code: no shift is subtracted, so k_s = 1 |
+| "incomparable across the lattice" | **Replaced.** Coalition-specific candidates now described as a valid game measuring a different retrieval+ranking estimand |
+
+Two CI guards added so the prose cannot regress, and a test that the PPMI
+naming stays consistent with the code.
+
+### Globally time-blocked replication (reviewer's #1 experiment)
+
+`scripts/run_global_timeblock.py` ships. It splits at global timestamp
+quantiles so no training event postdates any evaluated event, and it is
+referenced in the temporal-validity discussion.
+
+I could not run it here: the sandbox has no corpora and no network to fetch
+them. I verified the splitter on a synthetic corpus with realistic calendar
+overlap: 71.5% user retention and **zero** training events after any test
+event, folds strictly time ordered, one held-out event per user. Pinned by a
+test.
+
+Note it fails loudly on our synthetic fixture, whose users occupy disjoint time
+windows so a global cutoff retains nobody. That is a property of the fixture,
+not the method; real corpora overlap.
+
+    python scripts/run_global_timeblock.py --corpora ml_1m --budget-gb 24
+
 ### One blocker
 
 1. **The compile.** Everything statically checkable passes. Only a real

@@ -352,3 +352,41 @@ def test_run_study_refuses_to_shrink_a_corpus_silently():
     assert "check_paper_shape" in src, "must verify the manuscript's shape"
     assert "min(caps.values())" not in src, "must not silently shrink corpora"
     assert "one at a time" in src
+
+
+def test_global_timeblock_split_admits_no_future_training_events():
+    """The whole point of the blocked split: nothing is fitted on the future."""
+    import importlib.util
+    from pathlib import Path
+
+    import pandas as pd
+
+    root = Path(__file__).resolve().parents[1]
+    spec = importlib.util.spec_from_file_location(
+        "gt", root / "scripts" / "run_global_timeblock.py")
+    gt = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(gt)
+
+    rng = np.random.default_rng(0)
+    rows = []
+    for u in range(200):                       # users overlap in calendar time
+        ts = np.sort(rng.uniform(1e9, 1e9 + 1e7, size=rng.integers(20, 60)))
+        for t in ts:
+            rows.append((u, int(rng.integers(0, 300)), float(t), len(rows)))
+    df = pd.DataFrame(rows, columns=["user", "item", "timestamp",
+                                     "original_record_index"])
+
+    class DS:
+        pass
+    ds = DS(); ds.n_users, ds.n_items = 200, 300
+    ds.train, ds.valid, ds.test = df, df.iloc[:0].copy(), df.iloc[:0].copy()
+
+    blocked, stats = gt.global_split(ds)
+    assert stats["train_events_after_any_test_event"] == 0
+    assert stats["users_retained"] > 0
+    # One held-out event per user per fold.
+    assert blocked.valid["user"].is_unique
+    assert blocked.test["user"].is_unique
+    # And the folds really are time ordered.
+    assert blocked.train["timestamp"].max() <= blocked.valid["timestamp"].min()
+    assert blocked.valid["timestamp"].max() <= blocked.test["timestamp"].min()
