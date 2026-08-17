@@ -380,3 +380,27 @@ def test_ppmi_is_not_described_as_shifted():
     body = tex.read_text()
     assert "shifted-PPMI" not in body
     assert "shifted PPMI" not in body
+
+
+def test_global_timeblock_numbers_match_the_artefact():
+    """The blocked replication weakens the paper, so its numbers must be exact."""
+    import json
+    from pathlib import Path
+
+    root = Path(__file__).resolve().parents[1]
+    art = root / "artefacts" / "global_timeblock.json"
+    tex = root / "paper" / "sn-article.tex"
+    if not (art.exists() and tex.exists()):
+        import pytest
+        pytest.skip("artefact or paper absent")
+    r = json.loads(art.read_text())["ml_1m"]
+    body = tex.read_text()
+
+    # The property the whole experiment exists to establish.
+    assert r["train_events_after_any_test_event"] == 0
+
+    assert f"{r['users_retained']}" in body.replace("\\,", "")
+    assert f"{r['candidate_recall']:.3f}" in body
+    assert f"{100*r['user_coverage']:.1f}" in body
+    # The paper must not claim the per-source result replicates.
+    assert "do \\emph{not} claim" in body or "do \\emph{not} reproduce" in body

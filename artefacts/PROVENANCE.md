@@ -48,6 +48,7 @@ reported sign are unaffected. See spec provenance entry 36.
 | Metric robustness (Sec 11) | `metric_robustness_ml_1m.json` | x86 | legacy | 42 |
 | Temporal + validation-miss sensitivity (Sec 5) | `protocol_sensitivity.json` | M4 | sym | 42 (all three corpora) |
 | Global-time audit (Sec 7) | `global_time_audit.json` | M4 | n/a | n/a |
+| Globally blocked replication (Sec 7) | `global_timeblock.json` | M4 | sym | 42, ml_1m only |
 | Table 7 single-seed retirement | `e12_retirement_ml_1m.json` | M4 | **sym** | 42, raw utility |
 | Validation recall, Table 1 | `protocol_sensitivity.json` | M4 | sym | 42 |
 | LOO/gap intervals, ml_1m only (superseded) | `final_loo_gap_ci.json` | x86 | legacy | 42-51 |

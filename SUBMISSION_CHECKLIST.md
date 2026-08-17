@@ -228,6 +228,45 @@ experiment now covers all three corpora:
 Every headline number in the manuscript traces to an artefact (verified
 programmatically). Abstract 249 words, zero em dashes, no TODOs.
 
+## Globally blocked replication: the result is not flattering
+
+`run_global_timeblock.py` ran on MovieLens-1M. It does what it was built to do,
+zero training events postdate any evaluated event, and the answer weakens the
+paper's generality rather than confirming it.
+
+| | main (per-user, 10 seeds) | globally blocked (seed 42) |
+|---|---|---|
+| users | 6,038 | **526 (8.7%)** |
+| candidate recall | 0.748 | **0.464, below our own 0.60 gate** |
+| v(G) | 0.0522 | 0.0095 |
+| ordering | seq > cf > pop > rec > ct | cf > seq > pop > ct > rec |
+| material flip | cf | **pop and seq** |
+
+Agreement with the main run: Shapley ordering tau = 0.60, LOO ordering
+tau = -0.40.
+
+**What I wrote into the paper.** The qualitative claim survives: a material
+sign disagreement between allocation and ranking-stage removal is still present
+when every trace of cross-user future information is removed. The per-source
+attributions do NOT replicate, and the paper now says so in both the protocol
+section and Limitations. Two reasons stop us reading more into it: the blocked
+corpus fails our own recall gate, so by our stated policy it supports relative
+contrasts only, and at 8.7% coverage it is a different population rather than a
+cleaner measurement of the same one.
+
+This is now the sharpest limitation in the manuscript. A corpus dense enough to
+survive a global cutoff while clearing the recall gate would settle it.
+
+## Restructure: round-7 fixes were reverted, and two declarations were lost
+
+The restructure commits reset the manuscript to its pre-round-7 text. I
+re-applied all 38 edits and found two further regressions the checkers caught:
+
+- **Code availability and Use of AI tools declarations had been deleted.** The
+  AI declaration is a Springer requirement. Both restored.
+- **Seven subsections became subsubsections**, nesting four levels deep, which
+  breaks Discover AI's three-level limit. Promoted back.
+
 ## Review round 7: Minor Revision
 
 All five mandatory items were editorial and needed no new experiments.
