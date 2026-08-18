@@ -5,18 +5,19 @@ Self-contained submission directory for *Discover Artificial Intelligence*.
 | File | Purpose |
 |---|---|
 | `sn-article.tex` | The manuscript |
-| `paper.bib` | Bibliography (24 entries) |
+| `paper.bib` | Bibliography (48 entries) |
 | `sn-jnl.cls` | Official Springer Nature class, December 2024 package |
 | `sn-basic.bst` | Official Springer bibliography style |
 | `figures/` | F1–F7, copied from `artefacts/figures/` |
 
-Nothing here references paths outside this directory, so the folder can be
-zipped and uploaded as-is.
+The LaTeX sources compile from this directory. Numerical verification requires
+the full research repository because the checker and artefact JSON files are
+not bundled in this paper-only workspace.
 
 ## Build
 
 ```bash
-make          # number check, then pdflatex → bibtex → pdflatex ×2
+make          # soft checks when available, then pdflatex → bibtex → pdflatex ×2
 make zip      # flat submission.zip for Snapp / Editorial Manager
 ```
 
@@ -39,9 +40,10 @@ which ones.
 
 ## Before submitting
 
-See `../SUBMISSION_CHECKLIST.md`. The short version: fill in funding and ORCID,
-delete the title-rationale comment block, and confirm the abstract is under
-250 words.
+Do not cite the existing `discover-ai-submission` tag as the exact archive for
+this revision: it predates the current ten-seed tables. Create a new immutable
+tag containing the final manuscript, configuration, tests, score manifests and
+artefact JSON files, then run the strict number checker against that tag.
 
 ## Compiling on Overleaf
 
@@ -64,7 +66,7 @@ Two things to know if the compile misbehaves:
 Checks that run without TeX, and which should pass before you compile:
 
 ```bash
-python scripts/check_paper_numbers.py --strict   # every number traces to an artefact
+python scripts/check_paper_numbers.py --strict   # every number traces to the synchronized artefact archive
 python scripts/check_discover_ai.py              # journal formatting rules
 pytest tests/ -q                                 # 123 pass
 ```

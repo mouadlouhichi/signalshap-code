@@ -11,52 +11,49 @@ Dear Editors,
 We submit *SignalShap: Exact Ranking-Stage Attribution of Sources in Hybrid
 Recommenders* for consideration as a Research article.
 
-**Context.** Production recommender systems combine several architecturally
-distinct scorers — collaborative filtering, content, popularity, recency, and
-sequential signals — and teams routinely decide which to invest in or retire.
-Those decisions rest on leave-one-out ablation, which measures what is lost
-when a component is removed from the complete system. That is the right
-quantity only when components contribute independently, and real hybrids do
-not: implicit-feedback matrix factorisation is strongly popularity-driven, so
-overlapping components can each appear worthless when removed alone.
+**Context.** Production recommender systems combine architecturally distinct
+scorers—collaborative filtering, content, popularity, recency, and sequential
+signals. Leave-one-out ablation measures the effect of removing one source from
+the deployed system, even when sources interact. It is not, however, a complete
+rule for dividing the system's measured value among overlapping components.
+The manuscript distinguishes this removal estimand from Shapley credit
+allocation rather than treating either as universally superior.
 
 **Contribution.** We recast the problem as a five-player cooperative game whose
 payoff is a fixed-candidate NDCG@10 on a coalition-independent candidate set.
 The small player count matters twice over. It makes the Shapley value exactly
 enumerable over all 32 coalitions, avoiding the sampling error that
 feature-level attribution must accept. More importantly, it makes the method
-*checkable*: we inject a controlled duplicate of a real source, which makes the
-pair exchangeable and therefore fixes a constraint the attribution must satisfy
-regardless of the data. SignalShap meets it to numerical precision on all four
-corpora, alongside efficiency to $6.9\times10^{-18}$.
+*checkable*: six analytic games verify the exact aggregation, and a controlled
+duplicate-source experiment on MovieLens creates an exchangeability constraint
+that any symmetric allocation must satisfy. SignalShap meets that constraint
+to numerical precision, alongside efficiency residuals no larger than
+$6.9\times10^{-18}$ across the three reported corpora.
 
 **Why this journal.** The work sits at the intersection of explainable AI and
 applied machine learning, addressing how AI systems assembled from multiple
 components can be audited — a methodological question within the journal's
 scope and of practical interest to practitioners building such systems.
 
-**What we claim, and what we do not.** We are deliberate about scope. The
-duplicate experiment verifies symmetry and efficiency on real fitted games; it
-does not establish that the absolute magnitudes are the uniquely correct
-engineering credit, and we say so in the abstract, the validation section, and
-the threats-to-validity section. We report three findings that went against
-our expectations: the fitted game is non-monotone on three of four corpora, so
-our own Property 2 does not formally apply there; segment-adaptive fusion does
-not separate from a well-tuned global head; and on three corpora the temporal
-players operate on an ordering with no temporal meaning, making their
-attributions uninterpretable rather than merely small. An earlier draft
-described the latter as "lower bounds", which was unjustified and is withdrawn.
-We also show by counterexample that Shapley credit is *not* conserved under
-player replication, correcting a claim we had previously made.
+**What we claim, and what we do not.** The invariant checks verify the
+implementation of the Shapley aggregation; they do not establish a unique
+ground-truth allocation for the real systems. All three fitted games are
+non-monotone, so the manuscript audits rather than assumes the monotonicity
+condition used in its redundancy result. Across ten stochastic training runs
+per corpus, ranking-stage leave-one-out tracks observed end-to-end retirement
+cost more closely than ranking-stage Shapley. We therefore claim Shapley credit
+allocation only under the declared game, not retirement or investment guidance.
+Segment-derived fusion shows no resolvable advantage over a matched global
+head. Two corpora fail the declared candidate-recall gate and are restricted to
+relative contrasts.
 
-**Reproducibility.** Code, frozen configuration, cached score matrices, and
-every JSON backing a reported number are available at
-<https://github.com/mouadlouhichi/signalshap-code>. The repository provides one
-command per table and figure, and a test suite covering the efficiency,
-symmetry, monotonicity, and leakage-freedom invariants. Every number in the
-manuscript was produced at the tagged revision `discover-ai-submission`,
-cited in the paper so that the
-results can be checked against exactly the code that generated them.
+**Reproducibility.** The implementation is public at
+<https://github.com/mouadlouhichi/signalshap-code>. The existing
+`discover-ai-submission` tag predates the revised ten-seed tables and is not
+presented as their exact archive. Before submission, we will create a new
+immutable tag containing the final manuscript, complete configuration, cached
+score matrices, table/figure manifest, tests, and every JSON backing a reported
+number; the strict number checker must pass against that tag.
 
 **Declarations.** The work is original, is not under consideration elsewhere,
 and all authors have approved the submission. We declare no competing
