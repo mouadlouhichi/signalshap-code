@@ -56,6 +56,8 @@ succ prec succeq preceq star ast bullet circ oplus otimes top ell
 substack nonumber textstyle displaystyle Pr not dagger verb
 linewidth textwidth textheight else fi FloatBarrier
 resizebox scalebox rotatebox
+arraybackslash centering raggedright tabcolsep arrayrulewidth extrarowheight
+ddagger ne ge le textbackslash tabularx bottomrule addlinespace
 """.split())
 
 
@@ -139,7 +141,7 @@ def main() -> int:
                 # data row is glued to \midrule after the join, so filtering on
                 # a leading rule silently exempted it. That is how a 10-cell
                 # row in a 9-column spec passed.
-                row = re.sub(r"\\(?:top|mid|bot|c)rule(?:\{[^{}]*\})?", " ", row)
+                row = re.sub(r"\\(?:top|mid|bot|bottom|c)rule(?:\{[^{}]*\})?|\\addlinespace(?:\[[^]]*\])?", " ", row)
                 if not row.strip() or "\\multicolumn" in row:
                     continue
                 got = len(re.findall(r"(?<!\\)&", row)) + 1
