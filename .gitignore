@@ -42,4 +42,7 @@ paper/*.fdb_latexmk
 paper/*.synctex
 paper/*.synctex.gz
 signalshap-code_fix.zip
-signalshap-main2.zip
+# signalshap-main2.zip is deliberately TRACKED: it is a deliverable handed
+# to the user, not a build artefact. Ignoring it meant `make main2` wrote
+# it to disk and the commit silently dropped it, so it never arrived.
+# Regenerate with `make -C paper main2`, which gates on the number checks.
