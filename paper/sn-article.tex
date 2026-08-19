@@ -1457,8 +1457,8 @@ and evaluated users; monotonicity entries are material/raw counts.}
 Corpus & Users / eval. & Items & Density & $N_{\max}$ & Recall & Val.\ & Monot. & Prop.~\ref{prop:loo} \\
  &  &  &  &  & (test) & recall & (mat./raw) &  \\
 \midrule
-MovieLens-1M & 6\,038 / 6\,035 & 3\,533  & $2.697\%$ & 600    & $0.748$ & $0.799$ & $7$ / $23$ & no \\
-Amazon-VG    & 7\,120 / 7\,120 & 3\,516  & $0.469\%$ & 600    & $0.588^{\dagger}$ & $0.648$ & $4$ / $12$ & no \\
+MovieLens-1M & 6\,038 / 6\,035 & 3\,533  & $2.697\%$ & 600    & $0.748$ & $0.799$ & $7$ / $26$ & no \\
+Amazon-VG    & 7\,120 / 7\,120 & 3\,516  & $0.469\%$ & 600    & $0.589^{\dagger}$ & $0.648$ & $4$ / $14$ & no \\
 Gowalla      & 8\,865 / 8\,865 & 82\,134 & $0.075\%$ & 11\,623 & $0.450^{\dagger\ddagger}$ & $0.462$ & $6$ / $13$ & no \\
 \botrule
 \end{tabular}
@@ -1494,9 +1494,13 @@ Table~\ref{tab:preconditions} reports two counts, and the distinction is not
 pedantry. The raw count is every audited pair with
 $v(S \cup \{g\}) < v(S)$; the material count keeps only those with
 $|v(S \cup \{g\}) - v(S)| > 10^{-3}$. Most violations are far below the scale of $v$ itself (the median is $4.5\times10^{-4}$ against $v(\G) \approx 0.05$), so the raw count is sensitive to floating-point ordering and is not a
-reproducible statistic. On two machines, identical code and data produced
-identical code on identical data reported $17$ and $23$ raw violations while
-both reported the same material count. The Property~\ref{prop:loo} argument
+reproducible statistic. Identical code on identical data reported $17$, $23$
+and $26$ raw MovieLens violations on three separate runs differing only in
+platform and candidate rule, while every one of them reported the same
+material count of $7$. Amazon-VG behaves the same way, moving from $12$ raw
+to $14$ with its material count fixed at $4$. That is precisely the intended
+division of labour between the two columns, and it is the reason the material
+count is the one the argument uses. The Property~\ref{prop:loo} argument
 is what we quote as the headline. Thus $10^{-3}$ is a declared reporting
 threshold chosen to exceed the observed cross-platform instability, not a
 statistical significance cutoff or a weakened theorem hypothesis.
@@ -2242,10 +2246,18 @@ Result & Seeds & Candidate rule & Role \\
 \midrule
 Attribution and retirement & 42--51 & source-symmetric & primary \\
 Pairwise interactions & 42--51 & source-symmetric & explanatory \\
-Preconditions and duplicate test & 42 & legacy rule & sensitivity \\
-Sweeps, ablations, and segments & 42 & legacy rule & exploratory \\
+Neutral candidate pools & 42 & all four pool rules & sensitivity \\
+Preconditions and duplicate test & 42--44 & source-symmetric$^{\ast}$ & sensitivity \\
+Sweeps, ablations, and segments & 42--44 & source-symmetric$^{\ast}$ & exploratory \\
 \bottomrule
 \end{tabular}
+\smallskip
+\noindent\footnotesize $^{\ast}$MovieLens-1M and Amazon-VG only. The Gowalla
+diagnostics remain under the legacy rule: regenerating them requires holding
+five dense $8\,865 \times 82\,134$ score matrices, which exhausted memory on
+the $48$\,GB machine used for these runs. Gowalla's primary attribution and
+retirement numbers are unaffected, since those come from the ten-seed
+artefact, which is source-symmetric on all three corpora.
 \end{table}
 
 \paragraph{Per-user rather than globally chronological}
@@ -2262,16 +2274,22 @@ survives, in that a material disagreement between allocation and ranking-stage
 removal is still present, but the particular sources it names do not. The
 blocked corpus also retains only $8.7\%$ of users and fails the paper's own
 $0.60$ recall gate, so it is a different and much smaller population rather
-than a cleaner measurement of the same one. Because the paper's operational
-claim is specifically about retirement, the released pipeline runs the
-end-to-end retirement simulation under the blocked split as well
-(\texttt{run\_global\_timeblock.py -{}-retirement}), so the
-$\tau_{\LOOr}$-versus-$\tau_{\text{Shapley}}$ contrast can be checked on a
-causal split and not only the attribution vectors. The honest position is that
-our per-source numbers describe offline per-user chronological evaluation,
-which is what the recommender literature this work compares against also does,
-and that we have not shown they transfer to a globally causal deployment
-simulation.
+than a cleaner measurement of the same one.
+
+The paper's operational claim is specifically about retirement, though, and
+that claim is separable from the per-source allocation. We therefore ran the
+end-to-end retirement simulation under the blocked split as well. \emph{It
+replicates.} Against the observed removal cost, $\LOOr$ attains
+$\tau = 0.80$ and the Shapley allocation $\tau = 0.60$, an advantage of
+$+0.20$ in the same direction as the main result; $\LOOr$ identifies the
+genuinely cheapest source ($pop$) while the allocation names $rec$ instead and
+is wrong. So the disagreement between allocation and removal, which is this
+paper's central claim, survives a globally causal split even on a population
+where the individual attributions do not. The honest position is therefore
+split: our per-source numbers describe offline per-user chronological
+evaluation, which is what the recommender literature this work compares
+against also does, and we have not shown those transfer; the
+allocation-versus-removal contrast is the narrower finding that does.
 
 \paragraph{Two-step-ahead evaluation from a frozen state}
 The protocol of Section~\ref{sec:algorithm} freezes the source state at the
@@ -2279,7 +2297,8 @@ training fold, so the validation interaction is neither added to the history
 nor masked before test scoring. We measured the cost rather than reasoning
 about it, and it is substantial on the dense corpora: a refreshed
 one-step-ahead protocol raises $v(\G)$ by $36\%$ on MovieLens-1M, $19\%$ on
-Amazon-VG and $3.7\%$ on Gowalla, most of it accruing to $seq$. The absolute
+Amazon-VG and $3.7\%$ on Gowalla at seed $42$ (across ten seeds the MovieLens
+figure is $+31.7\%$ $[+30.2\%,+33.1\%]$), most of it accruing to $seq$. The absolute
 coalition values reported here are therefore specific to the frozen protocol
 and understate what these sources achieve with a current history. The source
 ordering is unchanged on MovieLens and Gowalla but not on Amazon-VG, where the
@@ -2287,13 +2306,21 @@ leading pair exchanges. It would be unsound to conclude from this that the
 frozen values are a lower bound on the refreshed ones: the measured direction
 agrees on all three corpora, but the argument ignores the simultaneous changes
 to the source scores, the candidate set and the baseline. The finding that
-matters is the ordering instability on Amazon-VG. Those figures are seed-42
-single runs, which cannot separate a protocol effect from run-to-run noise;
-the released pipeline therefore also runs the contrast across the same ten
-seeds as the main results (\texttt{run\_protocol\_sensitivity.py -{}-seeds}),
-reporting a paired percentile-bootstrap interval on the change in $v(\G)$ and
-a per-source sign count, so the comparison rests on an interval rather than on
-one draw.
+matters is the ordering instability on Amazon-VG. Those figures were seed-42
+single runs, which cannot separate a protocol effect from run-to-run noise, so
+we repeated the contrast across the same ten seeds as the main results on
+MovieLens-1M. The effect is far larger than the noise: $v(\G)$ rises from
+$0.05225$ to $0.06880$, a paired increase of $+31.7\%$ with a
+percentile-bootstrap interval of $[+30.2\%,+33.1\%]$ and all ten seeds
+positive. The source ordering is nonetheless preserved on every seed
+($\tau = 1.00$, $10/10$, $seq$ leading throughout). Per source, the increase
+is concentrated exactly where the mechanism predicts: $seq$ gains
+$+0.01393$ $[+0.01369,+0.01418]$ and $cf$ $+0.00199$
+$[+0.00155,+0.00247]$, both with all ten seeds agreeing in sign, while $ct$
+and $rec$ move by less than $10^{-4}$ with five seeds either way and no stable
+sign. A refreshed history helps the sequential source and essentially nothing
+else. The magnitude of the protocol effect is therefore established well
+beyond seed noise, and so is the stability of the ordering under it.
 
 \paragraph{Timestamp and metadata comparability}
 All reported corpora carry genuine interaction timestamps: Gowalla spans
@@ -2324,6 +2351,26 @@ with a null game; the \emph{oracle} rule therefore restores the test item
 while leaving the distractors source-blind, and it is the cleanest of the
 three. Only orderings and signs are comparable across pools, since each rule
 yields a different $|C_u|$ and hence a different baseline and recall ceiling.
+
+The attribution is largely, but not entirely, pool-independent. Kendall $\tau$
+against the union pool is $0.80$ for every rule on MovieLens-1M, $0.80$,
+$0.80$ and $0.60$ on Amazon-VG, and $1.00$, $0.80$, $0.80$ on Gowalla. The
+leading source is preserved under all three neutral rules on MovieLens and
+under the popularity rule everywhere; it changes on Amazon-VG under the oracle
+rule ($cf \to seq$) and on Gowalla under both random rules ($cf \to ct$, the
+near-tie already flagged in Section~\ref{sec:results}). Sign agreement holds
+in eight of the nine comparisons. The material disagreement itself is the most
+robust feature: $cf$ on MovieLens and $pop$ on Gowalla remain flipped under
+pools that no source helped build, so the phenomenon is not an artefact of
+letting the players choose the candidates.
+
+One measurement here is an independent confirmation of
+Eq.~\eqref{eq:dilution} rather than a sensitivity result. Under the oracle
+rule every test item is inserted whenever it is eligible, so recall should
+equal $\rho$ exactly. It does: $1.000$ on MovieLens-1M, $0.972$ on Amazon-VG
+and $0.501$ on Gowalla, matching the retrievability ceilings of
+Table~\ref{tab:repeats} to three decimals. A pool that inserts the target by
+construction still cannot retrieve a target the training mask has removed.
 
 \paragraph{Reproducibility of the recency clusters}
 The $rec$ cluster assignment is an $\operatorname{argmax}$ over SVD
@@ -2826,10 +2873,12 @@ test evaluation.
 
 
 \paragraph{Segment heterogeneity is descriptive, not established}
-On MovieLens-1M, $8$ of $30$ segment-pair contrasts are significant at
-$\alpha = 0.05$ uncorrected, against $1.5$ expected by chance. On the two
-sparse corpora the counts are $4$ of $30$ (Gowalla) and $5$ of $30$
-(Amazon-VG). These are above the chance rate but well below MovieLens, and
+On MovieLens-1M, $7$ of $30$ segment-pair contrasts are significant at
+$\alpha = 0.05$ uncorrected, against $1.5$ expected by chance, and Amazon-VG
+gives the same $7$ of $30$. Gowalla gives $4$ of $30$, but that count is still
+under the legacy candidate rule (Table~\ref{tab:provenance}), because
+regenerating this corpus under the symmetric rule exhausted memory at
+$8\,865 \times 82\,134$. All three are above the chance rate, and
 after Holm correction within each corpus none of the three corpora retains a
 significant contrast. We therefore make no confirmatory segment-heterogeneity
 claim. The profiles in Figure~\ref{fig:segments} remain useful for showing the
@@ -2861,18 +2910,22 @@ they are not inputs to the weights.
 \paragraph{Attribution-derived fusion gives no resolvable gain over the matched head}
 On the MovieLens illustration, weights derived from segment-level attributions
 are numerically above uniform fusion
-($+0.0120$, $d_z = 0.098$), a popularity reference ($+0.0450$,
-$d_z = 0.231$), LightGCN~\citep{he2020lightgcn} ($+0.0293$, $d_z = 0.156$), and
-SASRec~\citep{kang2018sasrec} ($+0.0462$, $d_z = 0.243$), at
-$\NDCG = 0.06327$ (Figure~\ref{fig:fusion}). These are descriptive differences,
+($+0.0118$, $d_z = 0.097$), a popularity reference ($+0.0452$,
+$d_z = 0.232$), LightGCN~\citep{he2020lightgcn} ($+0.0295$, $d_z = 0.157$), and
+SASRec~\citep{kang2018sasrec} ($+0.0464$, $d_z = 0.243$), at
+$\NDCG = 0.06348$ (Figure~\ref{fig:fusion}). These are descriptive differences,
 not superiority tests: users share fitted models, the neural references received
 smaller tuning budgets, and every effect size is below $0.25$.
 
-Against a globally tuned head of the same family ($\NDCG = 0.06324$) the
-difference is $+0.00003$ ($d_z = 0.001$, Holm-corrected $p = 0.77$),
-which is practically negligible. The estimate is not stable in sign under the
-plausible per-user normalisation in Eq.~\eqref{eq:head}, while its magnitude
-remains within noise. \textbf{We therefore make no claim
+Against a globally tuned head of the same family ($\NDCG = 0.06357$) the
+attribution-derived head is $0.00009$ \emph{lower} ($d_z = -0.007$,
+Holm-corrected $p = 0.23$), which is practically negligible and, in this run,
+negative. Under the legacy candidate rule the same comparison came out at
+$+0.00003$: the difference is not stable in sign across the candidate
+construction, and it is not stable under the plausible per-user normalisation
+in Eq.~\eqref{eq:head} either, while its magnitude stays within noise
+throughout. A quantity whose sign depends on the truncation key is not
+evidence of an advantage in either direction. \textbf{We therefore make no claim
 of any advantage over a well-tuned global head}, and note that the comparisons
 against LightGCN and SASRec are conditional on tuning budgets that were not
 matched to our own pipeline.

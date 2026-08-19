@@ -11,26 +11,28 @@ Seven closed; the rest need runs on your machine.
 | 1 | Artifact does not reproduce | **Substantially closed.** `make_manifest.py` writes SHA-256 for all 52 artefacts plus commit, environment and BLAS backend. The "does not reproduce" sentence is replaced by a precise statement of what does and does not transfer |
 | 2 | Repeat-item diagnostics | **DONE, and it changed a claim.** New Table `tab:repeats`. ML-1M is exactly clean (0/0/0%). Amazon 6.04% / 2.78% / 5.27%. **Gowalla 14.21% / 49.90% / 52.61%.** Half of Gowalla's evaluated users have a test venue already in training, so `mask_seen` makes it unretrievable and v_u(S)=0 for all 32 coalitions. Those users dilute the whole game by an exact constant: v(S) = rho * v_live(S), rho=0.501, verified to 1.4e-17 over all coalitions and confirmed by 6 new tests |
 
-Still open, needing your machine. Everything is now implemented and tested;
-these are runs, not code. Either entry point does all of them, resumably:
+## Round 8 runs completed on the M4 (commit 4936244)
 
-```
-jupyter lab notebooks/SignalShap_Round8_Runs.ipynb   # stage by stage, with readouts
-bash scripts/run_round8_remaining.sh 24              # same sequence, one command
-```
+| # | Item | Result |
+|---|---|---|
+| 3 | Blocked retirement | **REPLICATES.** tau_LOO 0.80 vs tau_Shapley 0.60 (advantage +0.20, same direction as the main result). LOO names the truly cheapest source (`pop`); Shapley names `rec` and is wrong. The allocation-versus-removal claim survives a globally causal split even though the per-source attributions do not |
+| 7 | Ten-seed refreshed history | v(G) +31.7% [+30.2%,+33.1%], 10/10 seeds positive, so the protocol effect far exceeds seed noise. Ordering preserved on every seed (tau=1.00, 10/10). Gains concentrate in `seq` (+0.01393) and `cf` (+0.00199), both sign-stable; `ct` and `rec` move <1e-4 with no stable sign |
+| 10 | Neutral candidate pools | All three corpora. tau vs union 0.80 almost everywhere (1.00 for Gowalla popularity). Both material flips (`cf` on ML-1M, `pop` on Gowalla) survive pools no source helped build. Top source changes only on Amazon oracle (cf->seq) and Gowalla random (cf->ct, the known near-tie). **Oracle recall came out at exactly rho: 1.000 / 0.972 / 0.501, an independent confirmation of Eq. (14)** |
+| 6 | Legacy diagnostics | ML-1M and Amazon regenerated under the symmetric rule. **Gowalla OOM-killed after 116 min** (five dense 8,865 x 82,134 matrices at 24 GB); its diagnostics stay legacy and Table `tab:provenance` now says so |
 
-**Do not use `SignalShap_M4_FullStudy.ipynb` for these.** It runs `yelp2018`,
-`gowalla` and `amazon_book_lgcn`, the untimestamped LightGCN splits, not the
-three corpora this paper reports. It would produce artefacts for the wrong
-datasets.
+### What the regeneration changed in the paper
 
-| # | Item | What was built | Command if run alone |
-|---|---|---|---|
-| 3 | Blocked retirement | `run_global_timeblock.py --retirement` now drives the same end-to-end `retirement_simulation` under the global cutoff, via a duck-typed experiment whose attribute list is asserted against the estimands source so it cannot go stale | `python scripts/run_global_timeblock.py --corpora ml_1m --budget-gb 24 --retirement` |
-| 7 | Ten-seed refreshed history | `block_temporal_seeds` with paired percentile-bootstrap intervals, per-source sign counts and every per-seed record retained | `python scripts/run_protocol_sensitivity.py --corpora ml_1m --budget-gb 24 --seeds 42 43 44 45 46 47 48 49 50 51` |
-| 6 | Regenerate legacy-rule diagnostics | no code change needed; the pipeline already stamps `candidate_rule` and `build_dataset_stats` merges. Verified end to end on the synthetic fixture | `python scripts/run_study.py --datasets <one> --budget-gb 24` |
-| 10 | Neutral candidate-pool sensitivity | **new** `run_pool_sensitivity.py`: popularity, random and random-oracle pools, none of which reads a source score. Six tests, including one that permutes the score magnitudes and asserts the neutral pools do not move while the union pool does | `python scripts/run_pool_sensitivity.py --corpora ml_1m --budget-gb 24` |
-| 11 | Deterministic SVD sign for `rec` | **closed, and it was a false alarm.** `canonical_svd_sign` added and `rec` is now provably seed-invariant, but sklearn's `TruncatedSVD` already applies the identical `svd_flip` convention, so nothing changes numerically and no cached run is invalidated. The real residual hazard is a tied singular subspace, which no sign convention can fix; a test exhibits it and the paper now states that instead |
+- **Fusion difference flipped sign**: the attribution-derived head is now 0.00009 *below* the global head (was +0.00003), Holm p=0.23. Appendix A's negative result is *strengthened*, and the sign instability across candidate rules is now stated explicitly
+- Table 1 raw monotonicity: ML-1M 23 -> 26, Amazon 12 -> 14. **Material counts unchanged (7/4/6)**, which is exactly the reproducibility argument the paper already makes; the prose now cites three runs instead of two
+- Amazon test recall 0.588 -> 0.589
+- Segment heterogeneity: ML-1M 8/30 -> 7/30, Amazon 5/30 -> 7/30. Gowalla's 4/30 flagged as legacy
+
+Nothing above weakens a claim. The one sign flip makes a negative result more negative.
+
+### Still open
+
+- Gowalla legacy diagnostics need a machine with more headroom, or a chunked scorer. Not blocking: Gowalla's primary attribution and retirement numbers come from the ten-seed artefact, which is already symmetric on all three corpora
+- No immutable DOI (Zenodo declined)
 
 ## Compiled PDF audited (signalshap-code_fix.zip)
 

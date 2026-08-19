@@ -57,8 +57,19 @@ def test_notebook_matches_its_generator():
     mod = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(mod)
 
-    expected = json.dumps(mod.build(), indent=1) + "\n"
-    assert NB.read_text() == expected, (
+    # Compare SOURCE only. A committed run legitimately carries outputs and
+    # execution counts, and those must not be mistaken for drift; the thing
+    # that must never diverge silently is the code being executed.
+    def sources(nbdict):
+        # Jupyter appends a trailing empty cell when a notebook is saved from
+        # the UI. That is not drift, so empty cells are dropped before the
+        # comparison.
+        return [("".join(c["source"]), c["cell_type"]) for c in nbdict["cells"]
+                if "".join(c["source"]).strip()]
+
+    expected = sources(mod.build())
+    actual = sources(json.loads(NB.read_text()))
+    assert actual == expected, (
         "notebooks/SignalShap_Round8_Runs.ipynb differs from what "
         "scripts/make_round8_notebook.py produces. Edit the generator, then "
         "run `python scripts/make_round8_notebook.py`.")
