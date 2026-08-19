@@ -1,3 +1,35 @@
+## Compiled PDF audited (signalshap-code_fix.zip)
+
+Unzipped and read the real compile output, not just the source.
+
+**The compile is clean.** 52 pages, **zero errors**, **zero overfull boxes**,
+zero undefined references, zero BibTeX warnings, no duplicate labels, no `[?]`
+citations. The clipped Table 2 the new review flagged is already fixed by your
+`\tabcolsep` and `\small` edits.
+
+**Float placement confirmed in the PDF itself:** Fig 1 p4, Fig 2 p26, Fig 3
+p31, Fig 4 p33, Fig 5 p36, Fig 6 p46, Fig 7 p47; tables spread p9 to p41.
+Nothing stranded at the end. `placeins` holds.
+
+**The zip predates HEAD**, so two things it still contains are already fixed
+here: a 293-word abstract (43 over the limit) and three em dashes.
+
+**Findings from the new review in `paper-reviews/`, verified individually:**
+
+| # | Finding | Verdict |
+|---|---|---|
+| 6 | Table 6 labels `rec` a sign flip when both means are positive | **Was real; you already fixed it.** I re-verified all four dagger markers against the artefact: all correct |
+| 11 | Table 2 clipped, ~302pt overfull | **Fixed** in your commit; log shows 0 overfull |
+| 12 | `and others` author, README entry count | **Fixed** in your commit |
+| 12 | Brand capitalisation in bibliography | **Partly open, now fixed.** LightGCN/RankSHAP/ShaRP/KernelSHAP-IQ were already protected; `shapley` still rendered lowercase in 5 entries. Brace-protected 9 title occurrences |
+| 10 | Cover letter describes a four-corpus study | **Fixed** in your commit |
+
+Also adopted your improved `hou2026bridging` entry: the published ACL version
+with full metadata, replacing my arXiv preprint.
+
+Findings 1-5 and 7-9 are definitional and statistical scoping points that need
+judgement rather than a mechanical fix; they are listed below as open.
+
 ## THE COMPILE RAN (commit a38b393)
 
 Ten rounds of asking, and the `.synctex` in your commit is the proof. Extracted

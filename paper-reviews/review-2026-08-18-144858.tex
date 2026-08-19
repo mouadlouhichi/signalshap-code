@@ -1,0 +1,150 @@
+\documentclass[11pt]{article}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{lmodern}
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath,amssymb}
+\usepackage{booktabs}
+\usepackage{microtype}
+\usepackage[hidelinks]{hyperref}
+
+\newcommand{\loc}[1]{\par\noindent\textbf{Location:} #1\par}
+\newcommand{\problem}[1]{\noindent\textbf{Problem:} #1\par}
+\newcommand{\impact}[1]{\noindent\textbf{Why it matters:} #1\par}
+\newcommand{\fix}[1]{\noindent\textbf{Suggested fix:} #1\par}
+
+\title{Technical Review of ``SignalShap: Exact Ranking-Stage Attribution of Sources in Hybrid Recommenders''}
+\author{}
+\date{18 August 2026}
+
+\begin{document}
+\maketitle
+
+\section*{Overall assessment}
+
+The manuscript is unusually explicit about corrections, negative results, and the distinction between allocation and removal.  The central empirical message---ranking-stage Shapley and leave-one-out answer different questions, while ranking-stage leave-one-out is a better proxy for the reported retirement intervention---is supported by the tables as currently presented.  The Shapley weights for $n=5$, the ridge normal equations, the stated three-player counterexample, the per-corpus Shapley sums in Table~6, and the raw-versus-centred leave-one-out distinction are internally consistent.
+
+The paper is not yet submission-ready, however.  The formal definition of the empty coalition conflicts with the implemented definition; candidate construction and score ties are not specified sufficiently to reproduce the claimed deterministic game; the frozen-state masking argument omits a repeated-item case; and several statistical and decision-level statements are stronger than the design licenses.  There are also definite table/caption errors, stale submission materials, and a configuration table that is visibly clipped in the compiled PDF.  These issues are repairable and do not, by themselves, overturn the main allocation-versus-removal conclusion.
+
+The audit explicitly checked symbol definitions, sign conventions, dimensions, coalition weights, candidate and ranking branches, appendix formulas, quantitative table consistency, claims across the abstract/results/conclusion, citations and references, and the compiled manuscript.  No inverse-trigonometric expressions occur, so no inverse-trig branch defect was found.
+
+\section*{Major technical findings}
+
+\subsection*{1. The empty-coalition game is defined in three incompatible ways}
+
+\loc{Section~3.1, Equations~(4)--(5), the paragraph after Equation~(5), and Algorithm~1.}
+\problem{\textbf{Definite error.} Equation~(4) defines $v_u(S)$ through the deterministic ranking $\pi_u(S)$ for an apparently unrestricted coalition $S$.  With $S=\varnothing$, the declared score is all zero and the stated tie rule ranks by item index, so this expression is generally not equal to zero.  The following prose instead says that $v_u(\varnothing)$ is defined using the expected random payoff, while Algorithm~1 directly assigns $v_u(\varnothing)=0$.  These are different games.}
+\impact{The empty-set marginal has Shapley weight $1/n=1/5$ for every player.  The manuscript itself correctly notes that changing the empty-set baseline shifts every $\varphi_g$, so this is a load-bearing formal inconsistency rather than a cosmetic omission.}
+\fix{Define the game piecewise.  For example, set $U_u(\varnothing):=b_u$ and $v_u(\varnothing):=0$ by convention, and define $U_u(S):=\mathrm{NDCG@10}(\pi_u(S);y_u)$ and $v_u(S):=U_u(S)-b_u$ only for $S\ne\varnothing$.  State the same convention in the refitted, fixed-head, and end-to-end games.  Do not describe $\pi_u(\varnothing)$ as both a deterministic item-index ordering and a uniformly random ordering.}
+
+\subsection*{2. The candidate-set algorithm is not fully deterministic or fully specified}
+
+\loc{Equation~(3), ``Coalition-independent candidates,'' Algorithm~1 line~4, Table~2, and the definition of $C_u(S)$ in Section~4.5.}
+\problem{\textbf{Implementation ambiguity.} The source-specific lists $\operatorname{top-}N_g^{(g)}(u)$ have no tie rule, although $pop$ and $rec$ can produce many equal scores.  Thus list membership and $\operatorname{rank}_g(i)$ can depend on the sorting implementation before the source-symmetric reciprocal-rank key is applied.  In addition, the prose says that $N$ is grown until the union reaches the cap, Algorithm~1 shows a single fixed-$N$ construction, and Table~2 imposes ten growth iterations.  The end-to-end construction does not state whether the increment divides by $n=5$ or by $|S|$, nor what happens when the cap remains unattainable.}
+\impact{These choices change $C_u$, candidate recall, $b_u$, every coalition payoff, and therefore every attribution.  Source-order invariance of the truncation key does not guarantee reproducibility if the input top lists are themselves under-specified.}
+\fix{Give executable pseudocode for the complete construction.  Define each source list with a total order such as $(-s_g(u,i),\text{item index})$; state the initial depth, update rule, denominator, maximum iterations, stopping condition, and fallback when fewer than $N_{\max}$ eligible distinct items exist.  Specify the corresponding rule for every subset $S$ in the end-to-end game.}
+
+\subsection*{3. The ranking tie convention differs between the mathematical game and the algorithm}
+
+\loc{Section~3.1 after Equation~(3), Algorithm~1 line~18, and Table~2.}
+\problem{\textbf{Implementation ambiguity.} The characteristic function declares exact descending score followed by ascending item index.  Algorithm~1 instead uses $\operatorname{rank}_{\epsilon}$ with $\epsilon=10^{-12}$, and Table~2 calls this an absolute tolerance.  The paper never defines how approximate equality creates a total order.  A pairwise rule $|s_i-s_j|\le\epsilon$ is not transitive in general.}
+\impact{NDCG is discontinuous at rank changes, and the paper reports platform-dependent near-ties.  An unspecified tolerance can therefore change coalition payoffs and conflicts with the claim that the declared game is exactly reproduced.}
+\fix{Use one convention everywhere and define it as a total order.  For example, quantise scores to a declared grid before sorting and then break equal bins by item index, or remove the tolerance and use exact score ordering plus item index.  Apply the same rule to refitted-head, fixed-head, end-to-end, retirement, and metric-sensitivity calculations.}
+
+\subsection*{4. The frozen-state masking argument omits repeated held-out items}
+
+\loc{Section~3.2, ``The temporal state is frozen at the training fold, deliberately.''}
+\problem{\textbf{Likely issue.} The statement that masking $i_u^{\mathrm{val}}$ ``could only preserve or improve the test item's rank'' requires $i_u^{\mathrm{val}}\ne i_u^{\mathrm{test}}$.  If the last two events concern the same item, masking the validation item removes the relevant test item and forces its payoff to zero.  More generally, if the test item appeared earlier in training, masking previously seen items makes it unretrievable.  The manuscript does not state that user--item events are deduplicated before the temporal split, and repeat visits are particularly plausible for check-in data.}
+\impact{The omitted case affects candidate recall, the claimed direction of the masking effect, and the comparison between frozen two-step-ahead and refreshed one-step-ahead protocols.  It may also create protocol-induced zero-payoff users rather than retrieval failures.}
+\fix{Report, per corpus, the fractions with $i_u^{\mathrm{val}}=i_u^{\mathrm{test}}$ and with $i_u^{\mathrm{test}}\in\mathcal H_u$.  Then either split unique user--item pairs, allow repeat-item recommendation consistently, or retain event-level repeats while explicitly defining the masking and relevance policy.  Qualify the monotonic masking statement to the distinct-item case.}
+
+\subsection*{5. $v(\mathcal G)$ changes meaning from excess utility to raw ``current quality''}
+
+\loc{Equations~(4)--(5), Table~9, the surrounding discussion, and the conclusion.}
+\problem{\textbf{Definite notation/terminology drift.} The first formal definition attaches the descriptor ``baseline-centred game value'' to $v(S)$: $v(\mathcal G)=U(\mathcal G)-b$.  Later, Shapley is said to ``divide credit for current quality'' or allocate the system's ``measured ranking quality.''  It actually allocates performance above the expected-random baseline, not raw NDCG.}
+\impact{The baseline is deliberately nonzero and is important enough to shift every attribution.  Describing $\sum_g\varphi_g=v(\mathcal G)$ as allocation of raw current quality misstates the estimand and weakens the otherwise careful distinction between $U$ and $v$.}
+\fix{Use ``credit for NDCG@10 above the declared expected-random baseline'' throughout.  In Table~9 replace ``Shapley only'' with ``Shapley under the declared game and axioms.''  If allocation of raw $U(\mathcal G)$ is intended, define that game separately or explain how baseline credit is represented.}
+
+\subsection*{6. Table~6 contains a false sign-flip label and an undisplayed stability statistic}
+
+\loc{Table~6 caption and the MovieLens-1M $rec$ row.}
+\problem{\textbf{Definite error.} The row reports $\mathrm{LOO}_{\mathrm{rank}}(rec)=+0.00010$ and $\varphi_{rec}=+0.00032$ but labels the result ``flip, negligible.''  These displayed means have the same sign.  The caption also says that $\mathrm{LOO}_{\mathrm{rank}}(rec)$ has the relevant sign on $5/10$ seeds, while the only displayed stability entry in that row is $10/10$.  Consequently the meaning of ``Sign stab.'' and the statement ``Thirteen of fifteen cells are $10/10$'' cannot be reconstructed from the table.}
+\impact{Sign disagreement is one of the paper's headline outcomes.  A mislabeled row and an unstated denominator/statistic undermine confidence in the materiality classification even though the two material flips themselves appear arithmetically consistent.}
+\fix{Remove the MovieLens $rec$ flip label unless the underlying intended values differ.  Split stability into explicit columns for Shapley sign, LOO sign, and per-seed sign disagreement, or define exactly which one is shown.  Regenerate the caption from the same source as the table.}
+
+\subsection*{7. The regularisation-robustness claim is not labelled as a single-seed result}
+
+\loc{Abstract, Contribution C4, Section~4.3 ``The disagreement is not a regularisation artefact,'' and the reporting-protocol paragraph in Section~3.4.}
+\problem{\textbf{Unsupported scope.} The protocol says robustness sweeps are seed-42 diagnostics, but the $\lambda\in[10^{-5},10^3]$ paragraph is not labelled seed~42 and the abstract states that the material sign disagreement holds ``at every regularisation strength tested.''  In context this can be read as a ten-seed robustness result, whereas the manuscript's own protocol implies one seed.}
+\impact{The paper carefully distinguishes inferential ten-seed results from illustrative single runs elsewhere.  Omitting that qualifier in a headline robustness claim overstates the evidence.}
+\fix{Label the sweep ``MovieLens/Gowalla, seed~42'' at first mention, in the figure caption, and in the abstract, or repeat the sweep across seeds and report a seed-level stability summary.}
+
+\subsection*{8. Seed intervals do not identify corpus- or population-level uncertainty}
+
+\loc{Figure~2, Tables~5--6 and~8, and the statistical-conclusion-validity discussion.}
+\problem{\textbf{Likely statistical issue.} The $\bar{x}\pm t_9\mathrm{SE}$ intervals use ten random states on fixed corpora and fixed temporal splits.  They quantify sensitivity to stochastic fitting, not sampling uncertainty over users, interactions, corpora, or deployment populations.  Calling them generic ``95\% confidence intervals'' and using them to support corpus-level inferential language leaves the estimand of the interval undefined.  Wilson intervals over ten selected seeds similarly require an explicit interpretation of seeds as independent draws from a training-randomness distribution.}
+\impact{Very narrow intervals can coexist with large dataset or protocol uncertainty, as the manuscript's own Gowalla resampling and global-time-block results demonstrate.  Readers may otherwise interpret run-to-run stability as generalisation evidence.}
+\fix{Rename these ``95\% run-to-run intervals over random seeds'' and state their target explicitly.  Reserve population confidence claims for a design that resamples users/data/splits or includes multiple independently sampled corpora.  Keep protocol-sensitivity results adjacent to the headline intervals so the larger uncertainty source is visible.}
+
+\subsection*{9. The appendix bootstrap treats a crossed design as nested}
+
+\loc{Appendix~A and ``Statistical conclusion validity.''}
+\problem{\textbf{Likely statistical issue.} The same users occur under every seed, but the stated two-level bootstrap resamples seeds and then users independently within each seed.  Users and seeds are crossed factors, not users nested within seed.}
+\impact{Independent within-seed user resampling discards the repeated-user pairing across fitted models and can misstate uncertainty for the fusion-versus-global contrast.}
+\fix{Use a crossed or multiway bootstrap, or resample a common set of user indices across all sampled seeds while preserving within-user method differences.  Document the exact TOST standard error and degrees-of-freedom calculation.}
+
+\section*{Meaningful editorial and submission-package findings}
+
+\subsection*{10. The cover letter describes an obsolete study}
+
+\loc{\texttt{paper/cover-letter.md}, especially ``Context,'' ``Contribution,'' and ``What we claim, and what we do not.''}
+\problem{\textbf{Definite inconsistency.} The cover letter says ablation is appropriate only when components are independent, whereas the manuscript says dependence does not invalidate the removal estimand.  It refers repeatedly to four corpora, says the duplicate constraint was met on all four, and says temporal players are uninterpretable on three corpora because file order lacks temporal meaning.  The manuscript now contains three timestamped corpora, and the duplicate table reports MovieLens-1M only.}
+\impact{Editors will receive mutually incompatible accounts of the paper's data, validation evidence, and main conceptual distinction.}
+\fix{Rewrite the cover letter from the current abstract and conclusion.  State three corpora, one-corpus duplicate injection unless additional results are actually reported, and the current distinction: LOO is a removal estimand even under dependence, while Shapley is an allocation rule.}
+
+\subsection*{11. The compiled manuscript has a severely clipped configuration table}
+
+\loc{Compiled PDF page~25, Table~2; compile log at lines corresponding to manuscript lines 1521--1570.}
+\problem{\textbf{Definite production defect.} The compile reports an overfull box of approximately $302$\,pt, and the right side of Table~2 is visibly cut off beyond the page.  Other tables generate overfull boxes of approximately $19$, $39$, and $84$\,pt.  The log also reports duplicate PDF destinations for table and figure counters, so some hyperlinks may target the wrong float.}
+\impact{Configuration details needed for reproducibility are literally missing from the rendered page.  Broken float destinations reduce navigability and can fail submission checks.}
+\fix{Use wrapping columns (for example, \texttt{tabularx} or explicit \texttt{p\{\}} widths), split Table~2, or place it in landscape.  Recompile and require zero materially overfull table boxes.  Investigate the class/counter interaction causing duplicate destinations and verify every table/figure hyperlink.}
+
+\subsection*{12. Reference metadata and protected capitalization need repair}
+
+\loc{\texttt{paper/paper.bib} and rendered references on PDF pages~47--50.}
+\problem{\textbf{Definite bibliography defects.} The \texttt{pliatsika2025sharp} author field ends with \texttt{and others}, leaving the final author list incomplete.  Branded and proper-name capitalization is lost in the rendered bibliography (for example, ``Lightgcn,'' ``Rankshap,'' ``Rankingshap,'' ``Kernelshap-iq,'' and lowercase ``shapley'').  The README says the bibliography has 24 entries, while the file contains 42 cited entries.}
+\impact{Incomplete authorship and altered method names are avoidable citation-quality defects.  The stale README is a package-integrity warning.}
+\fix{Insert complete author metadata; protect names with braces such as \texttt{\{LightGCN\}}, \texttt{\{RankSHAP\}}, \texttt{\{RankingSHAP\}}, \texttt{\{KernelSHAP-IQ\}}, and \texttt{\{Shapley\}} where the style otherwise lowercases them; update the README count automatically.}
+
+\section*{Proofing sweep}
+
+The bundled mechanical scan was run on both the source and the compiled PDF.  Its double-period PDF hit is the mathematical ellipsis in $\{1,\ldots,N_g\}$, and its semicolon-capitalisation hits are legitimate clause boundaries or proper names; no actionable duplicated punctuation, product-name, malformed ``into'' frame, or $\arctan(x/y)$ expression was found.  The following manual hits are high-confidence:
+
+\begin{itemize}
+\item \textbf{Section~3.1, candidate paragraph:} ``through the scorers rather than through the construction. the bound'' should begin ``The bound.''  The preceding two sentences also repeat that the key is invariant to permuting $\mathcal G$; delete one.
+\item \textbf{Section~3.1, characteristic function:} ``and Let $y_{u,i}$'' should be ``and let $y_{u,i}$'' or should start a new sentence.
+\item \textbf{Section~4.4, first limitations paragraph:} ``and an they do not belong alongside the theorems'' is malformed.  Suggested rewrite: ``They do not belong alongside the theorems, because neither claim is proved.''
+\item \textbf{Table~6, $seq$ gap:} $0.02993-0.01745=0.01248$ from the displayed rounded entries, while the table prints $0.01249$.  This may be correct from unrounded values, but the caption should state that gaps are computed before rounding.
+\item \textbf{Discussion:} the example ``$+0.0155$'' versus ``$-0.0052$'' matches neither the ten-seed Table~6 values nor the seed-42 Table~7 values.  Replace it with one labelled aggregation level and reuse the table-generated values.
+\end{itemize}
+
+\section*{Items requiring external verification}
+
+\begin{itemize}
+\item The literature-review sentence claiming that RankSHAP, RankingSHAP, ShaRP, and triplet-importance methods all use features or training data as players and approximate by sampling should be checked against the primary papers.  This is a broad differentiating claim involving recent work and should not rest on citation titles alone.
+\item The \texttt{hou2024bridging} entry describes an EMNLP proceedings paper but uses an arXiv DOI.  Verify the final proceedings identifier and pagination against the official record.
+\item Claims that every reported number maps to a released artefact, that the tagged release ``discover-ai-submission'' reproduces the tables, and that the repository test suite covers the named invariants cannot be verified from the supplied paper directory, which does not include those scripts or artefacts.  Audit the release before submission.
+\end{itemize}
+
+\section*{Highest-priority fixes}
+
+\begin{enumerate}
+\item Make the empty-coalition definition piecewise and identical in equations, prose, and code.
+\item Fully specify source-list ties, candidate-depth growth, subset-specific retrieval, and the fused-score total order.
+\item Resolve repeat-item handling and correct the frozen-state masking claim.
+\item Correct Table~6, label the $\lambda$ sweep's seed scope, and distinguish run-to-run seed intervals from population uncertainty.
+\item Replace ``current quality'' with the exact baseline-centred estimand and weaken ``Shapley only'' to a conditional allocation claim.
+\item Repair the clipped tables, stale cover letter, bibliography metadata, and confirmed sentence-level defects; then rebuild and inspect the final PDF.
+\end{enumerate}
+
+\end{document}
