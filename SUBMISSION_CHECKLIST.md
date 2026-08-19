@@ -12,11 +12,17 @@ Seven closed; the rest need runs on your machine.
 | 2 | Repeat-item diagnostics | **DONE, and it changed a claim.** New Table `tab:repeats`. ML-1M is exactly clean (0/0/0%). Amazon 6.04% / 2.78% / 5.27%. **Gowalla 14.21% / 49.90% / 52.61%.** Half of Gowalla's evaluated users have a test venue already in training, so `mask_seen` makes it unretrievable and v_u(S)=0 for all 32 coalitions. Those users dilute the whole game by an exact constant: v(S) = rho * v_live(S), rho=0.501, verified to 1.4e-17 over all coalitions and confirmed by 6 new tests |
 
 Still open, needing your machine. Everything is now implemented and tested;
-these are runs, not code. One command does all of them, resumably:
+these are runs, not code. Either entry point does all of them, resumably:
 
 ```
-bash scripts/run_round8_remaining.sh 24
+jupyter lab notebooks/SignalShap_Round8_Runs.ipynb   # stage by stage, with readouts
+bash scripts/run_round8_remaining.sh 24              # same sequence, one command
 ```
+
+**Do not use `SignalShap_M4_FullStudy.ipynb` for these.** It runs `yelp2018`,
+`gowalla` and `amazon_book_lgcn`, the untimestamped LightGCN splits, not the
+three corpora this paper reports. It would produce artefacts for the wrong
+datasets.
 
 | # | Item | What was built | Command if run alone |
 |---|---|---|---|

@@ -2,8 +2,48 @@
 
 | Notebook | Purpose |
 |---|---|
-| `SignalShap_M4_FullStudy.ipynb` | **Full study on Apple Silicon (M4, 48 GB).** Four real corpora, memory-auto-sized, complete suite + paper assets. Start here. |
+| `SignalShap_Round8_Runs.ipynb` | **The current one. Start here.** Every remaining review-round-8 run, in cost order, resumable. Uses the three corpora the paper actually reports. |
+| `SignalShap_M4_FullStudy.ipynb` | Earlier full-study notebook on Apple Silicon. See the warning below before running it. |
 | `SignalShap_Reproduction.ipynb` | Original walkthrough, small scale, works anywhere (falls back to synthetic without raw data). |
+
+## Which notebook produces the paper's numbers
+
+`SignalShap_Round8_Runs.ipynb`, and only that one.
+
+`SignalShap_M4_FullStudy.ipynb` runs `yelp2018`, `gowalla` and
+`amazon_book_lgcn`: the untimestamped LightGCN benchmark splits. Those are
+**not** the corpora this paper reports, which are `ml_1m`,
+`amazon_video_games` and `gowalla_ts`. Three of the five players (`rec`,
+`seq`, and the decay term of `pop`) need real interaction timestamps, and the
+LightGCN splits discard them. Running the M4 notebook will happily produce
+artefacts; they will describe different datasets. It is retained because its
+memory-sizing walkthrough is still useful, not because it reproduces the
+manuscript.
+
+## Running the round-8 notebook
+
+```bash
+cd ~/signalshap-code
+bash scripts/fetch_benchmarks.sh      # ml-1m, from GroupLens
+bash scripts/fetch_timestamped.sh     # gowalla_ts, amazon_video_games
+jupyter lab notebooks/SignalShap_Round8_Runs.ipynb
+```
+
+Leave `BUDGET_GB` at 24. The reported corpus shapes were produced at that
+budget, and `check_paper_shape` refuses to overwrite the paper's artefacts if
+a different budget yields a different shape, because a different budget
+silently means a different Gowalla.
+
+Prefer a shell? The identical sequence is:
+
+```bash
+bash scripts/run_round8_remaining.sh 24
+```
+
+The notebook is **generated** by `scripts/make_round8_notebook.py`, and
+`tests/test_round8_notebook.py` asserts the committed file matches. If you
+edit it in Jupyter, port the change into the generator and re-run it, or CI
+will fail.
 
 ## Running the M4 notebook
 
