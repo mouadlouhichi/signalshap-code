@@ -61,9 +61,19 @@ ddagger ne ge le textbackslash tabularx bottomrule addlinespace
 """.split())
 
 
-def main() -> int:
-    tex = TEX.read_text()
-    cls = CLS.read_text(encoding="latin-1")
+def main(tex_path: Path | None = None,
+         cls_path: Path | None = None) -> int:
+    """Check one manuscript. Defaults to the Springer source.
+
+    Parameterised so the Elsevier conversion in paper-kbs/ gets the same
+    static checks. Its class file is not redistributed, so when cls_path is
+    absent the macro-definition scan falls back to the Springer class plus
+    the CAS macros the template defines; that is a superset check and only
+    risks a false "possibly undefined", never a missed one.
+    """
+    tex = (tex_path or TEX).read_text()
+    cls_path = cls_path or CLS
+    cls = cls_path.read_text(encoding="latin-1") if cls_path.exists() else ""
     body = tex[tex.index(r"\begin{document}"):]
     body_nc = re.sub(r"(?<!\\)%.*", "", body)
     all_nc = re.sub(r"(?<!\\)%.*", "", tex)
@@ -75,6 +85,18 @@ def main() -> int:
         r"\\(?:newcommand|renewcommand|providecommand|DeclareRobustCommand"
         r"|DeclareOldFontCommand)\*?\{?\\([a-zA-Z@]+)", cls))
     defined |= set(re.findall(r"\\newenvironment\{(\w+)\}", cls))
+    # Elsevier cas-dc.cls front matter, which we do not redistribute.
+    defined |= {
+        "shorttitle", "shortauthors", "cormark", "cortext", "ead", "credit",
+        "affiliation", "tnotemark", "tnotetext", "fnmark", "fntext",
+        "nonumnote", "printcredits", "WriteBookmarks", "floatpagepagefraction",
+        "textpagefraction", "highlights", "sep", "bibliographystyle",
+        "bibliography", "url", "href", "hypersetup", "graphicspath",
+        "theoremstyle", "newtheorem", "usetikzlibrary", "tikzset",
+        "fontsize", "selectfont", "setcounter", "FloatBarrier", "let", "relax",
+        "def", "smallskip", "footnotesize", "small", "tabcolsep", "setlength",
+        "arraybackslash", "textwidth", "linewidth", "textsuperscript",
+    }
     defined |= set(re.findall(
         r"\\(?:newcommand|renewcommand|providecommand|DeclareMathOperator"
         r"|newif\\if)\*?\{?\\?([a-zA-Z@]+)", tex))
@@ -216,4 +238,12 @@ def main() -> int:
 
 
 if __name__ == "__main__":
-    raise SystemExit(main())
+    import argparse
+
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--tex", type=Path, default=None,
+                    help="manuscript to check (default: paper/sn-article.tex)")
+    ap.add_argument("--cls", type=Path, default=None,
+                    help="class file whose macros count as defined")
+    a = ap.parse_args()
+    raise SystemExit(main(a.tex, a.cls))

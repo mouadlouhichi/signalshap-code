@@ -46,3 +46,15 @@ signalshap-code_fix.zip
 # to the user, not a build artefact. Ignoring it meant `make main2` wrote
 # it to disk and the commit silently dropped it, so it never arrived.
 # Regenerate with `make -C paper main2`, which gates on the number checks.
+paper-kbs/*.pdf
+paper-kbs/*.aux
+paper-kbs/*.bbl
+paper-kbs/*.blg
+paper-kbs/*.log
+paper-kbs/*.out
+paper-kbs/*.spl
+paper-kbs/signalshap-kbs.zip
+# Elsevier class files are Elsevier's; fetch with paper-kbs/fetch-template.sh
+paper-kbs/cas-*.cls
+paper-kbs/cas-*.sty
+paper-kbs/*.bst
