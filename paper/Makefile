@@ -7,7 +7,7 @@
 #   make          build the PDF (checks numbers against artefacts first)
 #   make zip      flat submission bundle
 #   make clean    remove build products
-.PHONY: all check verify zip overleaf clean
+.PHONY: all check verify zip overleaf main2 clean
 MAIN = sn-article
 FIGS = $(wildcard figures/*.png)
 
@@ -43,6 +43,15 @@ overleaf:
 	@unzip -l signalshap-overleaf.zip | tail -3
 	@echo "upload signalshap-overleaf.zip to Overleaf; compiler = pdfLaTeX"
 
+# Same bundle as `overleaf`, under the filename used for sharing the sources.
+# Runs the static checks first: shipping a tree whose numbers have drifted from
+# artefacts/ is the failure this whole pipeline exists to prevent.
+main2: check
+	rm -f ../signalshap-main2.zip
+	zip -qr ../signalshap-main2.zip $(MAIN).tex paper.bib sn-jnl.cls \
+	  sn-basic.bst figures/
+	@unzip -l ../signalshap-main2.zip | tail -3
+
 # Everything verifiable without a TeX installation. Kept separate from `check`,
 # which is a soft pre-build gate; this one is strict and runs the test suite.
 verify:
@@ -51,4 +60,4 @@ verify:
 	cd .. && python3 -m pytest tests/ -q
 
 clean:
-	rm -f *.aux *.bbl *.blg *.log *.out *.spl $(MAIN).pdf submission.zip signalshap-overleaf.zip
+	rm -f *.aux *.bbl *.blg *.log *.out *.spl $(MAIN).pdf submission.zip signalshap-overleaf.zip ../signalshap-main2.zip
