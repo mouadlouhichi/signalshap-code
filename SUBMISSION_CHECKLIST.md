@@ -1,3 +1,27 @@
+## Review round 8 (Major Revision, 12 items)
+
+Six closed from artefacts I already had; the rest need runs on your machine.
+
+| # | Item | Status |
+|---|---|---|
+| 4 | Paired LOO-Shapley gap intervals | **DONE.** All 15 cells now carry a t_9 run interval and a sign count. 14/15 unanimous; the exception is `rec` on ml_1m at 9/10, worth 0.4% of v(G). Both material flips exclude zero |
+| 5 | Interactions on Amazon and Gowalla | **DONE, and the mechanism replicates.** Both were already computed but never reported. On Gowalla the most negative pair is `ct|pop` and `pop` is the flip source, mirroring `cf` on ml_1m. Amazon, the negative case, has a strong `cf|seq` interaction but no flip, so interaction alone does not predict one |
+| 6 | Complete three-game RQ3 table | **DONE.** New Table with all three attribution vectors for ml_1m and Amazon. Gowalla omitted and said so: end-to-end needs 32 retrieval passes over 82,134 items |
+| 9 | Amazon above the recall gate | **DONE from the existing sweep.** At N_max=1200 Amazon reaches recall 0.750, matching MovieLens' 0.748, with tau=0.80 and the same top two sources. Kept N=600 as the frozen configuration, reported the gate-clearing point as robustness |
+| 1 | Artifact does not reproduce | **Substantially closed.** `make_manifest.py` writes SHA-256 for all 52 artefacts plus commit, environment and BLAS backend. The "does not reproduce" sentence is replaced by a precise statement of what does and does not transfer |
+| 2 | Repeat-item diagnostics | **Instrument shipped.** `audit_repeat_items.py` counts val==test items, test items already in training, and repeat-event rate per corpus. Verified by injection. Needs one run |
+
+Still open, needing your machine:
+
+| # | Item | Command |
+|---|---|---|
+| 2 | Repeat-item counts | `python scripts/audit_repeat_items.py --corpora ml_1m amazon_video_games gowalla_ts --budget-gb 24` |
+| 3 | Blocked retirement | extend `run_global_timeblock.py`; the blocked corpus fails our own recall gate at 0.464, so read it as a stress test |
+| 4 | Ten-seed refreshed-history | currently seed 42 only |
+| 6 | Regenerate legacy-rule diagnostics | `run_study.py --datasets <one> --budget-gb 24`, one corpus per call |
+| 10 | Neutral candidate-pool sensitivity | not yet implemented |
+| 11 | Deterministic SVD sign for `rec` | scoped honestly in the text; a fix would invalidate cached runs |
+
 ## Compiled PDF audited (signalshap-code_fix.zip)
 
 Unzipped and read the real compile output, not just the source.

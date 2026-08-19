@@ -966,9 +966,14 @@ same item and that item is unseen in training, it may be both the validation
 positive and the test positive. If the test item already appears in training,
 the training-history mask makes it ineligible, so its test target is the zero
 vector and it contributes a candidate miss. These cases remain in $\Ueval$ when
-$C_u$ is nonempty. Their per-corpus frequencies are not available in the
-paper-only artifact, so interpretations sensitive to repeated events remain
-limited until those diagnostics accompany the synchronized release.
+$C_u$ is nonempty. We ship the diagnostic that counts them
+(\texttt{scripts/audit\_repeat\_items.py}), which reports per corpus the users
+whose validation and test events name the same item, the users whose test item
+already appears in training, and the corpus-level repeat-event rate. Reporting
+those counts is the precondition for interpreting the two cases above, and we
+report them with the synchronized release rather than asserting they are
+negligible: on check-in data in particular, repeat visits to the same venue are
+expected, so Gowalla is the corpus where a non-trivial count is most likely.
 
 A refreshed one-step-ahead protocol also changes sequential and recency scores,
 candidate retrieval, and the baseline, so frozen and refreshed games are not
@@ -1441,12 +1446,26 @@ two fail for different reasons that we did not treat alike.
 
 For Amazon-VG, recall is $0.588$ at $N_{\max}=600$. That value is $17.1\%$ of
 its catalogue, the same fraction MovieLens receives; a log fit to the measured
-recall curve puts the $0.60$ crossing at $N_{\max}\approx 634$. Raising
-$600 \to 800$ would clear the gate. We did not, and the reason is
-methodological rather than technical: $N_{\max}$ is frozen in advance, and moving
-it by six percent of a threshold \emph{after} observing that threshold is
-selection on the very quantity the parameter gates. The corpus is retained
-under the ceiling restriction instead.
+recall curve puts the $0.60$ crossing at $N_{\max}\approx 634$. We did not move
+the frozen $N_{\max}$, and the reason is methodological rather than
+technical: it is frozen in advance, and shifting it by six percent of a
+threshold \emph{after} observing that threshold is selection on the very
+quantity the parameter gates.
+
+Changing the headline configuration and adding a declared robustness point are
+different acts, though, and the candidate-cap sweep already contains the
+second. At $N_{\max}=1\,200$ Amazon-VG reaches recall $0.750$, comfortably
+clear of the gate and almost exactly MovieLens-1M's $0.748$, and the
+attribution barely moves: $\varphi$ goes from $(0.01926, 0.00187, 0.00157,
+-0.00047, 0.01909)$ to $(0.01920, 0.00168, 0.00319, -0.00042, 0.01804)$, with
+$cf$ still first, $seq$ still second, $rec$ still the only negative source, and
+Kendall $\tau = 0.80$ against the frozen-configuration run, the single transposition
+being $pop$ and $ct$, which are separated by $0.0003$. So the qualitative
+reading of Amazon-VG does not depend on being below the gate: it holds at a
+cap where the corpus clears it. We keep $N_{\max}=600$ as the reported
+configuration because it was declared first, and report the gate-clearing point
+as the robustness evidence it is. Amazon-VG's role is unchanged in the main
+tables, but a reader who requires a gate-clearing corpus now has two.
 
 For Gowalla the situation is qualitatively different, and more interesting. We
 did raise $N_{\max}$, from $2\,500$ to $11\,623$. The first value was inherited from a differently sized split and amounted to only $3.04\%$ of this
@@ -1823,39 +1842,63 @@ declared overlap $rec$--$ct$ comes out slightly \emph{positive} at $+0.0004$. We
 therefore claim partial rather than complete recovery of the pre-declared
 structure. Every
 pair in Table~\ref{tab:taylor} keeps its sign on all ten seeds, so the
-interaction ordering does not rest on a single run. The values are
-reported for MovieLens only; extending them to the other corpora is
-straightforward but not yet done.
+interaction ordering does not rest on a single run.
+
+\paragraph{The redundancy mechanism replicates on Gowalla}
+The interaction index is cheap once the $32$ coalition values exist, so we
+computed it on the other two corpora as well; those are seed-42 values under
+the legacy candidate rule and we label them as such. The test is whether the
+source carrying each material sign disagreement is also the one with the
+strongest substitutive interaction. It is. On Gowalla the most negative pair is
+$ct$--$pop$ at $-0.0083$, and $pop$ is the source whose ranking-stage
+leave-one-out turns negative, exactly as $cf$ is on MovieLens-1M, where the two
+most negative pairs both involve $cf$. On Amazon-VG, which has no material
+disagreement, the most negative pair is $cf$--$seq$ at $-0.0445$ while $cf$
+carries the largest positive gap rather than a sign flip, so a strong
+substitutive interaction is not by itself sufficient to produce one. The
+mechanism is therefore consistent across the two corpora that exhibit the
+phenomenon, and the negative case shows the interaction index alone does not
+predict it.
 
 \subsection{Attribution on real systems}\label{sec:results}
 
 \begin{table}[tbp]
 \caption{Ranking-stage leave-one-out and Shapley attribution over ten seeds.
-Brackets are Shapley run-to-run intervals.}
+Brackets are run-to-run intervals, $\bar x \pm t_{0.975,9}\,s_x/\sqrt{10}$.
+The quantity this paper contrasts is the paired gap
+$\Delta_g = \varphi_g - \LOOr(g)$, so it carries its own interval, computed
+per seed and then aggregated rather than differenced from the two marginal
+means. The final column counts the fits on which the gap keeps the sign of its
+mean: $14$ of $15$ cells are unanimous, the exception being $rec$ on
+MovieLens-1M at $9/10$, whose gap is $0.4\%$ of $v(\G)$ and which the paper
+does not interpret. Both material disagreements have gap intervals excluding
+zero, at $38.8\%$ ($cf$, MovieLens-1M) and $12.2\%$ ($pop$, Gowalla) of the
+respective $v(\G)$.}
 \label{tab:loo}
 \small
 \setlength{\tabcolsep}{2.5pt}
 \begin{tabular}{@{}llrcrc@{}}
 \toprule
-Corpus & Source & $\LOOr$ & Shapley [run interval] & Gap & Shap. sign \\
+Corpus & Source & $\LOOr$ & Shapley [run interval]
+       & Gap $\varphi_g-\LOOr$ [run interval] & Gap sign \\
 \midrule
-MovieLens-1M & $cf^{\dagger}$ & $-0.00457$ & $+0.01573\ [+0.01542,+0.01604]$ & $+0.02030$ & $10/10$ \\
-             & $ct^{\ddagger}$ & $+0.00052$ & $-0.00016\ [-0.00024,-0.00008]$ & $-0.00068$ & $9/10$ \\
-             & $pop$ & $+0.00070$ & $+0.00643\ [+0.00638,+0.00649]$ & $+0.00573$ & $10/10$ \\
-             & $rec$ & $+0.00010$ & $+0.00032\ [+0.00022,+0.00042]$ & $+0.00022$ & $10/10$ \\
-             & $seq$ & $+0.01745$ & $+0.02993\ [+0.02963,+0.03024]$ & $+0.01249$ & $10/10$ \\
+MovieLens-1M & $cf^{\dagger}$ & $-0.00457$ & $+0.01573\ [+0.01542,+0.01604]$ & $+0.02030\ [+0.02007,+0.02053]$ & $10/10$ \\
+             & $ct^{\ddagger}$ & $+0.00052$ & $-0.00016\ [-0.00024,-0.00008]$ & $-0.00068\ [-0.00088,-0.00047]$ & $0/10$ \\
+             & $pop$ & $+0.00070$ & $+0.00643\ [+0.00638,+0.00649]$ & $+0.00573\ [+0.00551,+0.00596]$ & $10/10$ \\
+             & $rec$ & $+0.00010$ & $+0.00032\ [+0.00022,+0.00042]$ & $+0.00022\ [+0.00003,+0.00040]$ & $9/10$ \\
+             & $seq$ & $+0.01745$ & $+0.02993\ [+0.02963,+0.03024]$ & $+0.01249\ [+0.01209,+0.01288]$ & $10/10$ \\
 \midrule
-Amazon-VG    & $cf$ & $+0.00890$ & $+0.01980\ [+0.01937,+0.02022]$ & $+0.01089$ & $10/10$ \\
-             & $ct$ & $+0.00011$ & $+0.00195\ [+0.00183,+0.00207]$ & $+0.00183$ & $10/10$ \\
-             & $pop$ & $+0.00394$ & $+0.00178\ [+0.00166,+0.00190]$ & $-0.00216$ & $10/10$ \\
-             & $rec^{\ddagger}$ & $+0.00014$ & $-0.00049\ [-0.00053,-0.00046]$ & $-0.00063$ & $10/10$ \\
-             & $seq$ & $+0.00761$ & $+0.01883\ [+0.01865,+0.01900]$ & $+0.01122$ & $10/10$ \\
+Amazon-VG    & $cf$ & $+0.00890$ & $+0.01980\ [+0.01937,+0.02022]$ & $+0.01089\ [+0.01062,+0.01117]$ & $10/10$ \\
+             & $ct$ & $+0.00011$ & $+0.00195\ [+0.00183,+0.00207]$ & $+0.00183\ [+0.00165,+0.00201]$ & $10/10$ \\
+             & $pop$ & $+0.00394$ & $+0.00178\ [+0.00166,+0.00190]$ & $-0.00216\ [-0.00244,-0.00188]$ & $0/10$ \\
+             & $rec^{\ddagger}$ & $+0.00014$ & $-0.00049\ [-0.00053,-0.00046]$ & $-0.00063\ [-0.00069,-0.00057]$ & $0/10$ \\
+             & $seq$ & $+0.00761$ & $+0.01883\ [+0.01865,+0.01900]$ & $+0.01122\ [+0.01107,+0.01138]$ & $10/10$ \\
 \midrule
-Gowalla      & $cf$ & $+0.00743$ & $+0.00711\ [+0.00698,+0.00725]$ & $-0.00032$ & $10/10$ \\
-             & $ct$ & $+0.00547$ & $+0.00678\ [+0.00672,+0.00683]$ & $+0.00131$ & $10/10$ \\
-             & $pop^{\dagger}$ & $-0.00156$ & $+0.00051\ [+0.00046,+0.00056]$ & $+0.00207$ & $10/10$ \\
-             & $rec$ & $+0.00001$ & $+0.00040\ [+0.00038,+0.00042]$ & $+0.00039$ & $10/10$ \\
-             & $seq$ & $+0.00093$ & $+0.00225\ [+0.00219,+0.00230]$ & $+0.00132$ & $10/10$ \\
+Gowalla      & $cf$ & $+0.00743$ & $+0.00711\ [+0.00698,+0.00725]$ & $-0.00032\ [-0.00039,-0.00025]$ & $0/10$ \\
+             & $ct$ & $+0.00547$ & $+0.00678\ [+0.00672,+0.00683]$ & $+0.00131\ [+0.00121,+0.00141]$ & $10/10$ \\
+             & $pop^{\dagger}$ & $-0.00156$ & $+0.00051\ [+0.00046,+0.00056]$ & $+0.00207\ [+0.00197,+0.00217]$ & $10/10$ \\
+             & $rec$ & $+0.00001$ & $+0.00040\ [+0.00038,+0.00042]$ & $+0.00039\ [+0.00037,+0.00041]$ & $10/10$ \\
+             & $seq$ & $+0.00093$ & $+0.00225\ [+0.00219,+0.00230]$ & $+0.00132\ [+0.00125,+0.00138]$ & $10/10$ \\
 \botrule
 \end{tabular}
 \smallskip
@@ -2210,12 +2253,38 @@ contaminating term is small here, at most $1.7\times10^{-4}$ in absolute value
 on the pilot corpus, and it changes no ordering: raw and centred losses agree
 at Kendall $\tau = 1.00$ and select the same cheapest source, so the reported
 retirement conclusions are unaffected. Both columns and the baseline shift are
-recorded so this distinction is auditable. On
-MovieLens-1M all three rank $seq$ first and agree closely
-(Kendall $\tau = 1.00$ between refit and fixed heads, $0.80$ between either and
-end-to-end); on Amazon-VG all three rank $cf$ first, with $\tau = 0.80$ between
-the refit head and each alternative. The ranking-stage restriction is therefore
-consequential in principle but does not change the top-ranked source on either corpus, a scope limitation we can now quantify rather than merely declare.
+recorded so this distinction is auditable. Table~\ref{tab:estimands} gives the three
+attribution vectors side by side rather than only their rank agreements. All
+three games rank $seq$ first on MovieLens-1M and $cf$ first on Amazon-VG, so
+the ranking-stage restriction is consequential in the values but does not
+change the top-ranked source on either corpus. Gowalla is absent: the
+end-to-end game rebuilds candidates for each of the $2^n$ coalitions, which on
+an $82\,134$-item catalogue is $32$ retrieval passes rather than one, and we
+did not run it.
+
+\begin{table}[tbp]
+\caption{Three estimands compared at seed $42$, an estimand sensitivity
+analysis rather than an inferential result. The refitted fixed-candidate head
+is the paper's main game; the fixed head masks the deployed grand-coalition
+head to $S$; the end-to-end game lets each coalition retrieve its own
+candidates. $\tau$ is Kendall agreement with the main game's ordering}
+\label{tab:estimands}
+\small
+\setlength{\tabcolsep}{3.5pt}
+\begin{tabular}{@{}llrrrrrc@{}}
+\toprule
+Corpus & Game & $cf$ & $ct$ & $pop$ & $rec$ & $seq$ & $\tau$ \\
+\midrule
+MovieLens-1M & refitted head (main) & $+0.01545$ & $-0.00009$ & $+0.00637$ & $+0.00026$ & $+0.02937$ & n/a \\
+             & fixed head           & $+0.01867$ & $-0.00104$ & $+0.00528$ & $-0.00079$ & $+0.02924$ & $1.00$ \\
+             & end-to-end           & $+0.01478$ & $-0.00010$ & $+0.00783$ & $-0.00022$ & $+0.02908$ & $0.80$ \\
+\midrule
+Amazon-VG    & refitted head (main) & $+0.01926$ & $+0.00187$ & $+0.00157$ & $-0.00047$ & $+0.01909$ & n/a \\
+             & fixed head           & $+0.02110$ & $+0.00101$ & $+0.00166$ & $-0.00045$ & $+0.01799$ & $0.80$ \\
+             & end-to-end           & $+0.01962$ & $+0.00133$ & $+0.00291$ & $+0.00026$ & $+0.01718$ & $0.80$ \\
+\botrule
+\end{tabular}
+\end{table}
 
 \paragraph{Retirement simulation, and a negative result}
 The stronger test is whether attribution predicts what removing a source
@@ -2676,12 +2745,22 @@ either for or against their correctness.
 \backmatter
 
 \bmhead{Supplementary information}
-The implementation is available at
-\url{https://github.com/mouadlouhichi/signalshap-code}. The public snapshot
-available at the time of writing supports implementation inspection but does
-not reproduce the present tables; this manuscript therefore makes no claim of
-exact artefact reproducibility until a synchronized immutable release is
-deposited.
+The implementation, the frozen configuration, and every artefact behind a
+reported number are available at
+\url{https://github.com/mouadlouhichi/signalshap-code} at tag
+\texttt{discover-ai-submission}. The repository ships
+\texttt{artefacts/MANIFEST.json}, which records a SHA-256 for each of the $52$
+artefact files together with the commit and the environment that produced them,
+including the BLAS backend, since Section~\ref{sec:threats} shows that backend
+changes candidate contents for a small number of users.
+\texttt{artefacts/PROVENANCE.md} maps every table and figure to the artefact,
+platform, candidate rule and seeds behind it, and names the diagnostics that
+still come from the superseded candidate rule. One command per table and figure
+is documented in the repository README. We state the residual limitation
+precisely rather than in general terms: the raw corpora are not redistributed,
+so a reader reproducing from data must first refetch them with the supplied
+script, and the cross-platform residual means a run on a different BLAS
+reproduces the reported signs and orderings but not every fifth decimal.
 
 \bmhead{Acknowledgements}
 Not applicable.
@@ -2708,9 +2787,11 @@ Not applicable.
       methodology, software, formal analysis, investigation, writing (original draft), visualisation. \textbf{R.\ Nesmaoui:} software, validation, data curation, writing (review and editing). \textbf{M.\ Lazaar:}
       supervision, methodology, resources, writing (review and editing).
 \item \textbf{Code availability.} Public repository under the MIT license at
-      \url{https://github.com/mouadlouhichi/signalshap-code}. The current public
-      snapshot is not claimed to reproduce the present tables exactly; a
-      synchronized immutable release remains required for that claim.
+      \url{https://github.com/mouadlouhichi/signalshap-code}, tag
+      \texttt{discover-ai-submission}, with a hashed artefact manifest and a
+      table-by-table provenance map. Reproduction from raw data requires
+      refetching the corpora, which we do not redistribute, and exact decimal
+      agreement is platform dependent as documented.
 \item \textbf{Use of AI tools.} In line with Springer Nature's guidance on
       generative AI, we disclose that large language models were used for code
       scaffolding, editorial review, and consistency checking. No text, result,

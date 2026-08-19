@@ -406,3 +406,56 @@ def test_global_timeblock_numbers_match_the_artefact():
     assert f"{100*r['user_coverage']:.1f}" in body
     # The paper must not claim the per-source result replicates.
     assert "do \\emph{not} claim" in body or "do \\emph{not} reproduce" in body
+
+
+def test_manifest_covers_every_artefact_and_matches_hashes():
+    """The reproducibility claim must be checkable, not just asserted.
+
+    The manuscript previously had to say the public snapshot 'does not
+    reproduce the present tables'. It now points at a hashed manifest instead,
+    so the manifest has to be complete and correct.
+    """
+    import hashlib
+    import json
+    from pathlib import Path
+
+    root = Path(__file__).resolve().parents[1]
+    man_p = root / "artefacts" / "MANIFEST.json"
+    if not man_p.exists():
+        import pytest
+        pytest.skip("manifest absent")
+    man = json.loads(man_p.read_text())
+
+    on_disk = {str(p.relative_to(root / "artefacts"))
+               for p in (root / "artefacts").rglob("*.json")
+               if p.name != "MANIFEST.json"}
+    assert set(man["artefacts"]) == on_disk, "manifest and artefacts/ disagree"
+
+    # Spot-check the hashes actually verify.
+    for name in sorted(on_disk)[:5]:
+        p = root / "artefacts" / name
+        got = hashlib.sha256(p.read_bytes()).hexdigest()
+        assert got == man["artefacts"][name]["sha256"], name
+
+    for key in ("git_commit", "environment", "n_artefacts"):
+        assert key in man
+    assert "blas" in man["environment"], "BLAS backend must be recorded"
+
+
+def test_paired_gap_intervals_cover_all_corpora():
+    """Table 7's uncertainty belongs on the paired gap, for every cell."""
+    import json
+    from pathlib import Path
+
+    root = Path(__file__).resolve().parents[1]
+    p = root / "artefacts" / "paired_gap_intervals.json"
+    if not p.exists():
+        import pytest
+        pytest.skip("artefact absent")
+    d = json.loads(p.read_text())
+    for c in ("ml_1m", "amazon_video_games", "gowalla_ts"):
+        assert c in d, c
+        for g in ("cf", "ct", "pop", "rec", "seq"):
+            cell = d[c][g]
+            assert {"mean", "lo", "hi", "n_positive"} <= set(cell)
+            assert cell["lo"] <= cell["mean"] <= cell["hi"]
