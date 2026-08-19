@@ -76,10 +76,58 @@ bash scripts/run_round8_remaining.sh 24
 import os, sys, platform, subprocess, time, json
 from pathlib import Path
 
-REPO = Path.home() / "signalshap-code"        # <-- edit if you cloned elsewhere
-assert REPO.exists(), f"repo not found at {REPO}"
+def _find_repo():
+    \"\"\"Locate the repo by its CONTENTS, not by a guessed path.
+
+    An earlier version hardcoded `Path.home()/"signalshap-code"` and checked
+    only `.exists()`. A stale empty directory at that path passed the check,
+    the notebook chdir'd into it, and all nine stages died instantly with
+    "can't open file scripts/run_study.py" while the real clone sat elsewhere.
+    A directory existing is not evidence that it is the right directory, so
+    probe for files that must be present.
+    \"\"\"
+    MARKERS = ("scripts/run_study.py", "src/signalshap/config.py",
+               "configs/frozen.yaml")
+
+    def looks_right(p):
+        return p and all((p / m).exists() for m in MARKERS)
+
+    # 1. the notebook's own location, walking up; correct no matter where the
+    #    repo lives, and the only candidate that needs no configuration.
+    here = Path.cwd().resolve()
+    for cand in (here, *here.parents):
+        if looks_right(cand):
+            return cand
+    # 2. a few conventional spots, for a notebook opened from elsewhere.
+    for cand in (Path.home() / "signalshap-code",
+                 Path.home() / "Desktop" / "signalshap-code"):
+        if looks_right(cand):
+            return cand
+    return None
+
+
+REPO = _find_repo()
+if REPO is None:
+    raise SystemExit(
+        "Could not locate the signalshap-code repo.\\n"
+        "Set it explicitly and re-run this cell:\\n"
+        "    REPO = Path('/full/path/to/signalshap-code')\\n"
+        "    os.chdir(REPO); sys.path.insert(0, str(REPO/'src'))\\n"
+        f"(searched from {Path.cwd()} upward, and the usual home locations)")
+
 os.chdir(REPO)
 sys.path.insert(0, str(REPO / "src"))
+
+# The interpreter running the stages must be THIS kernel's interpreter. The
+# notebook shells out with sys.executable; if the kernel is a bare system
+# python while the repo has a .venv, the stages get a different environment
+# than the cells. Warn rather than guess.
+_venv = REPO / ".venv" / "bin" / "python"
+if _venv.exists() and Path(sys.executable).resolve() != _venv.resolve():
+    print(f"WARNING: kernel is {sys.executable}")
+    print(f"         repo venv is {_venv}")
+    print("         Stages will use the KERNEL. Select the .venv kernel if "
+          "that is not what you want.\\n")
 
 # A missing corpus must be a hard error, never a silent synthetic fallback.
 os.environ["SIGNALSHAP_STRICT_DATA"] = "1"

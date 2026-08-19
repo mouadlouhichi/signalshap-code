@@ -178,3 +178,57 @@ def test_notebook_warns_against_the_other_notebook(nb):
                    for c in nb["cells"] if c["cell_type"] == "markdown")
     assert "SignalShap_M4_FullStudy" in md
     assert "not" in md.lower()
+
+
+def test_repo_is_located_by_contents_not_by_a_guessed_path(code_src, tmp_path):
+    """A stale empty ~/signalshap-code must not be mistaken for the repo.
+
+    This is a regression test for a real failure. The first version of the
+    notebook did `REPO = Path.home()/"signalshap-code"` guarded only by
+    `.exists()`. The user had an empty directory at exactly that path while
+    the real clone lived under Desktop/..., so the assert passed, the notebook
+    chdir'd into the empty directory, and all nine stages died instantly with
+    "can't open file scripts/run_study.py". Nothing ran and nothing warned.
+    """
+    assert "_find_repo" in code_src, "repo must be discovered, not hardcoded"
+    assert "MARKERS" in code_src, "discovery must probe for known files"
+
+    # Execute the setup cell with HOME pointing at a decoy empty directory.
+    decoy = tmp_path / "home"
+    (decoy / "signalshap-code").mkdir(parents=True)
+
+    cell = next("".join(c["source"]) for c in json.loads(NB.read_text())["cells"]
+                if c["cell_type"] == "code" and "_find_repo" in "".join(c["source"]))
+    prog = (
+        "import os, sys\n"
+        f"os.environ['HOME'] = {str(decoy)!r}\n"
+        f"os.chdir({str(ROOT)!r})\n"
+        + cell
+        + "\nprint('RESOLVED', REPO)\n")
+    r = subprocess.run([sys.executable, "-c", prog], capture_output=True,
+                       text=True, cwd=ROOT)
+    assert r.returncode == 0, r.stderr[-2000:]
+    assert f"RESOLVED {ROOT}" in r.stdout, (
+        f"resolved the wrong directory:\n{r.stdout}\n{r.stderr[-800:]}")
+
+
+def test_missing_repo_fails_loudly_rather_than_running_nothing(tmp_path):
+    """If discovery fails it must raise with instructions, not chdir anyway."""
+    cell = next("".join(c["source"]) for c in json.loads(NB.read_text())["cells"]
+                if c["cell_type"] == "code" and "_find_repo" in "".join(c["source"]))
+    empty = tmp_path / "nowhere"
+    empty.mkdir()
+    prog = (
+        "import os, sys\n"
+        f"os.environ['HOME'] = {str(tmp_path)!r}\n"
+        f"os.chdir({str(empty)!r})\n"
+        + cell)
+    r = subprocess.run([sys.executable, "-c", prog], capture_output=True,
+                       text=True, cwd=empty)
+    assert r.returncode != 0, "must not proceed when the repo is not found"
+    assert "Could not locate" in (r.stdout + r.stderr)
+
+
+def test_kernel_interpreter_mismatch_is_surfaced(code_src):
+    """Stages shell out with sys.executable; a wrong kernel changes the env."""
+    assert ".venv" in code_src and "WARNING: kernel is" in code_src
