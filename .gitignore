@@ -34,3 +34,10 @@ logs/
 paper/*.pdf
 sn-article.pdf
 signalshap-archive.zip
+
+# latexmk / pdflatex byproducts (a local compile leaves these behind; the
+# synctex alone is 75k lines and is not a source artefact)
+paper/*.fls
+paper/*.fdb_latexmk
+paper/*.synctex
+paper/*.synctex.gz

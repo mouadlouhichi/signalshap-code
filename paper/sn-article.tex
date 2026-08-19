@@ -179,9 +179,9 @@ agreement is $0.96$--$1.00$ versus $0.20$--$0.80$ over ten stochastic fits, and
 the observed cheapest source is identified on $90$--$100\%$ of fits versus
 $0$--$50\%$.
 SignalShap allocates credit in a declared ranking-stage game; leave-one-out
-estimates removal effect. We therefore claim credit allocation, not retirement
-guidance. Candidate recall provides an applicability diagnostic: under our
-declared $0.60$ gate, only one corpus clears it.}
+estimates removal effect. We claim credit allocation, not retirement guidance.
+Candidate recall is an applicability diagnostic: under our declared $0.60$
+gate, only one corpus clears it.}
 
 \keywords{Shapley value, cooperative game theory, hybrid recommender systems,
 ranking-stage attribution, leave-one-out ablation, two-stage recommendation}
@@ -606,7 +606,8 @@ deterministic total order.
 
 \subsection{The cooperative game}\label{sec:game}
 
-Let $\G = \{cf, ct, pop, rec, seq\}$ with $|\G| = 5$.
+Let $\G = \{cf, ct, pop, rec, seq\}$ with $|\G| = 5$;
+Table~\ref{tab:notation} collects the notation used throughout.
 
 \begin{table}[tbp]
 \caption{Core notation.}
@@ -971,7 +972,8 @@ limited until those diagnostics accompany the synchronized release.
 
 A refreshed one-step-ahead protocol also changes sequential and recency scores,
 candidate retrieval, and the baseline, so frozen and refreshed games are not
-ordered in general. We measured the net effect with the head fitted in the
+ordered in general. We measured the net effect
+(\texttt{scripts/run\_protocol\_sensitivity.py}) with the head fitted in the
 validation state and the test coalition scored after appending and masking the
 validation event. Refreshing raises $v(\G)$ from $0.05169$ to $0.07026$ on
 MovieLens-1M ($+36\%$), from $0.04130$ to $0.04902$ on Amazon-VG ($+19\%$), and
@@ -1349,8 +1351,8 @@ run-to-run interval: the attributions, pairwise interactions, and retirement
 analysis. These runs share the same users, interactions, temporal split, and
 corpus subsample. Their intervals therefore quantify sensitivity to stochastic
 fitting only; they are \emph{not} confidence intervals for a population of
-users, datasets, or deployments. Diagnostics that remain illustrative---the
-estimand comparison and per-corpus robustness sweeps---use seed $42$ and are
+users, datasets, or deployments. Diagnostics that remain illustrative, namely the
+estimand comparison and the per-corpus robustness sweeps, use seed $42$ and are
 labelled as such. Wilcoxon signed-rank~\citep{wilcoxon1945individual},
 permutation tests with $10\,000$ shuffles, Holm--Bonferroni correction
 ~\citep{holm1979simple}, and Cohen's $d_z$ are retained as conditional
@@ -1909,6 +1911,14 @@ shows the representative points $0.1$, $1$, and $10$; the conclusions above
 refer to the complete evaluated grid. Because Eq.~\eqref{eq:head}
 uses a summed loss, the numerical values are not portable across corpus sizes.
 
+\begin{figure}[tbp]
+\centering
+\includegraphics[width=\textwidth]{Fig7.png}
+\caption{Seed-42 sensitivity to candidate cap (top) and ridge penalty
+(bottom); annotations report candidate recall.}
+\label{fig:robustness}
+\end{figure}
+
 Two robustness checks are available for the Gowalla result. The corpus was run
 at three subsample sizes, $4\,652$, $5\,910$ and $8\,865$ users, drawn to
 different memory budgets. The material $pop$ disagreement is present at all
@@ -2064,7 +2074,8 @@ profiles, the $\lambda$ and candidate-cap sweeps, the grand-pool ablation, and
 the estimand comparison. On MovieLens, the old and symmetric rules agree to
 $\max_g|\Delta\varphi_g|=2.8\times10^{-5}$ with identical ordering and recall
 equal to three decimals. Accordingly, ten-seed results are primary; diagnostics
-that have not been regenerated under the symmetric rule are explicitly
+that have not been regenerated under the symmetric rule are listed in
+Table~\ref{tab:provenance} and are explicitly
 single-seed sensitivity analyses rather than confirmatory evidence.
 
 \begin{table}[tbp]
@@ -2129,14 +2140,6 @@ defensible notion of item similarity, but not the curated metadata MovieLens
 provides. Second, exchangeability in the duplicate-source diagnostic validates
 symmetry independently of whether the cloned source has ideal domain semantics;
 it does not validate the absolute attribution magnitudes.
-
-\begin{figure}[tbp]
-\centering
-\includegraphics[width=\textwidth]{Fig7.png}
-\caption{Seed-42 sensitivity to candidate cap (top) and ridge penalty
-(bottom); annotations report candidate recall.}
-\label{fig:robustness}
-\end{figure}
 
 \paragraph{Metric sensitivity on MovieLens-1M}
 NDCG@10 is the only metric in the characteristic function, so the attributions
@@ -2602,8 +2605,9 @@ sparse corpora the counts are $4$ of $30$ (Gowalla) and $5$ of $30$
 (Amazon-VG). These are above the chance rate but well below MovieLens, and
 after Holm correction within each corpus none of the three corpora retains a
 significant contrast. We therefore make no confirmatory segment-heterogeneity
-claim. The profiles remain useful for showing the scale of the variation that
-the downstream fusion experiment attempted to exploit.
+claim. The profiles in Figure~\ref{fig:segments} remain useful for showing the
+scale of the variation that the downstream fusion experiment attempted to
+exploit.
 
 \begin{figure}[tbp]
 \centering

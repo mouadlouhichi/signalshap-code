@@ -242,7 +242,7 @@ def test_interaction_index_named_consistently():
     from pathlib import Path
 
     tex = (Path(__file__).resolve().parents[1] / "paper" / "sn-article.tex").read_text()
-    i = tex.index("\\label{eq:taylor}")
+    i = tex.index("\\label{eq:interaction}")
     window = tex[max(0, i - 2500):i]
     assert "grabisch1999interaction" in window, \
         "the interaction equation must cite Grabisch-Roubens"
@@ -287,7 +287,9 @@ def test_every_package_the_manuscript_needs_is_loaded():
 
 def test_amsthm_loads_before_the_theorem_styles():
     tex = _tex_no_comments()
-    assert tex.index("usepackage{amsthm}") < tex.index("theoremstyle{thmstyleone}")
+    # The class defines thmstyleone..four only if amsthm is loaded; the paper
+    # now uses the standard styles, so match whichever appears first.
+    assert tex.index("usepackage{amsthm}") < tex.index("theoremstyle{")
 
 
 def test_no_float_is_top_only():
