@@ -168,3 +168,110 @@ def test_block_seeds_frees_memory_between_seeds():
     body = FINAL.read_text()
     block = body[body.index("def block_seeds"):body.index("def block_lambda")]
     assert "del e" in block and "gc.collect()" in block
+
+
+# --------------------------------------------------------------------------- #
+# The round-8 remaining-runs driver. Same failure modes as rerun_all.sh, so it
+# gets the same guards: a non-portable prefix or a mistyped path here would
+# waste a multi-hour run on the user's machine before anyone noticed.
+# --------------------------------------------------------------------------- #
+
+ROUND8 = ROOT / "scripts" / "run_round8_remaining.sh"
+
+
+def _round8_stages():
+    """Every `run_stage "<label>" <cmd...>` line, with continuations joined."""
+    flat = ROUND8.read_text().replace("\\\n", " ")
+    out = []
+    for m in re.finditer(r'^\s*run_stage\s+"([^"]+)"\s+(.+)$', flat, re.M):
+        cmd = m.group(2).strip()
+        cmd = cmd.replace('"$BUDGET"', "24").replace('"$PY"', "python3")
+        out.append((m.group(1), shlex.split(cmd)))
+    return out
+
+
+def test_round8_script_is_syntactically_valid():
+    r = subprocess.run(["bash", "-n", str(ROUND8)], capture_output=True, text=True)
+    assert r.returncode == 0, r.stderr
+
+
+def test_round8_has_stages():
+    assert len(_round8_stages()) >= 8
+
+
+def test_round8_every_stage_is_portable_and_real():
+    for label, parts in _round8_stages():
+        assert parts[0] in ("python", "python3"), \
+            f"{label}: {parts[0]!r} is not a portable interpreter"
+        script = parts[1]
+        assert script.endswith(".py"), f"{label}: {script} is not a .py file"
+        assert (ROOT / script).exists(), f"{label}: {script} does not exist"
+
+
+def test_round8_flags_are_accepted_by_their_scripts():
+    """A flag the target script does not define kills the stage instantly.
+
+    `run_protocol_sensitivity.py --budget-gb` was once accepted and silently
+    ignored; the inverse, passing a flag that does not exist, aborts the run.
+    Both are cheap to catch by reading the target's parser.
+    """
+    for label, parts in _round8_stages():
+        body = (ROOT / parts[1]).read_text()
+        for tok in parts[2:]:
+            if tok.startswith("--"):
+                assert f'"{tok}"' in body, \
+                    f"{label}: {parts[1]} does not define {tok}"
+
+
+def test_round8_never_batches_corpora_into_one_run_study_call():
+    """run_study.py refuses corpora with different caps; do not tempt it."""
+    for label, parts in _round8_stages():
+        if parts[1].endswith("run_study.py"):
+            i = parts.index("--datasets")
+            rest = parts[i + 1:]
+            names = [t for t in rest[:len(rest)]
+                     if not t.startswith("--")]
+            # Stop at the next flag.
+            corpora = []
+            for t in rest:
+                if t.startswith("--"):
+                    break
+                corpora.append(t)
+            assert len(corpora) == 1, \
+                f"{label}: {corpora} in one call; run_study.py needs one corpus"
+            assert names  # the list really was parsed
+
+
+def test_round8_does_not_abort_on_first_failure():
+    """Check executable lines only; the file discusses `set -e` in a comment."""
+    code = [l for l in ROUND8.read_text().splitlines()
+            if not l.lstrip().startswith("#")]
+    assert not any(re.match(r"\s*set\s+-\w*e", l) for l in code), \
+        "a failed stage must not discard the later ones"
+    body = ROUND8.read_text()
+    assert "FAILED" in body and "exit 1" in body, "failures must be reported"
+
+
+def test_round8_enforces_strict_data():
+    assert "SIGNALSHAP_STRICT_DATA=1" in ROUND8.read_text()
+
+
+def test_round8_uses_no_timeout_command():
+    """`timeout` does not exist on macOS; this is run on an M4."""
+    body = ROUND8.read_text()
+    assert not re.search(r"^\s*(g?timeout)\s", body, re.M)
+    for _, parts in _round8_stages():
+        assert parts[0] not in ("timeout", "gtimeout")
+
+
+def test_round8_covers_every_open_review_item():
+    body = ROUND8.read_text()
+    for script in ("run_global_timeblock.py", "run_pool_sensitivity.py",
+                   "run_protocol_sensitivity.py", "run_study.py",
+                   "make_manifest.py"):
+        assert script in body, f"{script} is never run"
+    # The blocked retirement is the point of stage 1, not just the split.
+    assert "--retirement" in body
+    # The ten-seed refresh needs ten seeds, not the default single seed.
+    m = re.search(r"--seeds((?:\s+\d+)+)", body)
+    assert m and len(m.group(1).split()) >= 10, "item 7 needs ten seeds"

@@ -34,6 +34,36 @@ def _csr(df: pd.DataFrame, n_users: int, n_items: int) -> sparse.csr_matrix:
     )
 
 
+def canonical_svd_sign(emb: np.ndarray, components: np.ndarray) -> np.ndarray:
+    """Fix the arbitrary per-component sign of a truncated SVD.
+
+    A singular triplet is determined only up to a simultaneous sign flip of
+    its left and right vectors: (u, v) and (-u, -v) are equally valid, and
+    which one a randomised solver returns depends on its start vector, hence
+    on `random_state`. Anything invariant to that flip is unaffected, which is
+    why `seq` does not care: it uses inner products of embeddings, and a sign
+    flip cancels between the two factors.
+
+    `rec` is NOT invariant. It takes `emb.argmax(axis=1)` to assign each item
+    to a content cluster, and argmax is destroyed by negating a column: items
+    that loaded strongly negative on a component load strongly positive after
+    the flip and change cluster. So the cluster partition, and every `rec`
+    score built on it, silently depended on the solver's seed.
+
+    The convention here is the standard one (`sklearn.utils.extmath.svd_flip`,
+    applied to the right singular vectors): flip each component so that its
+    largest-magnitude loading is positive. Ties in magnitude are broken by the
+    lowest index, so the rule is a total function of the decomposition and
+    reproduces across solvers, BLAS builds and platforms.
+    """
+    k = components.shape[0]
+    pivot = np.argmax(np.abs(components), axis=1)
+    signs = np.sign(components[np.arange(k), pivot])
+    # A component that is exactly zero has no orientation to fix; leave it.
+    signs[signs == 0] = 1.0
+    return emb * signs[None, :]
+
+
 # --------------------------------------------------------------------------- #
 # cf -- ALS (implicit), deterministic
 # --------------------------------------------------------------------------- #
@@ -129,7 +159,12 @@ def score_rec(ds: Dataset, n_clusters: int = 20, half_life_days: float = 30.0,
         V = TfidfVectorizer(max_features=2000, token_pattern=r"\S+")
         M = V.fit_transform(tags)
         k = min(n_clusters, max(2, min(M.shape) - 1))
-        emb = TruncatedSVD(n_components=k, random_state=seed).fit_transform(M)
+        svd = TruncatedSVD(n_components=k, random_state=seed)
+        emb = svd.fit_transform(M)
+        # The argmax below is NOT invariant to an SVD component sign flip, and
+        # the flip is a function of the solver's random start. Canonicalise
+        # first, so the cluster partition depends on the data alone.
+        emb = canonical_svd_sign(emb, svd.components_)
         cluster = emb.argmax(axis=1)
     else:
         cluster = np.zeros(ds.n_items, dtype=int)

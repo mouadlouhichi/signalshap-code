@@ -27,6 +27,14 @@ contrast, not as a replacement for the main numbers.
 The comparison that matters is whether the two conclusions survive:
   * the material sign disagreements, and
   * tau(LOO) > tau(Shapley) against observed retirement loss.
+
+The second of those needs the end-to-end retirement simulation, not just the
+attribution vectors, because the paper's central claim is a statement about
+retirement: LOO tracks removal cost and Shapley does not. Running it under the
+blocked split is the only way to know whether that claim depends on the
+leave-last-out protocol's mild lookahead. `--retirement` turns it on. It costs
+2^1 * 5 extra retrieval passes rather than 2^5, since only the five
+leave-one-out coalitions are needed, but each pass rebuilds candidates.
 """
 from __future__ import annotations
 
@@ -96,7 +104,36 @@ def global_split(ds, q_val: float = 0.90, q_test: float = 0.95):
     return out, stats
 
 
-def run(name: str, cfg: FrozenConfig, seed: int = 42) -> dict:
+class _BlockedExperiment:
+    """Minimal duck-typed stand-in for `Experiment`, on the blocked split.
+
+    `retirement_simulation` and `coalition_retrieval_game` read exactly seven
+    attributes. Rather than construct a real `Experiment` -- which would reload
+    the corpus and rebuild the per-user leave-last-out folds, discarding the
+    global cutoff this whole script exists to impose -- we hand them the
+    blocked state directly. The attribute list is asserted in
+    `tests/test_blocked_retirement.py`, so a future field added to the
+    estimands code cannot silently read a stale value off this object.
+    """
+
+    __slots__ = ("name", "cfg", "ds", "n_max", "scores", "candidates",
+                 "valid_items", "test_items", "v")
+
+    def __init__(self, name, cfg, ds, n_max, scores, candidates,
+                 valid_items, test_items, v):
+        self.name = name
+        self.cfg = cfg
+        self.ds = ds
+        self.n_max = n_max
+        self.scores = scores
+        self.candidates = candidates
+        self.valid_items = valid_items
+        self.test_items = test_items
+        self.v = v
+
+
+def run(name: str, cfg: FrozenConfig, seed: int = 42,
+        retirement: bool = False) -> dict:
     from signalshap.data.loaders import load_dataset
 
     G = frozenset(SOURCES)
@@ -120,6 +157,19 @@ def run(name: str, cfg: FrozenConfig, seed: int = 42) -> dict:
 
     flips = [g for g in SOURCES
              if phi[g] * loo[g] < 0 and abs(phi[g] - loo[g]) > 1e-3]
+
+    retire = None
+    if retirement:
+        from signalshap.experiments.estimands import retirement_simulation
+        exp = _BlockedExperiment(name, cfg, blocked, n_max, scores, cands,
+                                 valid, test, v)
+        retire = retirement_simulation(exp, verbose=True)
+        # The headline contrast, lifted out so no reader has to recompute it.
+        retire["tau_advantage_loo_minus_shapley"] = (
+            retire["kendall_tau_loo_vs_truth"]
+            - retire["kendall_tau_shapley_vs_truth"])
+        retire["blocked_split"] = True
+
     return {
         "dataset": name, "seed": seed, "split": "global time block",
         **stats,
@@ -129,6 +179,7 @@ def run(name: str, cfg: FrozenConfig, seed: int = 42) -> dict:
         "v_grand": v[G],
         "ordering": sorted(order, key=lambda g: -phi[g]),
         "material_flips": flips,
+        "retirement": retire,
         "note": (
             "Single global cutoff at the 0.90/0.95 timestamp quantiles, so no "
             "training event postdates any evaluated event. Coverage falls "
@@ -144,6 +195,9 @@ def main() -> int:
     ap.add_argument("--corpora", nargs="+", default=["ml_1m"])
     ap.add_argument("--budget-gb", type=float, default=None)
     ap.add_argument("--seed", type=int, default=42)
+    ap.add_argument("--retirement", action="store_true",
+                    help="also run the end-to-end retirement simulation under "
+                         "the blocked split (review item 3)")
     a = ap.parse_args()
     cfg = FrozenConfig.load()
     budget = default_budget_gb(a.budget_gb)
@@ -159,7 +213,7 @@ def main() -> int:
         _register_timestamped()
         if name in ("gowalla_ts", "amazon_video_games"):
             size_corpus(name, LOADERS[name], budget, verbose=True)
-        r = run(name, cfg, a.seed)
+        r = run(name, cfg, a.seed, retirement=a.retirement)
         if r["users_retained"] == 0:
             # Every user fell entirely on one side of the cutoff. On real
             # corpora users overlap in calendar time so this cannot happen;
@@ -175,6 +229,14 @@ def main() -> int:
               f"retained, recall {r['candidate_recall']:.3f}, "
               f"order {' > '.join(r['ordering'])}, "
               f"flips {r['material_flips'] or 'none'}", flush=True)
+        if r.get("retirement"):
+            t = r["retirement"]
+            print(f"   retirement: tau_LOO={t['kendall_tau_loo_vs_truth']:+.2f} "
+                  f"tau_Shapley={t['kendall_tau_shapley_vs_truth']:+.2f} "
+                  f"(advantage {t['tau_advantage_loo_minus_shapley']:+.2f}); "
+                  f"cheapest truly {t['cheapest_to_retire_true']}, "
+                  f"LOO says {t['cheapest_by_loo']}, "
+                  f"Shapley says {t['cheapest_by_shapley']}", flush=True)
     return 0
 
 

@@ -681,11 +681,20 @@ while preserving that source's own ordering.
       Section~\ref{sec:setup}. Replacing global $t_{\max}$ by a user's scoring
       time multiplies that user's nonzero recency scores by one positive
       constant, so the subsequent per-user $z$-normalisation removes the choice
-      whenever the row is nonconstant. This argmax partition is not invariant to an
-      arbitrary sign reversal of an SVD component. Reproduction therefore
-      requires the exact fitted decomposition or an explicitly canonicalised
-      component-sign convention; the implementation uses the cached fitted
-      decomposition.
+      whenever the row is nonconstant. The argmax partition is not invariant
+      to an arbitrary sign reversal of an SVD component, so the implementation
+      canonicalises each component to have a positive largest-magnitude
+      loading before taking the argmax, which makes the partition a function
+      of the data alone; \texttt{rec} is then bit-identical across solver
+      seeds, which we test. We note for exactness that this convention is also
+      what \texttt{scikit-learn} already applies internally, so the signs were
+      never in fact the operative hazard, and imposing it explicitly changes
+      no reported number. What sign canonicalisation cannot repair is
+      \emph{degeneracy}: where two singular values coincide, the corresponding
+      subspace has no preferred basis, different solvers return different
+      rotations of it, and the argmax partition genuinely moves. That is the
+      residual reproducibility caveat for $rec$, and it is a property of the
+      spectrum rather than of the solver seed.
 
 \item \textbf{$seq$, PPMI--SVD sequential embedding.} Within each user's
       time-ordered history, all item pairs at distance $\le 5$ contribute to a
@@ -2253,10 +2262,16 @@ survives, in that a material disagreement between allocation and ranking-stage
 removal is still present, but the particular sources it names do not. The
 blocked corpus also retains only $8.7\%$ of users and fails the paper's own
 $0.60$ recall gate, so it is a different and much smaller population rather
-than a cleaner measurement of the same one. The honest position is that our
-per-source numbers describe offline per-user chronological evaluation, which is
-what the recommender literature this work compares against also does, and that
-we have not shown they transfer to a globally causal deployment simulation.
+than a cleaner measurement of the same one. Because the paper's operational
+claim is specifically about retirement, the released pipeline runs the
+end-to-end retirement simulation under the blocked split as well
+(\texttt{run\_global\_timeblock.py -{}-retirement}), so the
+$\tau_{\LOOr}$-versus-$\tau_{\text{Shapley}}$ contrast can be checked on a
+causal split and not only the attribution vectors. The honest position is that
+our per-source numbers describe offline per-user chronological evaluation,
+which is what the recommender literature this work compares against also does,
+and that we have not shown they transfer to a globally causal deployment
+simulation.
 
 \paragraph{Two-step-ahead evaluation from a frozen state}
 The protocol of Section~\ref{sec:algorithm} freezes the source state at the
@@ -2272,7 +2287,13 @@ leading pair exchanges. It would be unsound to conclude from this that the
 frozen values are a lower bound on the refreshed ones: the measured direction
 agrees on all three corpora, but the argument ignores the simultaneous changes
 to the source scores, the candidate set and the baseline. The finding that
-matters is the ordering instability on Amazon-VG.
+matters is the ordering instability on Amazon-VG. Those figures are seed-42
+single runs, which cannot separate a protocol effect from run-to-run noise;
+the released pipeline therefore also runs the contrast across the same ten
+seeds as the main results (\texttt{run\_protocol\_sensitivity.py -{}-seeds}),
+reporting a paired percentile-bootstrap interval on the change in $v(\G)$ and
+a per-source sign count, so the comparison rests on an interval rather than on
+one draw.
 
 \paragraph{Timestamp and metadata comparability}
 All reported corpora carry genuine interaction timestamps: Gowalla spans
@@ -2284,6 +2305,39 @@ defensible notion of item similarity, but not the curated metadata MovieLens
 provides. Second, exchangeability in the duplicate-source diagnostic validates
 symmetry independently of whether the cloned source has ideal domain semantics;
 it does not validate the absolute attribution magnitudes.
+
+\paragraph{A candidate pool the players did not build}
+The pool is coalition-independent, which is the property the game needs, but
+it is not source-independent: the five players construct it, so the pool is
+enriched for the items they rank highly. We therefore rebuilt the whole game
+on pools that consult no source score
+(\texttt{scripts/run\_pool\_sensitivity.py}). Three rules are implemented. The
+\emph{popularity} rule takes the $N_{\max}$ globally most frequent training
+items, the same list for every user; it is neutral with respect to four
+players but correlated with $pop$, which we state rather than gloss. The
+\emph{random} rule draws $N_{\max}$ eligible items per user by a keyed hash,
+so it is strictly independent of every source and reproducible across
+platforms. Because recall then collapses to roughly $N_{\max}/|\mathcal{I}|$,
+almost no user retains a reachable target and the game flattens for the
+dilution reason of Eq.~\eqref{eq:dilution}, which would confound a null result
+with a null game; the \emph{oracle} rule therefore restores the test item
+while leaving the distractors source-blind, and it is the cleanest of the
+three. Only orderings and signs are comparable across pools, since each rule
+yields a different $|C_u|$ and hence a different baseline and recall ceiling.
+
+\paragraph{Reproducibility of the recency clusters}
+The $rec$ cluster assignment is an $\operatorname{argmax}$ over SVD
+components, which is not invariant to a component sign flip, so the
+implementation now canonicalises the signs explicitly and we test that $rec$
+is bit-identical across solver seeds (Section~\ref{sec:setup}). Investigating
+this produced a negative result worth recording: the convention we imposed is
+the one \texttt{scikit-learn} already applies internally, so the signs were
+never the operative hazard and no reported number changes. The residual risk
+is different in kind and cannot be fixed by a sign convention. Where two
+singular values coincide the corresponding subspace has no preferred basis,
+different solvers return different rotations of it, and the partition
+genuinely moves. That is a property of the spectrum, not of the seed, and it
+is the caveat that stands.
 
 \paragraph{Metric sensitivity on MovieLens-1M}
 NDCG@10 is the only metric in the characteristic function, so the attributions

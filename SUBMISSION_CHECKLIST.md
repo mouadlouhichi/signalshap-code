@@ -11,15 +11,20 @@ Seven closed; the rest need runs on your machine.
 | 1 | Artifact does not reproduce | **Substantially closed.** `make_manifest.py` writes SHA-256 for all 52 artefacts plus commit, environment and BLAS backend. The "does not reproduce" sentence is replaced by a precise statement of what does and does not transfer |
 | 2 | Repeat-item diagnostics | **DONE, and it changed a claim.** New Table `tab:repeats`. ML-1M is exactly clean (0/0/0%). Amazon 6.04% / 2.78% / 5.27%. **Gowalla 14.21% / 49.90% / 52.61%.** Half of Gowalla's evaluated users have a test venue already in training, so `mask_seen` makes it unretrievable and v_u(S)=0 for all 32 coalitions. Those users dilute the whole game by an exact constant: v(S) = rho * v_live(S), rho=0.501, verified to 1.4e-17 over all coalitions and confirmed by 6 new tests |
 
-Still open, needing your machine:
+Still open, needing your machine. Everything is now implemented and tested;
+these are runs, not code. One command does all of them, resumably:
 
-| # | Item | Command |
-|---|---|---|
-| 3 | Blocked retirement | extend `run_global_timeblock.py`; the blocked corpus fails our own recall gate at 0.464, so read it as a stress test |
-| 4 | Ten-seed refreshed-history | currently seed 42 only |
-| 6 | Regenerate legacy-rule diagnostics | `run_study.py --datasets <one> --budget-gb 24`, one corpus per call |
-| 10 | Neutral candidate-pool sensitivity | not yet implemented |
-| 11 | Deterministic SVD sign for `rec` | scoped honestly in the text; a fix would invalidate cached runs |
+```
+bash scripts/run_round8_remaining.sh 24
+```
+
+| # | Item | What was built | Command if run alone |
+|---|---|---|---|
+| 3 | Blocked retirement | `run_global_timeblock.py --retirement` now drives the same end-to-end `retirement_simulation` under the global cutoff, via a duck-typed experiment whose attribute list is asserted against the estimands source so it cannot go stale | `python scripts/run_global_timeblock.py --corpora ml_1m --budget-gb 24 --retirement` |
+| 7 | Ten-seed refreshed history | `block_temporal_seeds` with paired percentile-bootstrap intervals, per-source sign counts and every per-seed record retained | `python scripts/run_protocol_sensitivity.py --corpora ml_1m --budget-gb 24 --seeds 42 43 44 45 46 47 48 49 50 51` |
+| 6 | Regenerate legacy-rule diagnostics | no code change needed; the pipeline already stamps `candidate_rule` and `build_dataset_stats` merges. Verified end to end on the synthetic fixture | `python scripts/run_study.py --datasets <one> --budget-gb 24` |
+| 10 | Neutral candidate-pool sensitivity | **new** `run_pool_sensitivity.py`: popularity, random and random-oracle pools, none of which reads a source score. Six tests, including one that permutes the score magnitudes and asserts the neutral pools do not move while the union pool does | `python scripts/run_pool_sensitivity.py --corpora ml_1m --budget-gb 24` |
+| 11 | Deterministic SVD sign for `rec` | **closed, and it was a false alarm.** `canonical_svd_sign` added and `rec` is now provably seed-invariant, but sklearn's `TruncatedSVD` already applies the identical `svd_flip` convention, so nothing changes numerically and no cached run is invalidated. The real residual hazard is a tied singular subspace, which no sign convention can fix; a test exhibits it and the paper now states that instead |
 
 ## Compiled PDF audited (signalshap-code_fix.zip)
 

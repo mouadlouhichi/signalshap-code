@@ -189,6 +189,98 @@ def block_validation_miss(name, cfg, seed=42):
     }
 
 
+def block_temporal_seeds(name, cfg, seeds, verbose: bool = True) -> dict:
+    """Block A across seeds, so the protocol effect gets an interval.
+
+    The single-seed version answers "did the numbers move?" and the honest
+    answer to that is always yes. The question worth asking is whether the
+    MOVEMENT is larger than the run-to-run noise of the game itself, and that
+    needs the same seed sweep the main results use.
+
+    Paired by seed: the frozen and refreshed games share the corpus, the
+    split, and the scorer seed, so the difference is attributable to the
+    protocol and a paired interval is the right summary. Intervals are
+    percentile bootstrap over seeds rather than t_9, because the ratio and
+    Kendall-tau statistics here are bounded and t intervals on them ran past
+    the admissible range (spec entry: Kendall tau t_9 intervals exceeded 1.0).
+    """
+    from signalshap.stats.tests import bootstrap_ci
+
+    per_seed, rows = {}, []
+    for s in seeds:
+        if verbose:
+            print(f"    [temporal] seed {s}...", flush=True)
+        r = block_temporal(name, cfg, s)
+        per_seed[str(s)] = r
+        rows.append(r)
+
+    order = list(SOURCES)
+
+    def _col(f):
+        return np.array([f(r) for r in rows], dtype=float)
+
+    v_f = _col(lambda r: r["frozen_two_step"]["v_grand"])
+    v_r = _col(lambda r: r["refreshed_one_step"]["v_grand"])
+    rel = (v_r - v_f) / np.where(np.abs(v_f) > 0, v_f, np.nan)
+
+    out = {
+        "dataset": name,
+        "seeds": list(seeds),
+        "n_seeds": len(seeds),
+        "per_seed": per_seed,
+        "v_grand_frozen": {"mean": float(v_f.mean()), "sd": float(v_f.std(ddof=1))},
+        "v_grand_refreshed": {"mean": float(v_r.mean()), "sd": float(v_r.std(ddof=1))},
+        "relative_change_v_grand": {
+            "mean": float(np.nanmean(rel)),
+            "ci": bootstrap_ci(rel[~np.isnan(rel)]),
+            "n_positive": int((rel > 0).sum()),
+            "n_negative": int((rel < 0).sum()),
+        },
+        "kendall_tau": {
+            "values": [r["kendall_tau"] for r in rows],
+            "mean": float(np.mean([r["kendall_tau"] for r in rows])),
+            # Tolerance, not equality: a perfectly preserved ordering comes
+            # back from scipy as 0.9999999999999999, so `== 1.0` reported
+            # "0 of 10 seeds agree" when in fact all ten did.
+            "n_unit": int(sum(1 for r in rows
+                              if abs(r["kendall_tau"] - 1.0) < 1e-9)),
+        },
+        "top_source_frozen": {r["top_frozen"] for r in rows},
+        "top_source_refreshed": {r["top_refreshed"] for r in rows},
+        "n_seeds_top_source_changes": int(
+            sum(1 for r in rows if r["top_frozen"] != r["top_refreshed"])),
+        "sign_agreement_all_seeds": bool(all(r["sign_agreement"] for r in rows)),
+    }
+
+    # Per-source paired delta, which is what a reader needs to judge whether
+    # any individual attribution is protocol-robust.
+    out["per_source_delta"] = {}
+    for g in order:
+        d = np.array([r["refreshed_one_step"]["shapley"][g]
+                      - r["frozen_two_step"]["shapley"][g] for r in rows])
+        out["per_source_delta"][g] = {
+            "mean": float(d.mean()),
+            "sd": float(d.std(ddof=1)),
+            "ci": bootstrap_ci(d),
+            "n_positive": int((d > 0).sum()),
+            "n_negative": int((d < 0).sum()),
+            "sign_stable": bool((d > 0).all() or (d < 0).all()),
+        }
+
+    # Sets are not JSON-serialisable and, more usefully, a set collapses the
+    # count a reader wants.
+    out["top_source_frozen"] = sorted(out["top_source_frozen"])
+    out["top_source_refreshed"] = sorted(out["top_source_refreshed"])
+    out["note"] = (
+        "Ten-seed version of the frozen-versus-refreshed protocol contrast. "
+        "Paired by seed: both protocols share the corpus, split and scorer "
+        "seed, so the difference is the protocol. Percentile bootstrap over "
+        "seeds; no direction is assumed a priori, because the refreshed state "
+        "moves the source scores, the candidate set and the baseline as well "
+        "as removing the consumed validation item.")
+    return out
+
+
 def _size(name: str, budget: float) -> None:
     """Install the memory-derived user cap BEFORE loading a large corpus.
 
@@ -208,6 +300,10 @@ def main() -> int:
     ap.add_argument("--corpora", nargs="+", default=["ml_1m"])
     ap.add_argument("--budget-gb", type=float, default=None)
     ap.add_argument("--seed", type=int, default=42)
+    ap.add_argument("--seeds", type=int, nargs="+", default=None,
+                    help="run block A across these seeds and report a paired "
+                         "interval (review item 7). Default is the single "
+                         "--seed run.")
     a = ap.parse_args()
     cfg = FrozenConfig.load()
     budget = default_budget_gb(a.budget_gb)
@@ -235,12 +331,27 @@ def main() -> int:
             if not ok:
                 raise SystemExit("REFUSING to report a resized corpus.\n  " + why)
         out.setdefault(name, {})["temporal"] = t
+        write_artefact("protocol_sensitivity.json", out)
+        print(f"   tau={t['kendall_tau']:.2f} maxdelta={t['max_abs_delta_phi']:.2e} "
+              f"top {t['top_frozen']}->{t['top_refreshed']}", flush=True)
+
+        if a.seeds:
+            print(f"== {name}: temporal state across {len(a.seeds)} seeds",
+                  flush=True)
+            ms = block_temporal_seeds(name, cfg, a.seeds)
+            out[name]["temporal_seeds"] = ms
+            write_artefact("protocol_sensitivity.json", out)
+            rc = ms["relative_change_v_grand"]
+            print(f"   v(G) relative change {rc['mean']:+.1%} "
+                  f"[{rc['ci']['lo']:+.1%}, {rc['ci']['hi']:+.1%}], "
+                  f"{rc['n_positive']}/{ms['n_seeds']} seeds positive; "
+                  f"tau mean {ms['kendall_tau']['mean']:.2f}, "
+                  f"top source changes on {ms['n_seeds_top_source_changes']}"
+                  f"/{ms['n_seeds']} seeds", flush=True)
+
         print(f"== {name}: validation misses", flush=True)
         out[name]["validation_miss"] = block_validation_miss(name, cfg, a.seed)
         write_artefact("protocol_sensitivity.json", out)
-        t = out[name]["temporal"]
-        print(f"   tau={t['kendall_tau']:.2f} maxdelta={t['max_abs_delta_phi']:.2e} "
-              f"top {t['top_frozen']}->{t['top_refreshed']}", flush=True)
     return 0
 
 
