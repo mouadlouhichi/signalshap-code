@@ -95,6 +95,28 @@ def _dirs() -> None:
     TAB.mkdir(parents=True, exist_ok=True)
 
 
+#: Reporting order for corpora: dense to sparse, matching Table 1 and every
+#: table in the manuscript.
+PAPER_ORDER = ("ml_1m", "amazon_video_games", "gowalla_ts")
+
+
+def corpus_order(results: dict) -> list[str]:
+    """Corpora in the manuscript's dense-to-sparse order.
+
+    `results` is built by globbing `results_*.json`, so its natural order is
+    ALPHABETICAL: amazon_video_games, gowalla_ts, ml_1m. Every table in the
+    paper reports dense to sparse, and MovieLens carries the main claims, so
+    a figure in alphabetical order silently disagrees with the text beside it
+    and buries the reference corpus in the right-hand panel.
+
+    F3 already worked around this locally; the other figures did not, so a
+    regeneration reordered five of seven panels. Shared here so the ordering
+    is one decision rather than six.
+    """
+    known = [n for n in PAPER_ORDER if n in results]
+    return known + [n for n in sorted(results) if n not in PAPER_ORDER]
+
+
 def _tex_safe(x):
     """Escape LaTeX specials in generated cells, leaving intentional math alone."""
     if not isinstance(x, str):
@@ -196,7 +218,7 @@ def _ten_seed_ci(name: str) -> dict | None:
 def fig2_shapley_shares(results: dict) -> Path:
     """F2: per-source Shapley shares with seed CIs (main text, spec §2.7)."""
     _dirs()
-    names = list(results)
+    names = corpus_order(results)
     fig, axes = plt.subplots(1, len(names), figsize=(3.6 * len(names), 3.1), sharey=True)
     axes = np.atleast_1d(axes)
     for ax, name in zip(axes, names):
@@ -267,12 +289,9 @@ def fig3_loo_vs_shapley(results: dict) -> Path:
     # Largest marker for the corpus that carries the main claims, so the eye
     # lands on MovieLens first. Sorting by name would put amazon_video_games
     # first and invert the emphasis.
-    _order = [n for n in ("ml_1m", "amazon_video_games", "gowalla_ts")
-              if n in results] + [n for n in sorted(results)
-                                  if n not in ("ml_1m", "amazon_video_games",
-                                               "gowalla_ts")]
+    _order = corpus_order(results)
     sizes = {n: s for n, s in zip(_order, (115, 62, 30, 30))}
-    for name, r in results.items():
+    for name, r in ((k, results[k]) for k in _order):
         # Ten-seed means where the artefact has them, so this figure sits at
         # the same aggregation level as the LOO-vs-Shapley table. It used to
         # plot seed-42 points beneath ten-seed prose.
@@ -311,7 +330,7 @@ def fig3_loo_vs_shapley(results: dict) -> Path:
 def fig4_redundancy_heatmap(results: dict) -> Path:
     """F4: Kendall tau redundancy. pop-cf and rec-ct are PRE-REGISTERED."""
     _dirs()
-    names = list(results)
+    names = corpus_order(results)
     fig, axes = plt.subplots(1, len(names), figsize=(3.5 * len(names), 3.2))
     fig.set_layout_engine("none")       # we place the colorbar axes by hand
     axes = np.atleast_1d(axes)
@@ -359,7 +378,7 @@ def fig5_segment_radar(results: dict) -> Path:
     the figure survives greyscale reproduction.
     """
     _dirs()
-    names = list(results)
+    names = corpus_order(results)
     # Larger panels rather than smaller type: sn-jnl caps artwork text at 8pt
     # and SN_FONT_MIN is already there, so readability at journal-column width
     # has to come from geometry. A reviewer found the six panels hard to read.
@@ -399,7 +418,7 @@ def fig5_segment_radar(results: dict) -> Path:
 def fig6_fuse_gain(results: dict) -> Path:
     """F6: SignalShap-Fuse lift, full-catalog protocol (spec §7)."""
     _dirs()
-    names = list(results)
+    names = corpus_order(results)
     # Every comparator the caption names must actually appear. A reviewer
     # flagged twice that the caption claimed separation from neural and
     # heuristic baselines while the chart showed only the three fusion
@@ -434,7 +453,7 @@ def fig6_fuse_gain(results: dict) -> Path:
 def fig7_robustness(results: dict) -> Path:
     """F7: robustness small-multiples, with recall annotated per cell."""
     _dirs()
-    names = list(results)
+    names = corpus_order(results)
     fig, axes = plt.subplots(2, len(names), figsize=(3.5 * len(names), 5.4), squeeze=False)
     for j, name in enumerate(names):
         rb = results[name]["e5_robustness"]
@@ -493,7 +512,7 @@ def table1_positioning() -> pd.DataFrame:
 
 def table2_datasets(results: dict, stats: dict) -> pd.DataFrame:
     rows = []
-    for name, r in results.items():
+    for name, r in ((k, results[k]) for k in corpus_order(results)):
         # Authoritative source is the RUN's own stats, not dataset_stats.json:
         # auto-downsizing can shrink a corpus after the global stats file was
         # written, and printing the pre-downsize counts beside post-downsize
@@ -551,7 +570,7 @@ def table_efficiency(results: dict) -> pd.DataFrame:
         v(G), which looks like a violated axiom but is only display rounding.
     """
     rows = []
-    for name, r in results.items():
+    for name, r in ((k, results[k]) for k in corpus_order(results)):
         e = r["e1_source_share"]["efficiency"]
         phi = r["e1_source_share"]["shapley"]
         rounded_sum = round(sum(round(v, 5) for v in phi.values()), 5)
@@ -581,7 +600,7 @@ def table_efficiency(results: dict) -> pd.DataFrame:
 
 def table4_cost(results: dict) -> pd.DataFrame:
     rows = []
-    for name, r in results.items():
+    for name, r in ((k, results[k]) for k in corpus_order(results)):
         t = r["timings_sec"]
         rows.append({
             "Dataset": name,
@@ -600,7 +619,7 @@ def table4_cost(results: dict) -> pd.DataFrame:
 
 def table5_main_results(results: dict) -> pd.DataFrame:
     rows = []
-    for name, r in results.items():
+    for name, r in ((k, results[k]) for k in corpus_order(results)):
         for m, lab in [("uniform", "Uniform fusion"), ("global", "Globally-tuned fusion"),
                        ("popularity_reference", "Popularity (full-catalog ref.)"),
                        ("signalshap_fuse", "SignalShap-Fuse")]:
@@ -623,7 +642,7 @@ def table5_main_results(results: dict) -> pd.DataFrame:
 
 def table6_loo_vs_shapley(results: dict) -> pd.DataFrame:
     rows = []
-    for name, r in results.items():
+    for name, r in ((k, results[k]) for k in corpus_order(results)):
         e2 = r["e2_loo_vs_shapley"]
         ci = r.get("multi_seed", {}).get("ci", {})
         for g in SOURCES:
@@ -655,7 +674,7 @@ def table6_loo_vs_shapley(results: dict) -> pd.DataFrame:
 
 def table7_fuse_significance(results: dict) -> pd.DataFrame:
     rows = []
-    for name, r in results.items():
+    for name, r in ((k, results[k]) for k in corpus_order(results)):
         e4 = r["e4_signalshap_fuse"]
         holm = e4["holm_bonferroni"]
         for b, t in e4["wilcoxon"].items():
@@ -680,7 +699,7 @@ def table7_fuse_significance(results: dict) -> pd.DataFrame:
 
 def table8_robustness(results: dict) -> pd.DataFrame:
     rows = []
-    for name, r in results.items():
+    for name, r in ((k, results[k]) for k in corpus_order(results)):
         rb = r["e5_robustness"]
         for k, cell in rb["candidate_size"].items():
             rows.append({

@@ -2,18 +2,18 @@
 
 | Dataset            | Baseline             |   Mean ΔNDCG@10 |   Wilcoxon $W$ |   raw $p$ |   Holm $p$ |   Cohen's $d_z$ |
 |:-------------------|:---------------------|----------------:|---------------:|----------:|-----------:|----------------:|
-| amazon_video_games | uniform              |         0.00615 |        52027.5 |    0      |     0      |           0.076 |
-| amazon_video_games | global               |         0.00035 |         5686.5 |    0.0188 |     0.0188 |           0.014 |
-| amazon_video_games | popularity_reference |         0.04358 |        15979   |    0      |     0      |           0.25  |
-| amazon_video_games | lightgcn             |         0.01483 |        97793   |    0      |     0      |           0.096 |
-| amazon_video_games | sasrec               |         0.03487 |        44788.5 |    0      |     0      |           0.199 |
+| ml_1m              | uniform              |         0.01182 |       109576   |    0      |     0      |           0.097 |
+| ml_1m              | global               |        -9e-05   |          805.5 |    0.2295 |     0.2295 |          -0.007 |
+| ml_1m              | popularity_reference |         0.04519 |        77167.5 |    0      |     0      |           0.232 |
+| ml_1m              | lightgcn             |         0.02952 |       128066   |    0      |     0      |           0.157 |
+| ml_1m              | sasrec               |         0.04636 |        63890   |    0      |     0      |           0.243 |
+| amazon_video_games | uniform              |         0.00627 |        52804.5 |    0      |     0      |           0.077 |
+| amazon_video_games | global               |         0.0005  |         7293   |    0.019  |     0.019  |           0.019 |
+| amazon_video_games | popularity_reference |         0.04369 |        15720   |    0      |     0      |           0.25  |
+| amazon_video_games | lightgcn             |         0.01494 |        98054.5 |    0      |     0      |           0.097 |
+| amazon_video_games | sasrec               |         0.03498 |        45919.5 |    0      |     0      |           0.199 |
 | gowalla_ts         | uniform              |         0.00079 |        11217.5 |    0.0146 |     0.0293 |           0.018 |
 | gowalla_ts         | global               |         9e-05   |          521.5 |    0.4946 |     0.4946 |           0.007 |
 | gowalla_ts         | popularity_reference |         0.01387 |         5783   |    0      |     0      |           0.142 |
 | gowalla_ts         | lightgcn             |         0.00412 |        27313   |    0.0001 |     0.0002 |           0.043 |
 | gowalla_ts         | sasrec               |         0.01411 |         6363   |    0      |     0      |           0.137 |
-| ml_1m              | uniform              |         0.01201 |       109564   |    0      |     0      |           0.098 |
-| ml_1m              | global               |         3e-05   |         3063.5 |    0.7701 |     0.7701 |           0.001 |
-| ml_1m              | popularity_reference |         0.04498 |        77229.5 |    0      |     0      |           0.231 |
-| ml_1m              | lightgcn             |         0.02931 |       127792   |    0      |     0      |           0.156 |
-| ml_1m              | sasrec               |         0.04616 |        63732   |    0      |     0      |           0.243 |

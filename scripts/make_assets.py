@@ -17,6 +17,9 @@ from signalshap.plots.assets import generate_all_assets
 
 if __name__ == "__main__":
     ap = argparse.ArgumentParser()
+    ap.add_argument("--no-publish", action="store_true",
+                    help="generate into artefacts/ but do not copy into "
+                         "paper/figures/")
     ap.add_argument("--include-failed", action="store_true",
                     help="DIAGNOSTIC ONLY: include corpora that failed the "
                          "recall gate. Never use for submission assets.")
@@ -54,3 +57,32 @@ if __name__ == "__main__":
     for k, v in out["figures"].items():
         print(f"  {k}: {v}")
     print(f"  tables -> {ARTEFACTS / 'tables'}")
+
+    # Publish into paper/figures/ as Fig<N>.png, which is what sn-article.tex
+    # \includegraphics actually reads.
+    #
+    # This copy used to be manual, and it silently rotted: the figures in
+    # paper/ were eleven days older than the artefacts, so Figure 6 printed a
+    # fusion comparison from the legacy candidate rule while the prose beside
+    # it quoted the regenerated numbers -- including one that had changed
+    # SIGN. A reviewer comparing the two would have found the figure
+    # contradicting the text. Copying here makes the two impossible to
+    # separate, and `--no-publish` exists for genuine diagnostic runs.
+    if a.include_failed:
+        print("  [not published] --include-failed assets are diagnostic; "
+              "paper/figures/ left untouched")
+    elif a.no_publish:
+        print("  [not published] --no-publish set")
+    else:
+        import re
+        import shutil
+
+        dest = Path(__file__).resolve().parents[1] / "paper" / "figures"
+        dest.mkdir(parents=True, exist_ok=True)
+        for k, v in sorted(out["figures"].items()):
+            n = re.fullmatch(r"F(\d+)", k)
+            if not n:
+                continue
+            target = dest / f"Fig{n.group(1)}.png"
+            shutil.copyfile(v, target)
+            print(f"  published {k} -> paper/figures/{target.name}")

@@ -29,6 +29,18 @@ Seven closed; the rest need runs on your machine.
 
 Nothing above weakens a claim. The one sign flip makes a negative result more negative.
 
+### Figures regenerated (this pass)
+
+All seven figures in `paper/figures/` were **eleven days stale**: they predated
+the symmetric-rule regeneration. Figure 6 plotted the legacy fusion comparison
+while the prose quoted the new numbers, one of which had changed sign, so the
+figure contradicted the text beside it. Regenerated, and the publish step is
+now part of `make_assets.py` with a test that catches staleness.
+
+Also fixed: five of seven figures and all seven tables ordered corpora
+alphabetically instead of dense-to-sparse, so a regeneration silently moved
+MovieLens to the right-hand panel.
+
 ### Still open
 
 - Gowalla legacy diagnostics need a machine with more headroom, or a chunked scorer. Not blocking: Gowalla's primary attribution and retirement numbers come from the ten-seed artefact, which is already symmetric on all three corpora
