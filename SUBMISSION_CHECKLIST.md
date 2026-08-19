@@ -1,6 +1,6 @@
 ## Review round 8 (Major Revision, 12 items)
 
-Six closed from artefacts I already had; the rest need runs on your machine.
+Seven closed; the rest need runs on your machine.
 
 | # | Item | Status |
 |---|---|---|
@@ -9,13 +9,12 @@ Six closed from artefacts I already had; the rest need runs on your machine.
 | 6 | Complete three-game RQ3 table | **DONE.** New Table with all three attribution vectors for ml_1m and Amazon. Gowalla omitted and said so: end-to-end needs 32 retrieval passes over 82,134 items |
 | 9 | Amazon above the recall gate | **DONE from the existing sweep.** At N_max=1200 Amazon reaches recall 0.750, matching MovieLens' 0.748, with tau=0.80 and the same top two sources. Kept N=600 as the frozen configuration, reported the gate-clearing point as robustness |
 | 1 | Artifact does not reproduce | **Substantially closed.** `make_manifest.py` writes SHA-256 for all 52 artefacts plus commit, environment and BLAS backend. The "does not reproduce" sentence is replaced by a precise statement of what does and does not transfer |
-| 2 | Repeat-item diagnostics | **Instrument shipped.** `audit_repeat_items.py` counts val==test items, test items already in training, and repeat-event rate per corpus. Verified by injection. Needs one run |
+| 2 | Repeat-item diagnostics | **DONE, and it changed a claim.** New Table `tab:repeats`. ML-1M is exactly clean (0/0/0%). Amazon 6.04% / 2.78% / 5.27%. **Gowalla 14.21% / 49.90% / 52.61%.** Half of Gowalla's evaluated users have a test venue already in training, so `mask_seen` makes it unretrievable and v_u(S)=0 for all 32 coalitions. Those users dilute the whole game by an exact constant: v(S) = rho * v_live(S), rho=0.501, verified to 1.4e-17 over all coalitions and confirmed by 6 new tests |
 
 Still open, needing your machine:
 
 | # | Item | Command |
 |---|---|---|
-| 2 | Repeat-item counts | `python scripts/audit_repeat_items.py --corpora ml_1m amazon_video_games gowalla_ts --budget-gb 24` |
 | 3 | Blocked retirement | extend `run_global_timeblock.py`; the blocked corpus fails our own recall gate at 0.464, so read it as a stress test |
 | 4 | Ten-seed refreshed-history | currently seed 42 only |
 | 6 | Regenerate legacy-rule diagnostics | `run_study.py --datasets <one> --budget-gb 24`, one corpus per call |

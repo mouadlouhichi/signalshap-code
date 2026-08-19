@@ -1,6 +1,6 @@
 {
- "git_commit": "47dfd99655182686fcdadf9e30c34887c9d8b79b",
- "git_describe": "47dfd99-dirty",
+ "git_commit": "44eb3b0118406e8d9c3c057646ca8ded12dcd0d1",
+ "git_describe": "44eb3b0-dirty",
  "environment": {
   "python": "3.11.2",
   "platform": "Linux-6.1.158+-x86_64-with-glibc2.36",
@@ -12,7 +12,7 @@
   "matplotlib": "3.11.1",
   "blas": "see numpy.show_config"
  },
- "n_artefacts": 52,
+ "n_artefacts": 53,
  "artefacts": {
   "candidate_rule_ablation_ml_1m.json": {
    "sha256": "7ee0120e7a4fe56baf5e1127351d7b3bd15fc944b3644b380f141417aa13e09e",
@@ -157,6 +157,10 @@
   "protocol_sensitivity.json": {
    "sha256": "d5a77df6fc1e04213dacb81063535579b808d425c160b0f9b03b92b8de4bfc1c",
    "bytes": 6823
+  },
+  "repeat_item_audit.json": {
+   "sha256": "f06312d3dbfc1b471e38c621f6a5c9633fca6b6196e5a94a3ec0de4653aabfe6",
+   "bytes": 2491
   },
   "results_amazon_video_games.json": {
    "sha256": "d1382bb59d0c0d3fff670a30f30952a7e46b68a3ae8e8a4f8ac5d8536fe7788e",

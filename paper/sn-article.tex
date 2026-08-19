@@ -969,11 +969,65 @@ vector and it contributes a candidate miss. These cases remain in $\Ueval$ when
 $C_u$ is nonempty. We ship the diagnostic that counts them
 (\texttt{scripts/audit\_repeat\_items.py}), which reports per corpus the users
 whose validation and test events name the same item, the users whose test item
-already appears in training, and the corpus-level repeat-event rate. Reporting
-those counts is the precondition for interpreting the two cases above, and we
-report them with the synchronized release rather than asserting they are
-negligible: on check-in data in particular, repeat visits to the same venue are
-expected, so Gowalla is the corpus where a non-trivial count is most likely.
+already appears in training, and the corpus-level repeat-event rate. We
+measured rather than assumed, and the counts are not negligible
+(Table~\ref{tab:repeats}).
+
+
+MovieLens-1M is deduplicated at source, so both cases are exactly absent and
+the frozen-state argument applies to every user unconditionally. Amazon-VG
+carries a small rate of both. Gowalla is the corpus the concern was raised
+about, and it is worse than anticipated: over half of all check-in events
+repeat a venue the same user already visited, $14.21\%$ of users have the same
+venue as validation and test target, and \emph{half of all evaluated users have
+a test venue that already appears in their training history}.
+
+The last column is the consequential one, and it is not a small correction.
+For such a user \texttt{mask\_seen} sets the test item's score to $-\infty$ in
+every source, so it is retrieved into no candidate set, $\mathrm{NDCG}_u = 0$
+under every coalition, and the baseline $b_u = 0$ as well. Hence
+$v_u(S) = 0$ identically, for all $32$ coalitions. Such users are not noise
+in the game; they are exact zeros. Because $v(S)$ is a mean over $\Ueval$,
+they act as a pure multiplicative dilution: writing $\rho$ for the fraction of
+evaluated users whose test item is retrievable at all,
+\begin{equation}
+v(S) \;=\; \rho \cdot v^{\mathrm{live}}(S) \quad \text{for every } S \subseteq \G ,
+\label{eq:dilution}
+\end{equation}
+where $v^{\mathrm{live}}$ is the same game restricted to those users. Shapley
+is linear in $v$, so $\varphi_g = \rho\,\varphi_g^{\mathrm{live}}$ for every
+source, and likewise for LOO and for every LOO-versus-Shapley gap reported in
+Section~\ref{sec:estimands}.
+We verified Eq.~\eqref{eq:dilution} numerically: over all $32$ coalitions and
+all five attributions the two sides agree to $1.4\times 10^{-17}$, machine
+precision.
+
+Two consequences follow, and they point in opposite directions. The reassuring
+one is that every \emph{ordering}, every sign, every Kendall $\tau$, and every
+ratio-to-$v(\G)$ this paper reports on Gowalla is exactly invariant to the
+dilution, because a positive common factor cancels in all of them. The
+material $pop$ flip is $12.2\%$ of $v(\G)$ whether or not the masked users are
+counted. No qualitative claim changes. The uncomfortable one is that Gowalla's
+absolute magnitudes are, on the frozen protocol, roughly half of what the same
+game measures on the users it can actually score: $\rho = 0.501$, so
+$v(\G) = 0.01705$ corresponds to $v^{\mathrm{live}}(\G) = 0.03403$ and the
+$pop$ gap of $0.00207$ to $0.00413$. We report the diluted numbers throughout,
+because $\Ueval$ is the declared evaluation population and rescaling after
+seeing $\rho$ would be selection, but absolute Gowalla values should be read
+as a property of that population and not compared directly against the other
+two corpora, where $\rho$ is $1.000$ and $0.972$.
+
+The same factor explains part of Gowalla's recall shortfall. Candidate recall
+cannot exceed $\rho$ by construction, so the $0.60$ gate was never reachable
+on this corpus under the training-history mask, whatever $N_{\max}$ is chosen:
+the measured $0.450$ is $0.898$ \emph{conditional on the test item being
+retrievable at all}, and validation recall $0.462$ is likewise $0.922$
+conditional. Section~\ref{sec:preconditions} presents the gate discussion with
+this ceiling made explicit. The shortfall is therefore not attributable
+entirely to catalogue size and candidate-pool affordability, as a
+sparsity-only reading would have it: roughly half of it is the repeat-visit
+structure of check-in data interacting with a mask designed for corpora
+without repeats.
 
 A refreshed one-step-ahead protocol also changes sequential and recency scores,
 candidate retrieval, and the baseline, so frozen and refreshed games are not
@@ -1016,7 +1070,11 @@ and we report validation recall so that a reader can judge how many users it
 concerns: $0.799$ on MovieLens-1M ($1\,216$ of $6\,035$ fitted users contribute
 negatives only), $0.648$ on Amazon-VG ($2\,505$ of $7\,120$), and $0.462$ on
 Gowalla, where $4\,773$ of $8\,865$ users, a clear majority, fit on negatives
-alone. Those are not marginal fractions, so the policy needed testing rather
+alone. The Gowalla figure is largely the same mechanism as the test-side
+dilution: $50.74\%$ of its users have a validation venue already present in
+training (Table~\ref{tab:repeats}), which the mask makes unretrievable, so
+their validation target is all zero by construction rather than by retrieval
+failure. Those are not marginal fractions, so the policy needed testing rather
 than defending. The same script refits with those users dropped. The
 attributions barely move: $\max_g|\Delta\varphi_g| = 3.7\times10^{-5}$ on
 MovieLens and $1.8\times10^{-4}$ on Gowalla, both with identical orderings, and
@@ -1392,12 +1450,17 @@ Corpus & Users / eval. & Items & Density & $N_{\max}$ & Recall & Val.\ & Monot. 
 \midrule
 MovieLens-1M & 6\,038 / 6\,035 & 3\,533  & $2.697\%$ & 600    & $0.748$ & $0.799$ & $7$ / $23$ & no \\
 Amazon-VG    & 7\,120 / 7\,120 & 3\,516  & $0.469\%$ & 600    & $0.588^{\dagger}$ & $0.648$ & $4$ / $12$ & no \\
-Gowalla      & 8\,865 / 8\,865 & 82\,134 & $0.075\%$ & 11\,623 & $0.450^{\dagger}$ & $0.462$ & $6$ / $13$ & no \\
+Gowalla      & 8\,865 / 8\,865 & 82\,134 & $0.075\%$ & 11\,623 & $0.450^{\dagger\ddagger}$ & $0.462$ & $6$ / $13$ & no \\
 \botrule
 \end{tabular}
 \smallskip
 \noindent\footnotesize $^{\dagger}$Below the $0.60$ gate; reported under the
 ceiling restriction described in this section (relative contrasts only).
+$^{\ddagger}$Recall on this corpus is bounded above by $\rho = 0.501$, the
+fraction of users whose test venue is not already in their training history
+(Table~\ref{tab:repeats}); $0.450$ is $0.898$ of that attainable ceiling and
+the gate is unreachable at any $N_{\max}$. The corresponding ceilings are
+$1.000$ for MovieLens-1M and $0.972$ for Amazon-VG.
 \end{table}
 
 Table~\ref{tab:preconditions} carries the two gates, and on this corpus set
@@ -1467,8 +1530,22 @@ configuration because it was declared first, and report the gate-clearing point
 as the robustness evidence it is. Amazon-VG's role is unchanged in the main
 tables, but a reader who requires a gate-clearing corpus now has two.
 
-For Gowalla the situation is qualitatively different, and more interesting. We
-did raise $N_{\max}$, from $2\,500$ to $11\,623$. The first value was inherited from a differently sized split and amounted to only $3.04\%$ of this
+For Gowalla the situation is qualitatively different, and the largest single
+term is one we originally missed. Half of this corpus's evaluated users
+($49.90\%$, Table~\ref{tab:repeats}) have a test venue that already appears in
+their own training history, and the training-history mask makes such an item
+ineligible in every candidate set. Candidate recall is therefore bounded above
+by $\rho = 0.501$ on this corpus, and the $0.60$ gate is unreachable at
+\emph{any} $N_{\max}$, including the full catalogue. The measured $0.450$ is
+$0.898$ of its attainable ceiling, which is a better score than Amazon-VG's
+$0.605$ conditional value and not far below MovieLens-1M's $0.748$, where the
+ceiling is $1.000$. The gate as declared compares a quantity against a
+threshold that the corpus's own repeat structure forbids it from reaching; we
+retain the gate and Gowalla's failure of it as declared, but the reason is
+mask-versus-repeats, not only sparsity. The sweep below should be read against
+the $0.501$ ceiling rather than against $1.0$.
+
+We did raise $N_{\max}$, from $2\,500$ to $11\,623$. The first value was inherited from a differently sized split and amounted to only $3.04\%$ of this
 corpus's catalogue, against $17\%$ elsewhere, so the raise is justified by
 consistency rather than by outcome. We note for exactness that $11\,623$ was
 derived from a $68\,443$-item extract of this corpus and is $14.2\%$ of the
@@ -1479,20 +1556,26 @@ sweep then measured the curve directly:
 $N_{\max}=5\,811 \to 0.418$, $11\,623 \to 0.450$, $23\,246 \to 0.471$. Doubling
 the pool buys $+0.021$.
 
-Recall is \emph{not} bounded below one: every unseen item receives a finite
-score from every source, so setting $N_{\max}$ to the catalogue size makes
-$C_u$ the whole eligible catalogue and recall approaches one by construction.
-On MovieLens, $N_{\max}=3\,533$ yields recall $0.9995$. The logarithmic fit is
-therefore interpreted only over the sampled range and is not extrapolated to
-claim that the Gowalla gate is unreachable.
+Recall is bounded above by $\rho$, the fraction of users whose test item is not
+already in their training history, and by nothing tighter: every \emph{unseen}
+item receives a finite score from every source, so setting $N_{\max}$ to the
+catalogue size makes $C_u$ the whole eligible catalogue and recall approaches
+$\rho$ by construction. On MovieLens $\rho = 1.000$ and $N_{\max}=3\,533$
+yields recall $0.9995$, as that reading predicts. On Gowalla $\rho = 0.501$,
+so the sweep is asymptoting toward $0.501$ rather than toward one, and the
+$0.60$ gate is unreachable at any pool size. This conclusion does not rest on
+extrapolating the logarithmic recall fit beyond its sampled range, which would
+not license it; it follows directly from the measured masking rate.
 
-What the measurements do establish is a cost. On Gowalla, clearing $0.60$ would
-require a candidate set large enough that the fixed-candidate design stops
+The remaining measurements establish a cost on top of that ceiling. Even
+reaching $0.501$ on Gowalla would require a candidate set large enough that
+the fixed-candidate design stops
 being a retrieval-plus-ranking decomposition and becomes full-catalogue
 ranking, at which point the game no longer models the two-stage architecture it
 was built to explain, and the $32$ coalition refits become correspondingly
-expensive. The practical statement is therefore about affordability and design
-validity rather than impossibility: on a corpus this sparse, the candidate pool
+expensive. The practical statement combines a hard ceiling with an
+affordability limit below it: on a corpus this repetitive the gate is
+unreachable outright, and on a corpus this sparse the candidate pool
 needed for a usable recall ceiling is a large fraction of the catalogue, and a
 practitioner should check that ratio before adopting a fixed-candidate game.
 Quantifying where that tradeoff becomes unacceptable, and whether recall rises
@@ -1583,6 +1666,24 @@ Protocol & seeds              & $42$--$51$ (run-to-run summaries) & seed $42$ al
 \smallskip
 \noindent\footnotesize $^{\dagger}$Selected on a MovieLens pilot and then
 frozen. All other values are fixed defaults; $N_{\max}$ alone varies by corpus.
+\end{table}
+
+\begin{table}[tbp]
+\caption{Repeat-event audit (\texttt{scripts/audit\_repeat\_items.py}).
+Percentages are of users holding both folds. ``Test item in train'' users are
+masked out of every candidate set, so their per-user payoff is zero for all
+$32$ coalitions.}
+\label{tab:repeats}
+\small
+\begin{tabular}{@{}lrrrr@{}}
+\toprule
+Corpus & Users & Val.\ $=$ test item & Test item in train & Repeat events \\
+\midrule
+MovieLens-1M & 6\,035 & $0$ ($0.00\%$)    & $0$ ($0.00\%$)      & $0.00\%$ \\
+Amazon-VG    & 7\,120 & $430$ ($6.04\%$)  & $198$ ($2.78\%$)    & $5.27\%$ \\
+Gowalla      & 8\,865 & $1\,260$ ($14.21\%$) & $4\,424$ ($49.90\%$) & $52.61\%$ \\
+\botrule
+\end{tabular}
 \end{table}
 
 \paragraph{Preprocessing and subsampling}
@@ -2198,9 +2299,12 @@ only. This is one corpus and one seed.
 Robustness sweeps (Figure~\ref{fig:robustness}), segment analysis, and fusion
 are strongest on MovieLens-1M, the only corpus that clears the candidate-recall
 gate. Gowalla required a candidate pool of $11\,623$ items and still reaches
-only $0.450$ recall (Section~\ref{sec:preconditions}); its attribution is the
-least comparable of the three, and we report it for the relative
-LOO-versus-Shapley contrast only.
+only $0.450$ recall, against an attainable ceiling of $0.501$ imposed by its
+repeat-visit structure rather than by the pool
+(Section~\ref{sec:preconditions}). Its absolute attribution magnitudes are
+diluted by that same factor and are the least comparable of the three, so we
+report Gowalla for the relative LOO-versus-Shapley contrast only, which
+Eq.~\eqref{eq:dilution} shows is exactly invariant to the dilution.
 
 \subsection{Which estimand, and does attribution predict retirement cost?}
 \label{sec:estimands}

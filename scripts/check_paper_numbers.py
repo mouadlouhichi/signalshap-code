@@ -226,14 +226,45 @@ def check() -> list[str]:
             bad.append(f"stale text: {why}")
 
     requires = [
-        ("unreachable at any pool size", "and we withdraw it",
-         "impossibility claim must appear only with its retraction"),
+        # This claim was once an unsupported extrapolation of the log recall
+        # fit, and the guard demanded its retraction. The repeat audit now
+        # establishes it directly: recall is bounded by rho, the fraction of
+        # users whose test item is not already masked out of every candidate
+        # set by mask_seen. So the guard now demands the EVIDENCE instead --
+        # the claim may stand only where the ceiling is stated.
+        (r"unreachable at any pool size", r"\rho = 0.501",
+         "impossibility claim must cite the measured retrievability ceiling"),
         ("six analytic", "table~\\ref{tab:analytic}",
          "analytic-games claim must cite the table that reports them"),
     ]
     for phrase, needed, why in requires:
         if phrase.lower() in flat and needed.lower() not in flat:
             bad.append(f"self-contradiction: {why}")
+
+    # 7b. the repeat-event audit table must match its artefact
+    ra = ART / "repeat_item_audit.json"
+    if ra.exists():
+        audit = json.loads(ra.read_text())
+        label = {"ml_1m": "MovieLens-1M", "amazon_video_games": "Amazon-VG",
+                 "gowalla_ts": "Gowalla"}
+        for name, row in audit.items():
+            pretty = label.get(name, name)
+            for key, field in (("val_equals_test_pct", "val==test"),
+                               ("test_item_seen_in_train_pct", "test-in-train"),
+                               ("repeat_event_pct", "repeat events")):
+                want = row[key]
+                # Every percentage the table quotes for this corpus.
+                if f"{want:.2f}\\%" not in tex and f"${want:.2f}\\%$" not in tex:
+                    bad.append(
+                        f"repeat audit: {pretty} {field} = {want:.2f}% "
+                        f"is not present in the manuscript")
+        # rho is quoted in three places and drives the impossibility claim.
+        g = audit.get("gowalla_ts")
+        if g:
+            rho = 1.0 - g["test_item_seen_in_train_pct"] / 100.0
+            if f"\\rho = {rho:.3f}" not in tex:
+                bad.append(f"repeat audit: Gowalla retrievability ceiling "
+                           f"rho = {rho:.3f} is not quoted in the manuscript")
 
     # 8. efficiency bound must not understate the artefact
     worst = max(r["e1_source_share"]["efficiency"]["abs_error"] for r in res.values())
