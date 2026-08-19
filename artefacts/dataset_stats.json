@@ -34,11 +34,11 @@
   },
   "_meta": {
     "corpora_in_this_run": [
-      "gowalla_ts"
+      "amazon_video_games"
     ],
     "source": "measured",
-    "measured_at": "2026-08-08T15:49:10.559006+00:00",
-    "corpus_hash": "8b3de94b933c4a56",
+    "measured_at": "2026-08-19T13:22:41.972674+00:00",
+    "corpus_hash": "db694693e7e2dd6f",
     "synthetic": false
   }
 }

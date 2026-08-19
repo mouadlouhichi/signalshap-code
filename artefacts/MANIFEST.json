@@ -1,26 +1,26 @@
 {
- "git_commit": "6f8d0b36c52bf33b1091e60bf300e0936a3318a3",
- "git_describe": "6f8d0b3-dirty",
+ "git_commit": "0f059815dc973fad9ddb8fb0c521ae74155e759a",
+ "git_describe": "discover-ai-submission-36-g0f05981-dirty",
  "environment": {
-  "python": "3.11.2",
-  "platform": "Linux-6.1.158+-x86_64-with-glibc2.36",
-  "machine": "x86_64",
-  "numpy": "2.4.6",
-  "scipy": "1.17.1",
+  "python": "3.12.13",
+  "platform": "macOS-26.6-arm64-arm-64bit",
+  "machine": "arm64",
+  "numpy": "2.5.1",
+  "scipy": "1.18.0",
   "pandas": "3.0.5",
   "sklearn": "1.9.0",
   "matplotlib": "3.11.1",
   "blas": "see numpy.show_config"
  },
- "n_artefacts": 53,
+ "n_artefacts": 54,
  "artefacts": {
   "candidate_rule_ablation_ml_1m.json": {
    "sha256": "7ee0120e7a4fe56baf5e1127351d7b3bd15fc944b3644b380f141417aa13e09e",
    "bytes": 1580
   },
   "dataset_stats.json": {
-   "sha256": "58b6e2a91811e90ea18e839cec661cbcbe803ab16d3156faccade5b74e284973",
-   "bytes": 928
+   "sha256": "227178e6428868b9358c6e2f3b315be06bc1c3ffd904c552ef382dad532c8a07",
+   "bytes": 936
   },
   "e10_values_amazon_video_games.json": {
    "sha256": "bb5b62bbc8564f1b97e26a0692ab2a76d431d5856957ba528b8fa80763a43b91",
@@ -111,8 +111,8 @@
    "bytes": 2838
   },
   "global_timeblock.json": {
-   "sha256": "d4658c8a2b5f6965a27d115e9a752e604271dce0cbe47769ef789503e4238e84",
-   "bytes": 1513
+   "sha256": "e1a663cba1b4896a5e4c8c9c3e0988f45aaaac028535f888710d80680d77605c",
+   "bytes": 4021
   },
   "gowalla_subsample_sensitivity.json": {
    "sha256": "47dca09b7734956259bd3119b026f403d6e4bffe7b16c1e39363c3a5cb2e0305",
@@ -154,25 +154,29 @@
    "sha256": "1bc4859d21a7d8cd4af870499f8ed9bc101683c8b0462e1f48483f2f610eb58a",
    "bytes": 4031
   },
+  "pool_sensitivity.json": {
+   "sha256": "336605879cfcd9c896d19642d392e037df7e85487d2dc68a208173fc11f37f33",
+   "bytes": 16145
+  },
   "protocol_sensitivity.json": {
-   "sha256": "d5a77df6fc1e04213dacb81063535579b808d425c160b0f9b03b92b8de4bfc1c",
-   "bytes": 6823
+   "sha256": "64fe09fe43ba32601fee42ce3a0ed782ec368a00cb5b5ae8eca2017d2fc8ae55",
+   "bytes": 27085
   },
   "repeat_item_audit.json": {
    "sha256": "f06312d3dbfc1b471e38c621f6a5c9633fca6b6196e5a94a3ec0de4653aabfe6",
    "bytes": 2491
   },
   "results_amazon_video_games.json": {
-   "sha256": "d1382bb59d0c0d3fff670a30f30952a7e46b68a3ae8e8a4f8ac5d8536fe7788e",
-   "bytes": 33381
+   "sha256": "9e990fec6d7193b73d85be8b47a4f1099ae85b456a93e6c308a2ded685171124",
+   "bytes": 34852
   },
   "results_gowalla_ts.json": {
    "sha256": "08584520b5447df3c3e3653917de3b8c91d3c10dd85f9285985bc1a45d490c50",
    "bytes": 33516
   },
   "results_ml_1m.json": {
-   "sha256": "4c97ab303a98d982abe06a3b6893b9146bc5211c3197bf0c296722e42bc5c4a0",
-   "bytes": 33790
+   "sha256": "393a30e07392534f8750e8aa4f30517a9729229bdc5fb46920ba78dfba73f7c3",
+   "bytes": 35800
   },
   "revision_amazon_video_games.json": {
    "sha256": "a50ace59644522914fbcef2178ef80bd6305e8bb4a3c49ce3e2b091cc33138cc",
@@ -195,8 +199,8 @@
    "bytes": 218
   },
   "study_manifest.json": {
-   "sha256": "4f56f8bc3ac07e90ddc89fd5bf311df9cfaa7b5f43889e08f30c5a34985816a9",
-   "bytes": 887
+   "sha256": "22c96f7c196e0c5911aa77be8b900bf7afc142075c3f9397b721f5bee4cd837b",
+   "bytes": 895
   },
   "synthetic_pilot/results_amazon_book.json": {
    "sha256": "13e272e0598e4f794dbeb63806458efcdd9096467ad61d74b577aacb2c4fab5c",
