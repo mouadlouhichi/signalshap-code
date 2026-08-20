@@ -1,0 +1,235 @@
+{
+ "git_commit": "0b8e998a13610932cef79b8ccb3fab55074263d3",
+ "git_describe": "0b8e998-dirty",
+ "environment": {
+  "python": "3.11.2",
+  "platform": "Linux-6.1.158+-x86_64-with-glibc2.36",
+  "machine": "x86_64",
+  "numpy": "2.4.6",
+  "scipy": "1.17.1",
+  "pandas": "3.0.5",
+  "sklearn": "1.9.0",
+  "matplotlib": "3.11.1",
+  "blas": "see numpy.show_config"
+ },
+ "n_artefacts": 54,
+ "artefacts": {
+  "candidate_rule_ablation_ml_1m.json": {
+   "sha256": "7ee0120e7a4fe56baf5e1127351d7b3bd15fc944b3644b380f141417aa13e09e",
+   "bytes": 1580
+  },
+  "dataset_stats.json": {
+   "sha256": "227178e6428868b9358c6e2f3b315be06bc1c3ffd904c552ef382dad532c8a07",
+   "bytes": 936
+  },
+  "e10_values_amazon_video_games.json": {
+   "sha256": "bb5b62bbc8564f1b97e26a0692ab2a76d431d5856957ba528b8fa80763a43b91",
+   "bytes": 1416
+  },
+  "e10_values_ml_1m.json": {
+   "sha256": "36553f152e81a80b89e8ab397480385080b782440bf6995ac171d6e410bb0e96",
+   "bytes": 2727
+  },
+  "e10_values_ml_1m_symmetric_candidates.json": {
+   "sha256": "4efb11a8df109e7348f3add0a0e774e63879eac1b549ac0cca85b1a68a6f3797",
+   "bytes": 2523
+  },
+  "e11_estimands_amazon_video_games.json": {
+   "sha256": "365cb5cbf71c7901efe60c653ce5d07cc43b036ebd51b8e6a9854875e39a176d",
+   "bytes": 2698
+  },
+  "e11_estimands_ml_1m.json": {
+   "sha256": "cd1eec1d18e160fcf7cf35ff6f565095f86808f9d01180cb4a78c09e2fdbc217",
+   "bytes": 2692
+  },
+  "e12_retirement_amazon_video_games.json": {
+   "sha256": "e22af432852b54b0c838860a2dc3f7effd0ca4c2cd3460d3534c025140fa1291",
+   "bytes": 2162
+  },
+  "e12_retirement_gowalla_ts.json": {
+   "sha256": "99f2f562aaf0e19e44e23ed4d6073f7b6b3a2549cf13db81929218e2f9ff49d6",
+   "bytes": 2183
+  },
+  "e12_retirement_ml_1m.json": {
+   "sha256": "5dc3fdf923723d9a0247fa65f1dc1e093904d02758829423a1ecea0110329b76",
+   "bytes": 2162
+  },
+  "e13_synthetic_ground_truth.json": {
+   "sha256": "ac9d658f5c7c2c3995c7196236d34586a6b898498e120119a137b40ad5c4f222",
+   "bytes": 2459
+  },
+  "e9_recovery_amazon_book_lgcn.json": {
+   "sha256": "12a56942c509d0c18a5a9d846bb607726f7c516fd24449130b4674490010801e",
+   "bytes": 4556
+  },
+  "e9_recovery_gowalla.json": {
+   "sha256": "74c50e8ae63ba411395f857544538ce2c49cfbc4181d23c9a6ed78727ba1b1ce",
+   "bytes": 4588
+  },
+  "e9_recovery_ml_1m.json": {
+   "sha256": "f1a0a316ebabfbd85d6486c197e0c52933ebf62ba6b56744363f705d6f2c6314",
+   "bytes": 4741
+  },
+  "e9_recovery_multisource.json": {
+   "sha256": "e478de0fe9c1bc5135d7230e2b55985ce2514d620af3a74afe29dcc22afd2779",
+   "bytes": 5020
+  },
+  "e9_recovery_yelp2018.json": {
+   "sha256": "0a3a844e7c8239b23e185139cde4341feb6925e22226827092bc5a119364a324",
+   "bytes": 4587
+  },
+  "e9_ridge_diagnostic.json": {
+   "sha256": "5957cd4c730749ed134380c57149079dae474c3368c97c75aea375a541b5a783",
+   "bytes": 8280
+  },
+  "final_friedman.json": {
+   "sha256": "0195a0aa4cb93c5c57eaebadb3da5ba5a106fff7b5fbd05a306b36026c3f7793",
+   "bytes": 1093
+  },
+  "final_lambda_sweep.json": {
+   "sha256": "851a0e8b5251e03f8f11af804f253a9f89a09970f25917a23a2ede53f2acc924",
+   "bytes": 8821
+  },
+  "final_loo_gap_ci.json": {
+   "sha256": "d398e5ff451fdeefea62402db20317555d1fd3dc07615539adbd9957f5bbfa3a",
+   "bytes": 9942
+  },
+  "final_retirement_seeds.json": {
+   "sha256": "be3588c49ec62394f3fccf4e188b52184afe6e3400257190a30053ce13030343",
+   "bytes": 7784
+  },
+  "final_seed_ci.json": {
+   "sha256": "80272de2b8588293719221d02dc9038bd7b5dbc02a51d9689b0edfc9b38356ad",
+   "bytes": 29756
+  },
+  "final_seed_ci_resized_12.6gb.json": {
+   "sha256": "6057bcced29ef2898e33d5d0e807413a350d4987dfaeda40129f8a389079334f",
+   "bytes": 9527
+  },
+  "global_time_audit.json": {
+   "sha256": "94ec0594098e92a2d7c8ba3e8b551c7708ef93a3303312a5a7840f9411ef6741",
+   "bytes": 2838
+  },
+  "global_timeblock.json": {
+   "sha256": "e1a663cba1b4896a5e4c8c9c3e0988f45aaaac028535f888710d80680d77605c",
+   "bytes": 4021
+  },
+  "gowalla_subsample_sensitivity.json": {
+   "sha256": "47dca09b7734956259bd3119b026f403d6e4bffe7b16c1e39363c3a5cb2e0305",
+   "bytes": 2091
+  },
+  "interaction_seed_ci_ml_1m.json": {
+   "sha256": "699d30451b286cee773352006937524e3b16f94ca8a281bde40acd5cedb38989",
+   "bytes": 7840
+  },
+  "interactions_all_corpora.json": {
+   "sha256": "24ea584b0ff8124c4e5dff1dbf4df8649ebba3a777478c415bdf794c5fdfd035",
+   "bytes": 2315
+  },
+  "kcore_sweep.json": {
+   "sha256": "0ba6df75d273229bbe7f65f80bab32bcc99387f8c53d151e6282a28292d4c463",
+   "bytes": 2332
+  },
+  "metric_robustness_ml_1m.json": {
+   "sha256": "9c23db087f1a5f313242a68b813fa54176240ac539f41b7004919e7cf546f39c",
+   "bytes": 981
+  },
+  "nmax_rereg_amazon_book.json": {
+   "sha256": "b2104cfdeb99dc732fc57f5752bfa74b0fe579e3b87e964e477f78712a1d9f5a",
+   "bytes": 834
+  },
+  "nmax_rereg_lightgcn_corpora.json": {
+   "sha256": "0cd72012632f98ee13af0d228e8d738e77b6d2cdd5269debac46bcdb6efb2e46",
+   "bytes": 596
+  },
+  "nmax_rereg_ml_1m.json": {
+   "sha256": "ed7adad7b027b18476915c1d8f7685dc7d67f8e1bb5afd633d872d0cde5e59e6",
+   "bytes": 540
+  },
+  "paired_delta_tau.json": {
+   "sha256": "e38b8626374bf018e77c84f14e81d941c3538f1185c11aea53b17d5c2ccbb3b3",
+   "bytes": 1013
+  },
+  "paired_gap_intervals.json": {
+   "sha256": "1bc4859d21a7d8cd4af870499f8ed9bc101683c8b0462e1f48483f2f610eb58a",
+   "bytes": 4031
+  },
+  "pool_sensitivity.json": {
+   "sha256": "336605879cfcd9c896d19642d392e037df7e85487d2dc68a208173fc11f37f33",
+   "bytes": 16145
+  },
+  "protocol_sensitivity.json": {
+   "sha256": "64fe09fe43ba32601fee42ce3a0ed782ec368a00cb5b5ae8eca2017d2fc8ae55",
+   "bytes": 27085
+  },
+  "repeat_item_audit.json": {
+   "sha256": "f06312d3dbfc1b471e38c621f6a5c9633fca6b6196e5a94a3ec0de4653aabfe6",
+   "bytes": 2491
+  },
+  "results_amazon_video_games.json": {
+   "sha256": "9e990fec6d7193b73d85be8b47a4f1099ae85b456a93e6c308a2ded685171124",
+   "bytes": 34852
+  },
+  "results_gowalla_ts.json": {
+   "sha256": "08584520b5447df3c3e3653917de3b8c91d3c10dd85f9285985bc1a45d490c50",
+   "bytes": 33516
+  },
+  "results_ml_1m.json": {
+   "sha256": "393a30e07392534f8750e8aa4f30517a9729229bdc5fb46920ba78dfba73f7c3",
+   "bytes": 35800
+  },
+  "revision_amazon_video_games.json": {
+   "sha256": "a50ace59644522914fbcef2178ef80bd6305e8bb4a3c49ce3e2b091cc33138cc",
+   "bytes": 1656
+  },
+  "revision_gowalla_ts.json": {
+   "sha256": "d37a2beee9bb57b919b11acca83c3e4b3c9ec4b246489d4de1518716a807b845",
+   "bytes": 1365
+  },
+  "revision_ml_1m.json": {
+   "sha256": "1cac0b71228c0e56b21059e1301aa40ae5ac119cb68274d289e84cb72901235f",
+   "bytes": 1662
+  },
+  "revision_summary.json": {
+   "sha256": "a386f5dc8b6bcf4ece91dfe2cc85d72a15699554bab53d605afc3ab1da35050e",
+   "bytes": 1794
+  },
+  "source_order_sensitivity.json": {
+   "sha256": "a335b8f936af5b37da0aa6f3404b8c86a73efeed63a48755962b13180a67ce53",
+   "bytes": 218
+  },
+  "study_manifest.json": {
+   "sha256": "22c96f7c196e0c5911aa77be8b900bf7afc142075c3f9397b721f5bee4cd837b",
+   "bytes": 895
+  },
+  "synthetic_pilot/results_amazon_book.json": {
+   "sha256": "13e272e0598e4f794dbeb63806458efcdd9096467ad61d74b577aacb2c4fab5c",
+   "bytes": 26931
+  },
+  "synthetic_pilot/results_amazon_book_lgcn.json": {
+   "sha256": "e8682689f32403cc7229134f300b4a93fc6d2a88a53f80b0503add185ed5e30c",
+   "bytes": 25276
+  },
+  "synthetic_pilot/results_gowalla.json": {
+   "sha256": "66a0fa207a115cf5fbe04bb14459fdfb6fdaf6006a990142917dace07556a0a6",
+   "bytes": 25216
+  },
+  "synthetic_pilot/results_lastfm_2k.json": {
+   "sha256": "b97dd75d2ee2fe660a6eb9f0f78c4c064b4cc11a7c0735037850bd48c20a82ef",
+   "bytes": 26837
+  },
+  "synthetic_pilot/results_yelp2018.json": {
+   "sha256": "3ea963c41dc0d24f231017b97118f23551f346c5b1c8d24dc0b718b15517f589",
+   "bytes": 25240
+  },
+  "temporal_validity_amazon_video_games.json": {
+   "sha256": "ecf600c6b2b8819059909eb1d14c91765c22a2f60e9224c1ef771993f716add8",
+   "bytes": 463
+  },
+  "temporal_validity_gowalla_ts.json": {
+   "sha256": "7f4eabe537e054bf361748e098982dfd80b9cd01602a68e7fdd0db512b6643ef",
+   "bytes": 455
+  }
+ },
+ "note": "SHA-256 of every artefact backing a reported number, with the commit and environment that produced them. Cross-platform BLAS differences change candidate contents for a small number of users, so the backend is recorded alongside the hashes."
+}

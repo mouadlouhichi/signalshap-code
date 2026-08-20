@@ -1,0 +1,33 @@
+{
+ "dataset": "ml_1m",
+ "seed": 42,
+ "shapley_ndcg10": {
+  "cf": 0.015314842716291844,
+  "ct": -5.443978836193515e-05,
+  "pop": 0.006526573465739088,
+  "rec": 0.0005594167121377458,
+  "seq": 0.029524874120525613
+ },
+ "shapley_recall10": {
+  "cf": 0.03614747307373653,
+  "ct": 0.0024827395747031187,
+  "pop": 0.01571112952223143,
+  "rec": 0.003835956917978459,
+  "seq": 0.05996685998342999
+ },
+ "shapley_mrr10": {
+  "cf": 0.01058061550128659,
+  "ct": 0.0006824355720378903,
+  "pop": 0.005257560614230045,
+  "rec": 0.0010723567987445369,
+  "seq": 0.021778620524892274
+ },
+ "kendall_tau_ndcg_vs_recall": 0.9999999999999999,
+ "kendall_tau_ndcg_vs_mrr": 0.9999999999999999,
+ "top_source": {
+  "ndcg": "seq",
+  "recall": "seq",
+  "mrr": "seq"
+ },
+ "note": "Metric-robustness check: the same game re-scored with Recall@10 and MRR@10 in place of NDCG@10. Recall/MRR games are not baseline-centred, so magnitudes are not comparable to the NDCG attributions; only the induced ordering is."
+}

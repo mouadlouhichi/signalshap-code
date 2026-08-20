@@ -1,0 +1,7 @@
+{
+  "n_permutations": 120,
+  "n_users_probed": 60,
+  "identical_permutations": 1,
+  "worst_mean_jaccard": 0.9965644192127183,
+  "note": "Source-order sensitivity of the Eq. (1) truncation tie-break, ml_1m N_max=600."
+}

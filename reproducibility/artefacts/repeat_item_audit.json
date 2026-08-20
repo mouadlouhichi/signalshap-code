@@ -1,0 +1,47 @@
+{
+  "ml_1m": {
+    "dataset": "ml_1m",
+    "users_with_both_folds": 6035,
+    "val_equals_test_item": 0,
+    "val_equals_test_pct": 0.0,
+    "test_item_seen_in_train": 0,
+    "test_item_seen_in_train_pct": 0.0,
+    "val_item_seen_in_train": 0,
+    "val_item_seen_in_train_pct": 0.0,
+    "total_events": 575276,
+    "distinct_user_item_pairs": 575276,
+    "repeat_events": 0,
+    "repeat_event_pct": 0.0,
+    "note": "val_equals_test_item counts users whose held-out validation and test events name the SAME item, so the head is fitted on the target it is later scored against. test_item_seen_in_train counts users whose test item was already consumed in training, in which case mask_seen removes it from every candidate set and its payoff is zero for every coalition."
+  },
+  "amazon_video_games": {
+    "dataset": "amazon_video_games",
+    "users_with_both_folds": 7120,
+    "val_equals_test_item": 430,
+    "val_equals_test_pct": 6.03932584269663,
+    "test_item_seen_in_train": 198,
+    "test_item_seen_in_train_pct": 2.7808988764044944,
+    "val_item_seen_in_train": 271,
+    "val_item_seen_in_train_pct": 3.806179775280899,
+    "total_events": 117468,
+    "distinct_user_item_pairs": 111280,
+    "repeat_events": 6188,
+    "repeat_event_pct": 5.267817618415228,
+    "note": "val_equals_test_item counts users whose held-out validation and test events name the SAME item, so the head is fitted on the target it is later scored against. test_item_seen_in_train counts users whose test item was already consumed in training, in which case mask_seen removes it from every candidate set and its payoff is zero for every coalition."
+  },
+  "gowalla_ts": {
+    "dataset": "gowalla_ts",
+    "users_with_both_folds": 8865,
+    "val_equals_test_item": 1260,
+    "val_equals_test_pct": 14.213197969543147,
+    "test_item_seen_in_train": 4424,
+    "test_item_seen_in_train_pct": 49.90411731528483,
+    "val_item_seen_in_train": 4498,
+    "val_item_seen_in_train_pct": 50.738860688099265,
+    "total_events": 542970,
+    "distinct_user_item_pairs": 257327,
+    "repeat_events": 285643,
+    "repeat_event_pct": 52.60751054386062,
+    "note": "val_equals_test_item counts users whose held-out validation and test events name the SAME item, so the head is fitted on the target it is later scored against. test_item_seen_in_train counts users whose test item was already consumed in training, in which case mask_seen removes it from every candidate set and its payoff is zero for every coalition."
+  }
+}

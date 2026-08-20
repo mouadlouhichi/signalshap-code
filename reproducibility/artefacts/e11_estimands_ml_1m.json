@@ -1,0 +1,85 @@
+{
+  "dataset": "ml_1m",
+  "refit_head": {
+    "shapley": {
+      "cf": 0.015451832278226767,
+      "ct": -8.521263825022287e-05,
+      "pop": 0.006369379596653198,
+      "rec": 0.00026062983437342643,
+      "seq": 0.029367143172692914
+    },
+    "v_grand": 0.051363772243696086
+  },
+  "fixed_head": {
+    "shapley": {
+      "cf": 0.018670107213631874,
+      "ct": -0.001039901681862511,
+      "pop": 0.005282468251542422,
+      "rec": -0.0007894141585634702,
+      "seq": 0.029240512618947764
+    },
+    "v_grand": 0.051363772243696086
+  },
+  "end_to_end": {
+    "shapley": {
+      "cf": 0.014777545288494672,
+      "ct": -0.00010180834005650516,
+      "pop": 0.007833677416049728,
+      "rec": -0.00022477314962237216,
+      "seq": 0.029079131028830554
+    },
+    "v_grand": 0.051363772243696086,
+    "coalition_recall": {
+      "empty": 0.0,
+      "cf": 0.7895608947804474,
+      "ct": 0.1852526926263463,
+      "pop": 0.6367854183927092,
+      "rec": 0.1855840927920464,
+      "seq": 0.691963545981773,
+      "cf,ct": 0.6876553438276719,
+      "cf,pop": 0.7847555923777962,
+      "cf,rec": 0.6896437448218724,
+      "cf,seq": 0.8182270091135045,
+      "ct,pop": 0.512344656172328,
+      "ct,rec": 0.18591549295774648,
+      "ct,seq": 0.6177299088649544,
+      "pop,rec": 0.5179784589892295,
+      "pop,seq": 0.7983429991714995,
+      "rec,seq": 0.616072908036454,
+      "cf,ct,pop": 0.7105219552609776,
+      "cf,ct,rec": 0.6268434134217067,
+      "cf,ct,seq": 0.7620546810273405,
+      "cf,pop,rec": 0.7123446561723281,
+      "cf,pop,seq": 0.8289975144987572,
+      "cf,rec,seq": 0.7622203811101905,
+      "ct,pop,rec": 0.4583264291632146,
+      "ct,pop,seq": 0.731897265948633,
+      "ct,rec,seq": 0.5743164871582436,
+      "pop,rec,seq": 0.7335542667771334,
+      "cf,ct,pop,rec": 0.6573322286661143,
+      "cf,ct,pop,seq": 0.7822700911350455,
+      "cf,ct,rec,seq": 0.7194697597348799,
+      "cf,pop,rec,seq": 0.7832642916321458,
+      "ct,pop,rec,seq": 0.6891466445733223,
+      "cf,ct,pop,rec,seq": 0.7483015741507871
+    }
+  },
+  "agreement": {
+    "refit_vs_fixed": {
+      "kendall_tau": 0.9999999999999999,
+      "top_source_a": "seq",
+      "top_source_b": "seq"
+    },
+    "refit_vs_e2e": {
+      "kendall_tau": 0.7999999999999999,
+      "top_source_a": "seq",
+      "top_source_b": "seq"
+    },
+    "fixed_vs_e2e": {
+      "kendall_tau": 0.7999999999999999,
+      "top_source_a": "seq",
+      "top_source_b": "seq"
+    }
+  },
+  "note": "refit_head mixes source value with the value of re-optimising the fusion; fixed_head isolates the deployed contribution; end_to_end is the only one that includes retrieval and therefore the only one that speaks to a retirement decision."
+}
