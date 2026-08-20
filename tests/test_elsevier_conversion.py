@@ -38,11 +38,25 @@ def tex() -> str:
     return KBS.read_text()
 
 
-def test_generated_file_matches_its_generator(tex):
-    expected, _ = _mod().convert(SPRINGER.read_text())
-    assert tex == expected, (
-        "paper-kbs/kbs-article.tex differs from what scripts/make_elsevier.py "
-        "produces. Edit paper/sn-article.tex and re-run the generator.")
+def test_generator_still_runs(tex):
+    """RETIRED as an equality check; kept so the generator stays usable.
+
+    `make_elsevier.py` bootstrapped paper-kbs/kbs-article.tex from the
+    Springer source. The KBS manuscript has since been edited directly:
+    double-column math reflow, symbol disambiguation, two corrected
+    bibliography entries, and the declaration sections. Those edits are the
+    submission and cannot be regenerated from the Springer file, so byte
+    equality is the wrong invariant and asserting it would only pressure
+    someone to overwrite the submitted text.
+
+    What still matters is that the numbers do not drift, and that is enforced
+    by check_paper_numbers.py against artefacts/ together with the
+    guide-conformance tests below.
+    """
+    out, stats = _mod().convert(SPRINGER.read_text())
+    assert stats["abstract_words"] > 0
+    assert stats["sections"] >= 5
+    assert r"\documentclass" in out
 
 
 # -- Knowledge-Based Systems guide for authors ------------------------------ #

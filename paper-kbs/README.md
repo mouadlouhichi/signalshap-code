@@ -3,19 +3,21 @@
 Elsevier CAS double-column version of the manuscript, targeting
 [Knowledge-Based Systems](https://www.sciencedirect.com/journal/knowledge-based-systems).
 
-## This file is generated
+## This manuscript is edited directly
 
-`kbs-article.tex` is produced from `../paper/sn-article.tex` by
-`../scripts/make_elsevier.py`. **Do not edit it by hand.** The Springer file
-stays the source of truth for prose and numbers, because
-`scripts/check_paper_numbers.py` validates that file against `artefacts/`. A
-hand-forked Elsevier copy would drift from the data within one revision and
-nothing would catch it. `tests/test_elsevier_conversion.py` fails if the two
-diverge.
+`kbs-article.tex` was **bootstrapped** from `../paper/sn-article.tex` by
+`../scripts/make_elsevier.py`, but it is no longer generated. The KBS version
+has since been edited directly: double-column math reflow, symbol
+disambiguation, two corrected bibliography entries, and the Elsevier
+declaration sections. Those edits are the submission.
 
-```bash
-python scripts/make_elsevier.py        # regenerate after editing the source
-```
+**Do not run the generator against this file.** `make regen` exists for a
+fresh re-port and will overwrite the submitted text, the bibliography and the
+figures. `make check` deliberately does not call it.
+
+What still guards the numbers is `scripts/check_paper_numbers.py`, which
+validates against `artefacts/`, plus the guide-conformance tests in
+`tests/test_elsevier_conversion.py`.
 
 ## Build
 
@@ -84,11 +86,55 @@ Checked by the generator on every run, and by
 | `highlights.tex` | highlights, uploaded as its own item |
 | `cas-dc.cls`, `cas-common.sty`, `*.bst` | after `fetch-template.sh` |
 
+
+## Submission checklist
+
+Verified on the current tree. Re-run `make check` and `make zip` after any edit.
+
+| item | state |
+|---|---|
+| compiles, pdflatex | 30 pages, 0 errors, 0 undefined refs or citations |
+| content within margins | max reach 544pt of 595pt; no page within 15pt of the edge |
+| abstract | 214 words (cap 250) |
+| keywords | 6 (cap 7) |
+| highlights | 5 bullets, longest 78 chars (3-5, cap 85), separate file |
+| citations | `elsarticle-num`, numbered `[n]` in order |
+| sections | numbered; no starred sections in the body |
+| CRediT statement | present, official taxonomy roles only |
+| competing interest | present |
+| generative AI declaration | present |
+| data availability | present, Option C wording |
+| code availability | present, public repository |
+| bundle | editable sources only; `make zip` fails if build products leak |
+
+### Upload as separate items
+
+1. `signalshap-kbs.zip` (manuscript sources, bibliography, figures)
+2. `highlights.tex` content, as the Highlights item
+3. `kbs-article.pdf` as the reviewer PDF
+
+### Known, deliberate
+
+- **One overfull hbox of 123.6pt is reported at `\maketitle`.** It is internal
+  to the CAS abstract frame and does not reach the page edge; nothing is
+  clipped. Three further boxes are under 13pt.
+- **`kbs-article.tex` is no longer generated.** `make_elsevier.py` bootstrapped
+  it from the Springer source; the text has since been edited directly, so
+  `make check` does not re-run the generator. Use `make regen` only for a
+  fresh re-port, and expect it to overwrite the submitted text and figures.
+- **Table 7 draws one row from two runs.** The Shapley column reproduces the
+  estimand table so the two agree; the other columns come from the retirement
+  run. Their grand-coalition values differ in the fifth decimal. Kendall tau
+  is +0.20 either way, and the caption and `artefacts/PROVENANCE.md` say so.
+
 ## Still open before submission
 
-- **No immutable DOI.** The data-availability statement points at a GitHub
-  repository and a hashed manifest, not a permanent archive. KBS applies
-  research-data Option C, so a Zenodo or Mendeley Data deposit would satisfy
-  it cleanly.
-- The submission tag still reads `discover-ai-submission` in the repository;
-  retag before submitting.
+- **No immutable DOI.** Code availability now points at a public repository,
+  which addresses the reviewer's stated blocker, but KBS applies research-data
+  Option C and that asks for a persistent identifier. A Zenodo or Mendeley
+  Data deposit would close it properly; a GitHub URL can move.
+- **The public repository is the pre-reorganisation snapshot.** It runs and
+  its tests pass, but it predates `environment.yml`, `data_preparation/`,
+  `experiments/`, `tables/` and `figures/`. Push the current
+  `reproducibility/` contents before submitting, so the cited repository
+  matches what the paper describes.

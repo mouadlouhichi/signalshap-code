@@ -2490,7 +2490,12 @@ realisation, not a population-level ``true'' cost.
 
 \begin{table*}[tp]
 \caption{MovieLens-1M source-retirement loss at seed 42. Negative loss denotes
-an NDCG@10 improvement after removal.}
+an NDCG@10 improvement after removal. The Shapley column reproduces the
+refitted-head row of Table~\ref{tab:estimands} so the two tables agree; the
+observed loss, recall and $\LOOr$ columns come from the retirement run, whose
+grand-coalition value differs in the fifth decimal ($0.05169$ against
+$0.05136$) because the two runs rebuild candidates independently. Rank
+agreement with the observed loss is $\tau = +0.20$ under either column.}
 \label{tab:retirement}
 \begin{tabular}{@{}lrrrr@{}}
 \toprule
@@ -2509,8 +2514,9 @@ $seq$  & $+0.01702$ & $0.659$ & $+0.02927$ & $+0.01672$ \\
 \end{table*}
 
 \paragraph{Which LOO is being tested}
-The LOO column of Table~\ref{tab:retirement} is $\LOOr$: it comes from the same
-fixed-candidate game as the Shapley column, so the comparison is like for like.
+The LOO column of Table~\ref{tab:retirement} is $\LOOr$: it is computed on the
+same \emph{kind} of fixed-candidate game as the Shapley column, so the
+comparison is like for like.
 It is \emph{not} $\LOOe$, which would equal the observed loss by construction
 (Equation~\ref{eq:loo}) and could not be evaluated as a predictor of it. The
 result below is therefore not the tautology it might appear to be. It says
@@ -2969,20 +2975,23 @@ analytical code; no generative tool was used to create or alter them.
 This work uses three public corpora and redistributes none of them.
 MovieLens-1M is used under the GroupLens research-use license, Gowalla
 check-ins come from the SNAP collection, and the Video Games category is taken
-from the Amazon Reviews 2023 corpus; \texttt{scripts/fetch\_benchmarks.sh} and
-\texttt{scripts/fetch\_timestamped.sh} refetch each from its original source.
-The corpora themselves are not redistributed because the GroupLens license
-forbids it. All derived data behind every reported number, together with the
-code that produces it, is openly available at
-\url{https://github.com/mouadlouhichi/signalshap-code}. The repository ships
-\texttt{artefacts/MANIFEST.json}, recording a SHA-256 for each artefact file
-with the commit and environment that produced it, including the BLAS backend,
-because Section~\ref{sec:threats} shows the backend changes candidate contents
-for a small number of users. \texttt{artefacts/PROVENANCE.md} maps every table
-and figure to the artefact, platform, candidate rule and seeds behind it. We
-state the residual limitation precisely: a reader reproducing from raw data
-must refetch the corpora first, and a run on a different BLAS reproduces the
-reported signs and orderings but not every fifth decimal.
+from the Amazon Reviews 2023 corpus; the fetch scripts in the repository
+retrieve each from its original source. The corpora themselves are not
+redistributed because the GroupLens license forbids it. All derived data
+behind every reported number is released with the code, together with
+\texttt{MANIFEST.json}, which records a SHA-256 for each artefact file with the
+commit and environment that produced it, including the BLAS backend, because
+Section~\ref{sec:threats} shows the backend changes candidate contents for a
+small number of users. \texttt{PROVENANCE.md} maps every table and figure to
+the artefact, platform, candidate rule and seeds behind it. We state the
+residual limitation precisely: a reader reproducing from raw data must refetch
+the corpora first, and a run on a different BLAS reproduces the reported signs
+and orderings but not every fifth decimal.
+
+\section*{Code availability}
+The implementation, configuration files, and scripts required to reproduce the
+reported experiments, tables, and figures are publicly available at
+\url{https://github.com/mouadlouhichi/signalshap}.
 
 \section*{Ethics}
 The study performs secondary analysis of previously released, de-identified

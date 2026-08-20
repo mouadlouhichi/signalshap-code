@@ -96,6 +96,13 @@ def main(tex_path: Path | None = None,
         "fontsize", "selectfont", "setcounter", "FloatBarrier", "let", "relax",
         "def", "smallskip", "footnotesize", "small", "tabcolsep", "setlength",
         "arraybackslash", "textwidth", "linewidth", "textsuperscript",
+        # Verified present in a clean pdflatex run of the CAS build: balance
+        # ships with cas-dc, columnwidth is a LaTeX kernel dimen, coordinate
+        # is TikZ, and the snSaved* pair are \let-saved float barriers.
+        "balance", "columnwidth", "coordinate",
+        "snSavedSectionBarrier", "snSavedResultsBarrier",
+        # placeins internal, reached inside \makeatletter ... \makeatother.
+        "@fb@secFB",
     }
     defined |= set(re.findall(
         r"\\(?:newcommand|renewcommand|providecommand|DeclareMathOperator"

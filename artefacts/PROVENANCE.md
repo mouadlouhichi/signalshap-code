@@ -35,7 +35,8 @@ reported sign are unaffected. See spec provenance entry 36.
 | Table 4 analytic games | `e13_synthetic_ground_truth.json` | any | n/a | n/a |
 | Table 5 interactions | `interaction_seed_ci_ml_1m.json` | x86 | legacy | 42-51 |
 | Table 6 LOO vs Shapley | `final_seed_ci.json` | M4 | **sym** | 42-51 (all columns) |
-| Table 7 retirement | `e12_retirement_ml_1m.json` | M4 | legacy | 42 |
+| Table 7 retirement, loss/recall/LOO columns | `e12_retirement_ml_1m.json` | M4 | sym | 42 |
+| Table 7 retirement, Shapley column | `e11_estimands_ml_1m.json` `refit_head.shapley` | M4 | sym | 42 |
 | Table 8 retirement seeds | `final_retirement_seeds.json` | M4 | **sym** | 42-51 |
 | Paired delta tau (Sec 13) | `final_retirement_seeds.json` `paired_delta_tau` | M4 | **sym** | 42-51 |
 | Figure 2 | `final_seed_ci.json` | M4 | **sym** | 42-51 |
@@ -52,6 +53,14 @@ reported sign are unaffected. See spec provenance entry 36.
 | Table 7 single-seed retirement | `e12_retirement_ml_1m.json` | M4 | **sym** | 42, raw utility |
 | Validation recall, Table 1 | `protocol_sensitivity.json` | M4 | sym | 42 |
 | LOO/gap intervals, ml_1m only (superseded) | `final_loo_gap_ci.json` | x86 | legacy | 42-51 |
+
+**Table 7 draws one row from two runs, deliberately.** The Shapley column
+reproduces the refitted-head row of the estimand table so the two tables
+agree; the remaining columns come from the retirement run. The two runs
+rebuild candidates independently, so their grand-coalition values differ in
+the fifth decimal (0.05136 against 0.05169) and `ct` changes sign at the
+1e-5 scale. Kendall tau against the observed loss is +0.20 under either
+column, so no reported conclusion depends on the choice.
 
 ## Status after commit 600fd98
 
