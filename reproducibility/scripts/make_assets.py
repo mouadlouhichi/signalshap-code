@@ -48,7 +48,7 @@ if __name__ == "__main__":
               f"declared; RELATIVE contrasts only, excluded from absolute NDCG")
     if not results:
         raise SystemExit("no usable artefacts/results_*.json -- "
-                         "run scripts/run_study.py first")
+                         "run experiments/run_study.py first")
     if a.include_failed:
         print("  WARNING: --include-failed set; these assets are DIAGNOSTIC "
               "and must not be used in the manuscript.")

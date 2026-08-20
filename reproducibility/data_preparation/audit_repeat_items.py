@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Do validation and test hold the same ITEM, not merely the same event?
 
-    python scripts/audit_repeat_items.py --corpora ml_1m --budget-gb 24
+    python data_preparation/audit_repeat_items.py --corpora ml_1m --budget-gb 24
 
 The split takes each user's last interaction as test and the second-to-last as
 validation. Those are distinct EVENTS, but nothing forces them to be distinct

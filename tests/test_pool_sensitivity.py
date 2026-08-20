@@ -16,7 +16,8 @@ from pathlib import Path
 import numpy as np
 import pytest
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
+for _d in ("scripts", "experiments"):          # flat repo, grouped release
+    sys.path.insert(0, str(Path(__file__).resolve().parents[1] / _d))
 
 from signalshap.candidates.builder import candidate_recall  # noqa: E402
 from signalshap.data.loaders import load_dataset            # noqa: E402

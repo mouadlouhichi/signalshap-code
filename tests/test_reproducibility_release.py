@@ -12,6 +12,7 @@ file CONTENT, not timestamps.
 from __future__ import annotations
 
 import hashlib
+import importlib.util
 import re
 from pathlib import Path
 
@@ -28,6 +29,26 @@ def _digest(p: Path) -> str:
     return hashlib.sha256(p.read_bytes()).hexdigest()
 
 
+def _same(a: Path, b: Path) -> bool:
+    """Compare content, allowing for the release's relocated runner paths.
+
+    The research repo keeps every runner in scripts/; the release groups them
+    into data_preparation/ and experiments/, and the sync rewrites intra-repo
+    invocations accordingly. That rewrite is intentional, so compare the
+    rewritten form rather than raw bytes.
+    """
+    if _digest(a) == _digest(b):
+        return True
+    spec = importlib.util.spec_from_file_location(
+        "_syncmod", ROOT / "scripts" / "sync_reproducibility.py")
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    try:
+        return mod._relocated(a.read_text()) == b.read_text()
+    except UnicodeDecodeError:
+        return False
+
+
 def test_source_tree_is_byte_identical():
     """src/ is the implementation; a fork here changes the results."""
     drift = []
@@ -36,7 +57,7 @@ def test_source_tree_is_byte_identical():
         b = REL / rel
         if not b.exists():
             drift.append(f"missing in release: {rel}")
-        elif _digest(a) != _digest(b):
+        elif not _same(a, b):
             drift.append(f"differs: {rel}")
     assert not drift, "\n".join(drift)
 
@@ -46,21 +67,43 @@ def test_configs_are_byte_identical():
     for a in sorted((ROOT / "configs").glob("*.yaml")):
         b = REL / "configs" / a.name
         assert b.exists(), f"missing: {a.name}"
-        assert _digest(a) == _digest(b), f"differs: {a.name}"
+        assert _same(a, b), f"differs: {a.name}"
+
+
+#: The release groups runners by purpose; the research repo keeps them all in
+#: scripts/. Content must still match exactly.
+RUNNER_DIRS = ("scripts", "data_preparation", "experiments")
 
 
 def test_shipped_scripts_are_byte_identical():
     """A release script must behave exactly like the one that made the numbers."""
     drift = []
-    for b in sorted((REL / "scripts").iterdir()):
-        if b.is_dir() or b.suffix not in (".py", ".sh"):
+    for d in RUNNER_DIRS:
+        if not (REL / d).exists():
             continue
-        a = ROOT / "scripts" / b.name
-        if not a.exists():
-            drift.append(f"release has an orphan script: {b.name}")
-        elif _digest(a) != _digest(b):
-            drift.append(f"differs: scripts/{b.name}")
+        for b in sorted((REL / d).iterdir()):
+            if b.is_dir() or b.suffix not in (".py", ".sh"):
+                continue
+            a = ROOT / "scripts" / b.name
+            if not a.exists():
+                drift.append(f"release has an orphan script: {d}/{b.name}")
+            elif not _same(a, b):
+                drift.append(f"differs: {d}/{b.name}")
     assert not drift, "\n".join(drift)
+
+
+def test_release_has_the_documented_directory_layout():
+    """The structure the README and the paper describe."""
+    for entry in ("README.md", "requirements.txt", "environment.yml",
+                  "configs", "src", "scripts", "data_preparation",
+                  "experiments", "tables", "figures"):
+        assert (REL / entry).exists(), f"release is missing {entry}"
+
+
+def test_generated_outputs_are_present():
+    """figures/ and tables/ are committed so a fresh run can be compared."""
+    assert len(list((REL / "figures").glob("*.png"))) >= 7
+    assert len(list((REL / "tables").glob("*.md"))) >= 8
 
 
 def test_shipped_tests_are_byte_identical():
@@ -69,7 +112,7 @@ def test_shipped_tests_are_byte_identical():
         a = ROOT / "tests" / b.name
         if not a.exists():
             drift.append(f"release has an orphan test: {b.name}")
-        elif _digest(a) != _digest(b):
+        elif not _same(a, b):
             drift.append(f"differs: tests/{b.name}")
     assert not drift, "\n".join(drift)
 

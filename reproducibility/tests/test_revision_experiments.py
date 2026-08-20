@@ -358,7 +358,7 @@ def _art(name):
 
     p = Path(__file__).resolve().parents[1] / "artefacts" / name
     if not p.exists():
-        pytest.skip(f"{name} not built yet (scripts/run_final_revision.py)")
+        pytest.skip(f"{name} not built yet (experiments/run_final_revision.py)")
     return json.loads(p.read_text())
 
 

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Is the split globally time-blocked, or only chronological per user?
 
-    python scripts/audit_global_time.py --corpora ml_1m amazon_video_games
+    python data_preparation/audit_global_time.py --corpora ml_1m amazon_video_games
 
 The split takes each user's last interaction as test and second-to-last as
 validation. That is chronological WITHIN a user. It does not follow that the

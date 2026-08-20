@@ -68,7 +68,7 @@ if __name__ == "__main__":
                 f"corpora need different user caps {caps}. Running them "
                 f"together would apply the smallest to all of them and change "
                 f"the corpora the manuscript reports. Run them one at a time:\n"
-                + "\n".join(f"  python scripts/run_study.py --datasets {k} "
+                + "\n".join(f"  python experiments/run_study.py --datasets {k} "
                              f"--budget-gb {budget:.0f}" for k in caps))
 
     t0 = time.time()

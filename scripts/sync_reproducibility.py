@@ -31,26 +31,36 @@ MIRROR_DIRS = ("src", "configs")
 #: in scripts/: the manuscript tooling (check_discover_ai, check_latex,
 #: make_elsevier, make_round8_notebook, make_assets' paper publishing) is
 #: repo-internal and would be dead weight or actively confusing in a release.
-SCRIPTS = (
-    "run_study.py",
-    "run_final_revision.py",
-    "run_full_revision.py",
-    "run_revision_experiments.py",
-    "run_protocol_sensitivity.py",
-    "run_global_timeblock.py",
-    "run_pool_sensitivity.py",
-    "audit_repeat_items.py",
-    "audit_global_time.py",
-    "measure_kcore_sweep.py",
-    "make_assets.py",
-    "make_manifest.py",
-    "check_paper_numbers.py",
-    "check_run_valid.py",
-    "fetch_benchmarks.sh",
-    "fetch_timestamped.sh",
-    "rerun_all.sh",
-    "run_round8_remaining.sh",
-)
+#: Runnable entry points, grouped by purpose in the release. Deliberately a
+#: whitelist, not everything in scripts/: the manuscript tooling
+#: (check_discover_ai, check_latex, make_elsevier, make_round8_notebook) is
+#: repo-internal and would be dead weight or actively confusing in a release.
+SCRIPT_DIRS = {
+    "data_preparation": (
+        "fetch_benchmarks.sh",
+        "fetch_timestamped.sh",
+        "audit_repeat_items.py",
+        "audit_global_time.py",
+        "measure_kcore_sweep.py",
+    ),
+    "experiments": (
+        "run_study.py",
+        "run_final_revision.py",
+        "run_full_revision.py",
+        "run_revision_experiments.py",
+        "run_protocol_sensitivity.py",
+        "run_global_timeblock.py",
+        "run_pool_sensitivity.py",
+        "rerun_all.sh",
+        "run_round8_remaining.sh",
+    ),
+    "scripts": (
+        "make_assets.py",
+        "make_manifest.py",
+        "check_paper_numbers.py",
+        "check_run_valid.py",
+    ),
+}
 
 #: Tests that read the manuscript or this repo's layout. Shipping them would
 #: hand a reviewer 13 failures on a clean clone, which reads as a broken
@@ -71,6 +81,34 @@ def _digest(p: Path) -> str:
     return hashlib.sha256(p.read_bytes()).hexdigest()
 
 
+def _relocated(text: str) -> str:
+    """Rewrite `scripts/NAME` to the release directory that holds NAME.
+
+    The research repo keeps every runner in scripts/; the release groups them
+    by purpose. Shell drivers and docstrings invoke siblings by path, so a
+    straight copy would leave `bash scripts/run_study.py` pointing at nothing.
+    Applied to text files on the way in, and inverted on the way out by
+    `_content_matches`, so byte-drift checks still compare like with like.
+    """
+    for dest_dir, names in SCRIPT_DIRS.items():
+        if dest_dir == "scripts":
+            continue
+        for name in names:
+            text = text.replace(f"scripts/{name}", f"{dest_dir}/{name}")
+    return text
+
+
+def _content_for(src: Path, dst: Path) -> bytes:
+    """Bytes to write at `dst`, with paths relocated for text files."""
+    raw = src.read_bytes()
+    if src.suffix not in (".py", ".sh", ".md", ".yaml", ".yml", ".toml"):
+        return raw
+    try:
+        return _relocated(raw.decode()).encode()
+    except UnicodeDecodeError:
+        return raw
+
+
 def _plan() -> list[tuple[Path, Path]]:
     """(source, destination) pairs, ignoring caches."""
     pairs: list[tuple[Path, Path]] = []
@@ -79,10 +117,11 @@ def _plan() -> list[tuple[Path, Path]]:
             if src.is_dir() or "__pycache__" in src.parts:
                 continue
             pairs.append((src, REL / src.relative_to(ROOT)))
-    for name in SCRIPTS:
-        src = ROOT / "scripts" / name
-        if src.exists():
-            pairs.append((src, REL / "scripts" / name))
+    for dest_dir, names in SCRIPT_DIRS.items():
+        for name in names:
+            src = ROOT / "scripts" / name
+            if src.exists():
+                pairs.append((src, REL / dest_dir / name))
     for src in sorted((ROOT / "tests").glob("*.py")):
         if src.name not in TESTS_EXCLUDED:
             pairs.append((src, REL / "tests" / src.name))
@@ -106,19 +145,21 @@ def main() -> int:
         if not src.exists():
             continue
         rel = dst.relative_to(REL)
+        payload = _content_for(src, dst)
         if not dst.exists():
             added.append(str(rel))
-        elif _digest(src) != _digest(dst):
+        elif dst.read_bytes() != payload:
             changed.append(str(rel))
         if not a.check:
             dst.parent.mkdir(parents=True, exist_ok=True)
-            shutil.copyfile(src, dst)
+            dst.write_bytes(payload)
             shutil.copymode(src, dst)
 
     # Orphans: present in the release, gone from the repo.
     wanted = {d for _, d in _plan()}
     orphans = []
-    for d in ("src", "configs", "scripts", "tests"):
+    for d in ("src", "configs", "scripts", "tests",
+              "data_preparation", "experiments"):
         for p in sorted((REL / d).rglob("*")):
             if p.is_dir() or "__pycache__" in p.parts:
                 continue

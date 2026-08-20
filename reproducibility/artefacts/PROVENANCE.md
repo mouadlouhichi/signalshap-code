@@ -92,9 +92,9 @@ from the previous legacy-key run by 2.7e-4, the scale of the rule change.
 
 To regenerate all of these under the symmetric key:
 
-    python scripts/run_study.py --datasets ml_1m --budget-gb 24
-    python scripts/run_study.py --datasets amazon_video_games --budget-gb 24
-    python scripts/run_study.py --datasets gowalla_ts --budget-gb 24
+    python experiments/run_study.py --datasets ml_1m --budget-gb 24
+    python experiments/run_study.py --datasets amazon_video_games --budget-gb 24
+    python experiments/run_study.py --datasets gowalla_ts --budget-gb 24
 
 That rewrites `results_*.json` and every e-block it contains. Expect Table 1's
 monotonicity integers to move by a count or two; the recall column and every

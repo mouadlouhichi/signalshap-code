@@ -2,7 +2,7 @@
 
 The main pool is the union of every source's top-N list. It is
 coalition-independent, which is what the game requires, but it is not
-source-independent: the players build it. `scripts/run_pool_sensitivity.py`
+source-independent: the players build it. `experiments/run_pool_sensitivity.py`
 rebuilds the game on pools that consult no source score, so these tests check
 the properties the sensitivity argument depends on -- the rules really are
 source-blind, deterministic, and correctly sized -- rather than the outcome,
@@ -16,7 +16,8 @@ from pathlib import Path
 import numpy as np
 import pytest
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
+for _d in ("scripts", "experiments"):          # flat repo, grouped release
+    sys.path.insert(0, str(Path(__file__).resolve().parents[1] / _d))
 
 from signalshap.candidates.builder import candidate_recall  # noqa: E402
 from signalshap.data.loaders import load_dataset            # noqa: E402

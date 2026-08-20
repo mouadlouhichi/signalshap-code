@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Full revision run: timestamped corpora, 10 seeds, matched baselines.
 
-    python scripts/run_full_revision.py --seeds 10 --corpora ml_1m gowalla_ts
+    python experiments/run_full_revision.py --seeds 10 --corpora ml_1m gowalla_ts
 
 Refuses to run on a corpus whose timestamps are not genuine, and refuses to
 fall back to synthetic data. Both failures produced withdrawn results before.

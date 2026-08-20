@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Everything the two reviews require that needs fresh computation.
 
-    python scripts/run_final_revision.py --budget-gb 24
+    python experiments/run_final_revision.py --budget-gb 24
 
 Four blocks, in priority order. Each writes its own artefact and can be
 re-run independently with --only.

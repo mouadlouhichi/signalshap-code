@@ -62,7 +62,7 @@ git clone <this repo> && cd <this repo>
 pip install -r requirements.txt
 
 # runs end to end with no downloads, on planted synthetic corpora
-PYTHONPATH=src python scripts/run_study.py --synthetic --datasets ml_1m --seeds 42 43
+PYTHONPATH=src python experiments/run_study.py --synthetic --datasets ml_1m --seeds 42 43
 
 # figures and tables from the artefacts
 PYTHONPATH=src python scripts/make_assets.py
@@ -87,16 +87,16 @@ The raw corpora are **not redistributed**: the GroupLens license forbids it.
 Both scripts are idempotent.
 
 ```bash
-bash scripts/fetch_benchmarks.sh    # MovieLens-1M, from GroupLens
-bash scripts/fetch_timestamped.sh   # Gowalla check-ins (SNAP), Amazon Video Games
+bash data_preparation/fetch_benchmarks.sh    # MovieLens-1M, from GroupLens
+bash data_preparation/fetch_timestamped.sh   # Gowalla check-ins (SNAP), Amazon Video Games
 ```
 
 ### 2. Run the study, one corpus at a time
 
 ```bash
-PYTHONPATH=src python scripts/run_study.py --datasets ml_1m              --budget-gb 24
-PYTHONPATH=src python scripts/run_study.py --datasets amazon_video_games --budget-gb 24
-PYTHONPATH=src python scripts/run_study.py --datasets gowalla_ts         --budget-gb 24
+PYTHONPATH=src python experiments/run_study.py --datasets ml_1m              --budget-gb 24
+PYTHONPATH=src python experiments/run_study.py --datasets amazon_video_games --budget-gb 24
+PYTHONPATH=src python experiments/run_study.py --datasets gowalla_ts         --budget-gb 24
 ```
 
 **One corpus per invocation, deliberately.** `run_study.py` refuses a
@@ -121,20 +121,20 @@ overwrite the artefacts if a different budget yields a different shape.
 ### 3. Ten-seed runs and the sensitivity analyses
 
 ```bash
-PYTHONPATH=src python scripts/run_final_revision.py --only seeds   --budget-gb 24
-PYTHONPATH=src python scripts/run_final_revision.py --only retire  --budget-gb 24
-PYTHONPATH=src python scripts/run_protocol_sensitivity.py --corpora ml_1m --budget-gb 24 \
+PYTHONPATH=src python experiments/run_final_revision.py --only seeds   --budget-gb 24
+PYTHONPATH=src python experiments/run_final_revision.py --only retire  --budget-gb 24
+PYTHONPATH=src python experiments/run_protocol_sensitivity.py --corpora ml_1m --budget-gb 24 \
     --seeds 42 43 44 45 46 47 48 49 50 51
-PYTHONPATH=src python scripts/run_global_timeblock.py --corpora ml_1m --budget-gb 24 --retirement
-PYTHONPATH=src python scripts/run_pool_sensitivity.py --corpora ml_1m --budget-gb 24
-PYTHONPATH=src python scripts/audit_repeat_items.py \
+PYTHONPATH=src python experiments/run_global_timeblock.py --corpora ml_1m --budget-gb 24 --retirement
+PYTHONPATH=src python experiments/run_pool_sensitivity.py --corpora ml_1m --budget-gb 24
+PYTHONPATH=src python data_preparation/audit_repeat_items.py \
     --corpora ml_1m amazon_video_games gowalla_ts --budget-gb 24
 ```
 
 Or all of the outstanding ones in one resumable command:
 
 ```bash
-bash scripts/run_round8_remaining.sh 24
+bash experiments/run_round8_remaining.sh 24
 ```
 
 Every script resumes from what is already on disk, so an interrupted run can
@@ -238,30 +238,54 @@ roughly halved.
 ## Layout
 
 ```
-src/signalshap/
-  config.py              frozen configuration, admissibility ladder
-  memory.py              corpus sizing from a RAM budget, shape guards
-  data/loaders.py        loading, leave-last-two-out split, as-used density
-  scorers/base.py        cf, ct, pop, rec, seq + mask_seen
-  scorers/neural.py      LightGCN and SASRec reference baselines (NumPy)
-  candidates/builder.py  union-of-top-N, growth loop, truncation rules
-  game/core.py           v(S), exact Shapley, monotonicity audit
-  attribution/values.py  Banzhaf, semivalues, Grabisch-Roubens interactions
-  attribution/baselines.py  LOO, forward selection, permutation, MC Shapley
-  experiments/estimands.py  three games + end-to-end retirement simulation
-  experiments/recovery.py   duplicate-injection symmetry recovery
-  experiments/synthetic_games.py  analytic games with known Shapley vectors
-  segments/segments.py   segmentation and SignalShap-Fuse
-  fusion/fullcatalog.py  full-catalogue protocol
-  stats/tests.py         Wilcoxon, permutation, Holm-Bonferroni, bootstrap
-  plots/assets.py        figures and tables, artefact-driven
-  pipeline.py            E0-E8 orchestration
-
-scripts/                 runnable entry points, see "Reproducing the paper"
-tests/                   204 tests, no data required
-configs/frozen.yaml      the frozen configuration, with its amendment log
-artefacts/               released results, MANIFEST.json, PROVENANCE.md
+reproducibility/
+├── README.md                  this file
+├── requirements.txt           pip dependencies
+├── environment.yml            conda environment
+├── configs/                   frozen.yaml: N_max, recall gate, seeds, amendment log
+├── src/                       the implementation (importable package)
+├── scripts/                   verification and asset generation
+├── data_preparation/          corpus fetching and characterisation
+├── experiments/               everything that produces results
+├── tables/                    generated tables (md, csv, tex)
+└── figures/                   generated figures (png)
 ```
+
+### What lives where
+
+| directory | contents |
+|---|---|
+| `data_preparation/` | `fetch_benchmarks.sh`, `fetch_timestamped.sh` (corpus download), `audit_repeat_items.py`, `audit_global_time.py`, `measure_kcore_sweep.py` (corpus characterisation) |
+| `experiments/` | `run_study.py` (main E0-E8 suite), `run_final_revision.py` (ten-seed), `run_protocol_sensitivity.py`, `run_global_timeblock.py`, `run_pool_sensitivity.py`, `rerun_all.sh`, `run_round8_remaining.sh` |
+| `scripts/` | `make_assets.py` (figures and tables), `make_manifest.py` (SHA-256), `check_run_valid.py`, `check_paper_numbers.py` |
+| `tables/`, `figures/` | regenerated by `scripts/make_assets.py`; committed so they can be compared against a fresh run |
+| `artefacts/` | released JSON results, `MANIFEST.json`, `PROVENANCE.md` |
+| `tests/` | 204 tests, no data required |
+
+### Inside `src/signalshap/`
+
+```
+config.py              frozen configuration, admissibility ladder
+memory.py              corpus sizing from a RAM budget, shape guards
+data/loaders.py        loading, leave-last-two-out split, as-used density
+scorers/base.py        cf, ct, pop, rec, seq + mask_seen
+scorers/neural.py      LightGCN and SASRec reference baselines (NumPy)
+candidates/builder.py  union-of-top-N, growth loop, truncation rules
+game/core.py           v(S), exact Shapley, monotonicity audit
+attribution/values.py  Banzhaf, semivalues, Grabisch-Roubens interactions
+attribution/baselines.py  LOO, forward selection, permutation, MC Shapley
+experiments/estimands.py  three games + end-to-end retirement simulation
+experiments/recovery.py   duplicate-injection symmetry recovery
+experiments/synthetic_games.py  analytic games with known Shapley vectors
+segments/segments.py   segmentation and SignalShap-Fuse
+fusion/fullcatalog.py  full-catalogue protocol
+stats/tests.py         Wilcoxon, permutation, Holm-Bonferroni, bootstrap
+plots/assets.py        figures and tables, artefact-driven
+pipeline.py            E0-E8 orchestration
+```
+
+Note `src/signalshap/experiments/` (library code, imported) is distinct from
+the top-level `experiments/` directory (runnable entry points).
 
 ---
 

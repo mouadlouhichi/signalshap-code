@@ -242,7 +242,7 @@ def test_kcore_sweep_is_measured_not_estimated():
 
     assert os.path.exists(SWEEP_PATH), (
         f"k-core is configured but {SWEEP_PATH} is missing. Run "
-        "scripts/measure_kcore_sweep.py first -- rung 3 may not be selected "
+        "data_preparation/measure_kcore_sweep.py first -- rung 3 may not be selected "
         "from the placeholder table in spec §6.2."
     )
     with open(SWEEP_PATH) as fh:

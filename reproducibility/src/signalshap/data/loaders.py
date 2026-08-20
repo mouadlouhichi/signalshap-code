@@ -400,7 +400,7 @@ def load_dataset(name: str, synthetic: bool = False, seed: int = 42,
             # the precise failure this whole module exists to prevent.
             raise FileNotFoundError(
                 f"{name}: raw files not found ({exc}). This corpus has no "
-                "synthetic fallback -- run scripts/fetch_timestamped.sh, or "
+                "synthetic fallback -- run data_preparation/fetch_timestamped.sh, or "
                 "check that the extracted files are under data/raw/."
             ) from exc
         warnings.warn(

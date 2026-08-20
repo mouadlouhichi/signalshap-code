@@ -18,7 +18,8 @@ import numpy as np
 import pandas as pd
 import pytest
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
+for _d in ("scripts", "experiments"):          # flat repo, grouped release
+    sys.path.insert(0, str(Path(__file__).resolve().parents[1] / _d))
 
 from signalshap.config import SOURCES, FrozenConfig     # noqa: E402
 from signalshap.data.loaders import Dataset             # noqa: E402

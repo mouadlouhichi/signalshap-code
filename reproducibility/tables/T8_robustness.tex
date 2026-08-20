@@ -1,0 +1,39 @@
+\begin{table}[htbp]
+\centering
+\footnotesize
+\caption{T8 -- Robustness matrix. CANDIDATE RECALL IS REPORTED PER CELL for the $|C_u|$ sweep: changing $|C_u|$ moves the recall ceiling and hence the level of $v$, so without it the cells are not comparable.}
+\label{tab:T8_robustness}
+\begin{tabular}{lllll}
+\toprule
+Dataset & Stress test & Candidate recall & Top source & $v(\mathcal{G})$ \\
+\midrule
+ml\_1m & $|C_u|$ = 300 & 0.566 & seq & 0.05204 \\
+ml\_1m & $|C_u|$ = 600 & 0.748 & seq & 0.05169 \\
+ml\_1m & $|C_u|$ = 1200 & 0.890 & seq & 0.05062 \\
+ml\_1m & $\lambda$ = 0.1 & -- & seq & -- \\
+ml\_1m & $\lambda$ = 1.0 & -- & seq & -- \\
+ml\_1m & $\lambda$ = 10.0 & -- & seq & -- \\
+ml\_1m & rescale: identity & -- & seq & -- \\
+ml\_1m & rescale: log1p & -- & seq & -- \\
+ml\_1m & rescale: rank & -- & seq & -- \\
+amazon\_video\_games & $|C_u|$ = 300 & 0.431 & seq & 0.04017 \\
+amazon\_video\_games & $|C_u|$ = 600 & 0.589 & cf & 0.04130 \\
+amazon\_video\_games & $|C_u|$ = 1200 & 0.750 & cf & 0.04177 \\
+amazon\_video\_games & $\lambda$ = 0.1 & -- & cf & -- \\
+amazon\_video\_games & $\lambda$ = 1.0 & -- & cf & -- \\
+amazon\_video\_games & $\lambda$ = 10.0 & -- & cf & -- \\
+amazon\_video\_games & rescale: identity & -- & cf & -- \\
+amazon\_video\_games & rescale: log1p & -- & cf & -- \\
+amazon\_video\_games & rescale: rank & -- & seq & -- \\
+gowalla\_ts & $|C_u|$ = 5811 & 0.417 & cf & 0.01636 \\
+gowalla\_ts & $|C_u|$ = 11623 & 0.450 & cf & 0.01690 \\
+gowalla\_ts & $|C_u|$ = 23246 & 0.471 & cf & 0.01778 \\
+gowalla\_ts & $\lambda$ = 0.1 & -- & cf & -- \\
+gowalla\_ts & $\lambda$ = 1.0 & -- & cf & -- \\
+gowalla\_ts & $\lambda$ = 10.0 & -- & cf & -- \\
+gowalla\_ts & rescale: identity & -- & cf & -- \\
+gowalla\_ts & rescale: log1p & -- & cf & -- \\
+gowalla\_ts & rescale: rank & -- & ct & -- \\
+\bottomrule
+\end{tabular}
+\end{table}

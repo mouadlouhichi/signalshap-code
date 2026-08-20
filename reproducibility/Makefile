@@ -1,9 +1,10 @@
 # SignalShap reproducibility release.
-.PHONY: help install test synthetic assets manifest verify clean
+.PHONY: help install conda test synthetic assets manifest verify clean
 export PYTHONPATH := src
 
 help:
-	@echo "make install    install dependencies"
+	@echo "make install    install dependencies (pip)"
+	@echo "make conda      create the conda environment"
 	@echo "make test       run the test suite (no data needed)"
 	@echo "make synthetic  end-to-end run on planted synthetic corpora"
 	@echo "make assets     regenerate figures and tables from artefacts/"
@@ -15,11 +16,14 @@ help:
 install:
 	pip install -r requirements.txt
 
+conda:
+	conda env create -f environment.yml
+
 test:
 	python -m pytest tests/ -q
 
 synthetic:
-	python scripts/run_study.py --synthetic --datasets ml_1m --seeds 42 43
+	python experiments/run_study.py --synthetic --datasets ml_1m --seeds 42 43
 
 assets:
 	python scripts/make_assets.py

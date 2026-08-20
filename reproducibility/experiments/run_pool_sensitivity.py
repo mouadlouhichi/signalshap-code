@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Does the attribution survive a candidate pool the players did not build?
 
-    python scripts/run_pool_sensitivity.py --corpora ml_1m --budget-gb 24
+    python experiments/run_pool_sensitivity.py --corpora ml_1m --budget-gb 24
 
 The main game fixes C_u to the union of every source's own top-N list. That
 construction is coalition-independent, which is the property the game needs:

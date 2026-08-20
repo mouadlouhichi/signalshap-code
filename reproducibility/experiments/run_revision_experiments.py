@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Run the experiments added in response to review (E10-E13).
 
-    python scripts/run_revision_experiments.py --dataset ml_1m [--skip-e2e]
+    python experiments/run_revision_experiments.py --dataset ml_1m [--skip-e2e]
 
 E10  alternative cooperative values + Shapley-Taylor interactions   (fast)
 E11  fixed-head vs refitted-head vs end-to-end estimands            (slow)

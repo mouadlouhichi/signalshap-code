@@ -18,6 +18,23 @@ from signalshap.memory import (MIN_USERS, check_fits, default_budget_gb,
 
 ROOT = Path(__file__).resolve().parents[1]
 
+def _runner_path(root, name):
+    """Locate a runnable script by NAME, not by a hardcoded directory.
+
+    The research repo keeps every runner in scripts/; the reproducibility
+    release groups them by purpose (data_preparation/, experiments/,
+    scripts/). Resolving by name lets one test file serve both layouts, so a
+    reorganisation cannot silently disable the test.
+    """
+    from pathlib import Path as _P
+    for d in ("scripts", "experiments", "data_preparation"):
+        p = _P(root) / d / name
+        if p.exists():
+            return p
+    raise FileNotFoundError(name)
+
+
+
 
 def test_gowalla_full_size_is_the_number_that_killed_the_run():
     """53k x 122k really is ~129 GB of score matrices -- not a guess."""
@@ -82,7 +99,7 @@ def test_check_fits_passes_a_sized_corpus():
 @pytest.mark.parametrize("script", ["run_study.py", "run_full_revision.py"])
 def test_both_entry_points_size_before_running(script):
     """The regression itself: sizing in one script only is not a safeguard."""
-    src = (ROOT / "scripts" / script).read_text()
+    src = _runner_path(ROOT, script).read_text()
     tree = ast.parse(src)
     called = {n.func.id for n in ast.walk(tree)
               if isinstance(n, ast.Call) and isinstance(n.func, ast.Name)}
@@ -93,7 +110,7 @@ def test_both_entry_points_size_before_running(script):
 @pytest.mark.parametrize("script", ["run_study.py", "run_full_revision.py"])
 def test_no_script_keeps_a_private_copy_of_the_sizing_math(script):
     """Duplicated sizing is how the two scripts drifted apart in the first place."""
-    src = (ROOT / "scripts" / script).read_text()
+    src = _runner_path(ROOT, script).read_text()
     assert "PEAK_MULTIPLIER =" not in src
     assert "def _fit_users" not in src
     assert "def _free_gb" not in src

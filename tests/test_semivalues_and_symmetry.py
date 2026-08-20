@@ -23,6 +23,23 @@ from signalshap.game.core import exact_shapley
 
 SRC = ("cf", "ct", "pop", "rec", "seq")
 
+def _runner_path(root, name):
+    """Locate a runnable script by NAME, not by a hardcoded directory.
+
+    The research repo keeps every runner in scripts/; the reproducibility
+    release groups them by purpose (data_preparation/, experiments/,
+    scripts/). Resolving by name lets one test file serve both layouts, so a
+    reorganisation cannot silently disable the test.
+    """
+    from pathlib import Path as _P
+    for d in ("scripts", "experiments", "data_preparation"):
+        p = _P(root) / d / name
+        if p.exists():
+            return p
+    raise FileNotFoundError(name)
+
+
+
 
 def _random_game(seed: int) -> dict:
     rng = np.random.default_rng(seed)
@@ -195,7 +212,7 @@ def test_protocol_sensitivity_script_is_registered():
     from pathlib import Path
 
     root = Path(__file__).resolve().parents[1]
-    src = (root / "scripts" / "run_protocol_sensitivity.py")
+    src = _runner_path(root, "run_protocol_sensitivity.py")
     assert src.exists()
     body = src.read_text()
     # Two states, not one refit on train+val: refitting everything masks the
@@ -276,8 +293,8 @@ def test_protocol_sensitivity_resumes_instead_of_overwriting():
     """
     from pathlib import Path
 
-    src = (Path(__file__).resolve().parents[1]
-           / "scripts" / "run_protocol_sensitivity.py").read_text()
+    src = _runner_path(Path(__file__).resolve().parents[1],
+                        "run_protocol_sensitivity.py").read_text()
     assert "resuming" in src
     assert "protocol_sensitivity.json" in src.split("def main")[1]
 
@@ -286,8 +303,8 @@ def test_protocol_sensitivity_actually_uses_its_budget_flag():
     """--budget-gb was accepted and ignored, so Gowalla loaded at full size."""
     from pathlib import Path
 
-    src = (Path(__file__).resolve().parents[1]
-           / "scripts" / "run_protocol_sensitivity.py").read_text()
+    src = _runner_path(Path(__file__).resolve().parents[1],
+                        "run_protocol_sensitivity.py").read_text()
     assert "size_corpus" in src, "budget flag must size the corpus"
     assert "check_paper_shape" in src, "must refuse a resized corpus"
 
@@ -347,8 +364,8 @@ def test_run_study_refuses_to_shrink_a_corpus_silently():
     """
     from pathlib import Path
 
-    src = (Path(__file__).resolve().parents[1]
-           / "scripts" / "run_study.py").read_text()
+    src = _runner_path(Path(__file__).resolve().parents[1],
+                        "run_study.py").read_text()
     assert "check_paper_shape" in src, "must verify the manuscript's shape"
     assert "min(caps.values())" not in src, "must not silently shrink corpora"
     assert "one at a time" in src
@@ -363,7 +380,7 @@ def test_global_timeblock_split_admits_no_future_training_events():
 
     root = Path(__file__).resolve().parents[1]
     spec = importlib.util.spec_from_file_location(
-        "gt", root / "scripts" / "run_global_timeblock.py")
+        "gt", _runner_path(root, "run_global_timeblock.py"))
     gt = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(gt)
 

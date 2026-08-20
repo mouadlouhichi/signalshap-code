@@ -1,7 +1,7 @@
 """Blocked retirement: does the LOO-versus-Shapley claim survive a causal split?
 
 The main study splits leave-last-out WITHIN each user, which is standard but
-not globally causal: `scripts/audit_global_time.py` measures up to 44% of
+not globally causal: `data_preparation/audit_global_time.py` measures up to 44% of
 pooled training events postdating the median test event. The paper's central
 operational claim is about retirement (LOO tracks removal cost, Shapley does
 not), so that claim in particular needs checking under a globally blocked
@@ -24,7 +24,8 @@ import numpy as np
 import pandas as pd
 import pytest
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
+for _d in ("scripts", "experiments"):          # flat repo, grouped release
+    sys.path.insert(0, str(Path(__file__).resolve().parents[1] / _d))
 
 from signalshap.config import SOURCES, FrozenConfig       # noqa: E402
 from signalshap.data.loaders import Dataset               # noqa: E402

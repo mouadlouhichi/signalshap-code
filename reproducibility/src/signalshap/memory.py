@@ -5,8 +5,8 @@ memory. Gowalla at its full 52,985 x 121,866 needs 129 GB for the matrices
 alone and roughly 207 GB at peak -- it cannot be attempted on any laptop, so
 it must be subsampled by DERIVATION from a memory budget, never by hope.
 
-This logic previously lived inside ``scripts/run_full_revision.py``. That is
-why ``scripts/run_study.py`` was OOM-killed on Gowalla: it called the pipeline
+This logic previously lived inside ``experiments/run_full_revision.py``. That is
+why ``experiments/run_study.py`` was OOM-killed on Gowalla: it called the pipeline
 directly, never set ``SIGNALSHAP_MAX_USERS``, and so the loaders' ``_env_cap``
 returned ``None`` and loaded all 53k users. Sizing that only one entry point
 performs is not a safeguard; it is a coincidence. Both scripts now share this

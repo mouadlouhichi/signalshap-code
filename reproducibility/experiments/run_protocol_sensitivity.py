@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Two protocol sensitivity experiments a reviewer made mandatory.
 
-    python scripts/run_protocol_sensitivity.py --corpora ml_1m --budget-gb 24
+    python experiments/run_protocol_sensitivity.py --corpora ml_1m --budget-gb 24
 
 A. TEMPORAL STATE. The main protocol freezes the source state at the training
    fold, so the validation interaction is neither appended to the user's

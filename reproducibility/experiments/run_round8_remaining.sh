@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Review round 8: every remaining run, in cost order, resumable.
 #
-#     bash scripts/run_round8_remaining.sh [BUDGET_GB]
+#     bash experiments/run_round8_remaining.sh [BUDGET_GB]
 #
 # Each stage writes its own artefact and every underlying script resumes from
 # what is already on disk, so an interrupted run can be restarted and a stage
@@ -50,34 +50,34 @@ command -v "$PY" >/dev/null 2>&1 || PY=python
 # -- cheap, and closes the two remaining Essential items ---------------------
 
 run_stage "item 3: blocked retirement (ml_1m)" \
-  "$PY" scripts/run_global_timeblock.py --corpora ml_1m \
+  "$PY" experiments/run_global_timeblock.py --corpora ml_1m \
         --budget-gb "$BUDGET" --retirement
 
 run_stage "item 10: neutral candidate pools (ml_1m)" \
-  "$PY" scripts/run_pool_sensitivity.py --corpora ml_1m --budget-gb "$BUDGET"
+  "$PY" experiments/run_pool_sensitivity.py --corpora ml_1m --budget-gb "$BUDGET"
 
 # -- moderate ----------------------------------------------------------------
 
 run_stage "item 7: ten-seed refreshed history (ml_1m)" \
-  "$PY" scripts/run_protocol_sensitivity.py --corpora ml_1m \
+  "$PY" experiments/run_protocol_sensitivity.py --corpora ml_1m \
         --budget-gb "$BUDGET" --seeds 42 43 44 45 46 47 48 49 50 51
 
 run_stage "item 10: neutral candidate pools (amazon_video_games)" \
-  "$PY" scripts/run_pool_sensitivity.py --corpora amazon_video_games \
+  "$PY" experiments/run_pool_sensitivity.py --corpora amazon_video_games \
         --budget-gb "$BUDGET"
 
 # -- expensive: legacy-rule diagnostics, one corpus per call -----------------
 
 run_stage "item 6: regenerate diagnostics (ml_1m)" \
-  "$PY" scripts/run_study.py --datasets ml_1m --budget-gb "$BUDGET" \
+  "$PY" experiments/run_study.py --datasets ml_1m --budget-gb "$BUDGET" \
         --seeds 42 43 44
 
 run_stage "item 6: regenerate diagnostics (amazon_video_games)" \
-  "$PY" scripts/run_study.py --datasets amazon_video_games \
+  "$PY" experiments/run_study.py --datasets amazon_video_games \
         --budget-gb "$BUDGET" --seeds 42 43 44
 
 run_stage "item 6: regenerate diagnostics (gowalla_ts)" \
-  "$PY" scripts/run_study.py --datasets gowalla_ts --budget-gb "$BUDGET" \
+  "$PY" experiments/run_study.py --datasets gowalla_ts --budget-gb "$BUDGET" \
         --seeds 42 43 44
 
 # -- optional, largest: Gowalla neutral pools --------------------------------
@@ -85,7 +85,7 @@ run_stage "item 6: regenerate diagnostics (gowalla_ts)" \
 
 if [ "${SKIP_GOWALLA:-0}" != "1" ]; then
   run_stage "item 10: neutral candidate pools (gowalla_ts)" \
-    "$PY" scripts/run_pool_sensitivity.py --corpora gowalla_ts \
+    "$PY" experiments/run_pool_sensitivity.py --corpora gowalla_ts \
           --budget-gb "$BUDGET"
 fi
 

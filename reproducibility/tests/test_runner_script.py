@@ -17,7 +17,24 @@ from pathlib import Path
 import pytest
 
 ROOT = Path(__file__).resolve().parents[1]
-SCRIPT = ROOT / "scripts" / "rerun_all.sh"
+
+def _runner_path(root, name):
+    """Locate a runnable script by NAME, not by a hardcoded directory.
+
+    The research repo keeps every runner in scripts/; the reproducibility
+    release groups them by purpose (data_preparation/, experiments/,
+    scripts/). Resolving by name lets one test file serve both layouts, so a
+    reorganisation cannot silently disable the test.
+    """
+    from pathlib import Path as _P
+    for d in ("scripts", "experiments", "data_preparation"):
+        p = _P(root) / d / name
+        if p.exists():
+            return p
+    raise FileNotFoundError(name)
+
+
+SCRIPT = _runner_path(ROOT, "rerun_all.sh")
 
 
 def _stages():
@@ -107,7 +124,7 @@ def test_validity_checker_survives_a_pre_fix_artefact():
         }))
         script = art.parent / "check.py"
         script.write_text(
-            SCRIPT.parent.joinpath("check_run_valid.py").read_text()
+            _runner_path(ROOT, "check_run_valid.py").read_text()
             .replace('Path(__file__).resolve().parents[1] / "artefacts"',
                      f'Path({str(art)!r})'))
         r = subprocess.run(["python3", str(script), "ml_1m"],
@@ -123,7 +140,7 @@ def test_validity_checker_survives_a_pre_fix_artefact():
 # ~8 h of successful work and would otherwise have discarded all of it).
 # --------------------------------------------------------------------------- #
 
-FINAL = ROOT / "scripts" / "run_final_revision.py"
+FINAL = _runner_path(ROOT, "run_final_revision.py")
 
 
 def test_block_seeds_checkpoints_inside_the_seed_loop():
@@ -176,7 +193,7 @@ def test_block_seeds_frees_memory_between_seeds():
 # waste a multi-hour run on the user's machine before anyone noticed.
 # --------------------------------------------------------------------------- #
 
-ROUND8 = ROOT / "scripts" / "run_round8_remaining.sh"
+ROUND8 = _runner_path(ROOT, "run_round8_remaining.sh")
 
 
 def _round8_stages():

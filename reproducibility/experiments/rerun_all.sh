@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Regenerate every artefact under the deterministic expected-random baseline.
 #
-#   bash scripts/rerun_all.sh [BUDGET_GB]
+#   bash experiments/rerun_all.sh [BUDGET_GB]
 #
 # Runs SEQUENTIALLY -- the corpora cannot share one SIGNALSHAP_MAX_USERS, and
 # running them concurrently would also contend for the same memory budget.
@@ -41,7 +41,7 @@ START=$SECONDS
 echo "budget ${BUDGET} GB | started $(date '+%H:%M:%S')"
 
 # 1. Core study, three seeds, one corpus at a time.
-run study_ml_1m      python scripts/run_study.py --datasets ml_1m \
+run study_ml_1m      python experiments/run_study.py --datasets ml_1m \
                        --seeds 42 43 44
 
 # Gate the remaining ~12 hours on the fastest corpus. If ml_1m comes back
@@ -53,20 +53,20 @@ if ! python scripts/check_run_valid.py ml_1m; then
   echo 'Fix the cause and re-run; nothing after this point would be usable.'
   exit 1
 fi
-run study_amazon     python scripts/run_study.py --datasets amazon_video_games \
+run study_amazon     python experiments/run_study.py --datasets amazon_video_games \
                        --budget-gb "$BUDGET" --seeds 42 43 44
-run study_gowalla    python scripts/run_study.py --datasets gowalla_ts \
+run study_gowalla    python experiments/run_study.py --datasets gowalla_ts \
                        --budget-gb "$BUDGET" --seeds 42 43 44
 
 # 2. E10-E13 (interactions, estimands, retirement, analytic games).
-run revision_ml_1m   python scripts/run_revision_experiments.py --dataset ml_1m
-run revision_amazon  python scripts/run_revision_experiments.py \
+run revision_ml_1m   python experiments/run_revision_experiments.py --dataset ml_1m
+run revision_amazon  python experiments/run_revision_experiments.py \
                        --dataset amazon_video_games
-run revision_gowalla python scripts/run_revision_experiments.py \
+run revision_gowalla python experiments/run_revision_experiments.py \
                        --dataset gowalla_ts
 
 # 3. Ten-seed intervals, lambda sweep, Friedman, retirement-over-seeds.
-run final_revision   python scripts/run_final_revision.py --budget-gb "$BUDGET"
+run final_revision   python experiments/run_final_revision.py --budget-gb "$BUDGET"
 
 # 4. Rebuild figures and tables, then check the paper against the artefacts.
 run assets           python scripts/make_assets.py

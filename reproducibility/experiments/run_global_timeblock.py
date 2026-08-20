@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 """Globally time-blocked replication of the main claim.
 
-    python scripts/run_global_timeblock.py --corpora ml_1m --budget-gb 24
+    python experiments/run_global_timeblock.py --corpora ml_1m --budget-gb 24
 
 The main study splits chronologically WITHIN each user: each user's last
 interaction is test, the second-to-last validation. That is standard
 leave-last-out, but it is not globally causal, and
-`scripts/audit_global_time.py` measures the exposure: 44.2% of pooled training
+`data_preparation/audit_global_time.py` measures the exposure: 44.2% of pooled training
 events postdate the median MovieLens test event, 27.1% on Amazon-VG, 19.4% on
 Gowalla.
 
