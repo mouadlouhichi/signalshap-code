@@ -1,0 +1,120 @@
+{
+  "amazon_book": {
+    "k=0": {
+      "users": 1200,
+      "items": 2564,
+      "interactions": 10859,
+      "density": 0.0035293161726469057
+    },
+    "k=3": {
+      "users": 1175,
+      "items": 1341,
+      "interactions": 8988,
+      "density": 0.005704222000095197
+    },
+    "k=5": {
+      "users": 277,
+      "items": 139,
+      "interactions": 1612,
+      "density": 0.04186686751681687
+    },
+    "k=8": {
+      "users": 0,
+      "items": 0,
+      "interactions": 0,
+      "density": 0.0
+    },
+    "k=10": {
+      "users": 0,
+      "items": 0,
+      "interactions": 0,
+      "density": 0.0
+    },
+    "k=20": {
+      "users": 0,
+      "items": 0,
+      "interactions": 0,
+      "density": 0.0
+    }
+  },
+  "lastfm_2k": {
+    "k=0": {
+      "users": 700,
+      "items": 1568,
+      "interactions": 11364,
+      "density": 0.010353498542274053
+    },
+    "k=3": {
+      "users": 700,
+      "items": 1288,
+      "interactions": 10915,
+      "density": 0.01210625554569654
+    },
+    "k=5": {
+      "users": 697,
+      "items": 847,
+      "interactions": 9383,
+      "density": 0.01589371890663139
+    },
+    "k=8": {
+      "users": 0,
+      "items": 0,
+      "interactions": 0,
+      "density": 0.0
+    },
+    "k=10": {
+      "users": 0,
+      "items": 0,
+      "interactions": 0,
+      "density": 0.0
+    },
+    "k=20": {
+      "users": 0,
+      "items": 0,
+      "interactions": 0,
+      "density": 0.0
+    }
+  },
+  "ml_1m": {
+    "k=0": {
+      "users": 900,
+      "items": 700,
+      "interactions": 28097,
+      "density": 0.0445984126984127
+    },
+    "k=3": {
+      "users": 900,
+      "items": 700,
+      "interactions": 28097,
+      "density": 0.0445984126984127
+    },
+    "k=5": {
+      "users": 900,
+      "items": 700,
+      "interactions": 28097,
+      "density": 0.0445984126984127
+    },
+    "k=8": {
+      "users": 900,
+      "items": 700,
+      "interactions": 28097,
+      "density": 0.0445984126984127
+    },
+    "k=10": {
+      "users": 900,
+      "items": 699,
+      "interactions": 28088,
+      "density": 0.044647909712287395
+    },
+    "k=20": {
+      "users": 874,
+      "items": 577,
+      "interactions": 25586,
+      "density": 0.05073587442345597
+    }
+  },
+  "source": "measured",
+  "measured_at": "2026-08-02T16:29:59.180230+00:00",
+  "corpus_hash": "334e701da3d6da2f",
+  "synthetic": true
+}

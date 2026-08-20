@@ -1,0 +1,49 @@
+{
+  "generated_at": "2026-08-19T13:22:41.975935+00:00",
+  "datasets": [
+    "amazon_video_games"
+  ],
+  "seeds": [
+    42,
+    43,
+    44
+  ],
+  "synthetic": false,
+  "config": {
+    "n_max": {
+      "ml_1m": 600,
+      "lastfm_2k": 500,
+      "amazon_book": 1000,
+      "gowalla": 2500,
+      "yelp2018": 5000,
+      "amazon_book_lgcn": 20000,
+      "gowalla_ts": 11623,
+      "amazon_video_games": 600
+    },
+    "recall_ceiling_exempt": [
+      "amazon_video_games",
+      "gowalla_ts"
+    ],
+    "ridge_lambda": 1.0,
+    "v0_seed": 42,
+    "seeds": [
+      42,
+      43,
+      44,
+      45,
+      46
+    ],
+    "recall_gate": 0.6,
+    "max_growth_iters": 10,
+    "k_ndcg": 10
+  },
+  "environment": {
+    "python": "3.12.13",
+    "platform": "macOS-26.6-arm64-arm-64bit",
+    "machine": "arm64",
+    "numpy": "2.5.1",
+    "scipy": "1.18.0",
+    "sklearn": "1.9.0",
+    "pandas": "3.0.5"
+  }
+}

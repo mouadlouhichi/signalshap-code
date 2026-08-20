@@ -1,0 +1,11 @@
+{
+  "dataset": "gowalla_ts",
+  "n_interactions": 360121,
+  "n_unique_timestamps": 357194,
+  "unique_fraction": 0.9918721762963004,
+  "span_days": 596.3199305555555,
+  "median_user_span_days": 100.02011574074074,
+  "looks_like_positional_index": false,
+  "temporally_valid": true,
+  "note": "temporally_valid must be True before rec/seq/pop-decay attributions are interpreted. A positional index passes a naive check but carries no temporal information."
+}

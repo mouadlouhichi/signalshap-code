@@ -1,0 +1,26 @@
+{
+  "ml_1m": {
+    "derivable": true,
+    "mean_delta_tau": 0.76,
+    "n": 10,
+    "ci95_t9": [
+      0.6996758089920478,
+      0.8203241910079522
+    ],
+    "note": "Shapley tau is identical on all ten seeds, so the paired difference has the same dispersion as tau_LOO shifted by a constant. Recovered from the stored summary; per-seed values are recorded directly by the updated runner."
+  },
+  "amazon_video_games": {
+    "derivable": false,
+    "reason": "Shapley tau varies across seeds and per-seed values were not stored; the paired difference cannot be reconstructed from the summary."
+  },
+  "gowalla_ts": {
+    "derivable": true,
+    "mean_delta_tau": 0.19999999999999984,
+    "n": 10,
+    "ci95_t9": [
+      0.1999999999999997,
+      0.19999999999999998
+    ],
+    "note": "Shapley tau is identical on all ten seeds, so the paired difference has the same dispersion as tau_LOO shifted by a constant. Recovered from the stored summary; per-seed values are recorded directly by the updated runner."
+  }
+}

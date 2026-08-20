@@ -1,0 +1,361 @@
+{
+  "_candidate_rule": "symmetric_reciprocal_rank",
+  "_provenance": "Retirement losses difference RAW utility (SignalShapGame.utility), not the baseline-centred v: end to end each coalition retrieves its own candidates, so the expected-random baseline moves when a source is retired.",
+  "ml_1m": {
+    "tau_shapley": {
+      "mean": 0.19999999999999998,
+      "lo": 0.19999999999999998,
+      "hi": 0.19999999999999998,
+      "n": 10,
+      "ci_method": "percentile bootstrap, 10000 resamples"
+    },
+    "tau_loo": {
+      "mean": 0.96,
+      "lo": 0.9,
+      "hi": 0.9999999999999998,
+      "n": 10,
+      "ci_method": "percentile bootstrap, 10000 resamples"
+    },
+    "tau_shapley_per_seed": [
+      0.19999999999999998,
+      0.19999999999999998,
+      0.19999999999999998,
+      0.19999999999999998,
+      0.19999999999999998,
+      0.19999999999999998,
+      0.19999999999999998,
+      0.19999999999999998,
+      0.19999999999999998,
+      0.19999999999999998
+    ],
+    "tau_loo_per_seed": [
+      0.9999999999999999,
+      0.7999999999999999,
+      0.9999999999999999,
+      0.9999999999999999,
+      0.9999999999999999,
+      0.9999999999999999,
+      0.7999999999999999,
+      0.9999999999999999,
+      0.9999999999999999,
+      0.9999999999999999
+    ],
+    "paired_delta_tau": {
+      "delta_tau_per_seed": [
+        0.7999999999999999,
+        0.6,
+        0.7999999999999999,
+        0.7999999999999999,
+        0.7999999999999999,
+        0.7999999999999999,
+        0.6,
+        0.7999999999999999,
+        0.7999999999999999,
+        0.7999999999999999
+      ],
+      "mean": 0.76,
+      "sd": 0.08432740427115676,
+      "bootstrap_ci95": [
+        0.7,
+        0.7999999999999999
+      ],
+      "n_seeds_loo_better": 10,
+      "n_seeds_equal": 0,
+      "n_seeds_shapley_better": 0,
+      "wilcoxon_p": 0.001953125,
+      "note": "Paired by seed: both correlations score the SAME observed retirement loss on the SAME fitted game, so the seed is a block. Percentile bootstrap over 10,000 resamples; with n=10 read it as indicative."
+    },
+    "cheapest_true_shapley_loo": [
+      [
+        "cf",
+        "ct",
+        "cf"
+      ],
+      [
+        "cf",
+        "ct",
+        "cf"
+      ],
+      [
+        "cf",
+        "ct",
+        "cf"
+      ],
+      [
+        "cf",
+        "ct",
+        "cf"
+      ],
+      [
+        "cf",
+        "ct",
+        "cf"
+      ],
+      [
+        "cf",
+        "ct",
+        "cf"
+      ],
+      [
+        "cf",
+        "ct",
+        "cf"
+      ],
+      [
+        "cf",
+        "ct",
+        "cf"
+      ],
+      [
+        "cf",
+        "ct",
+        "cf"
+      ],
+      [
+        "cf",
+        "ct",
+        "cf"
+      ]
+    ],
+    "loo_correct_frac": 1.0,
+    "shapley_correct_frac": 0.0
+  },
+  "amazon_video_games": {
+    "tau_shapley": {
+      "mean": 0.74,
+      "lo": 0.6799999999999999,
+      "hi": 0.7999999999999999,
+      "n": 10,
+      "ci_method": "percentile bootstrap, 10000 resamples"
+    },
+    "tau_loo": {
+      "mean": 0.96,
+      "lo": 0.9,
+      "hi": 0.9999999999999998,
+      "n": 10,
+      "ci_method": "percentile bootstrap, 10000 resamples"
+    },
+    "tau_shapley_per_seed": [
+      0.6,
+      0.7999999999999999,
+      0.7999999999999999,
+      0.7999999999999999,
+      0.7999999999999999,
+      0.7999999999999999,
+      0.7999999999999999,
+      0.6,
+      0.6,
+      0.7999999999999999
+    ],
+    "tau_loo_per_seed": [
+      0.9999999999999999,
+      0.9999999999999999,
+      0.7999999999999999,
+      0.9999999999999999,
+      0.9999999999999999,
+      0.9999999999999999,
+      0.9999999999999999,
+      0.7999999999999999,
+      0.9999999999999999,
+      0.9999999999999999
+    ],
+    "paired_delta_tau": {
+      "delta_tau_per_seed": [
+        0.3999999999999999,
+        0.19999999999999996,
+        0.0,
+        0.19999999999999996,
+        0.19999999999999996,
+        0.19999999999999996,
+        0.19999999999999996,
+        0.19999999999999996,
+        0.3999999999999999,
+        0.19999999999999996
+      ],
+      "mean": 0.21999999999999992,
+      "sd": 0.1135292424395093,
+      "bootstrap_ci95": [
+        0.15999999999999998,
+        0.27999999999999997
+      ],
+      "n_seeds_loo_better": 9,
+      "n_seeds_equal": 1,
+      "n_seeds_shapley_better": 0,
+      "wilcoxon_p": 0.00390625,
+      "note": "Paired by seed: both correlations score the SAME observed retirement loss on the SAME fitted game, so the seed is a block. Percentile bootstrap over 10,000 resamples; with n=10 read it as indicative."
+    },
+    "cheapest_true_shapley_loo": [
+      [
+        "ct",
+        "rec",
+        "ct"
+      ],
+      [
+        "rec",
+        "rec",
+        "rec"
+      ],
+      [
+        "ct",
+        "rec",
+        "ct"
+      ],
+      [
+        "rec",
+        "rec",
+        "rec"
+      ],
+      [
+        "ct",
+        "rec",
+        "ct"
+      ],
+      [
+        "rec",
+        "rec",
+        "rec"
+      ],
+      [
+        "rec",
+        "rec",
+        "rec"
+      ],
+      [
+        "ct",
+        "rec",
+        "rec"
+      ],
+      [
+        "ct",
+        "rec",
+        "ct"
+      ],
+      [
+        "rec",
+        "rec",
+        "rec"
+      ]
+    ],
+    "loo_correct_frac": 0.9,
+    "shapley_correct_frac": 0.5
+  },
+  "gowalla_ts": {
+    "tau_shapley": {
+      "mean": 0.7999999999999999,
+      "lo": 0.7999999999999999,
+      "hi": 0.7999999999999999,
+      "n": 10,
+      "ci_method": "percentile bootstrap, 10000 resamples"
+    },
+    "tau_loo": {
+      "mean": 0.9999999999999998,
+      "lo": 0.9999999999999998,
+      "hi": 0.9999999999999998,
+      "n": 10,
+      "ci_method": "percentile bootstrap, 10000 resamples"
+    },
+    "tau_shapley_per_seed": [
+      0.7999999999999999,
+      0.7999999999999999,
+      0.7999999999999999,
+      0.7999999999999999,
+      0.7999999999999999,
+      0.7999999999999999,
+      0.7999999999999999,
+      0.7999999999999999,
+      0.7999999999999999,
+      0.7999999999999999
+    ],
+    "tau_loo_per_seed": [
+      0.9999999999999999,
+      0.9999999999999999,
+      0.9999999999999999,
+      0.9999999999999999,
+      0.9999999999999999,
+      0.9999999999999999,
+      0.9999999999999999,
+      0.9999999999999999,
+      0.9999999999999999,
+      0.9999999999999999
+    ],
+    "paired_delta_tau": {
+      "delta_tau_per_seed": [
+        0.19999999999999996,
+        0.19999999999999996,
+        0.19999999999999996,
+        0.19999999999999996,
+        0.19999999999999996,
+        0.19999999999999996,
+        0.19999999999999996,
+        0.19999999999999996,
+        0.19999999999999996,
+        0.19999999999999996
+      ],
+      "mean": 0.19999999999999996,
+      "sd": 0.0,
+      "bootstrap_ci95": [
+        0.19999999999999996,
+        0.19999999999999996
+      ],
+      "n_seeds_loo_better": 10,
+      "n_seeds_equal": 0,
+      "n_seeds_shapley_better": 0,
+      "wilcoxon_p": 0.001953125,
+      "note": "Paired by seed: both correlations score the SAME observed retirement loss on the SAME fitted game, so the seed is a block. Percentile bootstrap over 10,000 resamples; with n=10 read it as indicative."
+    },
+    "cheapest_true_shapley_loo": [
+      [
+        "pop",
+        "rec",
+        "pop"
+      ],
+      [
+        "pop",
+        "rec",
+        "pop"
+      ],
+      [
+        "pop",
+        "rec",
+        "pop"
+      ],
+      [
+        "pop",
+        "rec",
+        "pop"
+      ],
+      [
+        "pop",
+        "rec",
+        "pop"
+      ],
+      [
+        "pop",
+        "rec",
+        "pop"
+      ],
+      [
+        "pop",
+        "rec",
+        "pop"
+      ],
+      [
+        "pop",
+        "rec",
+        "pop"
+      ],
+      [
+        "pop",
+        "rec",
+        "pop"
+      ],
+      [
+        "pop",
+        "rec",
+        "pop"
+      ]
+    ],
+    "loo_correct_frac": 1.0,
+    "shapley_correct_frac": 0.0
+  }
+}

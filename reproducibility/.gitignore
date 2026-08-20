@@ -1,0 +1,16 @@
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.venv/
+venv/
+*.egg-info/
+build/
+dist/
+
+# Corpora are not redistributed; refetch with scripts/fetch_*.sh
+data/raw/
+data/processed/
+data/ml-1m/
+
+# Generated locally; the released set is committed under artefacts/
+artefacts/tables/

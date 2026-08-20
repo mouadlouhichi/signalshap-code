@@ -1,0 +1,159 @@
+{
+ "ml_1m": {
+  "cf": {
+   "mean": 0.020297137563459446,
+   "lo": 0.020069041412567913,
+   "hi": 0.020525233714350978,
+   "n_positive": 10,
+   "n_seeds": 10,
+   "sign_consistent": true,
+   "pct_of_v_grand": 38.84378931636458,
+   "excludes_zero": true
+  },
+  "ct": {
+   "mean": -0.0006779717264934878,
+   "lo": -0.0008822521288322633,
+   "hi": -0.0004736913241547124,
+   "n_positive": 0,
+   "n_seeds": 10,
+   "sign_consistent": true,
+   "pct_of_v_grand": -1.2974731448721804,
+   "excludes_zero": true
+  },
+  "pop": {
+   "mean": 0.005732902341744188,
+   "lo": 0.005506655881744521,
+   "hi": 0.005959148801743855,
+   "n_positive": 10,
+   "n_seeds": 10,
+   "sign_consistent": true,
+   "pct_of_v_grand": 10.971382050191389,
+   "excludes_zero": true
+  },
+  "rec": {
+   "mean": 0.00021514415249348123,
+   "lo": 2.9046818123614772e-05,
+   "hi": 0.0004012414868633477,
+   "n_positive": 9,
+   "n_seeds": 10,
+   "sign_consistent": false,
+   "pct_of_v_grand": 0.4117336302213162,
+   "excludes_zero": true
+  },
+  "seq": {
+   "mean": 0.012486958981821528,
+   "lo": 0.012091583802070456,
+   "hi": 0.0128823341615726,
+   "n_positive": 10,
+   "n_seeds": 10,
+   "sign_consistent": true,
+   "pct_of_v_grand": 23.897005298184094,
+   "excludes_zero": true
+  }
+ },
+ "amazon_video_games": {
+  "cf": {
+   "mean": 0.010894843496256745,
+   "lo": 0.01061662035222592,
+   "hi": 0.01117306664028757,
+   "n_positive": 10,
+   "n_seeds": 10,
+   "sign_consistent": true,
+   "pct_of_v_grand": 26.024714133019728,
+   "excludes_zero": true
+  },
+  "ct": {
+   "mean": 0.0018333868596942964,
+   "lo": 0.0016522556401558476,
+   "hi": 0.0020145180792327452,
+   "n_positive": 10,
+   "n_seeds": 10,
+   "sign_consistent": true,
+   "pct_of_v_grand": 4.379445095762247,
+   "excludes_zero": true
+  },
+  "pop": {
+   "mean": -0.0021627854526762432,
+   "lo": -0.002443626008879227,
+   "hi": -0.0018819448964732593,
+   "n_positive": 0,
+   "n_seeds": 10,
+   "sign_consistent": true,
+   "pct_of_v_grand": -5.166285606240385,
+   "excludes_zero": true
+  },
+  "rec": {
+   "mean": -0.0006340279324175361,
+   "lo": -0.0006948016102866917,
+   "hi": -0.0005732542545483805,
+   "n_positive": 0,
+   "n_seeds": 10,
+   "sign_consistent": true,
+   "pct_of_v_grand": -1.5145142469632664,
+   "excludes_zero": true
+  },
+  "seq": {
+   "mean": 0.011223052044983022,
+   "lo": 0.011069781994123689,
+   "hi": 0.011376322095842354,
+   "n_positive": 10,
+   "n_seeds": 10,
+   "sign_consistent": true,
+   "pct_of_v_grand": 26.808711962777384,
+   "excludes_zero": true
+  }
+ },
+ "gowalla_ts": {
+  "cf": {
+   "mean": -0.00031943142134052536,
+   "lo": -0.000393628024997662,
+   "hi": -0.0002452348176833887,
+   "n_positive": 0,
+   "n_seeds": 10,
+   "sign_consistent": true,
+   "pct_of_v_grand": -1.8739458790025298,
+   "excludes_zero": true
+  },
+  "ct": {
+   "mean": 0.0013097511703100261,
+   "lo": 0.001205607552337318,
+   "hi": 0.0014138947882827342,
+   "n_positive": 10,
+   "n_seeds": 10,
+   "sign_consistent": true,
+   "pct_of_v_grand": 7.683661168400628,
+   "excludes_zero": true
+  },
+  "pop": {
+   "mean": 0.0020726925088056557,
+   "lo": 0.001970736315514215,
+   "hi": 0.0021746487020970966,
+   "n_positive": 10,
+   "n_seeds": 10,
+   "sign_consistent": true,
+   "pct_of_v_grand": 12.15945998366632,
+   "excludes_zero": true
+  },
+  "rec": {
+   "mean": 0.00039198202990433316,
+   "lo": 0.00037085090380576595,
+   "hi": 0.0004131131560029004,
+   "n_positive": 10,
+   "n_seeds": 10,
+   "sign_consistent": true,
+   "pct_of_v_grand": 2.2995643524974696,
+   "excludes_zero": true
+  },
+  "seq": {
+   "mean": 0.001318366616266934,
+   "lo": 0.0012539231434691694,
+   "hi": 0.0013828100890646987,
+   "n_positive": 10,
+   "n_seeds": 10,
+   "sign_consistent": true,
+   "pct_of_v_grand": 7.734203721099305,
+   "excludes_zero": true
+  }
+ },
+ "_note": "Paired Shapley-minus-LOO_rank gap per source: mean over ten stochastic fits, t_{0.975,9} run interval, count of fits with a positive gap, and the gap as a percentage of the ten-fit mean v(G). This is the quantity the paper contrasts, so the uncertainty belongs here."
+}

@@ -1,0 +1,44 @@
+{
+  "gowalla_ts": {
+    "users": 8865,
+    "items": 82134,
+    "interactions": 542970,
+    "density": 0.0007457171325451945,
+    "train": 525240,
+    "valid": 8865,
+    "test": 8865,
+    "synthetic": false,
+    "no_timestamps": false
+  },
+  "ml_1m": {
+    "users": 6038,
+    "items": 3533,
+    "interactions": 575276,
+    "density": 0.026967426883253875,
+    "train": 563206,
+    "valid": 6035,
+    "test": 6035,
+    "synthetic": false,
+    "no_timestamps": false
+  },
+  "amazon_video_games": {
+    "users": 7120,
+    "items": 3516,
+    "interactions": 117468,
+    "density": 0.004692353414886682,
+    "train": 103228,
+    "valid": 7120,
+    "test": 7120,
+    "synthetic": false,
+    "no_timestamps": false
+  },
+  "_meta": {
+    "corpora_in_this_run": [
+      "amazon_video_games"
+    ],
+    "source": "measured",
+    "measured_at": "2026-08-19T13:22:41.972674+00:00",
+    "corpus_hash": "db694693e7e2dd6f",
+    "synthetic": false
+  }
+}

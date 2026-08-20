@@ -1,0 +1,100 @@
+{
+ "ml_1m": {
+  "pairs": {
+   "cf|ct": 0.001963254460023375,
+   "cf|pop": -0.02539079160713371,
+   "cf|rec": -0.001149091725131474,
+   "cf|seq": -0.054157609913973226,
+   "ct|pop": -0.002718100975960057,
+   "ct|rec": 0.00043730198081943036,
+   "ct|seq": 0.0011818565438000877,
+   "pop|rec": -0.0017389554029818917,
+   "pop|seq": 0.005864983477188664,
+   "rec|seq": -0.0011197705994131643
+  },
+  "most_negative": [
+   "cf|seq",
+   "cf|pop",
+   "ct|pop"
+  ],
+  "material_flip_source": "cf",
+  "flip_source_pairs_ranked": [
+   [
+    "cf|seq",
+    -0.054157609913973226
+   ],
+   [
+    "cf|pop",
+    -0.02539079160713371
+   ],
+   [
+    "cf|rec",
+    -0.001149091725131474
+   ],
+   [
+    "cf|ct",
+    0.001963254460023375
+   ]
+  ]
+ },
+ "amazon_video_games": {
+  "pairs": {
+   "cf|ct": -0.005584950098296679,
+   "cf|pop": 0.0016228851877677602,
+   "cf|rec": 0.0013258393747713163,
+   "cf|seq": -0.04444618286123592,
+   "ct|pop": 0.006775298529198675,
+   "ct|rec": 0.0015533241693625407,
+   "ct|seq": -0.007709802116782878,
+   "pop|rec": 0.0016396024227189351,
+   "pop|seq": 0.002649121223750328,
+   "rec|seq": 0.0013850883917645098
+  },
+  "most_negative": [
+   "cf|seq",
+   "ct|seq",
+   "cf|ct"
+  ],
+  "material_flip_source": null,
+  "flip_source_pairs_ranked": []
+ },
+ "gowalla_ts": {
+  "pairs": {
+   "cf|ct": -0.0008608551451207442,
+   "cf|pop": -0.0017183853676179467,
+   "cf|rec": -0.0009406776222930282,
+   "cf|seq": -0.0038056097644210514,
+   "ct|pop": -0.008250919432344975,
+   "ct|rec": -0.001320708001212139,
+   "ct|seq": -0.0012914356406280637,
+   "pop|rec": 0.00021088754712290854,
+   "pop|seq": -0.0019818026333155016,
+   "rec|seq": -0.0006250464056884073
+  },
+  "most_negative": [
+   "ct|pop",
+   "cf|seq",
+   "pop|seq"
+  ],
+  "material_flip_source": "pop",
+  "flip_source_pairs_ranked": [
+   [
+    "ct|pop",
+    -0.008250919432344975
+   ],
+   [
+    "pop|seq",
+    -0.0019818026333155016
+   ],
+   [
+    "cf|pop",
+    -0.0017183853676179467
+   ],
+   [
+    "pop|rec",
+    0.00021088754712290854
+   ]
+  ]
+ },
+ "_note": "Grabisch-Roubens pairwise indices per corpus. ml_1m is the ten-seed mean; amazon and gowalla are seed 42 under the legacy candidate rule, labelled as such. Used to test whether the source carrying each material sign disagreement is also the one with the strongest substitutive interaction."
+}

@@ -1,0 +1,74 @@
+{
+ "ml_1m": {
+  "main_24gb": {
+   "cf": 0.01572938157181148,
+   "ct": -0.00016005520938266202,
+   "pop": 0.006433125945677293,
+   "rec": 0.00031597107620913353,
+   "seq": 0.029934814316437148
+  },
+  "resample_12_6gb": {
+   "cf": 0.015733620232012843,
+   "ct": -0.00018346995752328556,
+   "pop": 0.0064527243778263995,
+   "rec": 0.0002438647803626371,
+   "seq": 0.029915045247015493
+  },
+  "kendall_tau": 0.9999999999999999,
+  "max_rel_diff_pct": 22.820536838875412,
+  "sign_agreement": true,
+  "top_main": "seq",
+  "top_resample": "seq"
+ },
+ "amazon_video_games": {
+  "main_24gb": {
+   "cf": 0.019799408168288037,
+   "ct": 0.001947808971141276,
+   "pop": 0.0017785160603606665,
+   "rec": -0.0004906798410300682,
+   "seq": 0.018828397822951815
+  },
+  "resample_12_6gb": {
+   "cf": 0.019799408168288037,
+   "ct": 0.001947808971141276,
+   "pop": 0.0017785160603606665,
+   "rec": -0.0004906798410300682,
+   "seq": 0.018828397822951815
+  },
+  "kendall_tau": 0.9999999999999999,
+  "max_rel_diff_pct": 0.0,
+  "sign_agreement": true,
+  "top_main": "cf",
+  "top_resample": "cf"
+ },
+ "gowalla_ts": {
+  "main_24gb": {
+   "cf": 0.007111273500441839,
+   "ct": 0.006776233372081728,
+   "pop": 0.0005134985113538557,
+   "rec": 0.00039880635759744827,
+   "seq": 0.0022461139130351363
+  },
+  "resample_12_6gb": {
+   "cf": 0.005793777734772187,
+   "ct": 0.01309532994432854,
+   "pop": 0.0010735613381651619,
+   "rec": 0.00032921369186112944,
+   "seq": 0.004084691137716116
+  },
+  "kendall_tau": 0.7999999999999999,
+  "max_rel_diff_pct": 109.06805266770535,
+  "sign_agreement": true,
+  "top_main": "cf",
+  "top_resample": "ct"
+ },
+ "corpus_sizes": {
+  "main_24gb": {
+   "gowalla_ts": "8865 x 82134"
+  },
+  "resample_12_6gb": {
+   "gowalla_ts": "4652 x 59597"
+  }
+ },
+ "note": "Re-derived against the 24 GB ten-seed run of commit 600fd98. ml_1m and amazon_video_games have caps that are not budget-bound, so those corpora are identical in both runs. Gowalla is not: the smaller budget admits 4,652 of 8,865 users and 59,597 of 82,134 items. Reported as subsample sensitivity, not merged into the main tables."
+}
