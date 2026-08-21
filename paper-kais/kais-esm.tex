@@ -49,9 +49,13 @@
     rectangle, draw=black, line width=1.0pt, fill=white,
     minimum height=18mm, inner sep=3pt, align=center,
     font=\snFigMain, text width=27mm},
+  %% `align=center` with a fixed `text width` justifies the line, and
+  %% VALIDATION is wider than 19mm at this size, so TeX stretches the
+  %% inter-letter glue and the node renders as "V ALIDA TION". Widening the
+  %% box and switching to \centering (ragged, no justification) fixes it.
   snfold/.style={
     rectangle, draw=black, dashed, line width=0.5pt, fill=white,
-    inner sep=2pt, align=center, font=\snFigSub, text width=19mm},
+    inner sep=2pt, align=flush center, font=\snFigSub, text width=23mm},
   snflow/.style={-{Stealth[length=4.5pt,width=3.5pt]}, draw=black,
     line width=0.75pt},
   sndata/.style={-{Stealth[length=4.5pt,width=3.5pt]}, draw=black,
@@ -225,7 +229,7 @@ Game  & $N_{\max}$            & $600$ / $600$ / $11\,623$ & ML-1M / Amazon-VG / 
         ML-1M, Amazon-VG and Gowalla, so $\lambda=1$ is not the same
         effective penalty across corpora \\
       & NDCG cutoff $K$       & $10$    & \\
-      & empty-coalition baseline & $\mathbb{E}[\NDCG]$ & Equation~(the characteristic function of the main article); deterministic, no seed \\
+      & empty-coalition baseline & $\mathbb{E}[\NDCG]$ & Equation~(the baseline definition in the main article); deterministic, no seed \\
       & ranking tie rule      & score, then item index & exact total order; no tolerance relation \\
       & initial per-source depth & $\lceil N_{\max}/n \rceil$ & $120$ for $N_{\max}=600$, equal for every source \\
       & candidate growth iters& $10$    & $N_g \gets N_g + \lceil (N_{\max} - |C_u|)/n \rceil$ per pass \\
@@ -333,7 +337,7 @@ state raises $v(\G)$ on MovieLens-1M by $31.7\%$ $[+30.2\%, +33.1\%]$ while
 preserving the ordering at $\tau = 1.00$ on all ten seeds; and swapping the
 payoff metric to Recall@10 or MRR@10 preserves the ordering at $\tau = 1.00$.
 
-ESM~Table~S8 audits repeat events, which is what produces the
+Table~\ref{tab:repeats} audits repeat events, which is what produces the
 retrievability ceiling on Gowalla: $49.90\%$ of evaluated users there have
 their test venue already in training, and masking makes it unretrievable, so
 those users contribute zero to every coalition.

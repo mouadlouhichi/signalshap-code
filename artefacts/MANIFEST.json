@@ -1,6 +1,6 @@
 {
- "git_commit": "50a7e2823200522762008236d0deabe0761c5c7e",
- "git_describe": "50a7e28-dirty",
+ "git_commit": "4f7ef5a2c4a7893a5512f9a08908fd3dacd40c49",
+ "git_describe": "4f7ef5a-dirty",
  "environment": {
   "python": "3.11.2",
   "platform": "Linux-6.1.158+-x86_64-with-glibc2.36",
@@ -199,8 +199,8 @@
    "bytes": 1794
   },
   "sampling_error.json": {
-   "sha256": "56da0aaebe2d9782c12daa0b69e6380e89a1b91566f9e82db39cee9ad3c5c569",
-   "bytes": 2850
+   "sha256": "79af672f303925f70d10e5bde877b1c95d185dbdceb7ef72b83f86c87658a416",
+   "bytes": 2771
   },
   "source_order_sensitivity.json": {
    "sha256": "a335b8f936af5b37da0aa6f3404b8c86a73efeed63a48755962b13180a67ce53",

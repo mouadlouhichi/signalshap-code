@@ -49,16 +49,36 @@ ART = REPO / "artefacts"
 PLAYERS = ["cf", "ct", "pop", "rec", "seq"]
 
 
-def load_game(dataset: str) -> dict[frozenset[str], float]:
-    path = ART / f"e11_estimands_{dataset}.json"
-    raw = json.loads(path.read_text())["end_to_end"]["coalition_recall"]
+def load_game(dataset: str, which: str = "auto",
+              seed: int = 42) -> tuple[dict[frozenset[str], float], str]:
+    """Load a complete 32-coalition lattice.
+
+    Prefers the ranking-stage NDCG@10 game, which is the game the paper
+    reports. Falls back to the end-to-end recall lattice only if the NDCG one
+    has not been persisted yet, and reports which was used so the figure and
+    the prose cannot silently disagree about it.
+    """
+    ndcg_path = ART / f"ndcg_game_{dataset}_seed{seed}.json"
+    if which in ("auto", "ndcg") and ndcg_path.exists():
+        raw = json.loads(ndcg_path.read_text())["v"]
+        label = "ranking_stage_ndcg10"
+    elif which == "ndcg":
+        raise SystemExit(
+            f"{ndcg_path.name} not found. Generate it where the corpora live:\n"
+            f"    python scripts/persist_ndcg_game.py "
+            f"--dataset {dataset} --seed {seed}")
+    else:
+        raw = json.loads((ART / f"e11_estimands_{dataset}.json").read_text()
+                         )["end_to_end"]["coalition_recall"]
+        label = "end_to_end_recall"
+
     game = {}
     for key, val in raw.items():
         members = frozenset() if key == "empty" else frozenset(key.split(","))
         game[members] = float(val)
     if len(game) != 32:
         raise SystemExit(f"expected 32 coalitions, got {len(game)}")
-    return game
+    return game, label
 
 
 def exact_shapley(v: dict[frozenset[str], float]) -> dict[str, float]:
@@ -135,11 +155,14 @@ def main() -> int:
     ap.add_argument("--budgets", type=int, nargs="+",
                     default=[50, 100, 500, 2000])
     ap.add_argument("--seed", type=int, default=42)
+    ap.add_argument("--game", choices=("auto", "ndcg", "recall"),
+                    default="auto",
+                    help="which persisted lattice to measure on")
     ap.add_argument("--out", type=Path,
                     default=ART / "sampling_error.json")
     args = ap.parse_args()
 
-    v = load_game(args.dataset)
+    v, game_label = load_game(args.dataset, args.game, args.seed)
     exact = exact_shapley(v)
     v_grand = v[frozenset(PLAYERS)] - v[frozenset()]
 
@@ -150,13 +173,15 @@ def main() -> int:
     rng = np.random.default_rng(args.seed)
     out = {
         "dataset": args.dataset,
-        "game": "end_to_end.coalition_recall",
+        "game": game_label,
         "caveat": (
-            "This is the end-to-end recall game, the only complete "
-            "32-coalition characteristic function persisted in artefacts/. "
-            "It is NOT the ranking-stage NDCG@10 game whose Shapley values "
-            "the paper reports. Absolute errors do not transfer; errors "
-            "relative to v(G) do."),
+            "Measured on the ranking-stage NDCG@10 game, which is the game "
+            "the paper reports."
+            if game_label == "ranking_stage_ndcg10" else
+            "FALLBACK: measured on the end-to-end recall game because the "
+            "NDCG lattice has not been persisted. Run "
+            "scripts/persist_ndcg_game.py where the corpora live, then rerun "
+            "this with --game ndcg."),
         "v_grand": v_grand,
         "exact_shapley": exact,
         "efficiency_residual": resid,

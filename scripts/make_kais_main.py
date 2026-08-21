@@ -78,9 +78,13 @@ COMMON_PACKAGES = r"""\usepackage{amsmath}
     rectangle, draw=black, line width=1.0pt, fill=white,
     minimum height=18mm, inner sep=3pt, align=center,
     font=\snFigMain, text width=27mm},
+  %% `align=center` with a fixed `text width` justifies the line, and
+  %% VALIDATION is wider than 19mm at this size, so TeX stretches the
+  %% inter-letter glue and the node renders as "V ALIDA TION". Widening the
+  %% box and switching to \centering (ragged, no justification) fixes it.
   snfold/.style={
     rectangle, draw=black, dashed, line width=0.5pt, fill=white,
-    inner sep=2pt, align=center, font=\snFigSub, text width=19mm},
+    inner sep=2pt, align=flush center, font=\snFigSub, text width=23mm},
   snflow/.style={-{Stealth[length=4.5pt,width=3.5pt]}, draw=black,
     line width=0.75pt},
   sndata/.style={-{Stealth[length=4.5pt,width=3.5pt]}, draw=black,
@@ -177,9 +181,9 @@ and sequential signals. The payoff is normalised discounted cumulative gain at
 rank 10 on a coalition-independent candidate set, with a ridge fusion head fit
 per coalition on validation data and scored on test data. With five players the
 32 coalitions are enumerated exactly, so the step from the fitted game to
-Shapley values carries no sampling error; we show this matters, because
-permutation sampling at 500 draws still exceeds both the seed-to-seed spread
-and the materiality threshold used here.
+Shapley values carries no sampling error; on a five-player lattice of this
+shape we measure permutation sampling at 500 draws still exceeding both the
+seed-to-seed spread and the materiality threshold used here.
 
 On three timestamped corpora, two of the three fitted systems contain a source
 for which Shapley and ranking-stage leave-one-out disagree in sign by a
@@ -227,7 +231,7 @@ symmetry, null-player and additivity, and it evaluates each player against
 \emph{every} coalition. We make the players five architectural sources
 (collaborative filtering, content, popularity, recency, sequential
 co-occurrence) and the payoff normalised discounted cumulative gain at rank 10
-(NDCG@10) on a candidate set that is fixed across coalitions, so that $v(S)$ is
+(NDCG@10)~\citep{jarvelin2002cumulated} on a candidate set that is fixed across coalitions, so that $v(S)$ is
 comparable over a common item set. Five players give $2^5=32$ coalitions, which
 we enumerate exhaustively; the aggregation therefore contributes no sampling
 error, and Section~\ref{sec:verification} shows that this is load-bearing
@@ -243,7 +247,7 @@ observed ordering and Shapley does not. We claim credit allocation under a
 declared game; we do not claim retirement guidance, we make no causal or
 off-policy claim, and we do not claim state-of-the-art accuracy. Attribution-derived
 fusion weights gave no resolvable gain over a global head, a negative result we
-report in the supplement (ESM~S5).
+report in the supplement (@@ESM:esm:fusion@@).
 
 \medskip\noindent\textbf{Contributions.}
 \begin{itemize}
@@ -323,8 +327,8 @@ that matters here, since one can switch off a recommender source but not a
 feature of a clustering.
 
 \paragraph{Shapley for ranking}
-RankSHAP~\citep{chowdhury2024rankshap},
-RankingSHAP~\citep{heuss2025rankingshap} and ShaRP~\citep{pliatsika2024sharp}
+RankSHAP~\citep{chowdhury2025rankshap},
+RankingSHAP~\citep{heuss2025rankingshap} and ShaRP~\citep{pliatsika2025sharp}
 bring Shapley to ranked outputs, but they attribute to \emph{features} of a
 fixed candidate list and estimate by sampling. Because our players participate
 in retrieval, a coalition would otherwise rank a different item set, which is
@@ -341,10 +345,13 @@ scorers with no shared graph.
 
 \paragraph{Hybrid recommenders and ablation practice}
 Hybrid designs~\citep{burke2002hybrid} are still assessed component-wise by
-ablation, which is the practice this paper qualifies. Offline ranking
-evaluation is itself sensitive to protocol and exposure
-bias~\citep{ji2023critical}, which is why our applicability diagnostics are
-declared in advance in Section~\ref{sec:preconditions}.
+ablation, which is the practice this paper qualifies. Offline ranking evaluation is itself sensitive to protocol, data leakage and
+exposure bias, and benchmark comparisons are known to be fragile under
+inconsistent splitting and candidate
+sampling~\citep{ji2023leakage,sun2020are,zangerle2022evaluating}. That
+literature is why our applicability diagnostics are declared in advance in
+Section~\ref{sec:preconditions} and why the candidate rule, the recall gate and
+the leakage fractions are all reported rather than left implicit.
 
 \subsection{Background}\label{sec:background}
 
@@ -383,11 +390,10 @@ its statistical quality.
 Semivalues relax efficiency by replacing the weights in
 Equation~(\ref{eq:shapley}) with a general coalition-size distribution. Banzhaf
 weights all coalitions equally and the binomial family interpolates by a
-parameter $q$; both are used as comparators in ESM~S3, where we also record
+parameter $q$; both are used as comparators in @@ESM:esm:robustness@@, where we also record
 that the \emph{size-uniform} semivalue is algebraically identical to Shapley
-and so is not an independent comparator. Pairwise interaction indices measure
-whether two players behave substitutively or complementarily under the same
-game. With exactly one relevant test item per user, NDCG@10 reduces to
+and so is not an independent comparator. Pairwise interaction indices~\citep{grabisch1999} measure whether two players
+behave substitutively or complementarily under the same game. With exactly one relevant test item per user, NDCG@10 reduces to
 $1/\log_2(1+\mathrm{rank})$ when that item appears in the top ten and $0$
 otherwise, so a coalition value is an average of per-user reciprocal-log gains
 over a common item set.
@@ -417,7 +423,7 @@ interaction indices later recovered in part.}
 Player & Signal & Scoring function $s_g(u,i)$, and declared overlap \\
 \midrule
 $cf$  & Collaborative
-      & Implicit-feedback ALS, $64$ factors, confidence
+      & Implicit-feedback ALS~\citep{hu2008collaborative}, $64$ factors, confidence
         $c_{ui}=1+\alpha r_{ui}$ at $\alpha=1$, ridge
         $\lambda_{\mathrm{ALS}}=0.1$, $15$ iterations;
         $s_{cf}=x_u^\top y_i$. Declared to overlap $pop$. \\
@@ -441,7 +447,8 @@ $rec$ & Recency
         recent interaction $\ell$ in that cluster, else $0$. \\
 \addlinespace[2pt]
 $seq$ & Co-occurrence
-      & PPMI--SVD item embeddings (item2vec-style), pairs at distance $\le 5$,
+      & PPMI--SVD item embeddings~\citep{levy2014neural} (item2vec-style), pairs
+        at distance $\le 5$,
         $64$ components; user vector is a recency-weighted mean of the last
         $5$ items with weights $0.8^k$. The co-occurrence matrix is
         \emph{symmetric}: order enters only through those weights, so this is
@@ -486,19 +493,29 @@ if the union underfills the cap. Both components of the truncation key are
 invariant under permuting $\G$, so relabelling the players cannot change the
 game. Writing $\Ueval = \{u : |\Cu| > 0\}$, users outside $\Ueval$ are excluded
 from every coalition mean and reported separately as candidate-construction
-failures.
+failures. Source scores enter the fusion head standardised per user over
+$\Cu$,
+\begin{equation}
+z_{u,g,i} =
+\begin{cases}
+\bigl(s_g(u,i)-\mu_{u,g}\bigr)/\sigma_{u,g}, & \sigma_{u,g}>0,\\
+0, & \sigma_{u,g}=0,
+\end{cases}
+\label{eq:zscore}
+\end{equation}
+with $\mu_{u,g}$ and $\sigma_{u,g}$ the mean and standard deviation of
+$s_g(u,\cdot)$ over $\Cu$. A source is structurally nondegenerate when
+$\sigma_{u,g}>0$ for at least one evaluated user, which is the criterion the
+pre-run audit applies.
 
 This is the construct's load-bearing choice. If each coalition retrieved its
 own pool, $v(S)$ and $v(S')$ would be NDCG values over different item sets and
 their difference would confound ranking quality with retrieval coverage. The
 alternative of a grand-coalition-only pool is not neutral either, and we
 measured that cost rather than asserting it: under that design $\varphi_{ct}$
-changes sign on MovieLens-1M. Three source-blind pool rules (ESM~S3) leave both
+changes sign on MovieLens-1M. Three source-blind pool rules (@@ESM:esm:robustness@@) leave both
 material disagreements intact, and oracle-pool recall equals $\rho$ exactly on
-every corpus, which independently confirms
-Equation~(\ref{eq:dilution}). Source scores enter the head $z$-normalised per
-user over $\Cu$, with $z_{u,g,i} = (s_g(u,i)-\mu_{u,g})/\sigma_{u,g}$ when
-$\sigma_{u,g} > 0$ and $0$ otherwise, so no source dominates through scale.
+every corpus, which independently confirms Equation~(\ref{eq:dilution}).
 
 \paragraph{Characteristic function}
 For coalition $S$ we fit a ridge fusion head $w^{(S)}$ on \emph{validation}
@@ -512,10 +529,23 @@ v(S) \;=\; \frac{1}{|\Ueval|}\sum_{u\in\Ueval}
 \end{equation}
 with $v(\varnothing)=0$ by construction. The ridge penalty $\lambda$ is frozen
 before the study at a value selected on a MovieLens pilot; a sweep over eight
-orders of magnitude appears in ESM~S3. The per-user baseline $b_u$ is the
-\emph{expected} NDCG@10 of a uniformly random permutation of $C_u$, available
-in closed form, rather than a sampled draw; centring on an expectation removes
-a variance term that a single random draw would inject into every coalition.
+orders of magnitude appears in @@ESM:esm:robustness@@.
+
+The per-user baseline $b_u$ is the \emph{expected} NDCG@10 of a uniformly
+random permutation of $\Cu$, which for a single relevant item is available in
+closed form:
+\begin{equation}
+b_u \;=\; \frac{1}{|\Cu|}\sum_{r=1}^{\min(K,|\Cu|)}\frac{1}{\log_2(1+r)} ,
+\label{eq:baseline}
+\end{equation}
+since the relevant item is equally likely to occupy each of the $|\Cu|$
+positions and contributes only when it lands in the top $K$. Centring on this
+expectation rather than on a sampled random draw removes a variance term that a
+draw would inject into every coalition. The baseline is a declared modelling
+choice, not a normalisation that cancels: it survives in the marginal
+contribution of the empty coalition, which carries Shapley weight $1/n$, so
+changing $b_u$ by $\delta$ shifts every $\varphi_g$ by exactly $-\delta/n$.
+Efficiency is unaffected, since $\sum_g\varphi_g = v(\G)-v(\varnothing)$.
 
 \paragraph{What ``exact'' qualifies}
 Equation~(\ref{eq:shapley}) is evaluated over all 32 coalitions with no
@@ -537,6 +567,11 @@ practical to roughly $n \le 12$. Generative AI (OpenAI Codex) was used for code
 scaffolding and consistency checking; every number reported here was recomputed
 from the released commit.
 
+"""
+
+#: Algorithm 1 is emitted between these two chunks so that the float
+#: originates inside 3.2 rather than after 3.5, where it previously drifted.
+METHOD_B = r"""
 \paragraph{The temporal state is frozen}
 Sources are fitted on the training fold and not refreshed between the
 validation and test steps, so the test step is a two-step-ahead forecast from a
@@ -547,7 +582,7 @@ MovieLens-1M by $31.7\%$ $[+30.2\%,+33.1\%]$ over ten seeds, positive on
 $10/10$, while preserving the ordering at $\tau = 1.00$ on every seed. The
 sources whose values move are $seq$ ($+0.01393$) and $cf$ ($+0.00199$), both
 sign-stable; $ct$ and $rec$ move by less than $10^{-4}$ with no stable sign
-(ESM~S3). The choice is deliberate, since refreshing would give each coalition
+(@@ESM:esm:robustness@@). The choice is deliberate, since refreshing would give each coalition
 a different information state and break comparability, but it is a limitation
 on absolute magnitudes.
 
@@ -564,12 +599,15 @@ $\rho = 0.501$: half the users are exact zeros, all magnitudes are halved,
 and orderings, signs, rank correlations and ratios are exactly invariant. The
 practical consequence is stated plainly in Section~\ref{sec:preconditions}.
 
+"""
+
+METHOD_C = r"""
 \subsection{Formal properties}\label{sec:theory}
 
 Efficiency holds by construction, so $\sum_g \varphi_g = v(\G)$ exactly. A
 natural redundancy property, that a source duplicated into the system should
 receive non-negative credit, is \emph{false} without monotonicity: we give a
-three-player counterexample in ESM~S1 and record the corrected statement there
+three-player counterexample in @@ESM:esm:proofs@@ and record the corrected statement there
 with its proof. This matters empirically rather than only formally, because all
 three fitted games are non-monotone (Table~\ref{tab:preconditions}), so the
 property does not apply on our data and negative $\varphi_g$ values are
@@ -582,22 +620,23 @@ The five players are those of Table~\ref{tab:sources}. Before computing any
 attribution we declared two expected substitutions, $cf$--$pop$ (popularity
 leaking into implicit-feedback collaborative filtering) and $ct$--$rec$ (shared
 content input), so that the interaction indices could be read against a
-prediction rather than fitted to. Reference points include a uniform-weight
-head, a popularity-only ranker, LightGCN and SASRec; these are context for
+prediction rather than fitted to. Reference points include a uniform-weight head, a popularity-only ranker,
+LightGCN~\citep{he2020lightgcn} and SASRec~\citep{kang2018sasrec}; these are context for
 absolute magnitudes and are deliberately under-tuned. They are not competitors
 and no state-of-the-art claim is made or intended.
 
 \paragraph{Corpora and protocol}
 We use three timestamped corpora spanning a $36\times$ density range:
-MovieLens-1M ($6\,038$ users, $3\,533$ items), the Video Games category of
-Amazon Reviews 2023 ($7\,120 \times 3\,516$), and Gowalla check-ins
+MovieLens-1M~\citep{harper2015movielens} ($6\,038$ users, $3\,533$ items),
+the Video Games category of Amazon Reviews 2023~\citep{ni2019justifying}
+($7\,120 \times 3\,516$), and Gowalla check-ins~\citep{cho2011friendship}
 ($8\,865 \times 82\,134$), each subsampled to fit the memory budget
 (Table~\ref{tab:preconditions}). Timestamps are required, which is why these
 three were chosen. Splits are per-user leave-last-out:
 chronological within a user, which is standard for this protocol but not
 globally time-blocked, so pooled training events postdate some users' held-out
-events. We measured that rather than assuming it away: the mean fraction of a
-user's training events that postdate their test event is $44\%$, $27\%$ and
+events. The mean fraction of a user's training events that postdate their test
+event is $44\%$, $27\%$ and
 $19\%$. A globally blocked replication on MovieLens-1M retains 526 of 6\,038
 users and reproduces the paper's contrast, $\tau_{\LOOr} = 0.80$ against
 $\tau_{\text{Shapley}} = 0.60$ with LOO picking the correct source and Shapley
@@ -664,7 +703,7 @@ satisfies constraints fixed in advance.
 \paragraph{Known-answer games}
 Six analytic games with closed-form Shapley vectors, spanning additive,
 substitutive, complementary, null-player, harmful and unanimity structures, are
-recovered with maximum absolute error $0$ (ESM~Table~S1). The null-player and
+recovered with maximum absolute error $0$ (@@ESM:tab:analytic@@). The null-player and
 harmful games matter most here: our fitted games are non-monotone and produce
 negative $\varphi_g$, so it is necessary to establish that a negative value is
 a faithful computation rather than an implementation artefact, and the harmful
@@ -700,19 +739,33 @@ $M\in\{50,100,500,2000\}$ with 20 repeats each
 $2.22\%$ and a materiality threshold of $1.91\%$; KernelSHAP is worse
 throughout at this player count. Sampling error at a realistic budget is
 therefore \emph{larger} than the effects this paper reports, and could
-manufacture or erase a material sign flip. Exactness is load-bearing rather
-than cosmetic. The measurement is made on the end-to-end recall game, the
-complete lattice we persist; absolute errors do not transfer to the NDCG game,
-but errors relative to $v(\G)$ do.
+manufacture or erase a material sign flip on a game of this shape. Exactness is
+load-bearing rather than cosmetic.
+
+One scope limitation is worth stating precisely rather than glossing. The
+lattice measured here is the end-to-end \emph{recall} game on the same corpus
+and the same five players, because that is the complete 32-coalition
+characteristic function our released artefacts persist. It is not the
+ranking-stage NDCG@10 game whose Shapley values Section~\ref{sec:results}
+reports. What the two share is the structure that drives estimator variance:
+five players, a bounded payoff, and a comparable ratio of interaction to main
+effect. What we have \emph{not} shown is that the error curve transfers
+quantitatively, and we do not claim it does. The defensible reading is that a
+sampled estimator on a five-player ranking game of this kind carries error of
+the order of the effects we report, which is a reason to enumerate when
+enumeration costs 32 evaluations.
 
 \begin{figure}[tp]
 \centering
 \includegraphics[width=0.86\textwidth]{Fig8.png}
-\caption{Sampled Shapley error against exact enumeration, as a percentage of
-$v(\G)$, over 20 repeats per budget; bands span the mean to the 95th
-percentile. Both reference lines are quantities this paper already uses: the
-ten-seed spread of the fitted values, and the $10^{-3}$ materiality threshold.
-Permutation sampling crosses neither until well past $M=500$.}
+\caption{Sampled Shapley error against exact enumeration on a complete
+32-coalition lattice, as a percentage of $v(\\G)$, over 20 repeats per budget;
+bands span the mean to the 95th percentile. Both reference lines are
+quantities this paper already uses: the ten-seed spread of the fitted values,
+and the $10^{-3}$ materiality threshold. Permutation sampling crosses neither
+until well past $M=500$. Measured on the end-to-end recall game, the complete
+lattice the released artefacts persist, not on the ranking-stage NDCG@10 game
+of Section~\\ref{sec:results}; see the scope limitation in the text.}
 \label{fig:sampling}
 \end{figure}
 
@@ -726,8 +779,7 @@ makes that particular comparison vacuous.
 
 Among the genuine comparators, Banzhaf and two binomial semivalues rank the
 sources identically to Shapley on MovieLens-1M. Robustness is not uniform
-across corpora, and the honest statement is a conjunction rather than a
-generalisation. On Gowalla all three agree with Shapley at $\tau = 0.80$, with
+across corpora. On Gowalla all three agree with Shapley at $\tau = 0.80$, with
 the $q = 0.25$ semivalue promoting $ct$ over $cf$ across a margin of only
 $0.00037$ and Banzhaf transposing $pop$ and $rec$ across $0.00017$; these are
 near-ties, not disagreements of substance. On Amazon-VG the disagreement is
@@ -740,7 +792,7 @@ Table~\ref{tab:sources}. The two most negative pairs on MovieLens-1M are
 $cf$--$seq$ at $-0.054$ and $cf$--$pop$ at $-0.025$, both substitutive, and
 $cf$--$pop$ is one of the two declared overlaps. The recovery is partial rather
 than complete, which is what we report. Full semivalue and interaction tables
-are in ESM~S3.
+are in @@ESM:esm:robustness@@.
 """
 
 RESULTS = r"""
@@ -773,7 +825,7 @@ systems studied and is absent on the third. Three corpora cannot estimate how
 common it is, and nothing in either rule announces in advance whether a given
 system will exhibit it. Both material flips survive a $\lambda$ sweep over
 eight orders of magnitude, three source-blind candidate pools, and score
-perturbation at $\sigma\in\{0.1,0.5\}$ (ESM~S3).
+perturbation at $\sigma\in\{0.1,0.5\}$ (@@ESM:esm:robustness@@).
 
 \paragraph{Mechanism}
 The account is \emph{qualitatively} the redundancy story, though formally
@@ -815,9 +867,19 @@ grand-coalition head $w^{(\G)}$ fixed and merely masking it to $S$ gives
 $v_{\mathrm{fixed}}$; letting each coalition retrieve its own $C_u(S)$ and
 refit gives $v_{\mathrm{e2e}}$, under which coalition values are no longer
 comparable across a fixed item set, which is exactly the property the main game
-preserves. All three estimands are reported side by side in ESM~Table~S9; their
+preserves. All three estimands are reported side by side in @@ESM:tab:estimands@@; their
 orderings agree at $\tau \ge 0.80$ on both corpora where the comparison is
-available.
+available, though the three rows are not artefact-matched: the refitted head
+uses the final source-symmetric candidate rule while the other two predate that
+regeneration, so the table compares orderings and not point estimates. One
+consequence is worth naming for a reader who knows the masking-versus-retraining
+distinction in the SHAP literature. Our main game refits per coalition, and
+refitting is what makes the game non-monotone; if $v_{\mathrm{fixed}}$ were
+monotone then a negative $\varphi_g$ under our game would be attributable to
+refitting rather than to the source. We have not measured monotonicity
+violations for the fixed-head game, so we cannot settle that here, and we flag
+it as the sharpest open question about the construct rather than leaving it
+implicit.
 
 """
 
@@ -847,7 +909,7 @@ two of three corpora Shapley never once selects the right source to switch off.
 Ten seeds bound these proportions loosely and we give Wilson intervals rather
 than let point estimates stand: $100\%$ is $[72,100]$ and $0\%$ is $[0,28]$, so
 the separation survives on MovieLens-1M and Gowalla while the Amazon contrast,
-$[60,98]$ against $[24,76]$, overlaps. Pairing by seed, $\Delta\tau =
+$[60,98]$ against $[24,76]$, overlaps. Pairing by seed~\citep{wilcoxon1945,holm1979}, $\Delta\tau =
 \tau_{\LOOr}-\tau_{\text{Shapley}}$ is $+0.76\ [+0.70,+0.80]$, $+0.22\
 [+0.16,+0.28]$ and $+0.20$ with zero variance, no interval containing zero. We
 read this as run-to-run stability of the contrast on fixed datasets, not as
@@ -941,7 +1003,7 @@ and were regenerated under the final source-symmetric candidate rule. Several
 labelled single-seed diagnostics predate that regeneration and are sensitivity
 analyses rather than confirmatory evidence; on MovieLens-1M the two rules agree
 to $\max_g|\Delta\varphi_g| = 2.8\times10^{-5}$ with identical ordering.
-ESM~Table~S3 lists which group is which, including the Gowalla diagnostics that
+@@ESM:tab:provenance@@ lists which group is which, including the Gowalla diagnostics that
 could not be regenerated because five dense $8\,865\times82\,134$ score
 matrices exhausted memory.
 
@@ -1036,12 +1098,47 @@ Not applicable.
 #: split moved to the ESM, or at equation labels this rewrite renamed. Left
 #: unrewritten these render as `??`, which `test_kais_split.py` catches.
 REF_FIXUPS = {
-    r"\ref{tab:repeats}": "ESM~Table~S8",
-    r"\ref{prop:loo}": "Section~\\ref{sec:theory}",
+    r"Table~\ref{tab:repeats}": "@@ESM:tab:repeats@@",
+    r"\ref{tab:repeats}": "@@ESM:tab:repeats@@",
+    r"\ref{prop:loo}": r"\ref{sec:theory}",
+    # The candidate-construction equation is labelled eq:candidates here.
+    # eq:zscore and eq:baseline keep their own targets, since both are
+    # restored as numbered equations in METHOD.
     r"\ref{eq:cand}": r"\ref{eq:candidates}",
-    r"\ref{eq:zscore}": r"\ref{eq:candidates}",
-    r"\ref{eq:baseline}": r"\ref{eq:game}",
+    # eq:cand, eq:zscore and eq:baseline are restored as real numbered
+    # equations in this manuscript (see METHOD), so these keep their own
+    # targets rather than being retargeted at an unrelated equation. An
+    # earlier revision pointed the z-norm and baseline lines of Algorithm 1
+    # at Eq. (3) and Eq. (4), which are candidate construction and the
+    # characteristic function: wrong, and it made the algorithm
+    # unimplementable from the PDF.
 }
+
+#: Caption rewrites applied to lifted floats. Regexes, because captions wrap
+#: across source lines and a literal string will not match.
+CAPTION_FIXUPS = [
+    # The caption called the three paired Wilcoxon tests "one declared primary
+    # family", contradicting the sentence in the retirement subsection saying
+    # we read these as run-to-run stability rather than population inference.
+    # The Holm adjustment is still applied and still reported; only the
+    # inferential framing is withdrawn.
+    (r"paired Wilcoxon comparisons as one declared primary family\.",
+     "paired Wilcoxon comparisons over the three corpora. These describe "
+     "run-to-run stability of the contrast on fixed datasets, not population "
+     "inference."),
+
+    # Amazon-VG appeared only at the frozen cap, where it fails the gate, with
+    # the gate-clearing larger cap mentioned in prose. That invites the
+    # question "why is this corpus in the main table at all?". Both caps are
+    # now rows. Recall 0.7499 -> 0.750 is verified against
+    # results_amazon_video_games.json e5_robustness.candidate_size.
+    (r"Amazon-VG    & 7\\,120 / 7\\,120 & 3\\,516  & \$0\.469\\%\$ & 600    "
+     r"& \$0\.589\^\{\\dagger\}\$ & \$0\.648\$ & \$4\$ / \$14\$ & no \\\\",
+     "Amazon-VG    & 7\\,120 / 7\\,120 & 3\\,516  & $0.469\\%$ & 600    "
+     "& $0.589^{\\dagger}$ & $0.648$ & $4$ / $14$ & no \\\\\n"
+     "             &                 &         &           & 1\\,200  "
+     "& $0.750$           & n/a     & n/a        & no \\\\"),
+]
 
 
 def _fix_refs(src: str) -> str:
@@ -1051,6 +1148,10 @@ def _fix_refs(src: str) -> str:
         src = src.replace(old.replace(r"\ref{", r"\eqref{"),
                           new.replace(r"\ref{", r"\eqref{")
                           if new.startswith("\\ref{") else new)
+    for pattern, repl in CAPTION_FIXUPS:
+        # lambda: the replacements contain LaTeX backslashes, which re.sub
+        # would otherwise interpret as group escapes.
+        src = re.sub(pattern, lambda _m, r=repl: r, src, flags=re.S)
     return src
 
 
@@ -1116,6 +1217,40 @@ def _esm_localise(src: str) -> str:
     return src
 
 
+def _main_float(label: str, *, placement: str = "tp") -> str:
+    """Lift a float into the main text, applying the reference and caption
+    fixups. Every main-text float goes through here so none can bypass them,
+    which is how the Table 5 caption kept its withdrawn framing."""
+    return _fix_refs(float_src(label, star=False, placement=placement))
+
+
+
+def esm_numbering(esm_tex: str) -> dict[str, str]:
+    """Map ESM labels to their rendered S-numbers.
+
+    The main article cites the supplement by number ("ESM Table S4"), and the
+    supplement numbers its floats in order of appearance. Hand-writing those
+    numbers desynchronises the moment a float moves, which already happened
+    once: the analytic-games table was cited as S1 while it renders as S4, and
+    the fusion section as S5 while it renders as S6. Computing them removes
+    the failure mode.
+    """
+    body = esm_tex[esm_tex.index(r"\begin{document}"):]
+    out: dict[str, str] = {}
+    for kind, env in (("Table", "table"), ("Figure", "figure")):
+        n = 0
+        for m in re.finditer(r"\\begin\{%s\}(.*?)\\end\{%s\}" % (env, env),
+                             body, re.S):
+            n += 1
+            lab = re.search(r"\\label\{([^}]*)\}", m.group(1))
+            if lab:
+                out[lab.group(1)] = f"ESM {kind}~S{n}"
+    for i, m in enumerate(re.finditer(r"\\section\{[^}]*\}\\label\{([^}]*)\}",
+                                      body), 1):
+        out[m.group(1)] = f"ESM~S{i}"
+    return out
+
+
 def build_main() -> str:
     parts = [MAIN_PREAMBLE, FRONT, INTRO]
 
@@ -1126,22 +1261,27 @@ def build_main() -> str:
     parts.append(RELATED)
     parts.append(METHOD)
 
-    # Preconditions table carries the recall gate, rho and monotonicity.
-    parts.append(_fix_refs(
-        float_src("tab:preconditions", star=False, placement="tp")))
-    parts.append(PRECONDITIONS_TAIL)
+    # Algorithm 1 is placed here, immediately after the paragraph that
+    # introduces it in 3.2. Emitting it after the preconditions block made it
+    # float to page 11, several pages from its only discussion.
+    # [tb], not [t]: a bare [t] cannot fall back and one deferral stalls every
+    # later float. [tb] still keeps the algorithm inside 3.2.
+    parts.append(_fix_refs(float_src("alg:signalshap", placement="tb")))
+    parts.append(METHOD_B)
+    parts.append(METHOD_C)
 
-    # Algorithm stays in main: reviewers ask for it and it is compact.
-    parts.append(_fix_refs(float_src("alg:signalshap", placement="tp")))
+    # Preconditions table carries the recall gate, rho and monotonicity.
+    parts.append(_main_float("tab:preconditions"))
+    parts.append(PRECONDITIONS_TAIL)
 
     parts.append(VERIFICATION)
 
     parts.append(RESULTS)
     parts.append(_esm_localise(float_src("tab:loo", star=False, placement="tp")))
-    parts.append(float_src("fig:scatter", star=False, placement="tp"))
+    parts.append(_main_float("fig:scatter"))
     parts.append(RESULTS_MID)
     parts.append(_esm_localise(float_src("tab:retirement", star=False, placement="tp")))
-    parts.append(float_src("tab:retire-seeds", star=False, placement="tp"))
+    parts.append(_main_float("tab:retire-seeds"))
     parts.append(RESULTS_TAIL)
 
     parts.append(DISCUSSION)
@@ -1289,7 +1429,7 @@ state raises $v(\G)$ on MovieLens-1M by $31.7\%$ $[+30.2\%, +33.1\%]$ while
 preserving the ordering at $\tau = 1.00$ on all ten seeds; and swapping the
 payoff metric to Recall@10 or MRR@10 preserves the ordering at $\tau = 1.00$.
 
-ESM~Table~S8 audits repeat events, which is what produces the
+Table~\ref{tab:repeats} audits repeat events, which is what produces the
 retrievability ceiling on Gowalla: $49.90\%$ of evaluated users there have
 their test venue already in training, and masking makes it unretrievable, so
 those users contribute zero to every coalition.
@@ -1449,8 +1589,21 @@ def count_words(tex: str) -> int:
 
 
 def main() -> int:
-    main_tex = build_main()
     esm_tex = build_esm()
+    main_tex = build_main()
+
+    # Resolve @@ESM:label@@ placeholders against the supplement's ACTUAL
+    # float and section numbering, so a moved float cannot leave the main
+    # article pointing at the wrong S-number.
+    numbering = esm_numbering(esm_tex)
+    def _resolve(m: re.Match[str]) -> str:
+        label = m.group(1)
+        if label not in numbering:
+            raise SystemExit(f"ESM placeholder for unknown label: {label}")
+        return numbering[label]
+    main_tex = re.sub(r"@@ESM:([^@]+)@@", _resolve, main_tex)
+    if "@@ESM:" in main_tex or "@@ESM:" in esm_tex:
+        raise SystemExit("unresolved ESM placeholder")
 
     OUT_DIR.mkdir(exist_ok=True)
     MAIN.write_text(main_tex, encoding="utf-8")

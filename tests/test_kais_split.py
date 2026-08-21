@@ -178,3 +178,133 @@ def test_conditionals_are_declared_before_use() -> None:
         decl = text.find(r"\newif\iftikzfigure")
         assert decl != -1, f"{path.name} uses \\iftikzfigure without \\newif"
         assert decl <= first_use, f"{path.name} declares it after first use"
+
+
+# --- regression guards for the round-2 audit blockers ---------------------- #
+
+def test_every_cite_key_exists_in_the_bib() -> None:
+    """B2: three keys had wrong year suffixes and rendered as [?]. A desk
+    editor who skims page 4 bounces that as incomplete."""
+    tex = MAIN.read_text() + ESM.read_text()
+    used: set[str] = set()
+    for m in re.finditer(r"\\cite[a-z]*\{([^}]*)\}", tex):
+        used |= {k.strip() for k in m.group(1).split(",")}
+    bib = set(re.findall(r"@\w+\{([^,]+),",
+                         (REPO / "paper-kais" / "paper.bib").read_text()))
+    assert not used - bib, f"undefined cite keys: {sorted(used - bib)}"
+
+
+def test_core_artefacts_of_the_field_are_cited() -> None:
+    """B5: a recsys reviewer reading 'we use MovieLens-1M, ALS, NDCG@10' with
+    no citations reads it as sloppy, not as brevity."""
+    tex = MAIN.read_text()
+    for key in ("harper2015movielens", "cho2011friendship", "ni2019justifying",
+                "hu2008collaborative", "levy2014neural",
+                "jarvelin2002cumulated", "grabisch1999",
+                "wilcoxon1945", "holm1979"):
+        assert key in tex, f"{key} is used in the text but never cited"
+
+
+def test_reference_count_is_defensible() -> None:
+    tex = MAIN.read_text() + ESM.read_text()
+    used: set[str] = set()
+    for m in re.finditer(r"\\cite[a-z]*\{([^}]*)\}", tex):
+        used |= {k.strip() for k in m.group(1).split(",")}
+    assert len(used) >= 30, f"only {len(used)} references cited"
+
+
+def test_algorithm_equation_pointers_are_correct() -> None:
+    """B4: Algorithm 1 pointed at Eq. (3) for standardisation and Eq. (4) for
+    the baseline, which were candidate construction and the characteristic
+    function. That made the algorithm unimplementable from the PDF."""
+    tex = MAIN.read_text()
+    alg = re.search(r"\\begin\{algorithm\}(.*?)\\end\{algorithm\}",
+                    tex, re.S).group(1)
+    # The standardisation and baseline lines must name their own equations.
+    assert "eq:zscore" in alg, "algorithm does not reference the z-norm equation"
+    assert "eq:baseline" in alg, "algorithm does not reference the baseline"
+    for label in ("eq:zscore", "eq:baseline", "eq:candidates"):
+        assert f"\\label{{{label}}}" in tex, f"{label} referenced but never defined"
+
+
+def test_algorithm_is_placed_in_its_own_subsection() -> None:
+    """B4: the float drifted to page 11, several pages past its discussion."""
+    tex = MAIN.read_text()
+    alg = tex.index(r"\begin{algorithm}")
+    sec_algorithm = tex.index(r"\subsection{Algorithm and cost}")
+    sec_next = tex.index(r"\subsection{Formal properties}")
+    assert sec_algorithm < alg < sec_next, "Algorithm 1 is outside section 3.2"
+
+
+def test_sampling_artefact_declares_which_game_it_used() -> None:
+    """B3: the figure must not silently be computed on a different game from
+    the one the prose claims."""
+    data = json.loads((ART / "sampling_error.json").read_text())
+    assert data["game"] in ("ranking_stage_ndcg10", "end_to_end_recall")
+    if data["game"] == "end_to_end_recall":
+        assert "FALLBACK" in data["caveat"]
+        # The manuscript must then disclose the substitution, not hide it.
+        assert "recall game" in MAIN.read_text()
+
+
+def test_amazon_larger_cap_is_in_the_preconditions_table() -> None:
+    """R1: showing only the failing cap invites 'why is this corpus here?'."""
+    tex = MAIN.read_text()
+    table = re.search(r"\\label\{tab:preconditions\}(.*?)\\end\{table\}",
+                      tex, re.S).group(1)
+    assert "1\\,200" in table, "the gate-clearing cap is not a row"
+    assert "0.750" in table
+
+
+def test_wilcoxon_is_not_framed_as_population_inference() -> None:
+    """B6: the Table 5 caption contradicted the retirement subsection."""
+    tex = MAIN.read_text()
+    assert "primary family" not in tex
+
+
+def test_no_nested_table_reference_in_footnotes() -> None:
+    """B6: a retargeted \\ref produced 'Table~ESM Table~S8'."""
+    assert "Table~ESM" not in MAIN.read_text()
+    assert "Table ESM Table" not in MAIN.read_text()
+
+
+def test_tikz_folds_do_not_justify_their_text() -> None:
+    """B6: `align=center` with a fixed text width justified VALIDATION across
+    the node, rendering as 'V ALIDA TION' in the PDF."""
+    tex = MAIN.read_text()
+    fold = re.search(r"snfold/\.style=\{(.*?)\}", tex, re.S).group(1)
+    assert "align=flush center" in fold, (
+        "snfold justifies its text; VALIDATION will be letter-spaced")
+
+
+def test_esm_pointers_resolve_to_the_right_supplement_items() -> None:
+    """B1/R: the main article cites the supplement by S-number. Two were wrong
+    by hand (analytic games cited as S1 but rendering as S4; fusion as S5 but
+    rendering as S6), so the numbers are now computed from the ESM."""
+    sys.path.insert(0, str(REPO / "scripts"))
+    import importlib
+    mod = importlib.import_module("make_kais_main")
+
+    numbering = mod.esm_numbering(ESM.read_text())
+    main = MAIN.read_text()
+
+    # Each claim in the main text must point at the item that carries it.
+    expected = {
+        "tab:analytic": "analytic games",
+        "tab:estimands": "three estimands",
+        "tab:provenance": "provenance",
+        "tab:repeats": "repeat audit",
+        "esm:fusion": "fusion negative result",
+        "esm:proofs": "counterexample",
+        "esm:robustness": "robustness suite",
+    }
+    for label in expected:
+        assert label in numbering, f"{label} has no S-number"
+        assert numbering[label] in main, (
+            f"{label} renders as {numbering[label]} but the main text never "
+            f"cites that number")
+
+
+def test_no_unresolved_esm_placeholders() -> None:
+    for path in (MAIN, ESM):
+        assert "@@ESM:" not in path.read_text(), path.name

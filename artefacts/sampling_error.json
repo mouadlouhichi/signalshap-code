@@ -1,7 +1,7 @@
 {
  "dataset": "ml_1m",
- "game": "end_to_end.coalition_recall",
- "caveat": "This is the end-to-end recall game, the only complete 32-coalition characteristic function persisted in artefacts/. It is NOT the ranking-stage NDCG@10 game whose Shapley values the paper reports. Absolute errors do not transfer; errors relative to v(G) do.",
+ "game": "end_to_end_recall",
+ "caveat": "FALLBACK: measured on the end-to-end recall game because the NDCG lattice has not been persisted. Run scripts/persist_ndcg_game.py where the corpora live, then rerun this with --game ndcg.",
  "v_grand": 0.7483015741507871,
  "exact_shapley": {
   "cf": 0.29447666390499855,
