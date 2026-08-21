@@ -51,24 +51,41 @@ def test_no_orphan_figures_in_paper():
 
 
 @pytest.mark.skipif(not ART_FIGS.exists(), reason="assets not generated here")
-def test_published_figures_are_not_older_than_their_source():
-    """Catch the exact rot that shipped a legacy Figure 6.
+def test_published_figures_match_or_are_deliberately_hand_authored():
+    """Catch the rot that once shipped a legacy Figure 6.
 
-    Compares mtimes rather than bytes: matplotlib output is not
-    byte-reproducible across versions, so a hash comparison would fail for
-    reasons that have nothing to do with staleness.
+    Compares CONTENT, not mtimes. An earlier version compared timestamps and
+    produced false failures whenever artefacts/ was restored from a backup,
+    while missing the case that actually matters.
+
+    Figure 1 is exempt: it renders as live TikZ in the manuscript and its
+    raster is a hand-authored fallback, so the generated copy in artefacts/ is
+    deliberately NOT the published one.
     """
+    import hashlib
+
+    def digest(p):
+        return hashlib.sha256(p.read_bytes()).hexdigest()
+
     stale = []
-    for src in ART_FIGS.glob("F*_*.png"):
+    for src in sorted(ART_FIGS.glob("F*_*.png")):
         n = re.match(r"F(\d+)_", src.name)
-        if not n:
+        if not n or n.group(1) == "1":
             continue
         pub = PAPER_FIGS / f"Fig{n.group(1)}.png"
-        if pub.exists() and pub.stat().st_mtime < src.stat().st_mtime - 1:
+        if pub.exists() and digest(pub) != digest(src):
             stale.append(pub.name)
     assert not stale, (
-        f"{stale} are older than artefacts/figures/. Run "
+        f"{stale} differ from artefacts/figures/. Run "
         f"`python scripts/make_assets.py` to republish.")
+
+
+def test_figure1_is_live_tikz_with_a_raster_fallback():
+    """Fig1's raster may diverge, but only because TikZ is the real source."""
+    tex = TEX.read_text()
+    assert "\\tikzfiguretrue" in tex
+    assert "\\includegraphics[width=\\linewidth]{Fig1.png}" in tex
+    assert (PAPER_FIGS / "Fig1.png").exists()
 
 
 def test_make_assets_publishes_into_the_paper():

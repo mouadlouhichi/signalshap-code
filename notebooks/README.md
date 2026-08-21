@@ -2,7 +2,8 @@
 
 | Notebook | Purpose |
 |---|---|
-| `SignalShap_Round8_Runs.ipynb` | **The current one. Start here.** Every remaining review-round-8 run, in cost order, resumable. Uses the three corpora the paper actually reports. |
+| `SignalShap_Semivalues_Gowalla.ipynb` | **The current one.** The single run still worth doing before submission: semivalues on Gowalla, closing review item H14/#4. Tens of minutes. |
+| `SignalShap_Round8_Runs.ipynb` | Every review-round-8 run, in cost order, resumable. Completed; kept for provenance. |
 | `SignalShap_M4_FullStudy.ipynb` | Earlier full-study notebook on Apple Silicon. See the warning below before running it. |
 | `SignalShap_Reproduction.ipynb` | Original walkthrough, small scale, works anywhere (falls back to synthetic without raw data). |
 
