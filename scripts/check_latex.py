@@ -107,6 +107,10 @@ def main(tex_path: Path | None = None,
         "allowbreak",
         # amsmath, loaded by the preamble.
         "overset", "underset", "substack", "tfrac", "dfrac", "binom",
+        # \notag is amsmath (suppress an equation number inside aligned);
+        # \extracolsep is a LaTeX kernel tabular primitive, used in the
+        # \begin{tabular*}{\textwidth}{@{\extracolsep{\fill}}...} idiom.
+        "notag", "extracolsep",
     }
     defined |= set(re.findall(
         r"\\(?:newcommand|renewcommand|providecommand|DeclareMathOperator"

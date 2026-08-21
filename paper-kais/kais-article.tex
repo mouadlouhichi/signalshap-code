@@ -1,59 +1,62 @@
-%% Elsevier CAS double-column template (cas-dc.cls).
-%% Target: Knowledge-Based Systems (Elsevier).
+%% Springer Nature LaTeX template (sn-jnl.cls).
+%% Target: Knowledge and Information Systems (KAIS), Springer, journal 10115.
 %%
 %% GENERATED FILE -- do not edit by hand.
-%%   Source:    paper/sn-article.tex
-%%   Generator: scripts/make_elsevier.py
-%% Edit the source and regenerate, or the numbers will drift from
-%% artefacts/ and scripts/check_paper_numbers.py will stop protecting them.
+%%   Source:    paper-kbs/kbs-article.tex   (the latest manuscript)
+%%   Generator: scripts/make_kais.py
+%% Edit the source and regenerate, or the numbers will drift from artefacts/
+%% and scripts/check_paper_numbers.py will stop protecting them.
 %%
-%% Build:  pdflatex kbs-article && bibtex kbs-article
-%%         && pdflatex kbs-article && pdflatex kbs-article
+%% Build:  pdflatex kais-article && bibtex kais-article
+%%         && pdflatex kais-article && pdflatex kais-article
 %%
-%% cas-dc.cls, cas-common.sty and the .bst files are NOT redistributed here.
-%% Fetch them with:  bash paper-kbs/fetch-template.sh
-\documentclass[a4paper,fleqn]{cas-dc}
+%% KAIS asks for the Springer Nature template with numbered citations in
+%% square brackets, so: Numbered + sn-basic (-> sn-basic.bst).
+%% sn-jnl.cls and sn-basic.bst ship with this directory; unlike Elsevier's
+%% cas-dc.cls they are redistributable under the LPPL.
+\documentclass[pdflatex,sn-basic,Numbered]{sn-jnl}
 
-%% cas-dc.cls loads neither amsmath nor the table packages this manuscript
-%% needs. Same list as the Springer build, minus what cas-dc provides.
+%% sn-jnl.cls loads none of these itself.
+%% NOTE: natbib is deliberately absent. The class loads it with
+%% [numbers,sort&compress] inside its own \if@Spr@basic@refstyle branch;
+%% loading it here again is an option clash.
 \usepackage{amsmath}
 \usepackage{amssymb}
+%% amsthm is REQUIRED: sn-jnl.cls defines thmstyleone..four only inside
+%% \@ifpackageloaded{amsthm}{...}{}, so it configures those styles but never
+%% loads the package.
 \usepackage{amsthm}
-\usepackage[numbers,sort&compress]{natbib}
-\usepackage{microtype}
-\usepackage{xurl}
-%% cas-dc overlays the keyword box beside the abstract with an intentional
-%% zero-width box; silence only that class-internal diagnostic.
-\AtBeginEnvironment{Abstract}{\hfuzz=124pt}
+\usepackage{graphicx}
 \usepackage{multirow}
 \usepackage{array}
 \usepackage{tabularx}
 \usepackage{booktabs}
 \usepackage{algorithm}
 \usepackage{algpseudocode}
+\usepackage{microtype}
+\usepackage{xurl}
 \usepackage{tikz}
 \usetikzlibrary{arrows.meta,positioning,fit,backgrounds,calc,shapes.geometric}
 \graphicspath{{figures/}}
 
-%% Elsevier uses \tnotemark/\fnmark for title and author notes; hyperref comes
-%% from the class, so only the options are set here.
+%% sn-jnl and hyperref can otherwise emit duplicate float destinations, and
+%% paragraph-level headings make the PDF bookmark hierarchy skip levels.
 \hypersetup{hypertexnames=false,bookmarksdepth=3}
 
-%% DOUBLE-COLUMN CONSEQUENCE, and the main reason this is not a pure
-%% search-and-replace. cas-dc is two-column: the text block is about 84mm per
-%% column against roughly 165mm single-column in sn-jnl, so every wide table
-%% and every full-width figure must be promoted to a starred float that spans
-%% both columns. The generator does that promotion automatically; see
-%% `widen_floats` in scripts/make_elsevier.py.
+%% SINGLE COLUMN, and the main reason this is not a pure search-and-replace.
+%% cas-dc is two-column with a ~84mm measure, so every wide float had been
+%% promoted to a starred float spanning both columns. sn-basic is single
+%% column with a 160mm text block: starred floats are demoted back by the
+%% generator, since here they buy nothing and can be lost outright.
 
 %% Figure 1 renders as live TikZ; set \tikzfigurefalse to fall back to the
 %% pre-rendered raster in figures/Fig1.png.
 \newif\iftikzfigure
 \tikzfiguretrue
 
-%% Figure lettering. Elsevier's artwork instructions ask for legible text at
-%% the final printed size; in double column that is a smaller physical width,
-%% so the explicit point sizes from the Springer build are kept.
+%% Figure lettering. Springer requires 8-12pt in figures. sn-jnl.cls redefines
+%% the relative size macros (\tiny is 5pt, \footnotesize is 7pt), both of which
+%% would VIOLATE that rule, so explicit point sizes are set here.
 \newcommand{\snFigMain}{\fontsize{9}{10.5}\selectfont}
 \newcommand{\snFigSub}{\fontsize{8}{9.5}\selectfont}
 
@@ -84,21 +87,21 @@
   snlbl/.style={font=\snFigSub, inner sep=1.2pt, text=black},
 }
 
-%% Float placement. In two columns the queue backs up more easily than in one,
-%% so the same remedy as the Springer build applies, and placeins drains the
-%% queue at each section boundary.
+%% Float placement. Same remedy as the other two builds: without it a single
+%% deferred float stalls every later one and the whole backlog flushes at
+%% \end{document}. placeins drains the queue at each section boundary.
 \renewcommand{\topfraction}{0.9}
 \renewcommand{\bottomfraction}{0.8}
 \renewcommand{\textfraction}{0.07}
 \renewcommand{\floatpagefraction}{0.6}
-\renewcommand{\dbltopfraction}{0.9}
-\renewcommand{\dblfloatpagefraction}{0.6}
 \setcounter{topnumber}{3}
 \setcounter{bottomnumber}{2}
 \setcounter{totalnumber}{5}
-\setcounter{dbltopnumber}{3}
-\usepackage{placeins}
+\usepackage[section]{placeins}
 
+%% sn-jnl defines thmstyleone/thmstyletwo only when amsthm was loaded before
+%% the class, which is impossible in a normal document. Use amsthm's standard
+%% styles directly so the build has no "Unknown theoremstyle" warnings.
 \theoremstyle{plain}
 \newtheorem{theorem}{Theorem}
 \newtheorem{proposition}[theorem]{Proposition}
@@ -108,7 +111,7 @@
 \newtheorem{property}{Property}
 \newtheorem{remark}{Remark}
 
-\flushbottom
+\raggedbottom
 \emergencystretch=0.75em
 
 \newcommand{\G}{\mathcal{G}}
@@ -122,39 +125,18 @@
 
 \begin{document}
 
-\let\WriteBookmarks\relax
-\def\floatpagepagefraction{1}
-\def\textpagefraction{.001}
+\title[Exact-Enumeration Source Attribution]{SignalShap: Exact-Enumeration
+Ranking-Stage Attribution of Sources in Hybrid Recommenders}
 
-\shorttitle{Exact-enumeration ranking-stage source attribution}
-\shortauthors{M. Louhichi et al.}
+\author*[1]{\fnm{Mouad} \sur{Louhichi}\,\href{https://orcid.org/0000-0002-6849-230X}{\textsuperscript{\fontsize{8}{9}\selectfont ORCID}}}\email{mouad\_louhichi@um5.ac.ma}
+\author[1]{\fnm{Redwane} \sur{Nesmaoui}}\email{redwane.nesmaoui@um5.ac.ma}
+\author[1]{\fnm{Mohamed} \sur{Lazaar}}\email{mohamed.lazaar@ensias.um5.ac.ma}
 
-\title[mode=title]{SignalShap: Exact-Enumeration Ranking-Stage Attribution of
-Sources in Hybrid Recommenders}
+\affil*[1]{\orgdiv{National Higher School of Computer Science and Systems
+Analysis (ENSIAS)}, \orgname{Mohammed V University in Rabat},
+\city{Rabat}, \country{Morocco}}
 
-\author[1]{Mouad Louhichi}[orcid=0000-0002-6849-230X]
-\cormark[1]
-\ead{mouad_louhichi@um5.ac.ma}
-\credit{Conceptualization, Methodology, Software, Formal analysis,
-Investigation, Writing -- original draft, Visualization}
-
-\author[1]{Redwane Nesmaoui}
-\ead{redwane.nesmaoui@um5.ac.ma}
-\credit{Software, Validation, Data curation, Writing -- review and editing}
-
-\author[1]{Mohamed Lazaar}
-\ead{mohamed.lazaar@ensias.um5.ac.ma}
-\credit{Supervision, Methodology, Resources, Writing -- review and editing}
-
-\affiliation[1]{organization={National Higher School of Computer Science and
-Systems Analysis (ENSIAS), Mohammed V University in Rabat},
-  city={Rabat},
-  country={Morocco}}
-
-\cortext[1]{Corresponding author.}
-
-\begin{abstract}
-Source ablation and Shapley attribution answer different questions: removal
+\abstract{Source ablation and Shapley attribution answer different questions: removal
 cost and credit allocation. Conflating them can select the wrong decision
 instrument.
 
@@ -181,17 +163,10 @@ estimates removal effect. We claim credit allocation, not retirement guidance.
 Candidate recall is an applicability diagnostic: only MovieLens-1M clears the
 declared $0.60$ gate under the frozen primary configuration, Amazon-VG clears
 it in the larger-cap sensitivity, and Gowalla is retained as a relative stress
-test because training-history masking bounds its recall above by $0.501$.
-\end{abstract}
+test because training-history masking bounds its recall above by $0.501$.}
 
-\begin{keywords}
-Shapley value \sep
-cooperative game theory \sep
-hybrid recommender systems \sep
-ranking-stage attribution \sep
-leave-one-out ablation \sep
-two-stage recommendation
-\end{keywords}
+\keywords{Shapley value, cooperative game theory, hybrid recommender systems,
+ranking-stage attribution, leave-one-out ablation, two-stage recommendation}
 
 \maketitle
 
@@ -252,7 +227,7 @@ games and interventions whose attributions must satisfy known constraints, then
 test whether the implementation does so. Section~\ref{sec:recovery} applies
 this strategy to analytic and real fitted games.
 
-\begin{figure*}[tp]
+\begin{figure}[tp]
 \centering
 \iftikzfigure
 \begin{tikzpicture}[node distance=7mm]
@@ -310,7 +285,7 @@ this strategy to analytic and real fitted games.
 \caption{SignalShap workflow from source fitting and shared candidates to
 exact-game diagnostics.}
 \label{fig:workflow}
-\end{figure*}
+\end{figure}
 
 \subsection{Contributions}
 
@@ -1535,7 +1510,7 @@ are not used for superiority claims.
 
 \subsection{Preconditions}\label{sec:preconditions}
 
-\begin{table*}[tp]
+\begin{table}[tp]
 \caption{Corpus and candidate-set preconditions; monotonicity entries are
 material/raw violation counts.}
 \label{tab:preconditions}
@@ -1562,7 +1537,7 @@ fraction of users whose test venue is not already in their training history
 (Table~\ref{tab:repeats}); $0.450$ is $0.898$ of that attainable ceiling and
 the gate is unreachable at any $N_{\max}$. The corresponding ceilings are
 $1.000$ for MovieLens-1M and $0.972$ for Amazon-VG.
-\end{table*}
+\end{table}
 
 Table~\ref{tab:preconditions} carries the two gates, and on this corpus set
 both bite. Density is computed on the data as used. Users with an unretrieved
@@ -1705,13 +1680,13 @@ Figure~\ref{fig:shares}. Efficiency holds to machine precision on every corpus,
 with worst-case
 $|\sum_g \varphi_g - v(\G)| = 6.9 \times 10^{-18}$.
 
-\begin{figure*}[tp]
+\begin{figure}[tp]
 \centering
 \includegraphics[width=\textwidth]{Fig2.png}
 \caption{Per-source Shapley values over seeds 42--51; whiskers show
 $\bar{x}\pm t_9\mathrm{SE}$.}
 \label{fig:shares}
-\end{figure*}
+\end{figure}
 
 \paragraph{Configuration}\label{sec:hyperparams}
 
@@ -1722,7 +1697,7 @@ runs, the file records the date and the reason. We report them in the paper
 rather than only in the repository, because a frozen configuration is not a
 substitute for a stated one.
 
-\begin{table*}[tp]
+\begin{table}[tp]
 \caption{Experimental configuration.}
 \label{tab:hyper}
 \footnotesize
@@ -1780,9 +1755,9 @@ Protocol & seeds              & $42$--$51$ (run-to-run summaries) & seed $42$ al
 \noindent\footnotesize $^{\dagger}$Selected on a MovieLens pilot and then
 frozen. All other values are prespecified implementation settings and were not
 tuned separately by corpus or coalition; $N_{\max}$ alone varies by corpus.
-\end{table*}
+\end{table}
 
-\begin{table*}[tp]
+\begin{table}[tp]
 \caption{Repeat-event audit; masked test items yield zero payoff for every
 coalition.}
 \label{tab:repeats}
@@ -1806,7 +1781,7 @@ regeneration and are not artefact-matched to the refitted-head row. The table
 therefore compares \emph{orderings} across estimands, not numerical estimates
 from a single artefact.
 \end{minipage}
-\end{table*}
+\end{table}
 
 \paragraph{Preprocessing and subsampling}
 MovieLens-1M is binarised at rating $\geq 4$, which is why the as-used
@@ -1900,7 +1875,7 @@ $\varphi_{cf} = 0.01520$ in the same injection run, a ratio of $1.42$. We theref
 a \emph{diagnostic}, not a requirement, and the experiment as a symmetry and
 implementation check rather than as recovery of absolute credit.
 
-\begin{table*}[tp]
+\begin{table}[tp]
 \caption{MovieLens-1M duplicate-source diagnostics ($cf$ clone, $\eta=0$).}
 \label{tab:recovery}
 \begin{tabular}{@{}lrrrrr@{}}
@@ -1913,7 +1888,7 @@ $\LOO(cf)$, $\LOO(cf_{\mathrm{dup}})$ \\
                               & $0$    & $0.0$ & $0.0$ & $0.010781$ & $0.000000$, $0.000000$ \\
 \bottomrule
 \end{tabular}
-\end{table*}
+\end{table}
 
 Table~\ref{tab:recovery} reports the outcome. The result is unambiguous and
 reproducible: Shapley satisfies symmetry exactly
@@ -1952,7 +1927,7 @@ evidence about recommender data; they establish that the enumeration in
 Equation~(\ref{eq:shapley}) is implemented correctly, which is a precondition for interpreting
 anything computed with it.
 
-\begin{table*}[tp]
+\begin{table}[tp]
 \caption{Exact Shapley recovery on six analytic games.}
 \label{tab:analytic}
 %% \small and a p{} column: the characteristic functions are long enough
@@ -1973,7 +1948,7 @@ Harmful      & $5\cdot\mathbb{1}[a\in S] - 2\cdot\mathbb{1}[\mathit{bad}\in S]$
 Unanimity    & $9\cdot\mathbb{1}[S = \G]$                          & $(3, 3, 3)$  & $0$ \\
 \bottomrule
 \end{tabular}
-\end{table*}
+\end{table}
 
 We additionally verify \emph{additivity}, the remaining uniqueness axiom that
 no other diagnostic here exercises: efficiency is a sum constraint, symmetry is
@@ -2139,7 +2114,7 @@ predict it.
 
 \subsection{Attribution on real systems}\label{sec:results}
 
-\begin{table*}[tp]
+\begin{table}[tp]
 \caption{Ten-seed ranking-stage LOO and Shapley attribution. Brackets are
 run-to-run intervals $\bar x \pm t_{0.975,9}\,s_x/\sqrt{10}$. The quantity
 this paper contrasts is the paired gap $\Delta_g = \varphi_g - \LOOr(g)$, so it
@@ -2181,15 +2156,15 @@ Gowalla      & $cf$ & $+0.00743$ & $+0.00711\ [+0.00698,+0.00725]$ & $-0.00032\ 
 \par\smallskip
 {\raggedright\footnotesize $^{\dagger}$Material sign flip;
 $^{\ddagger}$sign flip below the $10^{-3}$ materiality threshold.\par}
-\end{table*}
+\end{table}
 
-\begin{figure*}[tp]
+\begin{figure}[tp]
 \centering
 \includegraphics[width=0.7\textwidth]{Fig3.png}
 \caption{Ten-seed mean Shapley versus ranking-stage LOO; the diagonal denotes
 equality.}
 \label{fig:scatter}
-\end{figure*}
+\end{figure}
 
 Table~\ref{tab:loo} gives the per-source comparison and
 Figure~\ref{fig:scatter} plots it. Material sign disagreement occurs on
@@ -2232,13 +2207,13 @@ shows the representative points $0.1$, $1$, and $10$; the conclusions above
 refer to the complete evaluated grid. Because Eq.~\eqref{eq:head}
 uses a summed loss, the numerical values are not portable across corpus sizes.
 
-\begin{figure*}[tp]
+\begin{figure}[tp]
 \centering
 \includegraphics[width=\textwidth]{Fig7.png}
 \caption{Candidate-cap and ridge-penalty sensitivity at seed 42; labels show
 candidate recall.}
 \label{fig:robustness}
-\end{figure*}
+\end{figure}
 
 Two robustness checks are available for the Gowalla result. The corpus was run
 at three subsample sizes, $4\,652$, $5\,910$ and $8\,865$ users, drawn to
@@ -2313,12 +2288,12 @@ redundancy or significance claim.
 
 Figure~\ref{fig:redundancy} shows the pairwise structure directly.
 
-\begin{figure*}[tp]
+\begin{figure}[tp]
 \centering
 \includegraphics[width=\textwidth]{Fig4.png}
 \caption{Pairwise source-score Kendall $\tau$ by corpus.}
 \label{fig:redundancy}
-\end{figure*}
+\end{figure}
 
 \subsection{Explainability scope and diagnostics}\label{sec:explainability}
 
@@ -2343,7 +2318,7 @@ human-facing explanation quality.
 The main design sensitivities are consolidated in Table~\ref{tab:ablations};
 all are described in detail in their referenced sections.
 
-\begin{table*}[tp]
+\begin{table}[tp]
 \caption{Ablation and sensitivity summary.}
 \label{tab:ablations}
 \small
@@ -2366,7 +2341,7 @@ Gowalla user subsample & Ten seeds & Signs persist; source-order agreement is
 $\tau=0.80$ (Sec.~\ref{sec:results}). \\
 \bottomrule
 \end{tabularx}
-\end{table*}
+\end{table}
 
 \subsection{Limitations}\label{sec:limitations}
 
@@ -2398,7 +2373,7 @@ that have not been regenerated under the symmetric rule are listed in
 Table~\ref{tab:provenance} and are explicitly
 single-seed sensitivity analyses rather than confirmatory evidence.
 
-\begin{table*}[tp]
+\begin{table}[tp]
 \caption{Provenance of reported result groups.}
 \label{tab:provenance}
 \centering
@@ -2426,7 +2401,7 @@ five dense $8\,865 \times 82\,134$ score matrices, which exhausted memory on
 the $48$\,GB machine used for these runs. Gowalla's primary attribution and
 retirement numbers are unaffected, since those come from the ten-seed
 artefact, which is source-symmetric on all three corpora.
-\end{table*}
+\end{table}
 
 \paragraph{Per-user rather than globally chronological}
 The evaluation orders each user's own interactions in time but does not impose
@@ -2651,7 +2626,7 @@ end-to-end game rebuilds candidates for each of the $2^n$ coalitions, which on
 an $82\,134$-item catalogue is $32$ retrieval passes rather than one, and we
 did not run it.
 
-\begin{table*}[tp]
+\begin{table}[tp]
 \caption{Three attribution games at seed 42; $\tau$ is Kendall
 agreement with the refitted-head game.}
 \label{tab:estimands}
@@ -2680,7 +2655,7 @@ regeneration and are not artefact-matched to the refitted-head row. The table
 compares \emph{orderings} across estimands rather than numerical estimates
 drawn from one artefact.
 \end{minipage}
-\end{table*}
+\end{table}
 
 \paragraph{Retirement simulation, and a negative result}
 The stronger test is whether attribution predicts what removing a source
@@ -2688,7 +2663,7 @@ actually costs. We removed each source \emph{entirely}, from retrieval and fusio
 end-to-end NDCG@10 loss under the reported protocol. This is one measured
 realisation, not a population-level ``true'' cost.
 
-\begin{table*}[tp]
+\begin{table}[tp]
 \caption{MovieLens-1M retirement losses at seed 42; negative values indicate
 improvement after removal.}
 \label{tab:retirement}
@@ -2706,7 +2681,7 @@ $seq$  & $+0.01702$ & $0.659$ & $+0.02927$ & $+0.01672$ \\
       & & $\tau = +0.20$ & $\tau = +1.00$ \\
 \bottomrule
 \end{tabular}
-\end{table*}
+\end{table}
 
 \paragraph{Which LOO is being tested}
 The LOO column of Table~\ref{tab:retirement} is $\LOOr$: it is computed on the
@@ -2839,7 +2814,7 @@ produce materially different decisions in the evaluated systems.
 Table~\ref{tab:decisions} states the mapping we can
 defend from the evidence here.
 
-\begin{table*}[tp]
+\begin{table}[tp]
 \caption{Decision-to-estimand mapping.}
 \label{tab:decisions}
 %% p{} columns, not l: the third column carries a sentence and `l' cannot
@@ -2879,7 +2854,7 @@ did not build the pool
     returns recall equal to $\rho$ exactly (Sec.~\ref{sec:threats}) \\
 \bottomrule
 \end{tabular}
-\end{table*}
+\end{table}
 
 \paragraph{What a positive Shapley value does and does not license}
 When SignalShap assigns collaborative filtering $+0.01573$ on MovieLens while
@@ -3113,7 +3088,7 @@ claim. The profiles in Figure~\ref{fig:segments} remain useful for showing the
 scale of the variation that the downstream fusion experiment attempted to
 exploit.
 
-\begin{figure*}[tp]
+\begin{figure}[tp]
 \centering
 \includegraphics[width=\textwidth]{Fig5.png}
 \caption{Descriptive segment-level Shapley values; legends give segment
@@ -3121,7 +3096,7 @@ sizes. No pairwise segment contrast survives within-corpus Holm correction,
 so the figure visualises exploratory variation and does not establish
 segment-level attribution heterogeneity.}
 \label{fig:segments}
-\end{figure*}
+\end{figure}
 
 \paragraph{No cross-corpus omnibus ranking}
 A cross-corpus Friedman test would pool absolute $\NDCG$ from two corpora that
@@ -3161,13 +3136,13 @@ of any advantage over a well-tuned global head}, and note that the comparisons
 against LightGCN and SASRec are conditional on tuning budgets that were not
 matched to our own pipeline.
 
-\begin{figure*}[tp]
+\begin{figure}[tp]
 \centering
 \includegraphics[width=0.85\textwidth]{Fig6.png}
 \caption{Full-catalogue fusion comparison; Amazon-VG and Gowalla remain below
 the candidate-recall gate.}
 \label{fig:fusion}
-\end{figure*}
+\end{figure}
 
 An exploratory bootstrap that resamples seeds and then users within each seed
 gives a mean difference of $+0.00005$ with interval
@@ -3183,67 +3158,73 @@ attribution results of Section~\ref{sec:results}. This appendix is a negative
 result about one downstream use of the attributions, and it is not evidence
 either for or against their correctness.
 
-\section*{CRediT authorship contribution statement}
-\textbf{Mouad Louhichi:} Conceptualization, Methodology, Software, Formal
-analysis, Investigation, Writing -- original draft, Visualization.
-\textbf{Redwane Nesmaoui:} Software, Validation, Data curation, Writing --
-review and editing. \textbf{Mohamed Lazaar:} Supervision, Methodology,
-Resources, Writing -- review and editing.
+\backmatter
 
-\section*{Declaration of competing interest}
-The authors declare that they have no known competing financial interests or
-personal relationships that could have appeared to influence the work reported
-in this paper.
+\bmhead{Acknowledgements}
+Not applicable.
 
-\section*{Data availability}
-This work uses three public corpora and redistributes none of them.
-MovieLens-1M is used under the GroupLens research-use license, Gowalla
-check-ins come from the SNAP collection, and the Video Games category is taken
-from the Amazon Reviews 2023 corpus; the fetch scripts in the repository
-retrieve each from its original source. The corpora themselves are not
-redistributed because the GroupLens license forbids it. All derived data
-behind every reported number is released with the code, together with
-\texttt{MANIFEST.json}, which records a SHA-256 for each artefact file with the
-commit and environment that produced it, including the BLAS backend, because
-Section~\ref{sec:threats} shows the backend changes candidate contents for a
-small number of users. \texttt{PROVENANCE.md} maps every table and figure to
-the artefact, platform, candidate rule and seeds behind it. We state the
-residual limitation precisely: a reader reproducing from raw data must refetch
-the corpora first, and a run on a different BLAS reproduces the reported signs
-and orderings but not every fifth decimal.
+\section*{Declarations}
 
-\section*{Code availability}
-The implementation, configuration files, and scripts required to reproduce the
-reported experiments, tables, and figures are publicly available at
-\url{https://github.com/mouadlouhichi/signalshap}. The results in this
-manuscript correspond to repository commit
-\path{0b8e998a13610932cef79b8ccb3fab55074263d3}, released as tag
-\texttt{kbs-submission}; that commit is the one recorded inside
-\texttt{MANIFEST.json} alongside the SHA-256 of every artefact, so a reader can
-confirm that the released hashes and the reported numbers come from the same
-state of the code.
+\begin{itemize}
+\item \textbf{Funding.} The authors declare that no funds, grants, or other
+      support were received during the preparation of this manuscript.
 
-\section*{Ethics}
-The study performs secondary analysis of previously released, de-identified
-human-generated ratings, reviews, and check-ins under the dataset licenses
-recorded in the artefact, and involves no new participant recruitment or
-intervention. Geographic check-ins can retain re-identification risk even after
-direct identifiers are removed; we use only aggregate geographic cells and
-redistribute no event records. Popularity-based signals can reinforce exposure
-disparities, and no fairness claim is made.
+\item \textbf{Competing interests.} The authors declare that they have no known
+      competing financial interests or personal relationships that could have
+      appeared to influence the work reported in this paper.
 
-\section*{Funding}
-The authors declare that no funds, grants, or other support were received
-during the preparation of this manuscript.
+\item \textbf{Ethics approval.} Not applicable to new participant recruitment
+      or intervention. The study performs secondary analysis of previously
+      released, de-identified human-generated ratings, reviews, and check-ins
+      under the dataset licenses recorded in the artefact. Geographic check-ins
+      can retain re-identification risk even after direct identifiers are
+      removed; we use only aggregate geographic cells and redistribute no event
+      records. Popularity-based signals can reinforce exposure disparities, and
+      no fairness claim is made.
 
-\section*{Declaration of generative AI and AI-assisted technologies in the
-manuscript preparation process}
-During the preparation of this work, the authors used OpenAI Codex for code
-scaffolding, editorial review, and consistency checking. After using this tool,
-the authors reviewed and edited the content as needed and take full
-responsibility for the content of the publication.
+\item \textbf{Data availability.} This work uses three public corpora and
+      redistributes none of them. MovieLens-1M is used under the GroupLens
+      research-use license, Gowalla check-ins come from the SNAP collection, and
+      the Video Games category is taken from the Amazon Reviews 2023 corpus; the
+      fetch scripts in the repository retrieve each from its original source.
+      The corpora themselves are not redistributed because the GroupLens license
+      forbids it. All derived data behind every reported number is released with
+      the code, together with \texttt{MANIFEST.json}, which records a SHA-256 for
+      each artefact file with the commit and environment that produced it,
+      including the BLAS backend, because Section~\ref{sec:threats} shows the
+      backend changes candidate contents for a small number of users.
+      \texttt{PROVENANCE.md} maps every table and figure to the artefact,
+      platform, candidate rule and seeds behind it. We state the residual
+      limitation precisely: a reader reproducing from raw data must refetch the
+      corpora first, and a run on a different BLAS reproduces the reported signs
+      and orderings but not every fifth decimal.
 
-\bibliographystyle{elsarticle-num}
+\item \textbf{Code availability.} The implementation, configuration files, and
+      scripts required to reproduce the reported experiments, tables, and
+      figures are publicly available at
+      \url{https://github.com/mouadlouhichi/signalshap}. The results in this
+      manuscript correspond to repository commit
+      \path{0b8e998a13610932cef79b8ccb3fab55074263d3}, released as tag
+      \texttt{kais-submission}; that commit is the one recorded inside
+      \texttt{MANIFEST.json} alongside the SHA-256 of every artefact, so a
+      reader can confirm that the released hashes and the reported numbers come
+      from the same state of the code.
+
+\item \textbf{Author contributions.} \textbf{M.\ Louhichi:} conceptualisation,
+      methodology, software, formal analysis, investigation, writing (original
+      draft), visualisation. \textbf{R.\ Nesmaoui:} software, validation, data
+      curation, writing (review and editing). \textbf{M.\ Lazaar:} supervision,
+      methodology, resources, writing (review and editing).
+
+\item \textbf{Use of AI tools.} In line with Springer Nature's guidance on
+      generative AI, we disclose that the authors used OpenAI Codex for code
+      scaffolding, editorial review, and consistency checking. No text, result,
+      figure, or citation was generated for inclusion without author
+      verification, and no AI system is listed as an author. The authors
+      reviewed and edited the content as needed and take full responsibility
+      for the content of the publication.
+\end{itemize}
+
 \bibliography{paper}
 
 \end{document}
