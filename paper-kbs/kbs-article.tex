@@ -1998,9 +1998,21 @@ Section~\ref{sec:game} rather than the $0.05136$ seed-42 main-game value
 underlying the refitted-head row of Table~\ref{tab:estimands}; only
 their ratios are meaningful, and the point of the comparison is that the
 \emph{ordering} is identical while the totals are not. Only Shapley sums to $v(\G)$; for the others
-only the induced ordering is comparable. We computed this on MovieLens only, so
-the claim is that the MovieLens ordering is robust to the choice among these
-values, and we do not extend it to the other two corpora.
+only the induced ordering is comparable.
+
+That robustness does \emph{not} extend to the second corpus, and we report the
+disagreement rather than confine the comparison to the corpus that supports it.
+On Amazon-VG the Banzhaf ordering agrees with Shapley only at
+$\tau = 0.60$, and the two disagree on the leading source: Shapley puts $cf$
+first, Banzhaf puts $seq$ first. Banzhaf weights every coalition equally,
+whereas Shapley up-weights the extreme sizes, so the two diverge exactly where
+a source's value depends on how many other sources are present. Amazon-VG is
+also the corpus with the strongest substitutive $cf$--$seq$ interaction and no
+material sign flip, which is consistent with that reading. The defensible claim
+is therefore narrower than a single-corpus result would suggest: the induced
+ordering is robust to the choice of semivalue on MovieLens-1M but not on
+Amazon-VG, so a reported ordering should state which value produced it. We did
+not compute these values on Gowalla.
 
 \paragraph{Pairwise interactions}
 Main-effect values cannot by themselves distinguish a source of low value from
@@ -2501,15 +2513,18 @@ Seed variation resamples the stochastic fits but leaves the data untouched, so
 it does not test whether the attribution survives corrupted inputs. We
 therefore added Gaussian noise directly to every source score at
 $\sigma \in \{0.1, 0.5\}$ in units of each source's own standard deviation, and
-recomputed the full game at seed 42 on MovieLens-1M. The ordering degrades
-gracefully rather than collapsing: Kendall $\tau$ against the clean run is
-$0.80$ at both levels, with $seq$ remaining the leading source throughout, and
-the single transposition falls among the three near-zero sources. The material
-$cf$ disagreement is unaffected, since $\varphi_{cf}$ stays positive
-($+0.01538$ clean, $+0.01659$ and $+0.02268$ under noise) while $\LOOr(cf)$ is
-negative. This is one corpus and one seed, and it perturbs the scores rather
-than the interaction data, so it does not speak to missing interactions or
-distribution shift, which we did not test.
+recomputed the full game at seed 42 on all three corpora. The ordering degrades
+gracefully rather than collapsing. On MovieLens-1M Kendall $\tau$ against the
+clean run is $0.80$ at both levels, with $seq$ remaining the leading source and
+the single transposition falling among the three near-zero sources; on
+Amazon-VG and Gowalla the ordering is unchanged at $\tau = 1.00$ with $cf$
+leading throughout. \textbf{Both material sign disagreements survive}: $cf$ on
+MovieLens-1M ($\varphi_{cf}$ stays positive at $+0.01538$ clean, $+0.01659$ and
+$+0.02268$ under noise, while $\LOOr(cf)$ is negative) and $pop$ on Gowalla,
+at both perturbation levels. The finding the paper rests on is therefore not an
+artefact of clean source scores. This is one seed per corpus, and it perturbs
+the scores rather than the interaction data, so it does not speak to missing
+interactions or distribution shift, which we did not test.
 
 \paragraph{Metric sensitivity on MovieLens-1M}
 NDCG@10 is the only metric in the characteristic function, so the attributions
