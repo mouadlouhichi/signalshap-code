@@ -105,6 +105,8 @@ def main(tex_path: Path | None = None,
         "@fb@secFB",
         # LaTeX kernel penalty primitive, used to break long numeric tuples.
         "allowbreak",
+        # amsmath, loaded by the preamble.
+        "overset", "underset", "substack", "tfrac", "dfrac", "binom",
     }
     defined |= set(re.findall(
         r"\\(?:newcommand|renewcommand|providecommand|DeclareMathOperator"
