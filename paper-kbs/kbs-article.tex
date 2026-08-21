@@ -19,6 +19,7 @@
 \usepackage{amsmath}
 \usepackage{amssymb}
 \usepackage{amsthm}
+\usepackage[numbers,sort&compress]{natbib}
 \usepackage{multirow}
 \usepackage{array}
 \usepackage{tabularx}
@@ -67,7 +68,14 @@
     line width=0.75pt},
   sndata/.style={-{Stealth[length=4.5pt,width=3.5pt]}, draw=black,
     line width=0.5pt, dashed},
-  snout/.style={font=\snFigSub, align=center, text=black},
+  snout/.style={
+    rectangle, draw=black, line width=0.65pt, fill=white,
+    minimum height=14mm, inner sep=3pt, align=center,
+    font=\snFigMain, text width=34mm},
+  sncredit/.style={snout},
+  snremoval/.style={snout},
+  sninteraction/.style={snout},
+  snbranch/.style={draw=black, line width=0.65pt},
   snlbl/.style={font=\snFigSub, inner sep=1.2pt, text=black},
 }
 
@@ -236,6 +244,66 @@ games and interventions whose attributions must satisfy known constraints, then
 test whether the implementation does so. Section~\ref{sec:recovery} applies
 this strategy to analytic and real fitted games.
 
+\begin{figure*}[tp]
+\centering
+\iftikzfigure
+\begin{tikzpicture}[node distance=7mm]
+\node[snstage] (src)
+  {\textbf{Source models}\\[-1pt]
+   {\snFigSub five heterogeneous signals}};
+\node[snstage, right=of src] (cand)
+  {\textbf{Shared candidates}\\[-1pt]
+   {\snFigSub one fixed set $\Cu$ per user}};
+\node[snstagekey, right=of cand] (heads)
+  {\textbf{Coalition rankers}\\[-1pt]
+   {\snFigSub $32$ fitted heads}};
+\node[snstagekey, right=of heads] (game)
+  {\textbf{Complete game}\\[-1pt]
+   {\snFigSub $\{v(S):S\subseteq\G\}$}};
+
+\draw[snflow] (src) -- (cand);
+\draw[snflow] (cand) -- (heads);
+\draw[snflow] (heads) -- (game);
+
+\node[snfold, above=8mm of src] (train)
+  {\textbf{TRAIN}\\{\snFigSub fit sources}};
+\node[snfold, above=8mm of heads] (val)
+  {\textbf{VALIDATION}\\{\snFigSub fit heads}};
+\node[snfold, above=8mm of game] (test)
+  {\textbf{TEST}\\{\snFigSub NDCG@10}};
+\draw[sndata] (train) -- (src);
+\draw[sndata] (val) -- (heads);
+\draw[sndata] (test) -- (game);
+
+\coordinate (outmid) at ($(cand)!0.5!(heads)$);
+\node[snremoval, below=24mm of outmid] (removal)
+  {\textbf{Removal effect}\\[-1pt]
+   {\snFigSub ranking-stage $\LOOr(g)$}};
+\node[sncredit, left=6mm of removal] (credit)
+  {\textbf{Credit allocation}\\[-1pt]
+   {\snFigSub Shapley $\varphi_g$}};
+\node[sninteraction, right=6mm of removal] (interaction)
+  {\textbf{Source dependence}\\[-1pt]
+   {\snFigSub interaction $I_{g,h}$}};
+
+\coordinate (busleft) at ($(credit.north)+(0,5mm)$);
+\coordinate (busmid) at ($(removal.north)+(0,5mm)$);
+\coordinate (busright) at ($(interaction.north)+(0,5mm)$);
+\draw[snbranch] (game.south) |- (busmid);
+\draw[snbranch] (busleft) -- (busright);
+\draw[snflow] (busleft) -- (credit.north);
+\draw[snflow] (busmid) -- (removal.north);
+\draw[snflow] (busright) -- (interaction.north);
+
+\end{tikzpicture}%
+\else
+\includegraphics[width=\linewidth]{Fig1.png}
+\fi
+\caption{SignalShap workflow from source fitting and shared candidates to
+exact-game diagnostics.}
+\label{fig:workflow}
+\end{figure*}
+
 \subsection{Contributions}
 
 \begin{itemize}
@@ -283,49 +351,6 @@ contextual references only, and received smaller tuning budgets than a
 performance comparison would require. Nor do we claim that the sign of an
 attribution prescribes retaining or removing a source;
 Section~\ref{sec:estimands} shows that it does not.
-
-\begin{figure*}[tp]
-\centering
-\iftikzfigure
-\begin{tikzpicture}[node distance=2mm]
-\node[snstage, text width=24mm, minimum height=25mm, inner sep=2pt] (src)
-  {\textbf{Source models}\\[2pt]
-   $cf,ct,pop$\\$rec,seq$};
-\node[snstage, text width=24mm, minimum height=25mm, inner sep=2pt, right=of src] (cand)
-  {\textbf{Fixed candidates}\\[2pt]
-   $\Cu=\bigcup_g T_g(u,N_g)$\\{\snFigSub shared by all $S$}};
-\node[snstagekey, text width=24mm, minimum height=25mm, inner sep=2pt, right=of cand] (game)
-  {\textbf{Coalition game}\\[2pt]
-   $2^5=32$ heads\\$w^{(S)},\ v(S)$};
-\node[snstagekey, text width=24mm, minimum height=25mm, inner sep=2pt, right=of game] (shap)
-  {\textbf{Shapley values}\\[2pt]
-   $\varphi_g$ and $\varphi_g(u)$\\{\snFigSub exact aggregation}};
-
-\draw[snflow] (src) -- (cand);
-\draw[snflow] (cand) -- (game);
-\draw[snflow] (game) -- (shap);
-
-\node[snfold, text width=18mm, above=7mm of src] (train)
-  {\textbf{Train}\\all but last two};
-\node[snfold, text width=18mm, above=7mm of game] (val)
-  {\textbf{Validation}\\second-to-last};
-\node[snfold, text width=18mm, above=7mm of shap] (test)
-  {\textbf{Test}\\last event};
-\draw[sndata] (train) -- node[snlbl,right]{fit} (src);
-\draw[sndata] (val) -- node[snlbl,right]{fit heads} (game);
-\draw[sndata] (test) -- node[snlbl,right]{evaluate} (shap);
-
-\node[snout, below=6mm of shap] (diag)
-  {source credit $\bullet$ LOO $\bullet$ interactions};
-\draw[snflow] (shap) -- (diag);
-
-\end{tikzpicture}%
-\else
-\includegraphics[width=\linewidth]{Fig1.png}
-\fi
-\caption{SignalShap ranking-stage workflow and data-fold separation.}
-\label{fig:workflow}
-\end{figure*}
 
 \subsection{Research questions}
 
@@ -548,9 +573,14 @@ $v_{\mathrm{e2e}}(S) = U_{\mathrm{e2e}}(S) - b(S)$ be the corresponding games.
 Then
 %
 \begin{equation}
-\LOOr(g) = U_{\mathrm{rank}}(\G) - U_{\mathrm{rank}}(\G\setminus\{g\}),
-\qquad
-\LOOe(g) = U_{\mathrm{e2e}}(\G) - U_{\mathrm{e2e}}(\G\setminus\{g\}).
+\begin{aligned}
+\LOOr(g)
+  &= U_{\mathrm{rank}}(\G)
+     - U_{\mathrm{rank}}(\G\setminus\{g\}),\\
+\LOOe(g)
+  &= U_{\mathrm{e2e}}(\G)
+     - U_{\mathrm{e2e}}(\G\setminus\{g\}).
+\end{aligned}
 \label{eq:loo}
 \end{equation}
 %
@@ -755,13 +785,14 @@ candidate coverage is $|\Ueval|/|\mathcal U|$.
 
 For $u\in\Ueval$, source scores enter the fusion head through
 \begin{equation}
-z_{u,g,i}=
+\begin{aligned}
+z_{u,g,i}&={}
 \begin{cases}
 (s_g(u,i)-\mu_{u,g})/\sigma_{u,g}, & \sigma_{u,g}>0,\\
 0, & \sigma_{u,g}=0,
-\end{cases}
-\quad
-\mu_{u,g}=\operatorname{mean}_{i\in C_u}s_g(u,i),
+\end{cases}\\
+\mu_{u,g}&=\operatorname{mean}_{i\in C_u}s_g(u,i).
+\end{aligned}
 \label{eq:zscore}
 \end{equation}
 where $\sigma_{u,g}$ is the corresponding standard deviation. A source is
@@ -1226,9 +1257,14 @@ $v(g_1)=v(g_2)=1$, $v(g_3)=5$, $v(g_1g_2)=1$, $v(g_1g_3)=v(g_2g_3)=0.5$, and
 $v(\G)=0.5$. Redundancy holds exactly, $v(\{g_1\}) = 1 > 0$, and
 $\LOO(g_1)=\LOO(g_2)=0$ as predicted. Symmetry and efficiency both hold. Yet
 \[
-\varphi_{g_1} = \varphi_{g_2} = -\tfrac{5}{12}\approx-0.4167,
-\qquad \varphi_{g_3} = \tfrac43\approx1.3333,
-\qquad \textstyle\sum = 0.5 = v(\G).
+\begin{aligned}
+\varphi_{g_1} = \varphi_{g_2}
+  &= -\tfrac{5}{12}\approx-0.4167,\\
+\varphi_{g_3}
+  &= \tfrac43\approx1.3333,\\
+\varphi_{g_1}+\varphi_{g_2}+\varphi_{g_3}
+  &= 0.5 = v(\G).
+\end{aligned}
 \]
 The redundant sources receive \emph{negative} credit despite positive
 standalone value. Restoring monotonicity repairs it: on the monotone variant
@@ -1243,8 +1279,13 @@ on all $|\G| \cdot 2^{|\G|-1} = 80$ pairs rather than assume it, and report
 violations as findings.
 
 \begin{property}[Free per-user decomposition]\label{prop:decomp}
-$\varphi_g = |\Ueval|^{-1}\sum_{u\in\Ueval} \varphi_g(u)$, by linearity of the
-Shapley operator and the definition of $v$ in Eq.~\eqref{eq:game}.
+The per-user attributions satisfy
+\[
+\varphi_g
+  = |\Ueval|^{-1}\sum_{u\in\Ueval} \varphi_g(u),
+\]
+by linearity of the Shapley operator and the definition of $v$ in
+Eq.~\eqref{eq:game}.
 \end{property}
 
 \begin{lemma}[$\varepsilon$-substitutability]\label{lem:eps}
@@ -1254,10 +1295,13 @@ instantiate an empirical test. We therefore use a \emph{two-sided} condition.
 Call $g_1,g_2$ \textbf{$\varepsilon$-substitutable} if, for every
 $S \subseteq \G\setminus\{g_1,g_2\}$,
 \begin{equation}
-\max\bigl\{
-|v(S\cup\{g_1\}) - v(S\cup\{g_1,g_2\})|,\;
-|v(S\cup\{g_2\}) - v(S\cup\{g_1,g_2\})|
-\bigr\} \;\le\; \varepsilon .
+\max\left\{
+\begin{aligned}
+&|v(S\cup\{g_1\}) - v(S\cup\{g_1,g_2\})|,\\
+&|v(S\cup\{g_2\}) - v(S\cup\{g_1,g_2\})|
+\end{aligned}
+\right\}
+\le \varepsilon .
 \label{eq:epssub}
 \end{equation}
 Then:
@@ -1436,8 +1480,8 @@ are not used for superiority claims.
 \subsection{Preconditions}\label{sec:preconditions}
 
 \begin{table*}[tp]
-\caption{Corpus and candidate-set preconditions. Users/eval. reports retained
-and evaluated users; monotonicity entries are material/raw counts.}
+\caption{Corpus and candidate-set preconditions; monotonicity entries are
+material/raw violation counts.}
 \label{tab:preconditions}
 %% \small: a ninth column (validation recall) was added in revision and the
 %% widest row is 90 characters, close to the text block at normal size.
@@ -1453,6 +1497,7 @@ Amazon-VG    & 7\,120 / 7\,120 & 3\,516  & $0.469\%$ & 600    & $0.589^{\dagger}
 Gowalla      & 8\,865 / 8\,865 & 82\,134 & $0.075\%$ & 11\,623 & $0.450^{\dagger\ddagger}$ & $0.462$ & $6$ / $13$ & no \\
 \bottomrule
 \end{tabular}
+\par
 \smallskip
 \noindent\footnotesize $^{\dagger}$Below the $0.60$ gate; reported under the
 ceiling restriction described in this section (relative contrasts only).
@@ -1523,8 +1568,11 @@ Changing the headline configuration and adding a declared robustness point are
 different acts, though, and the candidate-cap sweep already contains the
 second. At $N_{\max}=1\,200$ Amazon-VG reaches recall $0.750$, comfortably
 clear of the gate and almost exactly MovieLens-1M's $0.748$, and the
-attribution barely moves: $\varphi$ goes from $(0.01926, 0.00187, 0.00157,
--0.00047, 0.01909)$ to $(0.01920, 0.00168, 0.00319, -0.00042, 0.01804)$, with
+attribution barely moves: $\varphi$ goes from
+$(0.01926,\allowbreak 0.00187,\allowbreak 0.00157,\allowbreak
+-0.00047,\allowbreak 0.01909)$ to
+$(0.01920,\allowbreak 0.00168,\allowbreak 0.00319,\allowbreak
+-0.00042,\allowbreak 0.01804)$, with
 $cf$ still first, $seq$ still second, $rec$ still the only negative source, and
 Kendall $\tau = 0.80$ against the frozen-configuration run, the single transposition
 being $pop$ and $ct$, which are separated by $0.0003$. So the qualitative
@@ -1604,8 +1652,8 @@ $|\sum_g \varphi_g - v(\G)| = 6.9 \times 10^{-18}$.
 \begin{figure*}[tp]
 \centering
 \includegraphics[width=\textwidth]{Fig2.png}
-\caption{Per-source Shapley values over seeds 42--51. Whiskers are
-$\bar{x}\pm t_9\mathrm{SE}$ run-to-run intervals.}
+\caption{Per-source Shapley values over seeds 42--51; whiskers show
+$\bar{x}\pm t_9\mathrm{SE}$.}
 \label{fig:shares}
 \end{figure*}
 
@@ -1673,10 +1721,8 @@ frozen. All other values are fixed defaults; $N_{\max}$ alone varies by corpus.
 \end{table*}
 
 \begin{table*}[tp]
-\caption{Repeat-event audit (\texttt{scripts/audit\_repeat\_items.py}).
-Percentages are of users holding both folds. ``Test item in train'' users are
-masked out of every candidate set, so their per-user payoff is zero for all
-$32$ coalitions.}
+\caption{Repeat-event audit; masked test items yield zero payoff for every
+coalition.}
 \label{tab:repeats}
 \small
 \begin{tabular}{@{}lrrrr@{}}
@@ -1689,6 +1735,8 @@ Gowalla      & 8\,865 & $1\,260$ ($14.21\%$) & $4\,424$ ($49.90\%$) & $52.61\%$ 
 \bottomrule
 \end{tabular}
 \end{table*}
+
+\FloatBarrier
 
 \paragraph{Preprocessing and subsampling}
 MovieLens-1M is binarised at rating $\geq 4$, which is why the as-used
@@ -1766,8 +1814,7 @@ a \emph{diagnostic}, not a requirement, and the experiment as a symmetry and
 implementation check rather than as recovery of absolute credit.
 
 \begin{table*}[tp]
-\caption{Duplicate-source diagnostics on MovieLens-1M ($cf$ clone,
-$\eta=0$).}
+\caption{MovieLens-1M duplicate-source diagnostics ($cf$ clone, $\eta=0$).}
 \label{tab:recovery}
 \begin{tabular}{@{}lrrrrr@{}}
 \toprule
@@ -1915,8 +1962,7 @@ demonstration of causal redundancy; a positive value indicates complementarity
 in the same sense.
 
 \begin{table}[tbp]
-\caption{Pairwise Shapley interactions on MovieLens-1M. Intervals describe
-variation over ten stochastic fits.}
+\caption{MovieLens-1M pairwise Shapley interactions over ten stochastic fits.}
 \label{tab:taylor}
 \begin{tabular}{@{}lrcc@{}}
 \toprule
@@ -1968,17 +2014,8 @@ predict it.
 \subsection{Attribution on real systems}\label{sec:results}
 
 \begin{table*}[tp]
-\caption{Ranking-stage leave-one-out and Shapley attribution over ten seeds.
-Brackets are run-to-run intervals, $\bar x \pm t_{0.975,9}\,s_x/\sqrt{10}$.
-The quantity this paper contrasts is the paired gap
-$\Delta_g = \varphi_g - \LOOr(g)$, so it carries its own interval, computed
-per seed and then aggregated rather than differenced from the two marginal
-means. The final column counts the fits on which the gap keeps the sign of its
-mean: $14$ of $15$ cells are unanimous, the exception being $rec$ on
-MovieLens-1M at $9/10$, whose gap is $0.4\%$ of $v(\G)$ and which the paper
-does not interpret. Both material disagreements have gap intervals excluding
-zero, at $38.8\%$ ($cf$, MovieLens-1M) and $12.2\%$ ($pop$, Gowalla) of the
-respective $v(\G)$.}
+\caption{Ten-seed ranking-stage LOO and Shapley attribution; brackets show
+run-to-run $t_9$ intervals.}
 \label{tab:loo}
 \small
 \setlength{\tabcolsep}{2.5pt}
@@ -2014,8 +2051,8 @@ $^{\ddagger}$sign flip below the $10^{-3}$ materiality threshold.
 \begin{figure*}[tp]
 \centering
 \includegraphics[width=0.7\textwidth]{Fig3.png}
-\caption{Ten-seed mean Shapley and ranking-stage leave-one-out attribution; the
-diagonal denotes equality.}
+\caption{Ten-seed mean Shapley versus ranking-stage LOO; the diagonal denotes
+equality.}
 \label{fig:scatter}
 \end{figure*}
 
@@ -2062,8 +2099,8 @@ uses a summed loss, the numerical values are not portable across corpus sizes.
 \begin{figure*}[tp]
 \centering
 \includegraphics[width=\textwidth]{Fig7.png}
-\caption{Seed-42 sensitivity to candidate cap (top) and ridge penalty
-(bottom); annotations report candidate recall.}
+\caption{Candidate-cap and ridge-penalty sensitivity at seed 42; labels show
+candidate recall.}
 \label{fig:robustness}
 \end{figure*}
 
@@ -2143,8 +2180,7 @@ Figure~\ref{fig:redundancy} shows the pairwise structure directly.
 \begin{figure*}[tp]
 \centering
 \includegraphics[width=\textwidth]{Fig4.png}
-\caption{Pairwise source-score association across the three corpora
-(Kendall $\tau$).}
+\caption{Pairwise source-score Kendall $\tau$ by corpus.}
 \label{fig:redundancy}
 \end{figure*}
 
@@ -2459,11 +2495,8 @@ an $82\,134$-item catalogue is $32$ retrieval passes rather than one, and we
 did not run it.
 
 \begin{table*}[tp]
-\caption{Three estimands compared at seed $42$, an estimand sensitivity
-analysis rather than an inferential result. The refitted fixed-candidate head
-is the paper's main game; the fixed head masks the deployed grand-coalition
-head to $S$; the end-to-end game lets each coalition retrieve its own
-candidates. $\tau$ is Kendall agreement with the main game's ordering}
+\caption{Three attribution games at seed 42; $\tau$ is Kendall
+agreement with the refitted-head game.}
 \label{tab:estimands}
 \small
 \setlength{\tabcolsep}{3.5pt}
@@ -2489,13 +2522,8 @@ end-to-end NDCG@10 loss under the reported protocol. This is one measured
 realisation, not a population-level ``true'' cost.
 
 \begin{table*}[tp]
-\caption{MovieLens-1M source-retirement loss at seed 42. Negative loss denotes
-an NDCG@10 improvement after removal. The Shapley column reproduces the
-refitted-head row of Table~\ref{tab:estimands} so the two tables agree; the
-observed loss, recall and $\LOOr$ columns come from the retirement run, whose
-grand-coalition value differs in the fifth decimal ($0.05169$ against
-$0.05136$) because the two runs rebuild candidates independently. Rank
-agreement with the observed loss is $\tau = +0.20$ under either column.}
+\caption{MovieLens-1M retirement losses at seed 42; negative values indicate
+improvement after removal.}
 \label{tab:retirement}
 \begin{tabular}{@{}lrrrr@{}}
 \toprule
@@ -2534,8 +2562,7 @@ than \emph{true} loss throughout: this is a measured realisation under the
 reported protocol, not a population quantity.
 
 \begin{table}[tbp]
-\caption{Retirement agreement over ten training seeds. Intervals quantify
-training-run variation on each fixed corpus.}
+\caption{Ten-seed retirement agreement and training-run intervals.}
 \label{tab:retire-seeds}
 \centering
 \small
@@ -2885,7 +2912,7 @@ exploit.
 \begin{figure*}[tp]
 \centering
 \includegraphics[width=\textwidth]{Fig5.png}
-\caption{Segment-level Shapley values; legends report segment sample sizes.}
+\caption{Segment-level Shapley values; legends give segment sizes.}
 \label{fig:segments}
 \end{figure*}
 
@@ -2930,8 +2957,8 @@ matched to our own pipeline.
 \begin{figure*}[tp]
 \centering
 \includegraphics[width=0.85\textwidth]{Fig6.png}
-\caption{Fusion comparison under full-catalogue evaluation. Amazon-VG and
-Gowalla remain below the declared candidate-recall gate.}
+\caption{Full-catalogue fusion comparison; Amazon-VG and Gowalla remain below
+the candidate-recall gate.}
 \label{fig:fusion}
 \end{figure*}
 
@@ -2960,16 +2987,6 @@ Resources, Writing -- review and editing.
 The authors declare that they have no known competing financial interests or
 personal relationships that could have appeared to influence the work reported
 in this paper.
-
-\section*{Declaration of generative AI and AI-assisted technologies in the manuscript preparation process}
-During the preparation of this work the authors used large language models for
-code scaffolding, editorial review, and consistency checking. After using this
-tool the authors reviewed and edited the content as needed and take full
-responsibility for the content of the published article. No text, result,
-figure, or citation was included without author verification, and no AI system
-is listed as an author. All figures reporting data are produced directly from
-the released artefacts by \texttt{scripts/make\_assets.py} using reproducible
-analytical code; no generative tool was used to create or alter them.
 
 \section*{Data availability}
 This work uses three public corpora and redistributes none of them.
@@ -3006,8 +3023,12 @@ disparities, and no fairness claim is made.
 The authors declare that no funds, grants, or other support were received
 during the preparation of this manuscript.
 
-\section*{Acknowledgements}
-Not applicable.
+\section*{Declaration of generative AI and AI-assisted technologies in the
+manuscript preparation process}
+During the preparation of this work, the authors used OpenAI Codex for code
+scaffolding, editorial review, and consistency checking. After using this tool,
+the authors reviewed and edited the content as needed and take full
+responsibility for the content of the publication.
 
 \bibliographystyle{elsarticle-num}
 \bibliography{paper}

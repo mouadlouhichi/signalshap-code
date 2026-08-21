@@ -103,6 +103,8 @@ def main(tex_path: Path | None = None,
         "snSavedSectionBarrier", "snSavedResultsBarrier",
         # placeins internal, reached inside \makeatletter ... \makeatother.
         "@fb@secFB",
+        # LaTeX kernel penalty primitive, used to break long numeric tuples.
+        "allowbreak",
     }
     defined |= set(re.findall(
         r"\\(?:newcommand|renewcommand|providecommand|DeclareMathOperator"
