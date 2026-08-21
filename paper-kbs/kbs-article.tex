@@ -20,6 +20,11 @@
 \usepackage{amssymb}
 \usepackage{amsthm}
 \usepackage[numbers,sort&compress]{natbib}
+\usepackage{microtype}
+\usepackage{xurl}
+%% cas-dc overlays the keyword box beside the abstract with an intentional
+%% zero-width box; silence only that class-internal diagnostic.
+\AtBeginEnvironment{Abstract}{\hfuzz=124pt}
 \usepackage{multirow}
 \usepackage{array}
 \usepackage{tabularx}
@@ -86,10 +91,13 @@
 \renewcommand{\bottomfraction}{0.8}
 \renewcommand{\textfraction}{0.07}
 \renewcommand{\floatpagefraction}{0.6}
+\renewcommand{\dbltopfraction}{0.9}
+\renewcommand{\dblfloatpagefraction}{0.6}
 \setcounter{topnumber}{3}
 \setcounter{bottomnumber}{2}
 \setcounter{totalnumber}{5}
-\usepackage[section]{placeins}
+\setcounter{dbltopnumber}{3}
+\usepackage{placeins}
 
 \theoremstyle{plain}
 \newtheorem{theorem}{Theorem}
@@ -100,7 +108,8 @@
 \newtheorem{property}{Property}
 \newtheorem{remark}{Remark}
 
-\raggedbottom
+\flushbottom
+\emergencystretch=0.75em
 
 \newcommand{\G}{\mathcal{G}}
 \newcommand{\Cu}{C_u}
@@ -154,9 +163,8 @@ game over collaborative filtering, content, popularity, recency, and
 sequential-order signals. Its payoff is normalised discounted cumulative gain
 at rank~10 (NDCG@10) on a fixed, coalition-independent candidate set. Exact
 enumeration of all $2^5=32$ coalitions yields Shapley values without
-aggregation sampling error; it recovers the known vectors of six analytic
-games exactly, satisfies additivity to $4.4\times10^{-16}$, and holds
-efficiency on the fitted corpora to $6.9\times10^{-18}$.
+aggregation sampling error, and recovers the known vectors of six analytic
+games to an efficiency residual of at most $6.9\times10^{-18}$.
 
 Across three timestamped corpora spanning a $36\times$ density range, two of
 the three fitted systems contain a source for which the two rules disagree in
@@ -372,8 +380,8 @@ causal attribution; online or counterfactual evaluation. All attribution is
 the end-to-end variant is included only to compare estimands and evaluate the
 retirement decision.
 
-\paragraph{Roadmap} Section~\ref{sec:related} positions the work against
-component-level and ranking-specific attribution. Section~\ref{sec:background}
+\paragraph{Roadmap} Section~\ref{sec:related} reviews component-level and
+ranking-specific attribution. Section~\ref{sec:background}
 collects the cooperative-game definitions we rely on. Section~\ref{sec:game}
 defines the game, Section~\ref{sec:algorithm} gives the algorithm and its cost,
 and Section~\ref{sec:theory} the formal properties, including a counterexample
@@ -546,10 +554,13 @@ marginal contributions under a predeclared distribution $p_k$ over the size $k$
 of the predecessor coalition:
 %
 \begin{equation}
-\psi_g(v) \;=\; \sum_{k=0}^{n-1} \frac{p_k}{\binom{n-1}{k}}
-\sum_{\substack{S \subseteq \G \setminus \{g\} \\ |S| = k}}
-\bigl[v(S \cup \{g\}) - v(S)\bigr],
-\qquad \sum_{k=0}^{n-1} p_k = 1 .
+\begin{aligned}
+\psi_g(v)
+  &= \sum_{k=0}^{n-1} \frac{p_k}{\binom{n-1}{k}}
+     \sum_{\substack{S \subseteq \G \setminus \{g\} \\ |S| = k}}
+     \bigl[v(S \cup \{g\}) - v(S)\bigr],\\
+\sum_{k=0}^{n-1} p_k &= 1 .
+\end{aligned}
 \label{eq:semivalue}
 \end{equation}
 Shapley is the member with
@@ -1098,7 +1109,7 @@ without repeats.
 A refreshed one-step-ahead protocol also changes sequential and recency scores,
 candidate retrieval, and the baseline, so frozen and refreshed games are not
 ordered in general. We measured the net effect
-(\texttt{scripts/run\_protocol\_sensitivity.py}) with the head fitted in the
+(\path{scripts/run_protocol_sensitivity.py}) with the head fitted in the
 validation state and the test coalition scored after appending and masking the
 validation event. Refreshing raises $v(\G)$ from $0.05169$ to $0.07026$ on
 MovieLens-1M ($+36\%$), from $0.04130$ to $0.04902$ on Amazon-VG ($+19\%$), and
@@ -1236,8 +1247,11 @@ $2^n$ coalitions is an $O(n^3)$ solve on a slice, $O(mNn)$ to form the fused
 scores in the worst case, and $O(mN\log N)$ to rank and score. Total is
 %
 \begin{equation}
-O\bigl(C_{\mathrm{score}} + m\,n\,|\mathcal{I}| + m N n^2
- \;+\; m\,n\,N\log(nN) \;+\; 2^n\,(n^3 + mNn + mN\log N)\bigr).
+\begin{aligned}
+O\Bigl(&C_{\mathrm{score}} + m\,n\,|\mathcal{I}| + mNn^2 \\
+       &{}+ m\,n\,N\log(nN) \\
+       &{}+ 2^n\bigl(n^3 + mNn + mN\log N\bigr)\Bigr).
+\end{aligned}
 \label{eq:complexity}
 \end{equation}
 %
@@ -1310,7 +1324,7 @@ The redundant sources receive \emph{negative} credit despite positive
 standalone value. Restoring monotonicity repairs it: on the monotone variant
 ($v(g_1g_3)=v(g_2g_3)=v(\G)=5.5$) one obtains
 $\varphi_{g_1} = 5/12\approx0.4167 \ge v(\{g_1\})/3 = 1/3$. Both games are encoded as regression tests in
-\texttt{tests/test\_property2\_counterexample.py}.
+\path{tests/test_property2_counterexample.py}.
 
 This matters practically: the coalition-conditional refit is precisely the
 mechanism that can break monotonicity, since a head fitted on $S \cup \{g\}$
@@ -1793,8 +1807,6 @@ from a single artefact.
 \end{minipage}
 \end{table*}
 
-\FloatBarrier
-
 \paragraph{Preprocessing and subsampling}
 MovieLens-1M is binarised at rating $\geq 4$, which is why the as-used
 interaction count is $575\,276$ rather than one million. Gowalla and Amazon-VG
@@ -1851,16 +1863,19 @@ regression is not prediction-invariant: two identical columns share the
 penalty, so the effective regularisation on their common direction is halved
 and the fitted scores can move. Exchangeability of the pair is guaranteed;
 redundancy of the coalition \emph{values} is an empirical question. We
-therefore measure it, reporting
+therefore write $g'=g_{\mathrm{dup}}$ and measure it by reporting
 \begin{equation}
-\Delta_{\mathrm{red}}
-= \max_{S \subseteq \G\setminus\{g,g_{\mathrm{dup}}\}}
-\max\left\{
 \begin{aligned}
-&|v(S\cup\{g\})-v(S\cup\{g,g_{\mathrm{dup}}\})|,\\
-&|v(S\cup\{g_{\mathrm{dup}}\})-v(S\cup\{g,g_{\mathrm{dup}}\})|
+\Delta_{\mathrm{red}}
+&= \max_{S \subseteq \G\setminus\{g,g'\}} d(S),\\
+d(S)
+&= \max\left\{
+\begin{aligned}
+&|v(S\cup\{g\})-v(S\cup\{g,g'\})|,\\
+&|v(S\cup\{g'\})-v(S\cup\{g,g'\})|
 \end{aligned}
 \right\}
+\end{aligned}
 \label{eq:reddev}
 \end{equation}
 alongside the symmetry error, and we run the diagnostic at both the frozen
@@ -2051,10 +2066,13 @@ acceptable here because we use them only to \emph{rank} redundancy, which is
 all the argument requires. Each pair $\{a,b\}$ receives
 %
 \begin{equation}
-\mathcal{I}_{ab} \;=\;
-\sum_{S \subseteq \G \setminus \{a,b\}}
-\frac{|S|!\,(n - |S| - 2)!}{(n-1)!}\;
-\bigl[\,v(S \cup \{a,b\}) - v(S \cup \{a\}) - v(S \cup \{b\}) + v(S)\,\bigr],
+\begin{aligned}
+\mathcal{I}_{ab}
+  &= \sum_{S \subseteq \G \setminus \{a,b\}}
+     \frac{|S|!\,(n - |S| - 2)!}{(n-1)!} \\
+  &\quad{}\times \bigl[v(S \cup \{a,b\}) - v(S \cup \{a\}) \\
+  &\hspace{5.7em}{}- v(S \cup \{b\}) + v(S)\bigr],
+\end{aligned}
 \label{eq:interaction}
 \end{equation}
 %
@@ -2068,6 +2086,9 @@ in the same sense.
 \begin{table}[tbp]
 \caption{MovieLens-1M pairwise Shapley interactions over ten stochastic fits.}
 \label{tab:taylor}
+\centering
+\footnotesize
+\setlength{\tabcolsep}{2.5pt}
 \begin{tabular}{@{}lrcc@{}}
 \toprule
 Pair & $\mathcal{I}_{ab}$ (10-seed mean) & run interval & Neg.\ seeds \\
@@ -2132,7 +2153,7 @@ MovieLens-1M) and $12.2\%$ ($pop$, Gowalla) of the respective $v(\G)$.}
 \label{tab:loo}
 \small
 \setlength{\tabcolsep}{2.5pt}
-\begin{tabular}{@{}llrcrc@{}}
+\begin{tabular*}{\textwidth}{@{\extracolsep{\fill}}llrcrc@{}}
 \toprule
 Corpus & Source & $\LOOr$ & Shapley [run interval]
        & Gap $\varphi_g-\LOOr$ [run interval] & Gap sign \\
@@ -2155,10 +2176,10 @@ Gowalla      & $cf$ & $+0.00743$ & $+0.00711\ [+0.00698,+0.00725]$ & $-0.00032\ 
              & $rec$ & $+0.00001$ & $+0.00040\ [+0.00038,+0.00042]$ & $+0.00039\ [+0.00037,+0.00041]$ & $10/10$ \\
              & $seq$ & $+0.00093$ & $+0.00225\ [+0.00219,+0.00230]$ & $+0.00132\ [+0.00125,+0.00138]$ & $10/10$ \\
 \bottomrule
-\end{tabular}
-\smallskip
-\noindent\footnotesize $^{\dagger}$Material sign flip;
-$^{\ddagger}$sign flip below the $10^{-3}$ materiality threshold.
+\end{tabular*}
+\par\smallskip
+{\raggedright\footnotesize $^{\dagger}$Material sign flip;
+$^{\ddagger}$sign flip below the $10^{-3}$ materiality threshold.\par}
 \end{table*}
 
 \begin{figure*}[tp]
@@ -2586,24 +2607,22 @@ its own $C_u(S)$ and refits its head. For $S\ne\varnothing$ and
 $u\in\Ueval$, define
 \begin{align}
 v^{\mathrm{fixed}}_u(S)
-  &= \NDCGat{K}\!\left(\operatorname{rank}(Z_u^{(S)}w^{(\G)}_S);
-       \mathbf y_u^{\mathrm{te}}\right)-b_u,
+  &= \NDCGat{K}\!\left(\operatorname{rank}(Z_u^{(S)}w^{(\G)}_S);\right.\notag\\[-2pt]
+  &\hspace{7.1em}\left.\mathbf y_u^{\mathrm{te}}\right)-b_u,
        \label{eq:fixed-game}\\
 r_u^{\mathrm{e2e}}(S)
   &= \operatorname{rank}\!\left(Z_u^{(S)}(S)w^{(S)}\right),\\
 U^{\mathrm{e2e}}_u(S)
-  &=
-\begin{cases}
-\NDCGat{K}\!\left(r_u^{\mathrm{e2e}}(S);\mathbf y_u^{\mathrm{te}}(S)\right),
-       & |C_u(S)|>0,\\
-0, & |C_u(S)|=0.
-\end{cases}\\
+  &= \NDCGat{K}\!\left(r_u^{\mathrm{e2e}}(S);\right.\notag\\[-2pt]
+  &\hspace{6.8em}\left.\mathbf y_u^{\mathrm{te}}(S)\right),
+       \quad |C_u(S)|>0,\\
 v^{\mathrm{e2e}}_u(S)
   &= U^{\mathrm{e2e}}_u(S)-b_u(S).
 \label{eq:e2e-game}
 \end{align}
-Here $b_u(S)$ is Eq.~\eqref{eq:baseline} evaluated on $C_u(S)$ and is zero
-when that set is empty. Aggregate values average these per-user quantities over
+We set $U^{\mathrm{e2e}}_u(S)=0$ when $|C_u(S)|=0$. Here $b_u(S)$ is
+Eq.~\eqref{eq:baseline} evaluated on $C_u(S)$ and is zero when that set is
+empty. Aggregate values average these per-user quantities over
 the fixed population $\Ueval$. A
 removed source therefore loses its retrieval role too, and coalition values are
 no longer comparable across a fixed item set, which is exactly the property the
@@ -2714,18 +2733,29 @@ $\Delta\tau$ is the effect measure; $p_{\mathrm{Holm}}$ adjusts the three
 paired Wilcoxon comparisons as one declared primary family.}
 \label{tab:retire-seeds}
 \centering
-\small
-\begin{tabular}{@{}lcccc@{}}
+\footnotesize
+\setlength{\tabcolsep}{3pt}
+\begin{tabular}{@{}lcc@{}}
 \toprule
-Corpus & $\tau$ $\LOOr$ & $\tau$ Shapley & Paired $\Delta\tau$
-       & $p_{\mathrm{Holm}}$ \\
+Corpus & $\tau$ $\LOOr$ & $\tau$ Shapley \\
 \midrule
 MovieLens-1M & $0.96\ [0.90, 1.00]$ & $0.20\ [0.20, 0.20]$
-             & $+0.76\ [+0.70, +0.80]$ & $0.0059$ \\
+             \\
 Amazon-VG    & $0.96\ [0.90, 1.00]$ & $0.74\ [0.68, 0.80]$
-             & $+0.22\ [+0.16, +0.28]$ & $0.0059$ \\
+             \\
 Gowalla      & $1.00\ [1.00, 1.00]$ & $0.80\ [0.80, 0.80]$
-             & $+0.20\ [+0.20, +0.20]$ & $0.0059$ \\
+             \\
+\bottomrule
+\end{tabular}
+
+\smallskip
+\begin{tabular}{@{}lcc@{}}
+\toprule
+Corpus & Paired $\Delta\tau$ & $p_{\mathrm{Holm}}$ \\
+\midrule
+MovieLens-1M & $+0.76\ [+0.70, +0.80]$ & $0.0059$ \\
+Amazon-VG    & $+0.22\ [+0.16, +0.28]$ & $0.0059$ \\
+Gowalla      & $+0.20\ [+0.20, +0.20]$ & $0.0059$ \\
 \bottomrule
 \end{tabular}
 
@@ -3186,7 +3216,7 @@ The implementation, configuration files, and scripts required to reproduce the
 reported experiments, tables, and figures are publicly available at
 \url{https://github.com/mouadlouhichi/signalshap}. The results in this
 manuscript correspond to repository commit
-\texttt{0b8e998a13610932cef79b8ccb3fab55074263d3}, released as tag
+\path{0b8e998a13610932cef79b8ccb3fab55074263d3}, released as tag
 \texttt{kbs-submission}; that commit is the one recorded inside
 \texttt{MANIFEST.json} alongside the SHA-256 of every artefact, so a reader can
 confirm that the released hashes and the reported numbers come from the same
