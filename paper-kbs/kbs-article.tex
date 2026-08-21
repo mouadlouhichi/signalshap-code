@@ -479,6 +479,26 @@ Replication sensitivity of Shapley allocations~\citep{han2022replication} is
 directly relevant to our duplicate-injection design and is discussed in
 Section~\ref{sec:recovery}.
 
+\paragraph{Why not a graph or neural explainer}
+A parallel line explains \emph{neural} recommenders by attributing to graph
+structure: GNNExplainer~\citep{ying2019gnnexplainer} and
+PGExplainer~\citep{luo2020pgexplainer} learn edge and feature masks,
+GraphSVX~\citep{duval2021graphsvx} gives those masks a Shapley reading, and
+SubgraphX~\citep{yuan2021subgraphx} searches connected subgraphs with a
+Shapley scoring function. These are not comparators for the present study, and
+the reason is the unit of attribution rather than a judgement of quality. They
+attribute to \emph{entities inside one differentiable model}, nodes, edges or
+input features, and most require gradients or a message-passing structure. Our
+players are five \emph{architecturally distinct scorers}, only one of which is
+even a latent-factor model, and the payoff is a ranking metric over a
+retrieved candidate set rather than a differentiable output. There is no shared
+graph to mask and no gradient to integrate. The comparators that do apply at
+this granularity are other cooperative values over the same game, which is why
+we evaluate Banzhaf, two binomial semivalues, permutation importance and
+forward selection rather than a graph explainer. Extending the game so that a
+graph-neural component is one of the players is the natural bridge, and we
+name it as future work rather than claim it here.
+
 \paragraph{Offline recommender evaluation and exposure bias}
 Logged recommendation data reflect both user choice and earlier exposure
 policies. Counterfactual risk minimisation addresses learning from logged bandit
@@ -2476,6 +2496,21 @@ different solvers return different rotations of it, and the partition
 genuinely moves. That is a property of the spectrum, not of the seed, and it
 is the caveat that stands.
 
+\paragraph{Perturbing the source scores themselves}
+Seed variation resamples the stochastic fits but leaves the data untouched, so
+it does not test whether the attribution survives corrupted inputs. We
+therefore added Gaussian noise directly to every source score at
+$\sigma \in \{0.1, 0.5\}$ in units of each source's own standard deviation, and
+recomputed the full game at seed 42 on MovieLens-1M. The ordering degrades
+gracefully rather than collapsing: Kendall $\tau$ against the clean run is
+$0.80$ at both levels, with $seq$ remaining the leading source throughout, and
+the single transposition falls among the three near-zero sources. The material
+$cf$ disagreement is unaffected, since $\varphi_{cf}$ stays positive
+($+0.01538$ clean, $+0.01659$ and $+0.02268$ under noise) while $\LOOr(cf)$ is
+negative. This is one corpus and one seed, and it perturbs the scores rather
+than the interaction data, so it does not speak to missing interactions or
+distribution shift, which we did not test.
+
 \paragraph{Metric sensitivity on MovieLens-1M}
 NDCG@10 is the only metric in the characteristic function, so the attributions
 could in principle be an artefact of that choice. We re-scored the same game with
@@ -2928,6 +2963,13 @@ policy its candidate recall is bounded above by $\rho = 0.501 < 0.60$, so the
 gate is unattainable at any candidate-pool size, including the full catalogue.
 A repeat-aware evaluation protocol, not a larger candidate cap, is what that
 corpus requires.
+
+To state the boundary in one sentence: every claim above is established for
+five-source hybrid ranking systems under offline, single-positive,
+fixed-candidate evaluation on three timestamped corpora. We do not claim it for
+graph-neural or Transformer recommenders, for multi-positive or graded
+relevance, for online or industrial-scale deployment, or for source sets large
+enough that exhaustive enumeration is infeasible.
 
 \paragraph{Future work}
 Four directions follow directly from what we could not settle. First, a
