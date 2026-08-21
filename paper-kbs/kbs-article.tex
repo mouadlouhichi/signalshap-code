@@ -154,8 +154,9 @@ game over collaborative filtering, content, popularity, recency, and
 sequential-order signals. Its payoff is normalised discounted cumulative gain
 at rank~10 (NDCG@10) on a fixed, coalition-independent candidate set. Exact
 enumeration of all $2^5=32$ coalitions yields Shapley values without
-aggregation sampling error, and recovers the known vectors of six analytic
-games to an efficiency residual of at most $6.9\times10^{-18}$.
+aggregation sampling error; it recovers the known vectors of six analytic
+games exactly, satisfies additivity to $4.4\times10^{-16}$, and holds
+efficiency on the fitted corpora to $6.9\times10^{-18}$.
 
 Across three timestamped corpora spanning a $36\times$ density range, two of
 the three fitted systems contain a source for which the two rules disagree in
