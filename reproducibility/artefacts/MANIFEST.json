@@ -1,18 +1,18 @@
 {
- "git_commit": "0b8e998a13610932cef79b8ccb3fab55074263d3",
- "git_describe": "0b8e998-dirty",
+ "git_commit": "a037abc0f2c2b63e24fd5a7dc8d7c6b60d2e00d6",
+ "git_describe": "discover-ai-submission-58-ga037abc",
  "environment": {
-  "python": "3.11.2",
-  "platform": "Linux-6.1.158+-x86_64-with-glibc2.36",
-  "machine": "x86_64",
-  "numpy": "2.4.6",
-  "scipy": "1.17.1",
+  "python": "3.12.13",
+  "platform": "macOS-26.6-arm64-arm-64bit",
+  "machine": "arm64",
+  "numpy": "2.5.1",
+  "scipy": "1.18.0",
   "pandas": "3.0.5",
   "sklearn": "1.9.0",
   "matplotlib": "3.11.1",
   "blas": "see numpy.show_config"
  },
- "n_artefacts": 54,
+ "n_artefacts": 55,
  "artefacts": {
   "candidate_rule_ablation_ml_1m.json": {
    "sha256": "7ee0120e7a4fe56baf5e1127351d7b3bd15fc944b3644b380f141417aa13e09e",
@@ -25,6 +25,10 @@
   "e10_values_amazon_video_games.json": {
    "sha256": "bb5b62bbc8564f1b97e26a0692ab2a76d431d5856957ba528b8fa80763a43b91",
    "bytes": 1416
+  },
+  "e10_values_gowalla_ts.json": {
+   "sha256": "1586ae12bd0d36737541e2332da4eadbb14790aef1a2cba326eff149c51c1213",
+   "bytes": 2353
   },
   "e10_values_ml_1m.json": {
    "sha256": "36553f152e81a80b89e8ab397480385080b782440bf6995ac171d6e410bb0e96",

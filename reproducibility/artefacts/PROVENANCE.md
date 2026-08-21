@@ -43,6 +43,8 @@ reported sign are unaffected. See spec provenance entry 36.
 | LOO/gap intervals, all corpora | `final_seed_ci.json` `loo_ci`/`gap_ci` | M4 | **sym** | 42-51 |
 | Figure 3 | `results_*.json` | M4 | legacy | 42 |
 | Semivalues (Sec 10.2) | `e10_values_ml_1m.json` | x86 | legacy | 42 |
+| Semivalues, Gowalla | `e10_values_gowalla_ts.json` | M4 | **sym** | 42 |
+| Semivalues, Amazon-VG | `e10_values_amazon_video_games.json` | M4 | legacy | 42 |
 | Candidate-rule ablation (Sec 4.1) | `candidate_rule_ablation_ml_1m.json` | x86 | both | 42 |
 | Grand-pool ablation (Sec 4.1) | `results_ml_1m.json` `e8_appendix_b` | M4 | legacy | 42 |
 | Gowalla subsampling (Sec 11) | `gowalla_subsample_sensitivity.json` | M4 | sym vs sym | 42-51 |

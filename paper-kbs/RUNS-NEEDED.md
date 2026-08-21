@@ -3,34 +3,23 @@
 Nothing is blocking submission. Everything below is optional strengthening,
 ordered by value per hour. All commands assume the M4 and `--budget-gb 24`.
 
-## Tier 1: cheap, closes a named reviewer item
+## Tier 1: DONE
 
-### 1. Semivalues on Gowalla (closes H14 / #4 completely)
+### 1. Semivalues on Gowalla (H14 / #4) -- completed
 
-Round-9 review asked why Banzhaf and the binomial semivalues are MovieLens
-only. We just found the Amazon artefact and it *disagrees* with Shapley
-(tau = 0.60, different leading source), which is now reported. Gowalla is the
-only corpus still missing. It needs the 32 coalition values, which the
-ten-seed artefact does not store, so it is a real run.
+Ran, folded into the manuscript, and the result is more interesting than
+either outcome anticipated. Banzhaf and both binomial semivalues agree with
+Shapley at tau = 0.80, and three of four values put `cf` first. The `q=0.25`
+semivalue, which up-weights small coalitions, promotes `ct` instead. That is a
+second and independent route to a caveat the paper already carries: Shapley
+separates `cf` from `ct` on Gowalla by only 0.00037, and reweighting the
+coalition sizes inverts a margin that small. Under Banzhaf and `q=0.75` the
+transposition instead falls between `pop` and `rec`, separated by 0.00017.
 
-```
-# NOTE: this script has no --budget-gb. It does NOT size the corpus, so a bare
-# Gowalla call loads the full 52,985 x 121,866 matrix and will be OOM-killed.
-# Pass the user cap explicitly, matching the reported 8,865-user shape, and
-# skip the 2^n retrieval experiments, which are not needed for semivalues.
-PYTHONPATH=src python scripts/run_revision_experiments.py \
-    --dataset gowalla_ts --max-users 8865 --skip-e2e
-```
-
-Verify afterwards that the corpus shape is the reported one:
-
-```
-python -c "import json;d=json.load(open('artefacts/e10_values_gowalla_ts.json'));print(d.get('dataset'))"
-```
-
-Cost: one 32-coalition game on 8,865 x 82,134. Tens of minutes, not hours.
-Value: turns "we did not compute it on Gowalla" into a three-corpus statement,
-and the Amazon disagreement makes the third data point genuinely informative.
+Net effect on the claim: the ordering is robust to the choice of semivalue on
+MovieLens-1M, robust on Gowalla except for a leading pair already treated as a
+near-tie, and NOT robust on Amazon-VG, where the leading source itself changes.
+The manuscript now states the conjunction rather than the best case.
 
 ### 2. Oracle tuned head (closes #5 fully)
 
@@ -95,6 +84,7 @@ revision item.
 
 ## Recommendation
 
-Run item 1 if you want one more reviewer item fully closed for well under an
-hour. Everything else can wait for an actual revision request, since the
-current text scopes each of them honestly as a limitation.
+Tier 1 is done. Nothing else is worth running before a decision: every
+remaining item is scoped in the manuscript as a limitation, and the two that
+would most strengthen the paper (a repeat-aware Gowalla protocol and neural
+players) are follow-up work rather than revisions.

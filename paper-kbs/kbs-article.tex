@@ -2009,10 +2009,31 @@ whereas Shapley up-weights the extreme sizes, so the two diverge exactly where
 a source's value depends on how many other sources are present. Amazon-VG is
 also the corpus with the strongest substitutive $cf$--$seq$ interaction and no
 material sign flip, which is consistent with that reading. The defensible claim
-is therefore narrower than a single-corpus result would suggest: the induced
-ordering is robust to the choice of semivalue on MovieLens-1M but not on
-Amazon-VG, so a reported ordering should state which value produced it. We did
-not compute these values on Gowalla.
+is therefore narrower than a single-corpus result would suggest.
+
+Gowalla sits between the two, and its behaviour is the most informative of the
+three. Banzhaf and both binomial semivalues agree with Shapley at
+$\tau = 0.80$, and three of the four values put $cf$ first. The exception is
+the $q=0.25$ semivalue, which up-weights small coalitions and promotes $ct$
+above $cf$. That is not a contradiction of the main result but a second,
+independent route to a caveat the paper already states: Shapley separates $cf$
+from $ct$ on this corpus by only $0.00037$, and reweighting the coalition
+sizes is enough to invert a margin that small. Section~\ref{sec:results}
+reaches the same conclusion from user resampling. Under Banzhaf and $q=0.75$
+the single transposition instead falls between $pop$ and $rec$, which Shapley
+separates by $0.00017$. In every case the value that moves is one of a pair the
+main analysis already declines to order.
+
+The three corpora therefore give three different answers, and the honest
+summary is the conjunction rather than the best case: the induced ordering is
+robust to the choice of semivalue on MovieLens-1M, robust on Gowalla except
+for a leading pair the paper already treats as a near-tie, and \emph{not}
+robust on Amazon-VG, where the leading source itself changes. A reported
+ordering should therefore state which value produced it, and a margin at the
+$10^{-4}$ scale should not be read as an ordering at all. Only Shapley sums to
+$v(\G)$; the totals differ widely across values
+($0.01690$, $0.01438$, $0.02147$ and $0.01102$ on Gowalla), which is why we
+compare orderings and not magnitudes.
 
 \paragraph{Pairwise interactions}
 Main-effect values cannot by themselves distinguish a source of low value from
@@ -2366,6 +2387,8 @@ Result & Seeds & Candidate rule & Role \\
 Attribution and retirement & 42--51 & source-symmetric & primary \\
 Pairwise interactions & 42--51 & source-symmetric & explanatory \\
 Neutral candidate pools & 42 & all four pool rules & sensitivity \\
+Semivalues and interactions & 42 & source-symmetric (ML-1M, Gowalla);
+  legacy (Amazon-VG) & sensitivity \\
 Estimand comparison (Table~\ref{tab:estimands}) & 42 & refitted head
   source-symmetric; fixed head and end-to-end legacy & sensitivity \\
 Globally blocked replication & 42 & source-symmetric & stress test \\

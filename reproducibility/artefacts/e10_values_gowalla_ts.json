@@ -1,0 +1,73 @@
+{
+  "shapley": {
+    "cf": 0.007105564790575359,
+    "ct": 0.006738856585098587,
+    "pop": 0.0005519988570616448,
+    "rec": 0.00037723239321774154,
+    "seq": 0.002129034215540876
+  },
+  "banzhaf": {
+    "cf": 0.00611069386940245,
+    "ct": 0.006014152988008208,
+    "pop": 0.00012761282206722715,
+    "rec": 0.0002384873529967538,
+    "seq": 0.001893042169518
+  },
+  "semivalue_binomial_q025": {
+    "cf": 0.007813690891993805,
+    "ct": 0.00807269903080802,
+    "pop": 0.001956455975048207,
+    "rec": 0.000605379807866582,
+    "seq": 0.003021990195340649
+  },
+  "semivalue_binomial_q075": {
+    "cf": 0.005888699209082628,
+    "ct": 0.005031358321356133,
+    "pop": -0.0010759552979099567,
+    "rec": 6.840843897057697e-05,
+    "seq": 0.0011067781932418347
+  },
+  "semivalue_size_uniform": {
+    "cf": 0.007105564790575359,
+    "ct": 0.006738856585098587,
+    "pop": 0.0005519988570616448,
+    "rec": 0.00037723239321774154,
+    "seq": 0.002129034215540876
+  },
+  "size_uniform_equals_shapley_max_abs_diff": 0.0,
+  "shapley_top": "cf",
+  "banzhaf_top": "cf",
+  "top_source_agrees": true,
+  "kendall_tau_shapley_banzhaf": 0.7999999999999999,
+  "kendall_tau_shapley_q025": 0.7999999999999999,
+  "kendall_tau_shapley_q075": 0.7999999999999999,
+  "top_source_all_values": [
+    "cf",
+    "ct"
+  ],
+  "sums": {
+    "shapley": 0.016902686841494208,
+    "banzhaf": 0.01438398920199264,
+    "q025": 0.021470215901057264,
+    "q075": 0.011019288864741216
+  },
+  "note": "Banzhaf does not satisfy efficiency, so its values do not sum to v(G); only the induced ORDERING is comparable across values. The size-uniform semivalue is Shapley identically (see the diff key), so the distinct comparators are Banzhaf and the binomial semivalues at q = 0.25 and q = 0.75.",
+  "interactions": {
+    "cf": 0.010952526366613697,
+    "ct": 0.011145081092935149,
+    "pop": 0.004361663657418684,
+    "rec": 0.0013494463530067094,
+    "seq": 0.00455282967742921,
+    "cf|ct": -0.0008608551451207442,
+    "cf|pop": -0.0017183853676179467,
+    "cf|rec": -0.0009406776222930282,
+    "cf|seq": -0.0038056097644210514,
+    "ct|pop": -0.008250919432344975,
+    "ct|rec": -0.001320708001212139,
+    "ct|seq": -0.0012914356406280637,
+    "pop|rec": 0.00021088754712290854,
+    "pop|seq": -0.0019818026333155016,
+    "rec|seq": -0.0006250464056884073
+  },
+  "dataset": "gowalla_ts"
+}

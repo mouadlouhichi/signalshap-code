@@ -28,6 +28,7 @@ closed by editing because they require experiments we have not run.
 | 10 | New paragraph "Why not a graph or neural explainer", citing GNNExplainer, PGExplainer, GraphSVX and SubgraphX, and giving the **structural** reason they are not comparators: they attribute to entities inside one differentiable model, we attribute to five architecturally distinct scorers with no shared graph and no gradient. |
 | 16 | Score-perturbation robustness now reported: Gaussian noise at sigma = 0.1 and 0.5 in units of each source's own standard deviation. Ordering degrades gracefully (tau = 0.80, `seq` still leading) and the material `cf` disagreement survives. The artefact existed; it was never written up. |
 | 18 | Four recent GNN-explainability references added. |
+| 4 (part) | Semivalues now computed on **all three** corpora, not MovieLens only. Gowalla was run for this revision; the result narrowed the claim rather than confirming it. |
 | 19 | One-sentence explicit boundary added to the conclusion. |
 
 ## C. Cannot be closed by editing: these need new experiments
@@ -38,7 +39,7 @@ We state these as limitations rather than pretend otherwise.
 |---|---|---|
 | 2 | New attribution theory specific to recommenders | This is a request for a different paper. Our contribution is a declared game plus the finding that allocation and removal disagree, including against our own instrument. We would rather defend that scope than inflate it. |
 | 3, 9 | LightGCN / SASRec / Transformer **as players** | Both already appear as reference baselines. Making them players changes the retrieval structure the game assumes; named as future work. |
-| 4 | KernelSHAP, Integrated Gradients, GNN explainers as empirical comparators | Banzhaf, two binomial semivalues, permutation importance and forward selection are already compared. KernelSHAP approximates the same game we enumerate exactly, so it measures our sampling error, not a rival method. Gradient and graph explainers do not apply at this granularity, per the new #10 paragraph. |
+| 4 | KernelSHAP, Integrated Gradients, GNN explainers as empirical comparators | Banzhaf and two binomial semivalues are now compared on all three corpora, alongside permutation importance and forward selection. KernelSHAP approximates the same game we enumerate exactly, so it measures our sampling error, not a rival method. Gradient and graph explainers do not apply at this granularity, per the new #10 paragraph. |
 | 5 | Oracle tuned head | A third estimand column; feasible but a new run. |
 | 6 | Multi-positive, MAP, graded relevance | Requires a different evaluation protocol and re-running every corpus. |
 | 15 | 10 and 20 players | 2^20 coalitions is not enumerable; this is the approximation boundary the paper names as future work. |
@@ -47,8 +48,9 @@ We state these as limitations rather than pretend otherwise.
 
 ## Summary
 
-Of the 20 issues: **11 were already addressed**, **5 are fixed here**, and
-**4 require experiments** that we scope explicitly rather than claim.
+Of the 20 issues: **11 were already addressed**, **6 are fixed here** (the
+sixth, the semivalue extension, required the one run we judged worth doing),
+and **3 require experiments** that we scope explicitly rather than claim.
 
 The two Critical items are both in category A: #5 (coalition refitting) is
 already answered by the three-estimand table, and #7 (statistics) by the
