@@ -1,6 +1,6 @@
 {
- "git_commit": "8047a157b6ba890228ec0f85c9704a754db96e09",
- "git_describe": "8047a15-dirty",
+ "git_commit": "e1d4800ac5f658062757cfa853ef2befd7d358d2",
+ "git_describe": "e1d4800-dirty",
  "environment": {
   "python": "3.11.2",
   "platform": "Linux-6.1.158+-x86_64-with-glibc2.36",
@@ -12,7 +12,7 @@
   "matplotlib": "3.11.1",
   "blas": "see numpy.show_config"
  },
- "n_artefacts": 55,
+ "n_artefacts": 56,
  "artefacts": {
   "candidate_rule_ablation_ml_1m.json": {
    "sha256": "7ee0120e7a4fe56baf5e1127351d7b3bd15fc944b3644b380f141417aa13e09e",
@@ -197,6 +197,10 @@
   "revision_summary.json": {
    "sha256": "a386f5dc8b6bcf4ece91dfe2cc85d72a15699554bab53d605afc3ab1da35050e",
    "bytes": 1794
+  },
+  "sampling_error.json": {
+   "sha256": "56da0aaebe2d9782c12daa0b69e6380e89a1b91566f9e82db39cee9ad3c5c569",
+   "bytes": 2850
   },
   "source_order_sensitivity.json": {
    "sha256": "a335b8f936af5b37da0aa6f3404b8c86a73efeed63a48755962b13180a67ce53",

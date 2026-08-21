@@ -1,0 +1,81 @@
+{
+ "dataset": "ml_1m",
+ "game": "end_to_end.coalition_recall",
+ "caveat": "This is the end-to-end recall game, the only complete 32-coalition characteristic function persisted in artefacts/. It is NOT the ranking-stage NDCG@10 game whose Shapley values the paper reports. Absolute errors do not transfer; errors relative to v(G) do.",
+ "v_grand": 0.7483015741507871,
+ "exact_shapley": {
+  "cf": 0.29447666390499855,
+  "ct": -0.006434686550676611,
+  "pop": 0.1991853079259873,
+  "rec": -0.00530240265120131,
+  "seq": 0.26637669152167914
+ },
+ "efficiency_residual": 1.1102230246251565e-16,
+ "repeats": 20,
+ "budgets": {
+  "50": {
+   "permutation": {
+    "max_abs_error_mean": 0.04959908864954428,
+    "max_abs_error_p95": 0.08110994200497093,
+    "max_abs_error_worst": 0.08647832090582708,
+    "relative_to_v_grand_mean": 0.0662822187776793,
+    "relative_to_v_grand_p95": 0.10839205048715667
+   },
+   "kernelshap": {
+    "max_abs_error_mean": 0.1250327149768194,
+    "max_abs_error_p95": 0.19400600774641608,
+    "max_abs_error_worst": 0.2799956891494398,
+    "relative_to_v_grand_mean": 0.1670886702579949,
+    "relative_to_v_grand_p95": 0.25926179290292756
+   }
+  },
+  "100": {
+   "permutation": {
+    "max_abs_error_mean": 0.024301739850869898,
+    "max_abs_error_p95": 0.04735559237779593,
+    "max_abs_error_worst": 0.0615470864402102,
+    "relative_to_v_grand_mean": 0.03247586359610271,
+    "relative_to_v_grand_p95": 0.0632841009743132
+   },
+   "kernelshap": {
+    "max_abs_error_mean": 0.08193429449641562,
+    "max_abs_error_p95": 0.1391804172779004,
+    "max_abs_error_worst": 0.14010082230372883,
+    "relative_to_v_grand_mean": 0.10949368186135258,
+    "relative_to_v_grand_p95": 0.18599508819134827
+   }
+  },
+  "500": {
+   "permutation": {
+    "max_abs_error_mean": 0.012819182546257885,
+    "max_abs_error_p95": 0.020463910521955207,
+    "max_abs_error_worst": 0.026348191107428587,
+    "relative_to_v_grand_mean": 0.017131037791555875,
+    "relative_to_v_grand_p95": 0.02734714348981392
+   },
+   "kernelshap": {
+    "max_abs_error_mean": 0.03744081605117502,
+    "max_abs_error_p95": 0.07395497233107191,
+    "max_abs_error_worst": 0.074683253805637,
+    "relative_to_v_grand_mean": 0.050034394346510455,
+    "relative_to_v_grand_p95": 0.09883043800221855
+   }
+  },
+  "2000": {
+   "permutation": {
+    "max_abs_error_mean": 0.006784813587407042,
+    "max_abs_error_p95": 0.01619758630212796,
+    "max_abs_error_worst": 0.016544214305441507,
+    "relative_to_v_grand_mean": 0.009066950841452944,
+    "relative_to_v_grand_p95": 0.021645800118100585
+   },
+   "kernelshap": {
+    "max_abs_error_mean": 0.01907365484056097,
+    "max_abs_error_p95": 0.027453698797383224,
+    "max_abs_error_worst": 0.027824259063806644,
+    "relative_to_v_grand_mean": 0.025489261949243898,
+    "relative_to_v_grand_p95": 0.03668801422546673
+   }
+  }
+ }
+}
