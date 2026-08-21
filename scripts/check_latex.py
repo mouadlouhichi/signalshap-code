@@ -111,6 +111,9 @@ def main(tex_path: Path | None = None,
         # \extracolsep is a LaTeX kernel tabular primitive, used in the
         # \begin{tabular*}{\textwidth}{@{\extracolsep{\fill}}...} idiom.
         "notag", "extracolsep",
+        # LaTeX kernel; reached when checking the standalone ESM, which uses
+        # the `article` class rather than sn-jnl.
+        "newpage", "tableofcontents", "maketitle", "today", "clearpage",
     }
     defined |= set(re.findall(
         r"\\(?:newcommand|renewcommand|providecommand|DeclareMathOperator"

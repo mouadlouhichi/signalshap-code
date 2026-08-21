@@ -1,20 +1,43 @@
-%% Springer Nature LaTeX template (sn-jnl.cls).
-%% Target: Knowledge and Information Systems (KAIS), Springer, journal 10115.
-%%
-%% GENERATED FILE -- do not edit by hand.
-%%   Generator: scripts/make_kais_main.py
-%%   Numbers:   all tables/figures lifted verbatim from
-%%              paper-kbs/kbs-article.tex via scripts/extract_floats.py, so
-%%              they remain the values scripts/check_paper_numbers.py
-%%              validates against artefacts/.
-%%
-%% Build:  pdflatex kais-article && bibtex kais-article
-%%         && pdflatex kais-article && pdflatex kais-article
-%%
-%% KAIS requires numbered citations in square brackets: Numbered + sn-basic.
-\documentclass[pdflatex,sn-basic,Numbered]{sn-jnl}
+#!/usr/bin/env python3
+"""Build the KAIS main text and its Electronic Supplementary Material.
 
-\usepackage{amsmath}
+Why this is a rewrite and not a filter
+--------------------------------------
+KAIS caps a regular paper at 15,000 words and charges 500 words for each
+full-page display item. The ported manuscript measures ~20,100 body words with
+21 display items, so a mechanical extraction cannot reach the limit: the prose
+itself has to be rewritten. What IS mechanical, and must be, is every number.
+All tables and figures are lifted verbatim from `paper-kbs/kbs-article.tex` via
+`extract_floats.py`, so the numbers the reviewers see remain the numbers
+`check_paper_numbers.py` validates against `artefacts/`.
+
+Split
+-----
+Main text keeps eight display items and the argument. Everything else moves to
+a self-contained ESM whose numbering is S1, S2, ... and whose captions read
+without the main text. Nothing is deleted.
+"""
+
+from __future__ import annotations
+
+import re
+import shutil
+import sys
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from extract_floats import get as float_src  # noqa: E402
+
+REPO = Path(__file__).resolve().parent.parent
+OUT_DIR = REPO / "paper-kais"
+MAIN = OUT_DIR / "kais-article.tex"
+ESM = OUT_DIR / "kais-esm.tex"
+
+# --------------------------------------------------------------------------
+# Preamble shared by both documents.
+# --------------------------------------------------------------------------
+
+COMMON_PACKAGES = r"""\usepackage{amsmath}
 \usepackage{amssymb}
 \usepackage{amsthm}
 \usepackage{graphicx}
@@ -102,8 +125,32 @@
 \newcommand{\LOOr}{\mathrm{LOO}_{\mathrm{rank}}}
 \newcommand{\LOOe}{\mathrm{LOO}_{\mathrm{e2e}}}
 \newcommand{\LOO}{\mathrm{LOO}}
+"""
 
+MAIN_PREAMBLE = r"""%% Springer Nature LaTeX template (sn-jnl.cls).
+%% Target: Knowledge and Information Systems (KAIS), Springer, journal 10115.
+%%
+%% GENERATED FILE -- do not edit by hand.
+%%   Generator: scripts/make_kais_main.py
+%%   Numbers:   all tables/figures lifted verbatim from
+%%              paper-kbs/kbs-article.tex via scripts/extract_floats.py, so
+%%              they remain the values scripts/check_paper_numbers.py
+%%              validates against artefacts/.
+%%
+%% Build:  pdflatex kais-article && bibtex kais-article
+%%         && pdflatex kais-article && pdflatex kais-article
+%%
+%% KAIS requires numbered citations in square brackets: Numbered + sn-basic.
+\documentclass[pdflatex,sn-basic,Numbered]{sn-jnl}
 
+""" + COMMON_PACKAGES
+
+# --------------------------------------------------------------------------
+# Front matter. Title drops the coined method name; abstract is rebuilt to
+# the 150-250 word window with NDCG expanded on first use and no 1e-18.
+# --------------------------------------------------------------------------
+
+FRONT = r"""
 \begin{document}
 
 \title[Ranking-stage attribution is not source removal]{Ranking-stage source
@@ -147,8 +194,13 @@ under a declared ranking-stage game, not retirement guidance.}
 source attribution, two-stage ranking}
 
 \maketitle
+"""
 
+# --------------------------------------------------------------------------
+# Body.
+# --------------------------------------------------------------------------
 
+INTRO = r"""
 \section{Introduction}\label{sec:intro}
 
 A production hybrid recommender is an ensemble of architecturally distinct
@@ -222,67 +274,9 @@ Section~\ref{sec:results} reports attribution and retirement;
 Sections~\ref{sec:discussion} and~\ref{sec:conclusion} discuss and conclude.
 An Electronic Supplementary Material (ESM) holds proofs, full configuration,
 and the robustness suite.
+"""
 
-\begin{figure}[tp]
-\centering
-\iftikzfigure
-\begin{tikzpicture}[node distance=7mm]
-\node[snstage] (src)
-  {\textbf{Source models}\\[-1pt]
-   {\snFigSub five heterogeneous signals}};
-\node[snstage, right=of src] (cand)
-  {\textbf{Shared candidates}\\[-1pt]
-   {\snFigSub one fixed set $\Cu$ per user}};
-\node[snstagekey, right=of cand] (heads)
-  {\textbf{Coalition rankers}\\[-1pt]
-   {\snFigSub $32$ fitted heads}};
-\node[snstagekey, right=of heads] (game)
-  {\textbf{Complete game}\\[-1pt]
-   {\snFigSub $\{v(S):S\subseteq\G\}$}};
-
-\draw[snflow] (src) -- (cand);
-\draw[snflow] (cand) -- (heads);
-\draw[snflow] (heads) -- (game);
-
-\node[snfold, above=8mm of src] (train)
-  {\textbf{TRAIN}\\{\snFigSub fit sources}};
-\node[snfold, above=8mm of heads] (val)
-  {\textbf{VALIDATION}\\{\snFigSub fit heads}};
-\node[snfold, above=8mm of game] (test)
-  {\textbf{TEST}\\{\snFigSub NDCG@10}};
-\draw[sndata] (train) -- (src);
-\draw[sndata] (val) -- (heads);
-\draw[sndata] (test) -- (game);
-
-\coordinate (outmid) at ($(cand)!0.5!(heads)$);
-\node[snremoval, below=24mm of outmid] (removal)
-  {\textbf{Removal effect}\\[-1pt]
-   {\snFigSub ranking-stage $\LOOr(g)$}};
-\node[sncredit, left=6mm of removal] (credit)
-  {\textbf{Credit allocation}\\[-1pt]
-   {\snFigSub Shapley $\varphi_g$}};
-\node[sninteraction, right=6mm of removal] (interaction)
-  {\textbf{Source dependence}\\[-1pt]
-   {\snFigSub interaction $I_{g,h}$}};
-
-\coordinate (busleft) at ($(credit.north)+(0,5mm)$);
-\coordinate (busmid) at ($(removal.north)+(0,5mm)$);
-\coordinate (busright) at ($(interaction.north)+(0,5mm)$);
-\draw[snbranch] (game.south) |- (busmid);
-\draw[snbranch] (busleft) -- (busright);
-\draw[snflow] (busleft) -- (credit.north);
-\draw[snflow] (busmid) -- (removal.north);
-\draw[snflow] (busright) -- (interaction.north);
-
-\end{tikzpicture}%
-\else
-\includegraphics[width=\linewidth]{Fig1.png}
-\fi
-\caption{SignalShap workflow from source fitting and shared candidates to
-exact-game diagnostics.}
-\label{fig:workflow}
-\end{figure}
-
+RELATED = r"""
 \section{Related work and background}\label{sec:related}
 
 \subsection{Related work}
@@ -397,8 +391,9 @@ game. With exactly one relevant test item per user, NDCG@10 reduces to
 $1/\log_2(1+\mathrm{rank})$ when that item appears in the top ten and $0$
 otherwise, so a coalition value is an average of per-user reciprocal-log gains
 over a common item set.
+"""
 
-
+METHOD = r"""
 \section{Methodology}\label{sec:methodology}
 
 \subsection{The cooperative game}\label{sec:game}
@@ -640,36 +635,9 @@ expected rather than anomalous.
 item outside that pool is unreachable by every coalition and contributes zero
 to all 32 values. Recall therefore bounds what the game can observe.
 
+"""
 
-\begin{table}[tp]
-\caption{Corpus and candidate-set preconditions; monotonicity entries are
-material/raw violation counts.}
-\label{tab:preconditions}
-%% \small: a ninth column (validation recall) was added in revision and the
-%% widest row is 90 characters, close to the text block at normal size.
-\small
-\setlength{\tabcolsep}{3pt}
-\begin{tabular}{@{}lrrrrrrrl@{}}
-\toprule
-Corpus & Users / eval. & Items & Density & $N_{\max}$ & Recall & Val.\ & Monot. & Prop.~Section~\ref{sec:theory} \\
- &  &  &  &  & (test) & recall & (mat./raw) &  \\
-\midrule
-MovieLens-1M & 6\,038 / 6\,035 & 3\,533  & $2.697\%$ & 600    & $0.748$ & $0.799$ & $7$ / $26$ & no \\
-Amazon-VG    & 7\,120 / 7\,120 & 3\,516  & $0.469\%$ & 600    & $0.589^{\dagger}$ & $0.648$ & $4$ / $14$ & no \\
-Gowalla      & 8\,865 / 8\,865 & 82\,134 & $0.075\%$ & 11\,623 & $0.450^{\dagger\ddagger}$ & $0.462$ & $6$ / $13$ & no \\
-\bottomrule
-\end{tabular}
-\par
-\smallskip
-\noindent\footnotesize $^{\dagger}$Below the $0.60$ gate; reported under the
-ceiling restriction described in this section (relative contrasts only).
-$^{\ddagger}$Recall on this corpus is bounded above by $\rho = 0.501$, the
-fraction of users whose test venue is not already in their training history
-(Table~ESM~Table~S8); $0.450$ is $0.898$ of that attainable ceiling and
-the gate is unreachable at any $N_{\max}$. The corresponding ceilings are
-$1.000$ for MovieLens-1M and $0.972$ for Amazon-VG.
-\end{table}
-
+PRECONDITIONS_TAIL = r"""
 Candidate recall is an applicability diagnostic, not a quality metric, and the
 $0.60$ gate was fixed before the runs. Only MovieLens-1M clears it in the
 frozen configuration. Amazon-VG reaches $0.589$ at the frozen cap
@@ -681,76 +649,9 @@ pool size and the corpus is retained as a relative stress test, for orderings
 and signs rather than absolute magnitudes. Artefacts failing the gate are
 admitted only via a declared exemption list and carry the restriction string
 into every table built from them.
+"""
 
-\begin{algorithm}[tp]
-\caption{Exact ranking-stage SignalShap}\label{alg:signalshap}
-\fontsize{8.5}{10}\selectfont
-\begin{algorithmic}[1]
-\Require train $\mathcal{D}_{\mathrm{tr}}$, validation $\mathcal{D}_{\mathrm{val}}$,
-         test $\mathcal{D}_{\mathrm{te}}$; sources $\G$, $n=|\G|$; cap $N_{\max}$;
-         growth limit $L=10$; penalty $\lambda$; cutoff $K$
-\Ensure coalition values $v(S)$, source values $\varphi_g$, per-user $\varphi_g(u)$
-\State fit every source $g \in \G$ on $\mathcal{D}_{\mathrm{tr}}$ only
-\State score all eligible items per user from the TRAINING fold only; mask
-       items seen in training \Comment{frozen-state protocol, see below}
-\For{each user $u$}
-  \State order each source list by descending score, then item index
-  \State initialise $N_g\gets\lceil N_{\max}/n\rceil$ for every source
-  \State grow $\bigcup_gT_g(u,N_g)$ as in Eq.~\eqref{eq:candidates}, stopping when
-         $|C_u| \ge N_{\max}$, when every eligible per-source list is
-         exhausted, or after $L$ passes; truncate by reciprocal-rank sum, then
-         item index
-  \If{$|C_u|=0$}
-    \State record an empty-candidate diagnostic and continue
-  \EndIf
-  \State add $u$ to $\Ueval$
-  \State $Z_u \in \mathbb{R}^{|C_u| \times n} \gets$ scores standardised by
-         Eq.~\eqref{eq:candidates} \Comment{constant source rows become zero}
-  \State $\mathbf{y}^{\mathrm{val}}_u, \mathbf{y}^{\mathrm{te}}_u \in \{0,1\}^{|C_u|}
-         \gets$ indicators of the validation and test items
-  \State $b_u \gets \dfrac{1}{|C_u|}\sum_{r=1}^{\min(K,|C_u|)}\dfrac{1}{\log_2(r+1)}$
-         if the test item lies in $C_u$, else $0$
-         \Comment{Equation~\ref{eq:game}; deterministic, no permutation is drawn}
-  \State \textbf{note} $i_u^{\mathrm{val}}$ is NOT added to the history and NOT
-         masked before test scoring: one frozen source state serves both folds
-  \State record whether validation equals test and whether the test item was
-         observed in training
-\EndFor
-\State $A \gets \sum_{u\in\Ueval} |C_u|^{-1} Z_u^\top Z_u$, \quad
-       $c \gets \sum_{u\in\Ueval} |C_u|^{-1} Z_u^\top \mathbf{y}^{\mathrm{val}}_u$
-       \Comment{VALIDATION targets; accumulate once}
-\For{each $S \subseteq \G$}
-  \If{$S = \varnothing$}
-    \State $v_u(S) \gets 0$ \ for all $u\in\Ueval$
-           \Comment{$v(\varnothing) = 0$ exactly and per user}
-  \Else
-    \If{$\lambda > 0$}
-      \State solve $\bigl[A_{SS} + \lambda I_{|S|}\bigr]w^{(S)}=c_S$
-             \Comment{do not form an explicit inverse}
-    \Else
-      \State $w^{(S)} \gets A_{SS}^{+} c_S$
-             \Comment{minimum-norm least squares; $A_{SS}$ is singular under
-             exact duplicates. Singular values below
-             $\varepsilon_{\mathrm{mach}}|S|\sigma_{\max}$ are truncated}
-    \EndIf
-    \State $v_u(S) \gets \NDCGat{K}\bigl(\mathrm{rank}(Z_u^{(S)} w^{(S)});\,
-           \mathbf{y}^{\mathrm{te}}_u\bigr) - b_u$ \ for all $u\in\Ueval$
-           \Comment{descending score, then item index; no tolerance relation}
-  \EndIf
-  \State $v(S) \gets |\Ueval|^{-1}\sum_{u\in\Ueval}v_u(S)$
-\EndFor
-\For{each $g \in \G$}
-  \State $\varphi_g \gets \sum_{S \subseteq \G \setminus \{g\}}
-         \tfrac{|S|!\,(n-|S|-1)!}{n!}\,[v(S \cup \{g\}) - v(S)]$
-  \State $\varphi_g(u) \gets \sum_{S \subseteq \G \setminus \{g\}}
-         \tfrac{|S|!\,(n-|S|-1)!}{n!}\,[v_u(S \cup \{g\}) - v_u(S)]$
-\EndFor
-\State verify efficiency $\sum_g \varphi_g = v(\G)$, the per-user decomposition,
-       source-order invariance of $C_u$, and that no player is structurally
-       degenerate according to Eq.~\eqref{eq:candidates}
-\end{algorithmic}
-\end{algorithm}
-
+VERIFICATION = r"""
 \section{Verifying the aggregation}\label{sec:verification}
 
 Before interpreting any attribution we check the aggregation against
@@ -840,64 +741,16 @@ $cf$--$seq$ at $-0.054$ and $cf$--$pop$ at $-0.025$, both substitutive, and
 $cf$--$pop$ is one of the two declared overlaps. The recovery is partial rather
 than complete, which is what we report. Full semivalue and interaction tables
 are in ESM~S3.
+"""
 
-
+RESULTS = r"""
 \section{Results}\label{sec:results}
 
 \subsection{Allocation and removal disagree}\label{sec:attribution}
 
+"""
 
-\begin{table}[tp]
-\caption{Ten-seed ranking-stage LOO and Shapley attribution. Brackets are
-run-to-run intervals $\bar x \pm t_{0.975,9}\,s_x/\sqrt{10}$. The quantity
-this paper contrasts is the paired gap $\Delta_g = \varphi_g - \LOOr(g)$, so it
-carries its own interval, computed per seed and then aggregated rather than
-differenced from the two marginal means; this is why the gap interval is not
-the difference of the two columns beside it. ``Gap sign'' counts the fits on
-which $\Delta_g$ keeps the sign of its mean. Fourteen of the fifteen cells are
-unanimous; the exception is $rec$ on MovieLens-1M at $9/10$, whose gap is
-$0.4\%$ of $v(\G)$ and which the paper does not interpret. Both material
-disagreements have gap intervals excluding zero, at $38.8\%$ ($cf$,
-MovieLens-1M) and $12.2\%$ ($pop$, Gowalla) of the respective $v(\G)$.}
-\label{tab:loo}
-\small
-\setlength{\tabcolsep}{2.5pt}
-\begin{tabular*}{\textwidth}{@{\extracolsep{\fill}}llrcrc@{}}
-\toprule
-Corpus & Source & $\LOOr$ & Shapley [run interval]
-       & Gap $\varphi_g-\LOOr$ [run interval] & Gap sign \\
-\midrule
-MovieLens-1M & $cf^{\dagger}$ & $-0.00457$ & $+0.01573\ [+0.01542,+0.01604]$ & $+0.02030\ [+0.02007,+0.02053]$ & $10/10$ \\
-             & $ct^{\ddagger}$ & $+0.00052$ & $-0.00016\ [-0.00024,-0.00008]$ & $-0.00068\ [-0.00088,-0.00047]$ & $0/10$ \\
-             & $pop$ & $+0.00070$ & $+0.00643\ [+0.00638,+0.00649]$ & $+0.00573\ [+0.00551,+0.00596]$ & $10/10$ \\
-             & $rec$ & $+0.00010$ & $+0.00032\ [+0.00022,+0.00042]$ & $+0.00022\ [+0.00003,+0.00040]$ & $9/10$ \\
-             & $seq$ & $+0.01745$ & $+0.02993\ [+0.02963,+0.03024]$ & $+0.01249\ [+0.01209,+0.01288]$ & $10/10$ \\
-\midrule
-Amazon-VG    & $cf$ & $+0.00890$ & $+0.01980\ [+0.01937,+0.02022]$ & $+0.01089\ [+0.01062,+0.01117]$ & $10/10$ \\
-             & $ct$ & $+0.00011$ & $+0.00195\ [+0.00183,+0.00207]$ & $+0.00183\ [+0.00165,+0.00201]$ & $10/10$ \\
-             & $pop$ & $+0.00394$ & $+0.00178\ [+0.00166,+0.00190]$ & $-0.00216\ [-0.00244,-0.00188]$ & $0/10$ \\
-             & $rec^{\ddagger}$ & $+0.00014$ & $-0.00049\ [-0.00053,-0.00046]$ & $-0.00063\ [-0.00069,-0.00057]$ & $0/10$ \\
-             & $seq$ & $+0.00761$ & $+0.01883\ [+0.01865,+0.01900]$ & $+0.01122\ [+0.01107,+0.01138]$ & $10/10$ \\
-\midrule
-Gowalla      & $cf$ & $+0.00743$ & $+0.00711\ [+0.00698,+0.00725]$ & $-0.00032\ [-0.00039,-0.00025]$ & $0/10$ \\
-             & $ct$ & $+0.00547$ & $+0.00678\ [+0.00672,+0.00683]$ & $+0.00131\ [+0.00121,+0.00141]$ & $10/10$ \\
-             & $pop^{\dagger}$ & $-0.00156$ & $+0.00051\ [+0.00046,+0.00056]$ & $+0.00207\ [+0.00197,+0.00217]$ & $10/10$ \\
-             & $rec$ & $+0.00001$ & $+0.00040\ [+0.00038,+0.00042]$ & $+0.00039\ [+0.00037,+0.00041]$ & $10/10$ \\
-             & $seq$ & $+0.00093$ & $+0.00225\ [+0.00219,+0.00230]$ & $+0.00132\ [+0.00125,+0.00138]$ & $10/10$ \\
-\bottomrule
-\end{tabular*}
-\par\smallskip
-{\raggedright\footnotesize $^{\dagger}$Material sign flip;
-$^{\ddagger}$sign flip below the $10^{-3}$ materiality threshold.\par}
-\end{table}
-\begin{figure}[tp]
-\centering
-\includegraphics[width=0.7\textwidth]{Fig3.png}
-\caption{Ten-seed mean Shapley versus ranking-stage LOO; the diagonal denotes
-equality.}
-\label{fig:scatter}
-\end{figure}
-
+RESULTS_MID = r"""
 Table~\ref{tab:loo} gives the per-source comparison over ten stochastic fits
 and Figure~\ref{fig:scatter} plots it. Two of the three corpora contain a
 \emph{material} sign disagreement, meaning one whose gap exceeds the $10^{-3}$
@@ -966,70 +819,9 @@ preserves. All three estimands are reported side by side in ESM~Table~S9; their
 orderings agree at $\tau \ge 0.80$ on both corpora where the comparison is
 available.
 
+"""
 
-\begin{table}[tp]
-\caption{MovieLens-1M retirement losses at seed 42; negative values indicate
-improvement after removal.}
-\label{tab:retirement}
-\begin{tabular}{@{}lrrrr@{}}
-\toprule
-Source & Observed loss & Recall after & Shapley & $\LOOr$ \\
-\midrule
-$cf$   & $-0.00468$ & $0.691$ & $+0.01538$ & $-0.00480$ \\
-$rec$  & $-0.00128$ & $0.782$ & $+0.00053$ & $+0.00033$ \\
-$ct$   & $-0.00050$ & $0.785$ & $+0.00002$ & $+0.00115$ \\
-$pop$  & $+0.00253$ & $0.720$ & $+0.00648$ & $+0.00120$ \\
-$seq$  & $+0.01702$ & $0.659$ & $+0.02927$ & $+0.01672$ \\
-\midrule
-\multicolumn{2}{@{}l}{Rank agreement with observed loss}
-      & & $\tau = +0.20$ & $\tau = +1.00$ \\
-\bottomrule
-\end{tabular}
-\end{table}
-\begin{table}[tp]
-\caption{Ten-seed retirement agreement and training-run intervals. Paired
-$\Delta\tau$ is the effect measure; $p_{\mathrm{Holm}}$ adjusts the three
-paired Wilcoxon comparisons as one declared primary family.}
-\label{tab:retire-seeds}
-\centering
-\footnotesize
-\setlength{\tabcolsep}{3pt}
-\begin{tabular}{@{}lcc@{}}
-\toprule
-Corpus & $\tau$ $\LOOr$ & $\tau$ Shapley \\
-\midrule
-MovieLens-1M & $0.96\ [0.90, 1.00]$ & $0.20\ [0.20, 0.20]$
-             \\
-Amazon-VG    & $0.96\ [0.90, 1.00]$ & $0.74\ [0.68, 0.80]$
-             \\
-Gowalla      & $1.00\ [1.00, 1.00]$ & $0.80\ [0.80, 0.80]$
-             \\
-\bottomrule
-\end{tabular}
-
-\smallskip
-\begin{tabular}{@{}lcc@{}}
-\toprule
-Corpus & Paired $\Delta\tau$ & $p_{\mathrm{Holm}}$ \\
-\midrule
-MovieLens-1M & $+0.76\ [+0.70, +0.80]$ & $0.0059$ \\
-Amazon-VG    & $+0.22\ [+0.16, +0.28]$ & $0.0059$ \\
-Gowalla      & $+0.20\ [+0.20, +0.20]$ & $0.0059$ \\
-\bottomrule
-\end{tabular}
-
-\smallskip
-\begin{tabular}{@{}lcc@{}}
-\toprule
-Corpus & $\LOOr$ correct [Wilson] & Shapley correct [Wilson] \\
-\midrule
-MovieLens-1M & $100\%\ [72, 100]$ & $0\%\ [0, 28]$ \\
-Amazon-VG    & $90\%\ [60, 98]$   & $50\%\ [24, 76]$ \\
-Gowalla      & $100\%\ [72, 100]$ & $0\%\ [0, 28]$ \\
-\bottomrule
-\end{tabular}
-\end{table}
-
+RESULTS_TAIL = r"""
 The comparison is not tautological, and the reason is the distinction fixed in
 Section~\ref{sec:background}. The LOO column of Table~\ref{tab:retirement} is
 $\LOOr$, computed on the same kind of fixed-candidate game as the Shapley
@@ -1070,8 +862,9 @@ Shapley averages over coalitions in which $cf$ has no substitute and therefore
 assigns the capability positive value \emph{under the declared game}. We say
 that rather than ``correctly'': no external ground truth for the allocation
 exists, and the two statements describe different games.
+"""
 
-
+DISCUSSION = r"""
 \section{Discussion}\label{sec:discussion}
 
 The two rules answer different questions, and Table~\ref{tab:decisions-kais}
@@ -1171,8 +964,9 @@ Future work: cost-aware characteristic functions that price latency and
 maintenance; principled sampling beyond $n \approx 12$; graph-neural and
 Transformer components as players rather than baselines; and a repeat-aware
 protocol for check-in data, where the retrievability ceiling bites hardest.
+"""
 
-
+BACK = r"""
 \backmatter
 
 \bmhead{Acknowledgements}
@@ -1235,3 +1029,458 @@ Not applicable.
 \bibliography{paper}
 
 \end{document}
+"""
+
+
+#: Cross-references inside lifted floats that point at material which the
+#: split moved to the ESM, or at equation labels this rewrite renamed. Left
+#: unrewritten these render as `??`, which `test_kais_split.py` catches.
+REF_FIXUPS = {
+    r"\ref{tab:repeats}": "ESM~Table~S8",
+    r"\ref{prop:loo}": "Section~\\ref{sec:theory}",
+    r"\ref{eq:cand}": r"\ref{eq:candidates}",
+    r"\ref{eq:zscore}": r"\ref{eq:candidates}",
+    r"\ref{eq:baseline}": r"\ref{eq:game}",
+}
+
+
+def _fix_refs(src: str) -> str:
+    for old, new in REF_FIXUPS.items():
+        src = src.replace(old, new)
+        # \eqref carries its own parentheses; keep it valid when retargeted.
+        src = src.replace(old.replace(r"\ref{", r"\eqref{"),
+                          new.replace(r"\ref{", r"\eqref{")
+                          if new.startswith("\\ref{") else new)
+    return src
+
+
+#: Section labels that live in the main article. The ESM is compiled as its
+#: own document, so a \ref to one of these would render as `??`. Springer also
+#: asks that supplementary captions be readable on their own, so the right fix
+#: is prose naming the main article rather than a dangling cross-reference.
+ESM_SECTION_NAMES = {
+    "sec:game": "the cooperative game",
+    "sec:algorithm": "the algorithm",
+    "sec:setup": "the experimental setup",
+    "sec:preconditions": "the preconditions",
+    "sec:recovery": "the verification section",
+    "sec:validating": "the verification section",
+    "sec:alternatives": "the semivalue comparison",
+    "sec:results": "the results",
+    "sec:estimands": "the retirement comparison",
+    "sec:threats": "the threats to validity",
+    "sec:theory": "the formal properties",
+    "sec:discussion": "the discussion",
+    "sec:intro": "the introduction",
+    "sec:background": "the background",
+    "sec:related": "the related work",
+    "sec:conclusion": "the conclusion",
+    "sec:limitations": "the limitations",
+    "sec:explainability": "the explainability scope",
+    "sec:sources": "the source definitions",
+    "sec:hyperparams": "the configuration",
+    "sec:analytic": "the analytic games",
+    "app:fusion": "this section",
+}
+
+
+def _esm_localise(src: str) -> str:
+    """Rewrite main-article cross-references for the standalone supplement."""
+    def repl(m: re.Match[str]) -> str:
+        label = m.group(2)
+        if label in ESM_SECTION_NAMES:
+            return ESM_SECTION_NAMES[label] + " of the main article"
+        return m.group(0)
+
+    # "Section~\ref{sec:game}" -> "the cooperative game of the main article"
+    src = re.sub(r"(?:Section|Sec\.|Appendix)~?\\ref\{([^}]*)\}",
+                 lambda m: (ESM_SECTION_NAMES[m.group(1)] + " of the main article"
+                            if m.group(1) in ESM_SECTION_NAMES else m.group(0)),
+                 src)
+    src = re.sub(r"\\(ref|eqref)\{(sec:[^}]*|app:[^}]*)\}", repl, src)
+    # Equation labels defined only in the main article. `_fix_refs` may have
+    # already retargeted eq:baseline to eq:game, which is also main-only.
+    src = re.sub(r"Equation~?\\eqref\{eq:game\}",
+                 "the characteristic function of the main article", src)
+    src = re.sub(r"\\eqref\{eq:game\}",
+                 "the characteristic function of the main article", src)
+    src = re.sub(r"\\ref\{eq:game\}",
+                 "the characteristic function of the main article", src)
+    # Equation labels that live only in the main article.
+    src = re.sub(r"Equation~?\\eqref\{eq:baseline\}",
+                 "the baseline definition in the main article", src)
+    src = re.sub(r"\\eqref\{eq:baseline\}",
+                 "the baseline definition in the main article", src)
+    src = re.sub(r"\\ref\{eq:baseline\}",
+                 "the baseline definition in the main article", src)
+    return src
+
+
+def build_main() -> str:
+    parts = [MAIN_PREAMBLE, FRONT, INTRO]
+
+    # Figure 1 is the pipeline diagram: it orients the reader before any
+    # formalism and is one of the eight display items the plan keeps.
+    parts.append(_esm_localise(_fix_refs(float_src("fig:workflow", star=False, placement="tp"))))
+
+    parts.append(RELATED)
+    parts.append(METHOD)
+
+    # Preconditions table carries the recall gate, rho and monotonicity.
+    parts.append(_fix_refs(
+        float_src("tab:preconditions", star=False, placement="tp")))
+    parts.append(PRECONDITIONS_TAIL)
+
+    # Algorithm stays in main: reviewers ask for it and it is compact.
+    parts.append(_fix_refs(float_src("alg:signalshap", placement="tp")))
+
+    parts.append(VERIFICATION)
+
+    parts.append(RESULTS)
+    parts.append(_esm_localise(float_src("tab:loo", star=False, placement="tp")))
+    parts.append(float_src("fig:scatter", star=False, placement="tp"))
+    parts.append(RESULTS_MID)
+    parts.append(_esm_localise(float_src("tab:retirement", star=False, placement="tp")))
+    parts.append(float_src("tab:retire-seeds", star=False, placement="tp"))
+    parts.append(RESULTS_TAIL)
+
+    parts.append(DISCUSSION)
+    parts.append(BACK)
+    return "\n".join(parts)
+
+
+# --------------------------------------------------------------------------
+# ESM. Self-contained, S-numbered, captions readable without the main text.
+# --------------------------------------------------------------------------
+
+ESM_PREAMBLE = r"""%% Electronic Supplementary Material for the KAIS submission.
+%%
+%% GENERATED FILE -- do not edit by hand. Generator: scripts/make_kais_main.py
+%%
+%% Self-contained by design: Springer asks that supplementary captions be
+%% intelligible without the main text, so each float below restates what it
+%% shows. Floats are lifted verbatim from paper-kbs/kbs-article.tex, so every
+%% number matches the artefact-validated source.
+\documentclass[11pt,a4paper]{article}
+\usepackage[margin=25mm]{geometry}
+""" + COMMON_PACKAGES + r"""
+\usepackage{hyperref}
+
+%% S-numbering for every float and section.
+\renewcommand{\thesection}{S\arabic{section}}
+\renewcommand{\thetable}{S\arabic{table}}
+\renewcommand{\thefigure}{S\arabic{figure}}
+\renewcommand{\theequation}{S\arabic{equation}}
+
+\title{Electronic Supplementary Material\\[2mm]
+\large Ranking-stage source attribution is not source removal:\\
+exact Shapley analysis of five-source hybrid recommenders}
+\author{Mouad Louhichi \and Redwane Nesmaoui \and Mohamed Lazaar}
+\date{}
+
+\begin{document}
+\maketitle
+
+\noindent This supplement holds the proofs, the full experimental
+configuration, and the robustness suite for the main article. Sections are
+numbered S1--S5 and are referenced from the main text. Every table and figure
+here is reproduced from the same artefacts as the main article; captions are
+written to be read independently.
+
+\tableofcontents
+\newpage
+"""
+
+ESM_S1 = r"""
+\section{Redundancy requires monotonicity}\label{esm:proofs}
+
+The main text states that a natural redundancy property is false without
+monotonicity. We record the property, the counterexample, and the corrected
+statement here.
+
+\paragraph{The property as usually stated}
+If a source is duplicated into the system, one might expect each copy to
+receive non-negative credit. This is false for general characteristic
+functions.
+
+\paragraph{Counterexample}
+Take three players $\{a, b, c\}$ where $b$ and $c$ are exact duplicates, and
+let $v$ be non-monotone: $v(\{a\}) = 1$, $v(\{a,b\}) = v(\{a,c\}) = 0.5$,
+$v(\{b\}) = v(\{c\}) = v(\{b,c\}) = 0$, $v(\{a,b,c\}) = 0.5$. The duplicated
+pair is symmetric, so $\varphi_b = \varphi_c$ by the symmetry axiom, and
+efficiency gives $\varphi_a + 2\varphi_b = 0.5$. Direct enumeration yields
+$\varphi_b = \varphi_c = -1/12 < 0$. Both copies receive negative credit.
+
+\paragraph{Corrected statement}
+If $v$ is monotone, that is $v(S) \le v(T)$ whenever $S \subseteq T$, then
+every marginal contribution is non-negative and hence $\varphi_g \ge 0$ for all
+$g$, including duplicated players. Monotonicity is the missing hypothesis.
+
+\paragraph{Why this matters empirically}
+All three fitted games in the main article are non-monotone
+(Table~2 of the main text records the material violation counts), so the
+property does not apply to our data. Negative Shapley values in the main
+results are therefore faithful computations under a non-monotone game, not
+implementation faults. The harmful analytic game in
+Table~\ref{tab:analytic} confirms that the implementation recovers a negative
+value exactly when one is correct.
+"""
+
+ESM_S2_HEAD = r"""
+\section{Notation and full configuration}\label{esm:config}
+
+Table~\ref{tab:notation} fixes notation. Table~\ref{tab:hyper} gives the
+complete experimental configuration, including every hyperparameter, its
+value, and how it was selected. Table~\ref{tab:provenance} maps each group of
+reported results to the artefact, platform, candidate rule and seed range that
+produced it, including the one group that was regenerated under a different
+candidate rule.
+"""
+
+ESM_S3_HEAD = r"""
+\section{Verification detail and the robustness suite}\label{esm:robustness}
+
+\subsection{Analytic games and duplicate injection}
+
+Table~\ref{tab:analytic} lists the six analytic games with known Shapley
+vectors and the maximum absolute recovery error on each, which is zero
+throughout. Table~\ref{tab:recovery} reports the duplicate-injection
+diagnostics on MovieLens-1M: an exact clone of the collaborative source
+receives credit equal to its original to numerical precision, while
+leave-one-out assigns both clones zero.
+
+\subsection{Alternative values and interactions}
+
+Table~\ref{tab:taylor} gives the pairwise Shapley interaction indices on
+MovieLens-1M over ten stochastic fits. The two most negative pairs,
+$cf$--$seq$ and $cf$--$pop$, are the substitutions declared in advance in the
+main text, so the declared overlap is partially recovered by the data.
+
+Semivalue comparison, summarised in the main text, is as follows.
+On MovieLens-1M, Banzhaf and both binomial semivalues rank the five sources
+identically to Shapley. The size-uniform semivalue is algebraically identical
+to Shapley, since
+$|S|!\,(n-|S|-1)!/n! = 1/\bigl(n\binom{n-1}{|S|}\bigr)$, and agrees to exactly
+zero difference; we note this because the identity is easy to miss and makes
+that particular comparison vacuous. On Gowalla, Banzhaf and both binomial
+semivalues agree with Shapley at $\tau = 0.80$; the $q = 0.25$ semivalue
+promotes $ct$ over $cf$ across a margin of $0.00037$, and Banzhaf and
+$q = 0.75$ transpose $pop$ and $rec$ across a margin of $0.00017$. On
+Amazon-VG the disagreement is stronger and we report it as a limitation of the
+robustness claim: $\tau = 0.60$, with Shapley leading on $cf$ and Banzhaf on
+$seq$.
+
+\subsection{Sensitivity analyses}
+
+Table~\ref{tab:ablations} summarises the ablation and sensitivity suite.
+Figure~\ref{fig:robustness} shows the candidate-cap and ridge-penalty sweeps at
+seed 42, and Figure~\ref{fig:redundancy} the pairwise source-score rank
+correlations by corpus. Figure~\ref{fig:shares} gives per-source Shapley values
+with seed-based intervals on all three corpora.
+
+The headline robustness results, each verified against its artefact, are:
+the ridge penalty $\lambda$ swept over eight orders of magnitude leaves both
+material sign flips intact; three source-blind candidate pool rules leave both
+flips intact, and oracle-pool recall equals $\rho$ exactly on every corpus,
+which independently confirms the dilution identity; Gaussian score perturbation
+at $\sigma \in \{0.1, 0.5\}$ in units of each source's own standard deviation
+leaves both flips intact on all three corpora; refreshing the frozen temporal
+state raises $v(\G)$ on MovieLens-1M by $31.7\%$ $[+30.2\%, +33.1\%]$ while
+preserving the ordering at $\tau = 1.00$ on all ten seeds; and swapping the
+payoff metric to Recall@10 or MRR@10 preserves the ordering at $\tau = 1.00$.
+
+ESM~Table~S8 audits repeat events, which is what produces the
+retrievability ceiling on Gowalla: $49.90\%$ of evaluated users there have
+their test venue already in training, and masking makes it unretrievable, so
+those users contribute zero to every coalition.
+
+\subsection{Three estimands}
+
+Table~\ref{tab:estimands} reports the same seed-42 game under three
+constructions: the refitted head used in the main text, a fixed grand-coalition
+head merely masked to each coalition, and a fully end-to-end game in which each
+coalition retrieves its own candidates. The refitted-head rows use the final
+source-symmetric candidate rule; the other two predate that regeneration and
+are retained as a sensitivity analysis, so the table compares \emph{orderings}
+across estimands rather than numerical estimates from a single artefact.
+"""
+
+ESM_S4_HEAD = r"""
+\section{Sampling error against exact enumeration}\label{esm:sampling}
+
+The main text reports that permutation sampling at $M = 500$ has a
+95th-percentile error exceeding both the ten-seed spread and the materiality
+threshold. Table~\ref{tab:sampling-esm} gives the full grid behind
+Figure~8 of the main article.
+
+\begin{table}[htbp]
+\centering
+\caption{Sampled Shapley error against exact enumeration on a complete
+32-coalition game, over 20 repeats per budget. Values are
+$\|\hat\varphi - \varphi\|_\infty$ as a percentage of $v(\G)$. For reference,
+the ten-seed spread of the fitted values is $2.22\%$ and the $10^{-3}$
+materiality threshold is $1.91\%$ of $v(\G)$.}
+\label{tab:sampling-esm}
+\small
+\begin{tabular}{@{}lrrrr@{}}
+\toprule
+& \multicolumn{2}{c}{Permutation sampling} & \multicolumn{2}{c}{KernelSHAP} \\
+\cmidrule(lr){2-3}\cmidrule(lr){4-5}
+Budget $M$ & Mean & p95 & Mean & p95 \\
+\midrule
+$50$   & $6.68\%$ & $10.84\%$ & $20.85\%$ & $25.93\%$ \\
+$100$  & $3.32\%$ & $6.33\%$  & $11.44\%$ & $18.60\%$ \\
+$500$  & $1.62\%$ & $2.73\%$  & $4.87\%$  & $9.88\%$ \\
+$2000$ & $0.90\%$ & $2.16\%$  & $2.34\%$  & $3.67\%$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The measurement uses the end-to-end recall game, which is the only complete
+32-coalition characteristic function persisted in the released artefacts.
+Enumeration on it satisfies efficiency to $1.1\times10^{-16}$, confirming the
+estimator harness. Absolute errors do not transfer to the NDCG@10 game of the
+main text; errors relative to $v(\G)$ do, which is why the table is expressed
+that way. KernelSHAP is the weaker estimator here because at $n = 5$ its kernel
+concentrates on few coalition sizes.
+"""
+
+ESM_S6_HEAD = r"""
+\section{Full decision-to-estimand mapping}\label{esm:decisions}
+
+The main article gives a five-row summary of which estimand answers which
+question. Table~\ref{tab:decisions} is the complete mapping, including the rows
+that were compressed for length. It records, for each decision a practitioner
+might want to make, the quantity that actually answers it and whether this
+study establishes that quantity or leaves it open.
+"""
+
+ESM_S5_HEAD = r"""
+\section{Attribution-derived fusion: a negative result}\label{esm:fusion}
+
+This section reports an experiment that did not work. We include it because the
+natural next step after allocating credit is to \emph{use} the allocation, and
+a reader is entitled to know that we tried and that it failed.
+
+We mapped Shapley values to fusion weights, both globally and per user segment,
+and compared the resulting ranker against the matched global head on the full
+catalogue. Attribution-derived fusion gives no resolvable gain. Fusion weights
+never see test outcomes, so this is not a leakage artefact; the allocation
+simply is not a good weight vector, which is consistent with the main article's
+position that the allocation is descriptive rather than prescriptive.
+
+Figure~\ref{fig:fusion} shows the full-catalogue comparison and
+Figure~\ref{fig:segments} the descriptive segment-level values. Segment
+heterogeneity is descriptive only: segments were not pre-declared and the
+comparison is not powered for segment-level inference. No cross-corpus omnibus
+ranking is computed, because the corpora differ in protocol and cannot be
+pooled.
+
+This appendix is a negative result about one downstream use of the
+attributions. It is not evidence for or against their correctness, which rests
+on the checks in Section~\ref{esm:robustness}.
+"""
+
+
+def _esm_float(label: str, *, star: bool = False,
+               placement: str = "htbp") -> str:
+    """Lift a float into the supplement, localising its cross-references.
+
+    Every ESM float goes through here, so no float can accidentally keep a
+    dangling reference to a main-article section.
+    """
+    return _esm_localise(_fix_refs(
+        float_src(label, star=star, placement=placement)))
+
+
+def build_esm() -> str:
+    parts = [ESM_PREAMBLE, ESM_S1, ESM_S2_HEAD]
+
+    # S2: notation and configuration.
+    parts.append(_esm_float("tab:notation"))
+    parts.append(_esm_float("tab:hyper"))
+    parts.append(_esm_float("tab:provenance"))
+
+    # S3: verification detail and the robustness suite.
+    parts.append(ESM_S3_HEAD)
+    parts.append(_esm_float("tab:analytic"))
+    parts.append(_esm_float("tab:recovery"))
+    parts.append(_esm_float("tab:taylor"))
+    parts.append(_esm_float("tab:ablations"))
+    parts.append(_esm_float("tab:repeats"))
+    parts.append(_esm_float("tab:estimands"))
+    parts.append(_esm_float("fig:shares"))
+    parts.append(_esm_float("fig:robustness"))
+    parts.append(_esm_float("fig:redundancy"))
+
+    # S4: sampling error (table authored inline, no lifted float).
+    parts.append(ESM_S4_HEAD)
+
+    # S5: the full decision mapping.
+    parts.append(ESM_S6_HEAD)
+    parts.append(_esm_float("tab:decisions"))
+
+    # S6: the fusion negative result.
+    parts.append(ESM_S5_HEAD)
+    parts.append(_esm_float("fig:fusion"))
+    parts.append(_esm_float("fig:segments"))
+
+    parts.append("\n\\end{document}\n")
+    return "\n".join(parts)
+
+
+def count_words(tex: str) -> int:
+    """Approximate body word count: prose only, excluding floats and maths.
+
+    Deliberately conservative in the same direction as texcount so the number
+    can be compared against the 15,000 limit without flattering ourselves.
+    """
+    body = tex[tex.index(r"\section{Introduction}"):]
+    body = body[:body.index(r"\backmatter")] if r"\backmatter" in body else body
+    body = re.sub(r"(?<!\\)%.*", "", body)
+    body = re.sub(r"\\begin\{tikzpicture\}.*?\\end\{tikzpicture\}", "", body, flags=re.S)
+    body = re.sub(
+        r"\\begin\{(table|figure|algorithm|tabular|tabularx|tabular\*|align|equation|aligned|algorithmic)\*?\}"
+        r".*?\\end\{\1\*?\}", "", body, flags=re.S)
+    body = re.sub(r"\$[^$]*\$", " X ", body)
+    body = re.sub(r"\\[a-zA-Z@]+\*?(\[[^\]]*\])?", " ", body)
+    body = re.sub(r"[{}&\\]", " ", body)
+    return len(body.split())
+
+
+def main() -> int:
+    main_tex = build_main()
+    esm_tex = build_esm()
+
+    OUT_DIR.mkdir(exist_ok=True)
+    MAIN.write_text(main_tex, encoding="utf-8")
+    ESM.write_text(esm_tex, encoding="utf-8")
+
+    for name in ("sn-jnl.cls", "sn-basic.bst"):
+        shutil.copyfile(REPO / "paper" / name, OUT_DIR / name)
+    shutil.copyfile(REPO / "paper-kbs" / "paper.bib", OUT_DIR / "paper.bib")
+
+    figdir = OUT_DIR / "figures"
+    figdir.mkdir(exist_ok=True)
+    for fig in sorted((REPO / "paper-kbs" / "figures").glob("*.png")):
+        shutil.copyfile(fig, figdir / fig.name)
+
+    n_tab = len(re.findall(r"\\begin\{table\}", main_tex))
+    n_fig = len(re.findall(r"\\begin\{figure\}", main_tex))
+    n_alg = len(re.findall(r"\\begin\{algorithm\}", main_tex))
+    words = count_words(main_tex)
+
+    print(f"wrote {MAIN.relative_to(REPO)}")
+    print(f"  body words (approx)  {words}")
+    print(f"  display items        {n_tab} tables + {n_fig} figures "
+          f"+ {n_alg} algorithm = {n_tab + n_fig + n_alg}")
+    print(f"wrote {ESM.relative_to(REPO)}")
+    print(f"  tables {len(re.findall(r'.begin.table.', esm_tex))}  "
+          f"figures {len(re.findall(r'.begin.figure.', esm_tex))}")
+    if words > 15000:
+        print("  WARNING: over the KAIS 15,000-word limit")
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
