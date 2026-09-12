@@ -816,7 +816,7 @@ Gowalla      & 8\,865 / 8\,865 & 82\,134 & $0.075\%$ & 11\,623 & $0.450^{\dagger
 ceiling restriction described in this section (relative contrasts only).
 $^{\ddagger}$Recall on this corpus is bounded above by $\rho = 0.501$, the
 fraction of users whose test venue is not already in their training history
-(ESM~Table~S8); $0.450$ is $0.898$ of that attainable ceiling and
+(@@ESMTAB:tab:repeat@@); $0.450$ is $0.898$ of that attainable ceiling and
 the gate is unreachable at any $N_{\max}$. The corresponding ceilings are
 $1.000$ for MovieLens-1M and $0.972$ for Amazon-VG. At $N_{\max}=1\,200$,
 Amazon-VG test recall is $0.750$ and the attribution signs and orderings are
@@ -847,7 +847,7 @@ satisfies constraints fixed in advance.
 \subsection{Known-answer games}
 Six analytic games with closed-form Shapley vectors, spanning additive,
 substitutive, complementary, null-player, harmful and unanimity structures, are
-recovered with maximum absolute error $0$ (ESM~Table~S1). The null-player and
+recovered with maximum absolute error $0$ (@@ESMTAB:tab:analytic@@). The null-player and
 harmful games matter most here: our fitted games are non-monotone and produce
 negative $\varphi_g$, so it is necessary to establish that a negative value is
 a faithful computation rather than an implementation artefact, and the harmful
@@ -1106,7 +1106,7 @@ grand-coalition head $w^{(\G)}$ fixed and merely masking it to $S$ gives
 $v_{\mathrm{fixed}}$; letting each coalition retrieve its own $C_u(S)$ and
 refit gives $v_{\mathrm{e2e}}$, under which coalition values are no longer
 comparable across a fixed item set, which is exactly the property the main game
-preserves. All three estimands are reported side by side in ESM~Table~S9; their
+preserves. All three estimands are reported side by side in @@ESMTAB:tab:estimands@@; their
 orderings agree at $\tau \ge 0.80$ on both corpora where the comparison is
 available.
 
@@ -1292,7 +1292,7 @@ and were regenerated under the final source-symmetric candidate rule. Several
 labelled single-seed diagnostics predate that regeneration and are sensitivity
 analyses rather than confirmatory evidence; on MovieLens-1M the two rules agree
 to $\max_g|\Delta\varphi_g| = 2.8\times10^{-5}$ with identical ordering.
-ESM~Table~S3 lists which group is which, including the Gowalla diagnostics that
+@@ESMTAB:tab:provenance@@ lists which group is which, including the Gowalla diagnostics that
 could not be regenerated because five dense $8\,865\times82\,134$ score
 matrices exhausted memory.
 

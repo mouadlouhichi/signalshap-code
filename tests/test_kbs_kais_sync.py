@@ -35,18 +35,33 @@ def _kbs_body(text: str) -> str:
 
 
 def _normalise(body: str) -> str:
-    """Undo the intended, purely typographic differences."""
+    """Undo the intended, purely typographic and venue-naming differences."""
     for env in ("table", "figure", "algorithm"):
         body = body.replace(f"\\begin{{{env}*}}", f"\\begin{{{env}}}")
         body = body.replace(f"\\end{{{env}*}}", f"\\end{{{env}}}")
     body = body.replace(r"\paragraph{", r"\subsubsection{")
     body = body.replace(r"\includegraphics[width=\columnwidth]{Fig3.png}",
                         r"\includegraphics[width=0.7\textwidth]{Fig3.png}")
+    # "Online Resource 1" is Springer's term for the supplement; Elsevier uses
+    # "supplementary material". A venue leak, so the generator rewrites it.
+    body = body.replace(
+        "The electronic supplementary material (ESM) accompanying this article "
+        "contains",
+        "Online Resource~1 (Electronic Supplementary Material; ESM) contains")
+    # The KAIS source carries @@ESMTAB:label@@ placeholders, which the
+    # generator resolves against the supplement's real table numbering.
+    body = re.sub(r"ESM Table~S\d+", "@@ESMTAB@@", body)
+    body = re.sub(r"@@ESMTAB:[^@]+@@", "@@ESMTAB@@", body)
     return body
 
 
 def test_bodies_agree_modulo_the_publisher_wrapper() -> None:
-    assert _normalise(_kbs_body(KBS.read_text())) == _kais_body(KAIS.read_text())
+    """Compared on whitespace-collapsed text: the generator rewrites some
+    sentences, and LaTeX line wrapping differs afterwards without any content
+    differing."""
+    a = " ".join(_normalise(_kbs_body(KBS.read_text())).split())
+    b = " ".join(_normalise(_kais_body(KAIS.read_text())).split())
+    assert a == b
 
 
 def test_every_reported_number_is_identical() -> None:
@@ -57,7 +72,17 @@ def test_every_reported_number_is_identical() -> None:
         t = re.sub(r"\\includegraphics\[[^\]]*\]", "", t)
         return re.findall(r"[-+]?\d*\.\d+|\d+", t)
 
-    assert nums(_kais_body(KAIS.read_text())) == nums(_kbs_body(KBS.read_text()))
+    # ESM table numbers are resolved from placeholders by the generator, so
+    # they are structurally absent on the KAIS side; strip them both ways.
+    def clean(t: str) -> list[str]:
+        t = re.sub(r"ESM Table~S\d+", " ", t)
+        t = re.sub(r"@@ESMTAB:[^@]+@@", " ", t)
+        # "Online Resource~1" carries a numeral that the Elsevier rewrite
+        # drops. It names the supplement, not a result.
+        t = t.replace("Online Resource~1", "the supplement")
+        return nums(t)
+
+    assert clean(_kais_body(KAIS.read_text())) == clean(_kbs_body(KBS.read_text()))
 
 
 def test_supplements_differ_only_in_the_title_block() -> None:
@@ -233,3 +258,49 @@ def test_baselines_reproduce_the_published_shapley_and_loo() -> None:
             ref["shapley"][g], abs=1e-12), g
         assert data["rules"]["loo_rank"]["values"][g] == pytest.approx(
             ref["loo"][g], abs=1e-12), g
+
+
+def test_esm_table_citations_point_at_the_right_table() -> None:
+    """Hand-written S-numbers desynchronised: after the supplement was
+    restructured, three of the four cited numbers pointed at the wrong table
+    (repeat audit cited S8/renders S9, estimands S9/S10, provenance S3/S4).
+    The numbers are now computed, so this pins the resolution."""
+    sys.path.insert(0, str(REPO / "scripts"))
+    import importlib
+    mod = importlib.import_module("make_kbs_from_kais")
+
+    numbering = mod.esm_table_numbers(KBS_ESM.read_text())
+    inverse = {v: k for k, v in numbering.items()}
+    main = KBS.read_text()
+
+    # Each claim must cite the table that actually carries it.
+    expected = {
+        "tab:repeat": "not already in their training history",
+        "tab:estimands": "All three estimands are reported side by side",
+        "tab:provenance": "lists which group is which",
+        "tab:analytic": "maximum absolute error",
+    }
+    for label, phrase in expected.items():
+        number = numbering[label]
+        assert phrase in main, f"anchor prose for {label} missing"
+        idx = main.index(phrase)
+        # The citation may sit just before or just after its anchor phrase.
+        window = main[max(0, idx - 200):idx + 400]
+        assert number in window, (
+            f"{label} renders as {number} but the citation near "
+            f"{phrase!r} does not use that number")
+
+    for m in re.finditer(r"ESM Table~S\d+", main):
+        assert m.group(0) in inverse, f"{m.group(0)} does not exist in the ESM"
+
+
+def test_no_springer_supplement_terminology_in_the_elsevier_build() -> None:
+    """"Online Resource 1" is Springer's name for supplementary material."""
+    assert "Online Resource" not in KBS.read_text()
+    assert "Online Resource" not in KBS_ESM.read_text()
+
+
+def test_cover_letter_targets_the_right_journal() -> None:
+    letter = (REPO / "paper-kbs-elsevier" / "cover-letter.tex").read_text()
+    assert "Knowledge-Based Systems" in letter
+    assert "Knowledge and Information Systems" not in letter

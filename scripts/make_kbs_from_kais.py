@@ -205,6 +205,28 @@ content of the publication. No AI system is listed as an author.
 """
 
 
+
+def esm_table_numbers(esm_tex: str) -> dict[str, str]:
+    r"""Map ESM table labels to their rendered S-numbers.
+
+    The main article cites the supplement by number. Hand-written numbers
+    desynchronise the moment a table moves, and they did: after the supplement
+    was restructured, three of the four cited numbers pointed at the wrong
+    table. The repeat audit was cited as S8 but renders as S9, the estimand
+    table as S9 but renders as S10, and the provenance table as S3 but renders
+    as S4. Computing them removes the failure mode.
+    """
+    body = esm_tex[esm_tex.index(r"\begin{document}"):]
+    out: dict[str, str] = {}
+    n = 0
+    for m in re.finditer(r"\\begin\{table\}(.*?)\\end\{table\}", body, re.S):
+        n += 1
+        lab = re.search(r"\\label\{([^}]*)\}", m.group(1))
+        if lab:
+            out[lab.group(1)] = "ESM Table~S%d" % n
+    return out
+
+
 def extract(src: str) -> tuple[str, str, str]:
     """Split the KAIS source into (tikz/macro block, abstract, body)."""
     # Everything between the figure-lettering macros and \begin{document} is
@@ -296,6 +318,7 @@ def build_esm() -> tuple[str, int]:
 def main() -> int:
     src = SRC.read_text(encoding="utf-8")
     setup, abstract, body = extract(src)
+    esm, n_retitle = build_esm()
 
     body, n_wide = widen_floats(body)
     body = retarget_graphics(body)
@@ -304,13 +327,38 @@ def main() -> int:
     # level cramped.
     body, n_sub = re.subn(r"\\subsubsection\{", r"\\paragraph{", body)
 
+    # Resolve @@ESMTAB:label@@ against the supplement's ACTUAL numbering.
+    numbering = esm_table_numbers(esm)
+    missing = []
+
+    def _resolve(m):
+        label = m.group(1)
+        if label not in numbering:
+            missing.append(label)
+            return m.group(0)
+        return numbering[label]
+
+    body = re.sub(r"@@ESMTAB:([^@]+)@@", _resolve, body)
+    abstract = re.sub(r"@@ESMTAB:([^@]+)@@", _resolve, abstract)
+    if missing:
+        raise SystemExit(f"ESM placeholder for unknown label(s): {missing}")
+    if "@@ESMTAB:" in body:
+        raise SystemExit("unresolved ESM placeholder")
+
+    # "Online Resource 1" is Springer's name for the supplement. Elsevier calls
+    # it supplementary material, and the KBS supplement is titled that way, so
+    # leaving the Springer term in the body is a venue leak.
+    body = body.replace(
+        "Online Resource~1 (Electronic Supplementary Material; ESM) contains",
+        "The electronic supplementary material (ESM) accompanying this article "
+        "contains")
+
     front = FRONTMATTER.replace("%(ABSTRACT)s", abstract)
     out = PREAMBLE + "\n" + setup + front + "\n" + body + "\n" + BACKMATTER
 
     KBS_DIR.mkdir(exist_ok=True)
     DST.write_text(out, encoding="utf-8")
 
-    esm, n_retitle = build_esm()
     (KBS_DIR / "supplementary-material.tex").write_text(esm, encoding="utf-8")
 
     # KBS wants Highlights as a separate item, max five bullets of <= 85
