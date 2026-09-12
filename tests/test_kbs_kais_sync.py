@@ -402,3 +402,31 @@ def test_no_float_barriers_in_the_two_column_body() -> None:
     assert "\n\\FloatBarrier" not in body
     assert r"\usepackage[section]{placeins}" not in text
     assert r"\usepackage{placeins}" in text
+
+
+def test_full_width_floats_use_a_full_width_tabular() -> None:
+    r"""A starred float spans both columns, but a plain `tabular` inside it
+    sets to its natural width, so a table of narrow numeric columns huddles on
+    the left and leaves the rest of the span empty. Table 6 (retirement) and
+    Table 3 (preconditions) both did this. The fix is `tabular*` with
+    `\extracolsep{\fill}`, or `tabularx`."""
+    text = KBS.read_text()
+    for m in re.finditer(r"\\begin\{table\*\}(.*?)\\end\{table\*\}", text, re.S):
+        inner = m.group(1)
+        lab = re.search(r"\\label\{([^}]*)\}", inner)
+        label = lab.group(1) if lab else "(unlabelled)"
+        envs = re.findall(r"\\begin\{(tabularx|tabular\*|tabular)\}", inner)
+        assert envs, f"{label}: no tabular found"
+        assert "tabular" not in envs or {"tabularx", "tabular*"} & set(envs), (
+            f"{label} spans both columns but its tabular is natural width")
+
+
+def test_extracolsep_present_where_tabular_star_is_used() -> None:
+    r"""`tabular*` without `\extracolsep{\fill}` pads the inter-column gap at
+    one end rather than distributing it, which looks worse than not stretching
+    at all."""
+    for path in (KBS, KAIS):
+        text = path.read_text()
+        for m in re.finditer(r"\\begin\{tabular\*\}\{[^}]*\}\{([^}]*)\}", text):
+            assert "extracolsep" in m.group(1), (
+                f"{path.name}: tabular* without \\extracolsep: {m.group(1)[:40]}")

@@ -805,7 +805,7 @@ material/raw violation counts.}
 %% widest row is 90 characters, close to the text block at normal size.
 \small
 \setlength{\tabcolsep}{3pt}
-\begin{tabular}{@{}lrrrrrrrl@{}}
+\begin{tabular*}{\textwidth}{@{\extracolsep{\fill}}lrrrrrrrl@{}}
 \toprule
 Corpus & Users / eval. & Items & Density & $N_{\max}$ & Recall & Val.\ & Monot. & \shortstack[l]{Prop.\\Sec.~\ref{sec:theory}} \\
  &  &  &  &  & (test) & recall & (mat./raw) &  \\
@@ -814,7 +814,7 @@ MovieLens-1M & 6\,038 / 6\,035 & 3\,533  & $2.697\%$ & 600    & $0.748$ & $0.799
 Amazon-VG    & 7\,120 / 7\,120 & 3\,516  & $0.469\%$ & 600    & $0.589^{\dagger}$ & $0.648$ & $4$ / $14$ & no \\
 Gowalla      & 8\,865 / 8\,865 & 82\,134 & $0.075\%$ & 11\,623 & $0.450^{\dagger\ddagger}$ & $0.462$ & $6$ / $13$ & no \\
 \bottomrule
-\end{tabular}
+\end{tabular*}
 \par
 \smallskip
 \noindent\footnotesize $^{\dagger}$Below the $0.60$ gate; reported under the
@@ -1116,7 +1116,11 @@ available.
 \caption{MovieLens-1M retirement losses at seed 42; negative values indicate
 improvement after removal.}
 \label{tab:retirement}
-\begin{tabular}{@{}lrrrr@{}}
+%% tabular* + \extracolsep{\fill}: five narrow numeric columns have a small
+%% natural width, so a plain tabular inside a full-width float leaves the
+%% right-hand side of the span empty. This distributes the slack between the
+%% columns instead.
+\begin{tabular*}{\textwidth}{@{\extracolsep{\fill}}lrrrr@{}}
 \toprule
 Source & Observed loss & Recall after & Shapley & $\LOOr$ \\
 \midrule
@@ -1129,7 +1133,7 @@ $seq$  & $+0.01702$ & $0.659$ & $+0.02927$ & $+0.01672$ \\
 \multicolumn{2}{@{}l}{Rank agreement with observed loss}
       & & $\tau = +0.20$ & $\tau = +1.00$ \\
 \bottomrule
-\end{tabular}
+\end{tabular*}
 \end{table*}
 \begin{table*}[tp]
 \caption{Ten-seed agreement with observed end-to-end retirement loss. Brackets
