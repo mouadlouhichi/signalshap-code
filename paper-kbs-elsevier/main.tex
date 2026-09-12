@@ -201,7 +201,7 @@ Material sign disagreement appears on two of the three timestamped corpora.
 On MovieLens-1M, collaborative filtering receives the second-largest Shapley
 allocation even though its ranking-stage removal improves the metric. Its two
 strongest substitutive interactions are with the sequential and popularity
-signals (Section~\ref{sec:attribution}; ESM~S3), providing a concrete mechanism
+signals (Section~\ref{sec:attribution}; Supplementary Section~S3), providing a concrete mechanism
 for the disagreement. When we remove
 each source from both retrieval and ranking, ranking-stage LOO tracks the
 ordering of observed losses substantially more closely than Shapley across ten
@@ -210,7 +210,7 @@ a retirement estimator. Our claims are limited to credit allocation under a
 declared game; we do not offer retirement guidance, causal identification,
 off-policy evaluation, or a state-of-the-art accuracy claim. Attribution-derived fusion
 weights produced no resolvable gain over a global head, a negative result
-reported in ESM~S5.
+reported in Supplementary Section~S5.
 
 \medskip\noindent\textbf{Contributions.}
 \begin{itemize}
@@ -239,7 +239,7 @@ Section~\ref{sec:methodology} defines the game, algorithm and protocol;
 Section~\ref{sec:verification} verifies the aggregation; and
 Section~\ref{sec:results} reports attribution and retirement. Sections
 \ref{sec:discussion} and~\ref{sec:conclusion} discuss the implications and
-conclude. The electronic supplementary material (ESM) accompanying this article contains
+conclude. Appendix~A, the supplementary material accompanying this article, contains
 proofs, full configuration details and the robustness suite.
 
 \section{Related work and background}\label{sec:related}
@@ -268,7 +268,8 @@ games~\citep{rozemberczki2021ensemble} treat whole classifiers as players and
 allocate ensemble accuracy among them; and related work attributes changes in
 performance rather than individual
 predictions~\citep{zhang2023performance,shah2024coar,bell2024lsspa}. Closest to
-our result is~\citet{kim2026forecast}, who compare an all-subsets Shapley
+our result is that of Kim et al.~\citep{kim2026forecast}, who compare an
+all-subsets Shapley
 measure against leave-one-model-out in ensemble forecasting and relate the
 disagreement to overlap in member errors.
 
@@ -288,9 +289,11 @@ feature of a clustering.
 \subsection{Explainable recommendation in the data-engineering literature}
 A large recent body of work explains recommendations by reasoning over
 knowledge-graph paths, and it appears predominantly in the data-engineering
-venues. \citet{li2023rlpath} learn path-exploration policies by reinforcement
+venues. Li et al.~\citep{li2023rlpath} learn path-exploration policies by
+reinforcement
 learning for sequential explainable recommendation, and
-\citet{li2024counterfactual} replace attention weights with counterfactually
+Li et al.~\citep{li2024counterfactual} replace attention weights with
+counterfactually
 learned path weights, arguing that attention is optimised for accuracy and is
 unstable across reproductions. Both explain \emph{why a particular item reached
 a particular user}, attributing to entities and relations inside one
@@ -305,6 +308,21 @@ Section~\ref{sec:rulecomparison}.
 Recent surveys of the field~\citep{garapati2025recsysreview,papadakis2022cftaxonomy}
 confirm that component-level credit in hybrid architectures is still assessed
 almost entirely by ablation, which is the practice this paper qualifies.
+
+A parallel line of work asks a causal rather than an allocative question about
+recommender components. Wei et al.~\citep{wei2021macr} remove the direct causal
+effect of item popularity by counterfactual inference, and Li et
+al.~\citep{li2023becausal} treat a social network as a confounder of exposure
+and rating. Both intervene on a \emph{signal} to change what the system
+recommends. We intervene on a \emph{source} to measure what it contributed,
+and we make no causal claim: our characteristic function is observational, and
+Section~\ref{sec:threats} says so explicitly. The distinction matters for
+reading our result, because a sign disagreement between allocation and removal
+is not evidence of confounding; it is what two different estimands look like on
+one fitted system. Architectural routing is also an active target in this
+literature, with per-user compound routers selecting among sequential
+encoders~\citep{liu2022canet}; such a router is a natural sixth player for the
+game defined here, which we note as future work rather than claim.
 
 \subsection{Shapley for ranking}
 RankSHAP~\citep{chowdhury2025rankshap},
@@ -321,7 +339,8 @@ that trade-off: five architectural players make the lattice small enough to
 enumerate, which is what lets us \emph{measure} approximation error rather than
 assume it (Section~\ref{sec:verification}).
 
-\citet{sundararajan2020many} show that different Shapley formulations answer
+Sundararajan and Najmi~\citep{sundararajan2020many} show that different
+Shapley formulations answer
 different questions, so an attribution is only interpretable relative to a
 declared game. We declare ours in Section~\ref{sec:game} and treat the choice,
 not the axioms, as the substantive commitment. Graph and gradient
@@ -393,7 +412,7 @@ its statistical quality.
 Semivalues relax efficiency by replacing the weights in
 Equation~(\ref{eq:shapley}) with a general coalition-size distribution. Banzhaf
 weights all coalitions equally and the binomial family interpolates by a
-parameter $q$; both are used as comparators in ESM~S3, where we also record
+parameter $q$; both are used as comparators in Supplementary Section~S3, where we also record
 that the \emph{size-uniform} semivalue is algebraically identical to Shapley
 and so is not an independent comparator. Pairwise interaction
 indices~\citep{grabisch1999interaction} measure
@@ -568,7 +587,7 @@ own pool, $v(S)$ and $v(S')$ would be NDCG values over different item sets and
 their difference would confound ranking quality with retrieval coverage. The
 alternative of a grand-coalition-only pool is not neutral either, and we
 measured that cost rather than asserting it: under that design $\varphi_{ct}$
-changes sign on MovieLens-1M. Three source-blind pool rules (ESM~S3) leave both
+changes sign on MovieLens-1M. Three source-blind pool rules (Supplementary Section~S3) leave both
 material disagreements intact. Oracle-pool recall equals $\rho$ exactly on
 every corpus, in agreement with the dilution identity in
 Equation~(\ref{eq:dilution}). Source scores enter the head $z$-normalised per
@@ -595,7 +614,7 @@ v(S) \;=\; \frac{1}{|\Ueval|}\sum_{u\in\Ueval}
 \end{equation}
 with $v(\varnothing)=0$ by construction. The ridge penalty $\lambda$ is frozen
 before the study at a value selected on a MovieLens pilot; a sweep over eight
-orders of magnitude appears in ESM~S3. For cutoff $K=10$, the per-user
+orders of magnitude appears in Supplementary Section~S3. For cutoff $K=10$, the per-user
 baseline is the closed-form expectation
 \begin{equation}
 b_u =
@@ -639,7 +658,7 @@ MovieLens-1M by $31.7\%$ $[+30.2\%,+33.1\%]$ over ten seeds, positive on
 $10/10$, while preserving the ordering at $\tau = 1.00$ on every seed. The
 sources whose values move are $seq$ ($+0.01393$) and $cf$ ($+0.00199$), both
 sign-stable; $ct$ and $rec$ move by less than $10^{-4}$ with no stable sign
-(ESM~S3). The choice is deliberate, since refreshing would give each coalition
+(Supplementary Section~S3). The choice is deliberate, since refreshing would give each coalition
 a different information state and break comparability, but it is a limitation
 on absolute magnitudes.
 
@@ -730,7 +749,7 @@ practical consequence is stated plainly in Section~\ref{sec:preconditions}.
 Efficiency holds by construction, so $\sum_g \varphi_g = v(\G)$ exactly. A
 natural redundancy property, that a source duplicated into the system should
 receive non-negative credit, is \emph{false} without monotonicity: we give a
-three-player counterexample in ESM~S1 and record the corrected statement there
+three-player counterexample in Supplementary Section~S1 and record the corrected statement there
 with its proof. This matters empirically rather than only formally, because all
 three fitted games are non-monotone (Table~\ref{tab:preconditions}), so the
 property does not apply on our data and negative $\varphi_g$ values are
@@ -821,11 +840,11 @@ Gowalla      & 8\,865 / 8\,865 & 82\,134 & $0.075\%$ & 11\,623 & $0.450^{\dagger
 ceiling restriction described in this section (relative contrasts only).
 $^{\ddagger}$Recall on this corpus is bounded above by $\rho = 0.501$, the
 fraction of users whose test venue is not already in their training history
-(ESM Table~S9); $0.450$ is $0.898$ of that attainable ceiling and
+(Supplementary Table~S9); $0.450$ is $0.898$ of that attainable ceiling and
 the gate is unreachable at any $N_{\max}$. The corresponding ceilings are
 $1.000$ for MovieLens-1M and $0.972$ for Amazon-VG. At $N_{\max}=1\,200$,
 Amazon-VG test recall is $0.750$ and the attribution signs and orderings are
-unchanged (ESM~S3).
+unchanged (Supplementary Section~S3).
 \end{table*}
 
 Candidate recall is an applicability diagnostic, not a quality metric, and the
@@ -852,7 +871,7 @@ satisfies constraints fixed in advance.
 \subsection{Known-answer games}
 Six analytic games with closed-form Shapley vectors, spanning additive,
 substitutive, complementary, null-player, harmful and unanimity structures, are
-recovered with maximum absolute error $0$ (ESM Table~S1). The null-player and
+recovered with maximum absolute error $0$ (Supplementary Table~S1). The null-player and
 harmful games matter most here: our fitted games are non-monotone and produce
 negative $\varphi_g$, so it is necessary to establish that a negative value is
 a faithful computation rather than an implementation artefact, and the harmful
@@ -927,14 +946,16 @@ Table~\ref{tab:sources}. The two most negative pairs on MovieLens-1M are
 $cf$--$seq$ at $-0.054$ and $cf$--$pop$ at $-0.025$, both substitutive, and
 $cf$--$pop$ is one of the two declared overlaps. The recovery is partial rather
 than complete, which is what we report. Full semivalue and interaction tables
-are in ESM~S3.
+are in Supplementary Section~S3.
 
-\subsection{Which attribution rule predicts removal cost?}
+\subsection{Is the disagreement specific to Shapley's weighting?}
 \label{sec:rulecomparison}
 
-Semivalues vary the coalition weighting but remain allocations, so comparing
-them to one another cannot settle whether an allocation is the right instrument
-for a removal decision. We therefore widen the comparison to the attribution
+This subsection stays in the verification section because it asks a question
+about the instrument rather than about the corpora: is the allocation-versus-
+removal gap a property of Shapley's particular coalition weights, or of
+coalition averaging as such? Semivalues vary the weighting but remain
+allocations, so comparing them to one another cannot settle it. We therefore widen the comparison to the attribution
 rules a practitioner would realistically reach for, and score each against the
 same external criterion: the \emph{observed} end-to-end cost of retiring each
 source. Every rule in Table~\ref{tab:rulecomparison} is a different linear
@@ -1067,7 +1088,7 @@ systems studied and is absent on the third. Three corpora cannot estimate how
 common it is, and nothing in either rule announces in advance whether a given
 system will exhibit it. Both material flips survive a $\lambda$ sweep over
 eight orders of magnitude, three source-blind candidate pools, and score
-perturbation at $\sigma\in\{0.1,0.5\}$ (ESM~S3).
+perturbation at $\sigma\in\{0.1,0.5\}$ (Supplementary Section~S3).
 
 \paragraph{Mechanism}
 The account is \emph{qualitatively} the redundancy story, though formally
@@ -1108,7 +1129,7 @@ grand-coalition head $w^{(\G)}$ fixed and merely masking it to $S$ gives
 $v_{\mathrm{fixed}}$; letting each coalition retrieve its own $C_u(S)$ and
 refit gives $v_{\mathrm{e2e}}$, under which coalition values are no longer
 comparable across a fixed item set, which is exactly the property the main game
-preserves. All three estimands are reported side by side in ESM Table~S10; their
+preserves. All three estimands are reported side by side in Supplementary Table~S10; their
 orderings agree at $\tau \ge 0.80$ on both corpora where the comparison is
 available.
 
@@ -1295,7 +1316,7 @@ and were regenerated under the final source-symmetric candidate rule. Several
 labelled single-seed diagnostics predate that regeneration and are sensitivity
 analyses rather than confirmatory evidence; on MovieLens-1M the two rules agree
 to $\max_g|\Delta\varphi_g| = 2.8\times10^{-5}$ with identical ordering.
-ESM Table~S4 lists which group is which, including the Gowalla diagnostics that
+Supplementary Table~S4 lists which group is which, including the Gowalla diagnostics that
 could not be regenerated because five dense $8\,865\times82\,134$ score
 matrices exhausted memory.
 

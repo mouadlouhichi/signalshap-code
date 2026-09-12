@@ -350,8 +350,16 @@ def main() -> int:
     # leaving the Springer term in the body is a venue leak.
     body = body.replace(
         "Online Resource~1 (Electronic Supplementary Material; ESM) contains",
-        "The electronic supplementary material (ESM) accompanying this article "
+        "Appendix~A, the supplementary material accompanying this article, "
         "contains")
+
+    # Elsevier calls it supplementary material, not ESM. Sixteen "ESM Sn" /
+    # "ESM Table Sn" pointers would otherwise read as a Springer manuscript
+    # that had been re-badged. The S-numbering itself is kept, because the
+    # supplement numbers its own sections and tables that way.
+    body = body.replace("ESM Table~S", "Supplementary Table~S")
+    body = body.replace("ESM~S", "Supplementary Section~S")
+    body = body.replace("ESM S", "Supplementary Section~S")
 
     # Two-column float parameters. The float block is inherited from the
     # single-column KAIS setup, where \dbltop* is irrelevant because there are

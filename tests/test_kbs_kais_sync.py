@@ -44,16 +44,19 @@ def _normalise(body: str) -> str:
                         r"\includegraphics[width=0.7\textwidth]{Fig3.png}")
     # "Online Resource 1" is Springer's term for the supplement; Elsevier uses
     # "supplementary material". A venue leak, so the generator rewrites it.
+    # Elsevier says "supplementary material", Springer says "Online Resource".
     body = body.replace(
-        "The electronic supplementary material (ESM) accompanying this article "
+        "Appendix~A, the supplementary material accompanying this article, "
         "contains",
         "Online Resource~1 (Electronic Supplementary Material; ESM) contains")
+    body = body.replace("Supplementary Table~S", "ESM Table~S")
+    body = body.replace("Supplementary Section~S", "ESM~S")
     # The two explicit \FloatBarrier calls are dropped from the two-column
     # build: each follows a starred float and pins it, leaving slack beside it.
     body = body.replace("\\FloatBarrier\n", "")
     # The KAIS source carries @@ESMTAB:label@@ placeholders, which the
     # generator resolves against the supplement's real table numbering.
-    body = re.sub(r"ESM Table~S\d+", "@@ESMTAB@@", body)
+    body = re.sub(r"(?:ESM|Supplementary) Table~S\d+", "@@ESMTAB@@", body)
     body = re.sub(r"@@ESMTAB:[^@]+@@", "@@ESMTAB@@", body)
     return body
 
@@ -78,7 +81,8 @@ def test_every_reported_number_is_identical() -> None:
     # ESM table numbers are resolved from placeholders by the generator, so
     # they are structurally absent on the KAIS side; strip them both ways.
     def clean(t: str) -> list[str]:
-        t = re.sub(r"ESM Table~S\d+", " ", t)
+        t = re.sub(r"(?:ESM|Supplementary) Table~S\d+", " ", t)
+        t = re.sub(r"(?:ESM|Supplementary Section)~S\d+", " ", t)
         t = re.sub(r"@@ESMTAB:[^@]+@@", " ", t)
         # "Online Resource~1" carries a numeral that the Elsevier rewrite
         # drops. It names the supplement, not a result.
@@ -287,7 +291,7 @@ def test_esm_table_citations_point_at_the_right_table() -> None:
         "tab:analytic": "maximum absolute error",
     }
     for label, phrase in expected.items():
-        number = numbering[label]
+        number = numbering[label].replace("ESM Table~S", "Supplementary Table~S")
         assert phrase in main, f"anchor prose for {label} missing"
         idx = main.index(phrase)
         # The citation may sit just before or just after its anchor phrase.
@@ -296,8 +300,9 @@ def test_esm_table_citations_point_at_the_right_table() -> None:
             f"{label} renders as {number} but the citation near "
             f"{phrase!r} does not use that number")
 
-    for m in re.finditer(r"ESM Table~S\d+", main):
-        assert m.group(0) in inverse, f"{m.group(0)} does not exist in the ESM"
+    for m in re.finditer(r"Supplementary Table~S\d+", main):
+        key = m.group(0).replace("Supplementary Table~S", "ESM Table~S")
+        assert key in inverse, f"{m.group(0)} does not exist in the supplement"
 
 
 def test_no_springer_supplement_terminology_in_the_elsevier_build() -> None:
@@ -430,3 +435,63 @@ def test_extracolsep_present_where_tabular_star_is_used() -> None:
         for m in re.finditer(r"\\begin\{tabular\*\}\{[^}]*\}\{([^}]*)\}", text):
             assert "extracolsep" in m.group(1), (
                 f"{path.name}: tabular* without \\extracolsep: {m.group(1)[:40]}")
+
+
+def test_no_author_year_citations_under_a_numeric_style() -> None:
+    r"""`elsarticle-num.bst` writes bare `\bibitem{key}` with no optional
+    author field, so `\citet`, `\citeauthor` and friends have no name to
+    typeset and natbib prints a literal "(author?)" into the PDF. Author names
+    must be written in the prose and the citation kept numeric."""
+    for path in (KBS, KAIS):
+        text = re.sub(r"(?<!\\)%.*", "", path.read_text())
+        for macro in (r"\citet", r"\citeauthor", r"\citeyear", r"\Citet"):
+            assert macro + "{" not in text, (
+                f"{path.name} uses {macro}, which renders as (author?) under a "
+                f"numeric bibliography style")
+
+
+def test_elsevier_supplement_naming() -> None:
+    """Springer says ESM / Online Resource; Elsevier says supplementary
+    material. Leaving the Springer wording signals a re-badged manuscript."""
+    text = KBS.read_text() + KBS_ESM.read_text()
+    assert "ESM" not in text
+    assert "Online Resource" not in text
+    assert "Supplementary" in KBS.read_text()
+
+
+def test_editor_named_venues_all_have_a_recent_entry() -> None:
+    """The KAIS handling editor named five venues. TKDD, KDD and ICDM had no
+    entry newer than 2018 after the first pass."""
+    cited = _cited_entries(
+        [KBS, KBS_ESM], REPO / "paper-kbs-elsevier" / "paper.bib")
+
+    def newest(pattern):
+        ys = []
+        for body in cited.values():
+            if re.search(pattern, body):
+                y = re.search(r"year = \{?(\d{4})", body)
+                if y:
+                    ys.append(int(y.group(1)))
+        return max(ys) if ys else None
+
+    venues = {
+        "TKDE": r"Knowledge and Data Engineering",
+        "TKDD": r"Knowledge Discovery from Data",
+        "KAIS": r"Knowledge and Information Systems",
+        "KDD": r"SIGKDD",
+        "ICDM": r"IEEE International Conference on Data Mining",
+    }
+    for name, pattern in venues.items():
+        y = newest(pattern)
+        assert y is not None, f"{name}: no citation at all"
+        assert y >= 2021, f"{name}: newest citation is {y}"
+
+
+def test_section_titles_are_distinguishable() -> None:
+    """Two subsections were titled 'Which attribution rule predicts removal
+    cost?' and 'Which estimand predicts retirement cost?'."""
+    text = KBS.read_text()
+    titles = re.findall(r"^\\subsection\{([^}]*)\}", text, re.M)
+    starts = [t.lower()[:28] for t in titles]
+    dupes = {t for t in starts if starts.count(t) > 1}
+    assert not dupes, f"near-identical subsection titles: {dupes}"

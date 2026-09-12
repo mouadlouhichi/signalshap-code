@@ -252,7 +252,8 @@ games~\citep{rozemberczki2021ensemble} treat whole classifiers as players and
 allocate ensemble accuracy among them; and related work attributes changes in
 performance rather than individual
 predictions~\citep{zhang2023performance,shah2024coar,bell2024lsspa}. Closest to
-our result is~\citet{kim2026forecast}, who compare an all-subsets Shapley
+our result is that of Kim et al.~\citep{kim2026forecast}, who compare an
+all-subsets Shapley
 measure against leave-one-model-out in ensemble forecasting and relate the
 disagreement to overlap in member errors.
 
@@ -272,9 +273,11 @@ feature of a clustering.
 \subsection{Explainable recommendation in the data-engineering literature}
 A large recent body of work explains recommendations by reasoning over
 knowledge-graph paths, and it appears predominantly in the data-engineering
-venues. \citet{li2023rlpath} learn path-exploration policies by reinforcement
+venues. Li et al.~\citep{li2023rlpath} learn path-exploration policies by
+reinforcement
 learning for sequential explainable recommendation, and
-\citet{li2024counterfactual} replace attention weights with counterfactually
+Li et al.~\citep{li2024counterfactual} replace attention weights with
+counterfactually
 learned path weights, arguing that attention is optimised for accuracy and is
 unstable across reproductions. Both explain \emph{why a particular item reached
 a particular user}, attributing to entities and relations inside one
@@ -289,6 +292,21 @@ Section~\ref{sec:rulecomparison}.
 Recent surveys of the field~\citep{garapati2025recsysreview,papadakis2022cftaxonomy}
 confirm that component-level credit in hybrid architectures is still assessed
 almost entirely by ablation, which is the practice this paper qualifies.
+
+A parallel line of work asks a causal rather than an allocative question about
+recommender components. Wei et al.~\citep{wei2021macr} remove the direct causal
+effect of item popularity by counterfactual inference, and Li et
+al.~\citep{li2023becausal} treat a social network as a confounder of exposure
+and rating. Both intervene on a \emph{signal} to change what the system
+recommends. We intervene on a \emph{source} to measure what it contributed,
+and we make no causal claim: our characteristic function is observational, and
+Section~\ref{sec:threats} says so explicitly. The distinction matters for
+reading our result, because a sign disagreement between allocation and removal
+is not evidence of confounding; it is what two different estimands look like on
+one fitted system. Architectural routing is also an active target in this
+literature, with per-user compound routers selecting among sequential
+encoders~\citep{liu2022canet}; such a router is a natural sixth player for the
+game defined here, which we note as future work rather than claim.
 
 \subsection{Shapley for ranking}
 RankSHAP~\citep{chowdhury2025rankshap},
@@ -305,7 +323,8 @@ that trade-off: five architectural players make the lattice small enough to
 enumerate, which is what lets us \emph{measure} approximation error rather than
 assume it (Section~\ref{sec:verification}).
 
-\citet{sundararajan2020many} show that different Shapley formulations answer
+Sundararajan and Najmi~\citep{sundararajan2020many} show that different
+Shapley formulations answer
 different questions, so an attribution is only interpretable relative to a
 declared game. We declare ours in Section~\ref{sec:game} and treat the choice,
 not the axioms, as the substantive commitment. Graph and gradient
@@ -914,12 +933,14 @@ $cf$--$pop$ is one of the two declared overlaps. The recovery is partial rather
 than complete, which is what we report. Full semivalue and interaction tables
 are in ESM~S3.
 
-\subsection{Which attribution rule predicts removal cost?}
+\subsection{Is the disagreement specific to Shapley's weighting?}
 \label{sec:rulecomparison}
 
-Semivalues vary the coalition weighting but remain allocations, so comparing
-them to one another cannot settle whether an allocation is the right instrument
-for a removal decision. We therefore widen the comparison to the attribution
+This subsection stays in the verification section because it asks a question
+about the instrument rather than about the corpora: is the allocation-versus-
+removal gap a property of Shapley's particular coalition weights, or of
+coalition averaging as such? Semivalues vary the weighting but remain
+allocations, so comparing them to one another cannot settle it. We therefore widen the comparison to the attribution
 rules a practitioner would realistically reach for, and score each against the
 same external criterion: the \emph{observed} end-to-end cost of retiring each
 source. Every rule in Table~\ref{tab:rulecomparison} is a different linear
