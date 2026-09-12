@@ -76,12 +76,15 @@
 \setcounter{topnumber}{3}
 \setcounter{bottomnumber}{2}
 \setcounter{totalnumber}{5}
+%% placeins without [section]: a \FloatBarrier at every section head
+%% forces a flush that reads as a gap before the heading. \FloatBarrier
+%% remains available where a barrier is genuinely wanted.
 %% Two-column floats: starred floats obey the \dbltop* parameters,
 %% and 11 of 12 body floats here are starred.
 \renewcommand{\dbltopfraction}{0.9}
 \renewcommand{\dblfloatpagefraction}{0.6}
 \setcounter{dbltopnumber}{3}
-\usepackage[section]{placeins}
+\usepackage{placeins}
 
 \theoremstyle{plain}
 \newtheorem{theorem}{Theorem}
@@ -92,7 +95,9 @@
 \newtheorem{property}{Property}
 \newtheorem{remark}{Remark}
 
-\raggedbottom
+%% \flushbottom, not \raggedbottom: in two columns ragged bottoms
+%% leave slack at the foot of BOTH columns on every page.
+\flushbottom
 \emergencystretch=0.75em
 
 \newcommand{\G}{\mathcal{G}}
@@ -719,7 +724,6 @@ practical consequence is stated plainly in Section~\ref{sec:preconditions}.
        degenerate according to Eq.~\eqref{eq:z}
 \end{algorithmic}
 \end{algorithm*}
-\FloatBarrier
 
 \subsection{Formal properties}\label{sec:theory}
 
@@ -1243,7 +1247,6 @@ Trust the named flipping source under a global time split
 \end{tabularx}
 \end{table*}
 
-\FloatBarrier
 \subsection{Interpreting source allocations}
 A positive $\varphi_g$ licenses the statement that source $g$ is allocated
 value under this game. It does not license keeping $g$, and a negative

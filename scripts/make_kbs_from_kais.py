@@ -361,7 +361,47 @@ def main() -> int:
     # (0.7 and 0.5) a full-width table is often refused at the top of a page
     # and deferred to a float page it only half fills, which is the main
     # source of white space in the two-column build.
-    setup_marker = "\\usepackage[section]{placeins}"
+    # --- Page-filling policy, the dominant cause of the visible gaps -------
+    #
+    # Three things interact in the two-column build, and all three had been
+    # inherited unchanged from the single-column Springer setup:
+    #
+    # 1. \raggedbottom tells LaTeX NOT to stretch a page to full height, so
+    #    all leftover space is dumped at the bottom. In two columns that
+    #    happens twice per page. \flushbottom distributes the slack into the
+    #    inter-paragraph glue instead, which is what a journal two-column
+    #    layout expects and what elsarticle assumes.
+    #
+    # 2. placeins was loaded with [section], so every \section issues a
+    #    \FloatBarrier. With 7 sections and 11 starred floats that forces a
+    #    flush at each section boundary, and under \raggedbottom the flush is
+    #    visible as a gap immediately before the heading. The barriers were
+    #    added for the Springer build, where one deferred float stalled the
+    #    whole queue; the \dbltop* parameters now handle that properly, so the
+    #    barrier is no longer earning its cost.
+    #
+    # 3. Section skips are set for a single-column measure and are loose at
+    #    84mm.
+    setup = setup.replace(
+        "\\raggedbottom",
+        "%% \\flushbottom, not \\raggedbottom: in two columns ragged bottoms\n"
+        "%% leave slack at the foot of BOTH columns on every page.\n"
+        "\\flushbottom")
+    setup = setup.replace(
+        "\\usepackage[section]{placeins}",
+        "%% placeins without [section]: a \\FloatBarrier at every section head\n"
+        "%% forces a flush that reads as a gap before the heading. \\FloatBarrier\n"
+        "%% remains available where a barrier is genuinely wanted.\n"
+        "\\usepackage{placeins}")
+
+    # The two explicit \FloatBarrier calls in the body each sit immediately
+    # after a starred float. Under the old [section] regime they were belt and
+    # braces; with \dbltop* tuned and \flushbottom in force they only pin a
+    # wide float in place and leave the slack beside it. \FloatBarrier is
+    # still available from placeins if a barrier is ever wanted again.
+    body = body.replace("\n\\FloatBarrier\n", "\n")
+
+    setup_marker = "\\usepackage{placeins}"
     dbl = (
         "%% Two-column floats: starred floats obey the \\dbltop* parameters,\n"
         "%% and 11 of 12 body floats here are starred.\n"

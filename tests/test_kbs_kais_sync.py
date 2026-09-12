@@ -48,6 +48,9 @@ def _normalise(body: str) -> str:
         "The electronic supplementary material (ESM) accompanying this article "
         "contains",
         "Online Resource~1 (Electronic Supplementary Material; ESM) contains")
+    # The two explicit \FloatBarrier calls are dropped from the two-column
+    # build: each follows a starred float and pins it, leaving slack beside it.
+    body = body.replace("\\FloatBarrier\n", "")
     # The KAIS source carries @@ESMTAB:label@@ placeholders, which the
     # generator resolves against the supplement's real table numbering.
     body = re.sub(r"ESM Table~S\d+", "@@ESMTAB@@", body)
@@ -372,3 +375,30 @@ def test_kais_does_not_set_two_column_float_parameters() -> None:
 def test_source_has_no_runs_of_blank_lines() -> None:
     for path in (KBS, KAIS):
         assert not re.search(r"\n\s*\n\s*\n", path.read_text()), path.name
+
+
+def test_two_column_build_fills_pages() -> None:
+    r"""\raggedbottom dumps all leftover space at the foot of the page, and in
+    two columns that happens once per column on every page. It was inherited
+    from the single-column Springer setup. \flushbottom distributes the slack
+    into inter-paragraph glue instead, which is what the reported gaps before
+    section headings were."""
+    text = re.sub(r"(?<!\\)%.*", "", KBS.read_text())
+    assert r"\flushbottom" in text
+    assert r"\raggedbottom" not in text
+
+
+def test_kais_keeps_ragged_bottom() -> None:
+    """Single column: ragged bottoms are the conventional choice there."""
+    assert r"\raggedbottom" in KAIS.read_text()
+
+
+def test_no_float_barriers_in_the_two_column_body() -> None:
+    r"""placeins[section] put a \FloatBarrier at every section head, and two
+    more were explicit in the body. Each forces a flush that reads as a gap.
+    The \dbltop* parameters handle deferral properly instead."""
+    text = KBS.read_text()
+    body = text[text.index(r"\section{Introduction}"):]
+    assert "\n\\FloatBarrier" not in body
+    assert r"\usepackage[section]{placeins}" not in text
+    assert r"\usepackage{placeins}" in text
