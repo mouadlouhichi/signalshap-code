@@ -9,10 +9,13 @@ and the abstract. These tests make that failure mode loud.
 
 from __future__ import annotations
 
+import json
 import re
 import subprocess
 import sys
 from pathlib import Path
+
+import pytest
 
 REPO = Path(__file__).resolve().parents[1]
 KAIS = REPO / "paper-kais" / "main.tex"
@@ -146,3 +149,87 @@ def test_elsevier_build_uses_paragraph_not_subsubsection() -> None:
     text = KBS.read_text()
     assert r"\subsubsection{" not in text
     assert text.count(r"\paragraph{") >= 10
+
+
+# --- KAIS editor: "comparative studies are insufficient, lacks recent
+#     references from TKDE, TKDD, KAIS, KDD, ICDM" ----------------------- #
+
+def _cited_entries(tex_paths, bib_path):
+    used: set[str] = set()
+    for p in tex_paths:
+        for m in re.finditer(r"\\cite[a-z]*\{([^}]*)\}", p.read_text()):
+            used |= {k.strip() for k in m.group(1).split(",")}
+    bib = bib_path.read_text()
+    entries = {m.group(2): " ".join(m.group(3).split())
+               for m in re.finditer(r"@(\w+)\{([^,]+),(.*?)\n\}", bib, re.S)}
+    return {k: entries[k] for k in used if k in entries}
+
+
+def test_editor_named_venues_are_represented_recently() -> None:
+    """The handling editor counted our KDD citations exactly: "1 in 2011 and
+    1 in 2016". TKDE, TKDD and KAIS were literally absent. A desk complaint
+    that specific should not be able to recur silently."""
+    cited = _cited_entries(
+        [KBS, KBS_ESM], REPO / "paper-kbs-elsevier" / "paper.bib")
+
+    def years(pattern):
+        out = []
+        for body in cited.values():
+            if re.search(pattern, body):
+                y = re.search(r"year = \{?(\d{4})", body)
+                if y:
+                    out.append(int(y.group(1)))
+        return out
+
+    tkde = years(r"Knowledge and Data Engineering")
+    kais = years(r"Knowledge and Information Systems")
+    assert tkde, "no TKDE citation"
+    assert kais, "no KAIS citation"
+    assert max(tkde) >= 2024, f"newest TKDE citation is {max(tkde)}"
+    assert max(kais) >= 2024, f"newest KAIS citation is {max(kais)}"
+
+
+def test_bibliography_is_recent_enough() -> None:
+    cited = _cited_entries(
+        [KBS, KBS_ESM], REPO / "paper-kbs-elsevier" / "paper.bib")
+    ys = []
+    for body in cited.values():
+        y = re.search(r"year = \{?(\d{4})", body)
+        if y:
+            ys.append(int(y.group(1)))
+    recent = sum(1 for y in ys if y >= 2022)
+    assert recent >= 14, f"only {recent} citations from 2022 onward"
+
+
+def test_attribution_rule_comparison_is_present() -> None:
+    """The editor's substantive point was comparative studies, not citation
+    count. The rule comparison is the answer to it."""
+    assert "tab:rulecomparison" in KBS.read_text()
+    assert "rulecomparison-esm" in KBS_ESM.read_text()
+
+
+def test_attribution_baselines_match_the_artefact() -> None:
+    """Prose numbers must track artefacts/attribution_baselines.json."""
+    data = json.loads((REPO / "artefacts" / "attribution_baselines.json").read_text())
+    rules = data["rules"]
+    # The ordering that carries the argument.
+    assert rules["loo_rank"]["kendall_tau_vs_observed_loss"] == pytest.approx(1.0)
+    assert rules["forward_selection"]["kendall_tau_vs_observed_loss"] == pytest.approx(0.8)
+    for name in ("shapley", "banzhaf", "binomial_q025", "leave_one_in"):
+        assert rules[name]["kendall_tau_vs_observed_loss"] == pytest.approx(0.2), name
+    # Uniform split is constant: tau undefined, and it must not be scored.
+    assert rules["uniform_split"]["kendall_tau_vs_observed_loss"] is None
+    assert rules["uniform_split"]["degenerate_constant_vector"] is True
+
+
+def test_baselines_reproduce_the_published_shapley_and_loo() -> None:
+    """The recovered lattice must agree with the values already in the paper,
+    otherwise the new comparison is measuring a different game."""
+    data = json.loads((REPO / "artefacts" / "attribution_baselines.json").read_text())
+    pool = json.loads((REPO / "artefacts" / "pool_sensitivity.json").read_text())
+    ref = pool["ml_1m"]["pools"]["union_of_top_n"]
+    for g in ("cf", "ct", "pop", "rec", "seq"):
+        assert data["rules"]["shapley"]["values"][g] == pytest.approx(
+            ref["shapley"][g], abs=1e-12), g
+        assert data["rules"]["loo_rank"]["values"][g] == pytest.approx(
+            ref["loo"][g], abs=1e-12), g

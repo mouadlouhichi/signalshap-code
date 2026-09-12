@@ -1,0 +1,145 @@
+{
+ "dataset": "ml_1m",
+ "seed": 42,
+ "game": "ranking_stage_ndcg10_baseline_centred",
+ "note": "Every rule is a different linear functional of the same 32 coalition values; no model is refitted, so the comparison introduces no additional randomness.",
+ "observed_end_to_end_loss": {
+  "cf": -0.00468,
+  "rec": -0.00128,
+  "ct": -0.0005,
+  "pop": 0.00253,
+  "seq": 0.01702
+ },
+ "observed_smallest_loss_source": "cf",
+ "v_grand": 0.051688648659728206,
+ "rules": {
+  "shapley": {
+   "values": {
+    "cf": 0.015381831033907913,
+    "ct": 2.4768641547738725e-05,
+    "pop": 0.00647865512243407,
+    "rec": 0.0005308012954656519,
+    "seq": 0.02927259256637285
+   },
+   "kendall_tau_vs_observed_loss": 0.19999999999999998,
+   "p_value": 0.8166666666666667,
+   "degenerate_constant_vector": false,
+   "sum": 0.05168864865972822,
+   "efficient": true,
+   "identifies_smallest_loss_source": false,
+   "predicted_smallest": "ct"
+  },
+  "banzhaf": {
+   "values": {
+    "cf": 0.015607202178567923,
+    "ct": -0.00019790156843463161,
+    "pop": 0.0062851257703321894,
+    "rec": 0.00016095869827549905,
+    "seq": 0.029389280803890635
+   },
+   "kendall_tau_vs_observed_loss": 0.19999999999999998,
+   "p_value": 0.8166666666666667,
+   "degenerate_constant_vector": false,
+   "sum": 0.051244665882631615,
+   "efficient": false,
+   "identifies_smallest_loss_source": false,
+   "predicted_smallest": "ct"
+  },
+  "binomial_q025": {
+   "values": {
+    "cf": 0.025051424102610544,
+    "ct": -0.00041585439387869497,
+    "pop": 0.008915701610801092,
+    "rec": 0.0008192517439912687,
+    "seq": 0.0352243175601087
+   },
+   "kendall_tau_vs_observed_loss": 0.19999999999999998,
+   "p_value": 0.8166666666666667,
+   "degenerate_constant_vector": false,
+   "sum": 0.06959484062363291,
+   "efficient": false,
+   "identifies_smallest_loss_source": false,
+   "predicted_smallest": "ct"
+  },
+  "binomial_q075": {
+   "values": {
+    "cf": 0.005805441687066317,
+    "ct": 0.0003345747215140251,
+    "pop": 0.003925362107547147,
+    "rec": 3.794769787599653e-05,
+    "seq": 0.023359729840926928
+   },
+   "kendall_tau_vs_observed_loss": 0.39999999999999997,
+   "p_value": 0.48333333333333334,
+   "degenerate_constant_vector": false,
+   "sum": 0.03346305605493041,
+   "efficient": false,
+   "identifies_smallest_loss_source": false,
+   "predicted_smallest": "rec"
+  },
+  "loo_rank": {
+   "values": {
+    "cf": -0.004795104337238322,
+    "ct": 0.0011459055332501966,
+    "pop": 0.0011961774628880956,
+    "rec": 0.0003315205530342036,
+    "seq": 0.016724012570953663
+   },
+   "kendall_tau_vs_observed_loss": 0.9999999999999999,
+   "p_value": 0.016666666666666666,
+   "degenerate_constant_vector": false,
+   "sum": 0.014602511782887836,
+   "efficient": false,
+   "identifies_smallest_loss_source": true,
+   "predicted_smallest": "cf"
+  },
+  "leave_one_in": {
+   "values": {
+    "cf": 0.03474634171427221,
+    "ct": -0.00011662752236712488,
+    "pop": 0.012624310078245675,
+    "rec": 0.002298512314515824,
+    "seq": 0.04144347949957898
+   },
+   "kendall_tau_vs_observed_loss": 0.19999999999999998,
+   "p_value": 0.8166666666666667,
+   "degenerate_constant_vector": false,
+   "sum": 0.09099601608424557,
+   "efficient": false,
+   "identifies_smallest_loss_source": false,
+   "predicted_smallest": "ct"
+  },
+  "forward_selection": {
+   "values": {
+    "cf": -0.004795104337238325,
+    "ct": -0.00016421241257836422,
+    "pop": 0.015320788824133331,
+    "rec": -0.00011630291416737243,
+    "seq": 0.041443479499578904
+   },
+   "kendall_tau_vs_observed_loss": 0.7999999999999999,
+   "p_value": 0.08333333333333333,
+   "degenerate_constant_vector": false,
+   "sum": 0.05168864865972818,
+   "efficient": true,
+   "identifies_smallest_loss_source": true,
+   "predicted_smallest": "cf"
+  },
+  "uniform_split": {
+   "values": {
+    "cf": 0.010337729731945642,
+    "ct": 0.010337729731945642,
+    "pop": 0.010337729731945642,
+    "rec": 0.010337729731945642,
+    "seq": 0.010337729731945642
+   },
+   "kendall_tau_vs_observed_loss": null,
+   "p_value": null,
+   "degenerate_constant_vector": true,
+   "sum": 0.051688648659728206,
+   "efficient": true,
+   "identifies_smallest_loss_source": null,
+   "predicted_smallest": null
+  }
+ }
+}

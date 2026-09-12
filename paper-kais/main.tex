@@ -273,6 +273,27 @@ clustering~\citep{louhichi2025gametheory}; that setting differs on every axis
 that matters here, since one can switch off a recommender source but not a
 feature of a clustering.
 
+\subsubsection{Explainable recommendation in the data-engineering literature}
+A large recent body of work explains recommendations by reasoning over
+knowledge-graph paths, and it appears predominantly in the data-engineering
+venues. \citet{li2023rlpath} learn path-exploration policies by reinforcement
+learning for sequential explainable recommendation, and
+\citet{li2024counterfactual} replace attention weights with counterfactually
+learned path weights, arguing that attention is optimised for accuracy and is
+unstable across reproductions. Both explain \emph{why a particular item reached
+a particular user}, attributing to entities and relations inside one
+differentiable model. Our unit is different and complementary: we attribute a
+system-level ranking metric to architecturally distinct scorers, none of which
+shares a graph or a gradient with the others, and we ask which source earned
+the system's quality rather than which path justified an item. That difference
+is also why these methods are not usable as baselines here; the comparators
+that do apply to our unit are the attribution rules compared in
+Section~\ref{sec:rulecomparison}.
+
+Recent surveys of the field~\citep{garapati2025recsysreview,papadakis2022cftaxonomy}
+confirm that component-level credit in hybrid architectures is still assessed
+almost entirely by ablation, which is the practice this paper qualifies.
+
 \subsubsection{Shapley for ranking}
 RankSHAP~\citep{chowdhury2025rankshap},
 RankingSHAP~\citep{heuss2025rankingshap} and ShaRP~\citep{pliatsika2025sharp}
@@ -282,6 +303,13 @@ in retrieval, a coalition would otherwise rank a different item set, which is
 precisely why the game is defined on a coalition-independent candidate set.
 
 \subsubsection{The game is a modelling choice}
+The same cooperative-game machinery underpins data pricing and valuation,
+where the exponential cost of exact computation is the central obstacle and
+sampling is therefore the norm~\citep{pei2022datapricing}. Our setting inverts
+that trade-off: five architectural players make the lattice small enough to
+enumerate, which is what lets us \emph{measure} approximation error rather than
+assume it (Section~\ref{sec:verification}).
+
 \citet{sundararajan2020many} show that different Shapley formulations answer
 different questions, so an attribution is only interpretable relative to a
 declared game. We declare ours in Section~\ref{sec:game} and treat the choice,
@@ -895,6 +923,67 @@ $cf$--$seq$ at $-0.054$ and $cf$--$pop$ at $-0.025$, both substitutive, and
 $cf$--$pop$ is one of the two declared overlaps. The recovery is partial rather
 than complete, which is what we report. Full semivalue and interaction tables
 are in ESM~S3.
+
+\subsection{Which attribution rule predicts removal cost?}
+\label{sec:rulecomparison}
+
+Semivalues vary the coalition weighting but remain allocations, so comparing
+them to one another cannot settle whether an allocation is the right instrument
+for a removal decision. We therefore widen the comparison to the attribution
+rules a practitioner would realistically reach for, and score each against the
+same external criterion: the \emph{observed} end-to-end cost of retiring each
+source. Every rule in Table~\ref{tab:rulecomparison} is a different linear
+functional of the same 32 coalition values, so nothing is refitted and the
+comparison adds no estimator variance. Beyond Shapley, Banzhaf and the binomial
+semivalues, we include leave-one-in (the singleton value $v(\{g\})$, the rule
+implied by scoring each source in isolation), exact forward-selection
+importance averaged over all $n!$ greedy orders, and a uniform split
+$v(\G)/n$ as a deliberately uninformative control.
+
+\begin{table}[tp]
+\caption{Attribution rules scored against observed end-to-end retirement loss,
+MovieLens-1M, seed 42. All rules are linear functionals of one 32-coalition
+lattice, so no model is refitted. $\tau$ is Kendall agreement with the observed
+loss ordering; ``picks'' is the source each rule nominates as having the
+smallest removal loss, which is $cf$ in the observed data. The uniform split is
+a constant vector, so its $\tau$ is undefined and it nominates nothing.}
+\label{tab:rulecomparison}
+\small
+\begin{tabularx}{\textwidth}{@{}l
+  >{\centering\arraybackslash}X
+  >{\centering\arraybackslash}X
+  >{\centering\arraybackslash}X
+  >{\raggedright\arraybackslash}p{0.30\textwidth}@{}}
+\toprule
+Rule & $\tau$ vs.\ observed & Efficient & Picks & Character \\
+\midrule
+Ranking-stage LOO      & $+1.00$ & no  & $cf$  & grand-coalition marginal \\
+Forward selection      & $+0.80$ & yes & $cf$  & greedy path, all orders \\
+Binomial $q{=}0.75$    & $+0.40$ & no  & $rec$ & large coalitions weighted \\
+Shapley                & $+0.20$ & yes & $ct$  & all coalitions, size weights \\
+Banzhaf                & $+0.20$ & no  & $ct$  & all coalitions, uniform \\
+Binomial $q{=}0.25$    & $+0.20$ & no  & $ct$  & small coalitions weighted \\
+Leave-one-in           & $+0.20$ & no  & $ct$  & singleton value \\
+Uniform split          & n/a     & yes & n/a   & uninformative control \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+The ordering is the point. The two rules that track the removal outcome,
+ranking-stage LOO and forward selection, are the two that condition on the
+grand coalition or on a path towards it. Every rule that averages over all
+coalitions, whatever its weighting, lands at $\tau = +0.20$ and nominates the
+wrong source. The separation is therefore not an artefact of Shapley's
+particular weights: it is a property of averaging over coalitions in which a
+substitutable source has no substitute present, and Banzhaf, the binomial
+semivalues and leave-one-in all inherit it. Notably, forward selection is
+efficient \emph{and} predictive here, which shows the two properties are not
+inherently in tension, though with $n = 5$ sources on one corpus we do not
+claim that this generalises.
+
+This is the comparison that supports the paper's claim. An allocation is not a
+removal estimate, switching to a different allocation does not repair that, and
+only changing the question does.
 
 
 \section{Results}\label{sec:results}

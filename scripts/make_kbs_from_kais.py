@@ -58,6 +58,8 @@ WIDE_FLOATS = {
     # Six columns on a \textwidth tabularx. In a single-column float this
     # overruns the 84mm measure and runs into the gutter.
     "tab:notation",
+    # Five columns including a 0.30\textwidth prose column.
+    "tab:rulecomparison",
 }
 NARROW_FLOATS = {"fig:scatter"}
 
