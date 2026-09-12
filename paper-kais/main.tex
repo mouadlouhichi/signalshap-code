@@ -105,7 +105,6 @@
 \newcommand{\runint}[2]{%
   \shortstack{$#1$\\[-1pt]{\footnotesize $#2$}}}
 
-
 \begin{document}
 
 \title[SignalShap for hybrid recommenders]{SignalShap: Exact Ranking-Stage
@@ -150,7 +149,6 @@ game, not retirement guidance.}
 source attribution, two-stage ranking}
 
 \maketitle
-
 
 \section{Introduction}\label{sec:intro}
 
@@ -230,9 +228,7 @@ proofs, full configuration details and the robustness suite.
 
 \section{Related work and background}\label{sec:related}
 
-\subsection{Related work}
-
-\subsubsection{Feature-level attribution versus source-level attribution}
+\subsection{Feature-level attribution versus source-level attribution}
 SHAP~\citep{lundberg2017} unified additive feature attribution, with extensions
 to trees~\citep{lundberg2020}, data valuation~\citep{ghorbani2019} and
 federated contribution~\citep{wang2020federated}.
@@ -248,7 +244,7 @@ value across subsystems. Because there are five such subsystems rather than
 hundreds of features, the complete game is small enough to enumerate: that
 difference in granularity is what makes exactness available at all.
 
-\subsubsection{Component-level games and the parent phenomenon}
+\subsection{Component-level games and the parent phenomenon}
 Closer to our unit of analysis is work attributing behaviour to \emph{model
 components}. Neuron Shapley~\citep{ghorbani2020neuron} treats individual
 neurons as players with a performance payoff; ensemble
@@ -273,7 +269,7 @@ clustering~\citep{louhichi2025gametheory}; that setting differs on every axis
 that matters here, since one can switch off a recommender source but not a
 feature of a clustering.
 
-\subsubsection{Explainable recommendation in the data-engineering literature}
+\subsection{Explainable recommendation in the data-engineering literature}
 A large recent body of work explains recommendations by reasoning over
 knowledge-graph paths, and it appears predominantly in the data-engineering
 venues. \citet{li2023rlpath} learn path-exploration policies by reinforcement
@@ -294,7 +290,7 @@ Recent surveys of the field~\citep{garapati2025recsysreview,papadakis2022cftaxon
 confirm that component-level credit in hybrid architectures is still assessed
 almost entirely by ablation, which is the practice this paper qualifies.
 
-\subsubsection{Shapley for ranking}
+\subsection{Shapley for ranking}
 RankSHAP~\citep{chowdhury2025rankshap},
 RankingSHAP~\citep{heuss2025rankingshap} and ShaRP~\citep{pliatsika2025sharp}
 bring Shapley to ranked outputs, but they attribute to \emph{features} of a
@@ -302,7 +298,6 @@ fixed candidate list and estimate by sampling. Because our players participate
 in retrieval, a coalition would otherwise rank a different item set, which is
 precisely why the game is defined on a coalition-independent candidate set.
 
-\subsubsection{The game is a modelling choice}
 The same cooperative-game machinery underpins data pricing and valuation,
 where the exponential cost of exact computation is the central obstacle and
 sampling is therefore the norm~\citep{pei2022datapricing}. Our setting inverts
@@ -318,7 +313,6 @@ explainers~\citep{ying2019gnnexplainer,luo2020pgexplainer} operate inside one
 differentiable model and do not apply across five architecturally distinct
 scorers with no shared graph.
 
-\subsubsection{Hybrid recommenders and ablation practice}
 Hybrid designs~\citep{burke2002hybrid} are still assessed component-wise by
 ablation, which is the practice this paper qualifies. Offline ranking
 evaluation is itself sensitive to protocol and exposure
@@ -393,7 +387,6 @@ NDCG@10~\citep{jarvelin2002cumulated} reduces to
 $1/\log_2(1+\mathrm{rank})$ when that item appears in the top ten and $0$
 otherwise, so a coalition value is an average of per-user reciprocal-log gains
 over a common item set.
-
 
 \section{Methodology}\label{sec:methodology}
 
@@ -601,7 +594,6 @@ the expected NDCG@10 of a uniformly random permutation of $C_u$, rather than a
 sampled draw. Centring on an expectation removes a variance term that a single
 random draw would inject into every coalition.
 
-\subsubsection{What ``exact'' qualifies}
 Equation~(\ref{eq:shapley}) is evaluated over all 32 coalitions with no
 sampling. Exactness therefore qualifies \emph{the aggregation step, conditional
 on the fitted characteristic function}, and nothing else: finite data,
@@ -731,7 +723,6 @@ faithful computations rather than implementation faults.
 
 \subsection{Experimental setup}\label{sec:setup}
 
-\subsubsection{Players, baselines and declared overlaps}
 The five players are those of Table~\ref{tab:sources}. Before computing any
 attribution we declared two expected substitutions, $cf$--$pop$ (popularity
 leaking into implicit-feedback collaborative filtering) and $ct$--$rec$ (shared
@@ -790,7 +781,6 @@ expected rather than anomalous.
 \emph{Candidate recall.} Because the game is defined on a fixed pool, a test
 item outside that pool is unreachable by every coalition and contributes zero
 to all 32 values. Recall therefore bounds what the game can observe.
-
 
 \begin{table}[tp]
 \caption{Corpus and candidate-set preconditions; monotonicity entries are
@@ -985,11 +975,9 @@ This is the comparison that supports the paper's claim. An allocation is not a
 removal estimate, switching to a different allocation does not repair that, and
 only changing the question does.
 
-
 \section{Results}\label{sec:results}
 
 \subsection{Allocation and removal disagree}\label{sec:attribution}
-
 
 \begin{table}[tp]
 \caption{Ten-seed ranking-stage LOO and Shapley attribution. Brackets are
@@ -1081,7 +1069,6 @@ signal that is covered, by a geographic content signal essentially tied with
 $cf$ at the top of the ranking ($0.00678$ against $0.00711$, an ordering that
 resampling reverses).
 
-\subsubsection{Orderings and no cross-corpus claim}
 The per-corpus orderings are
 $seq \succ cf \succ pop \succ rec \succ ct$ (MovieLens-1M),
 $cf \succ seq \succ ct \succ pop \succ rec$ (Amazon-VG) and
@@ -1109,7 +1096,6 @@ comparable across a fixed item set, which is exactly the property the main game
 preserves. All three estimands are reported side by side in @@ESMTAB:tab:estimands@@; their
 orderings agree at $\tau \ge 0.80$ on both corpora where the comparison is
 available.
-
 
 \begin{table}[tp]
 \caption{MovieLens-1M retirement losses at seed 42; negative values indicate
@@ -1213,7 +1199,6 @@ assigns the capability positive value \emph{under the declared game}. We say
 this because no external ground truth for the allocation exists, and the two
 statements describe different games.
 
-
 \section{Discussion}\label{sec:discussion}
 
 The two rules answer different questions, and Table~\ref{tab:decisions-kais}
@@ -1316,10 +1301,7 @@ maintenance; principled sampling beyond $n \approx 12$; graph-neural and
 Transformer components as players rather than baselines; and a repeat-aware
 protocol for check-in data, where the retrievability ceiling bites hardest.
 
-
 \backmatter
-
-
 
 \section*{Declarations}
 

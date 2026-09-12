@@ -173,7 +173,10 @@ def test_elsevier_build_uses_paragraph_not_subsubsection() -> None:
     covered by the body-agreement test, which normalises the two forms."""
     text = KBS.read_text()
     assert r"\subsubsection{" not in text
-    assert text.count(r"\paragraph{") >= 10
+    # Lower bound only. The count fell from 18 to 9 when stacked and thin
+    # headings were merged to reduce white space in the two-column build, so
+    # this guards the conversion, not the heading count.
+    assert text.count(r"\paragraph{") >= 5
 
 
 # --- KAIS editor: "comparative studies are insufficient, lacks recent
@@ -304,3 +307,68 @@ def test_cover_letter_targets_the_right_journal() -> None:
     letter = (REPO / "paper-kbs-elsevier" / "cover-letter.tex").read_text()
     assert "Knowledge-Based Systems" in letter
     assert "Knowledge and Information Systems" not in letter
+
+
+# --- heading density: the two-column build was fragmented ------------------ #
+
+def _heading_chunks(path):
+    """Yield (level, title, prose_word_count) for the body of a manuscript."""
+    t = path.read_text()
+    start = t.index(r"\section{Introduction}")
+    for end_marker in (r"\section*{CRediT", r"\backmatter"):
+        if end_marker in t:
+            body = t[start:t.index(end_marker)]
+            break
+    pat = re.compile(r"^\\(section|subsection|subsubsection|paragraph)\{([^}]*)\}",
+                     re.M)
+    marks = [(m.start(), m.group(1), m.group(2)) for m in pat.finditer(body)]
+    marks.append((len(body), "END", ""))
+
+    def words(chunk: str) -> int:
+        chunk = re.sub(r"(?<!\\)%.*", "", chunk)
+        chunk = re.sub(
+            r"\\begin\{(table|figure|algorithm|tikzpicture)\*?\}.*?"
+            r"\\end\{\1\*?\}", "", chunk, flags=re.S)
+        chunk = re.sub(r"\$[^$]*\$", " X ", chunk)
+        chunk = re.sub(r"\\[a-zA-Z@]+\*?(\[[^\]]*\])?", " ", chunk)
+        return len(re.sub(r"[{}&\\]", " ", chunk).split())
+
+    for i in range(len(marks) - 1):
+        st, lvl, name = marks[i]
+        yield lvl, name, words(body[st:marks[i + 1][0]]) - len(name.split())
+
+
+def test_no_heading_is_immediately_followed_by_another() -> None:
+    """A heading with no prose before the next heading burns vertical space
+    twice and reads as a gap. Four such pairs existed in both builds."""
+    for path in (KBS, KAIS):
+        stacked = [(l, n) for l, n, w in _heading_chunks(path) if w == 0]
+        assert not stacked, f"{path.name}: empty headings {stacked}"
+
+
+def test_no_subsection_is_too_thin_to_justify_a_heading() -> None:
+    """Sub-70-word sections fragment a two-column page. Six existed."""
+    for path in (KBS, KAIS):
+        thin = [(l, n, w) for l, n, w in _heading_chunks(path)
+                if l in ("subsection", "subsubsection", "paragraph") and w < 50]
+        assert not thin, f"{path.name}: thin sections {thin}"
+
+
+def test_two_column_float_parameters_are_set_in_the_elsevier_build() -> None:
+    """Starred floats obey \\dbltopfraction, not \\topfraction. Eleven of the
+    twelve body floats are starred, so leaving these at the LaTeX defaults
+    deferred wide tables onto half-empty float pages."""
+    text = KBS.read_text()
+    for macro in (r"\dbltopfraction", r"\dblfloatpagefraction",
+                  r"dbltopnumber"):
+        assert macro in text, f"{macro} not set in the two-column build"
+
+
+def test_kais_does_not_set_two_column_float_parameters() -> None:
+    """The Springer build is single column; \\dbltop* would be meaningless."""
+    assert r"\dbltopfraction" not in KAIS.read_text()
+
+
+def test_source_has_no_runs_of_blank_lines() -> None:
+    for path in (KBS, KAIS):
+        assert not re.search(r"\n\s*\n\s*\n", path.read_text()), path.name

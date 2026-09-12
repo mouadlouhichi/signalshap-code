@@ -353,8 +353,31 @@ def main() -> int:
         "The electronic supplementary material (ESM) accompanying this article "
         "contains")
 
+    # Two-column float parameters. The float block is inherited from the
+    # single-column KAIS setup, where \dbltop* is irrelevant because there are
+    # no starred floats. In elsarticle 5p, 11 of the 12 body floats ARE
+    # starred, and starred floats are governed by \dbltopfraction and
+    # \dblfloatpagefraction, not by \topfraction. Left at the LaTeX defaults
+    # (0.7 and 0.5) a full-width table is often refused at the top of a page
+    # and deferred to a float page it only half fills, which is the main
+    # source of white space in the two-column build.
+    setup_marker = "\\usepackage[section]{placeins}"
+    dbl = (
+        "%% Two-column floats: starred floats obey the \\dbltop* parameters,\n"
+        "%% and 11 of 12 body floats here are starred.\n"
+        "\\renewcommand{\\dbltopfraction}{0.9}\n"
+        "\\renewcommand{\\dblfloatpagefraction}{0.6}\n"
+        "\\setcounter{dbltopnumber}{3}\n"
+        + setup_marker)
+    if setup_marker not in setup:
+        raise SystemExit("placeins marker not found in shared setup")
+    setup = setup.replace(setup_marker, dbl, 1)
+
     front = FRONTMATTER.replace("%(ABSTRACT)s", abstract)
     out = PREAMBLE + "\n" + setup + front + "\n" + body + "\n" + BACKMATTER
+    # Concatenating the parts can leave a run of blank lines at each seam.
+    # Harmless to LaTeX, but it hides real structural gaps during review.
+    out = re.sub(r"\n[ \t]*\n([ \t]*\n)+", "\n\n", out)
 
     KBS_DIR.mkdir(exist_ok=True)
     DST.write_text(out, encoding="utf-8")
