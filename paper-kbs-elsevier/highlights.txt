@@ -1,0 +1,5 @@
+- Exact Shapley attribution is computed over all 32 source coalitions.
+- Shapley and ranking-stage LOO disagree on two of three corpora.
+- Ranking-stage LOO better predicts observed source-retirement cost.
+- Fixed candidates separate ranking attribution from retrieval effects.
+- The method allocates source credit without prescribing source retirement.

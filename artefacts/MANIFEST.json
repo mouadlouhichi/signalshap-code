@@ -1,6 +1,6 @@
 {
- "git_commit": "4f7ef5a2c4a7893a5512f9a08908fd3dacd40c49",
- "git_describe": "4f7ef5a-dirty",
+ "git_commit": "d3f7eb826f47c0a200efdf95229b9e42c158f436",
+ "git_describe": "d3f7eb8-dirty",
  "environment": {
   "python": "3.11.2",
   "platform": "Linux-6.1.158+-x86_64-with-glibc2.36",
@@ -8,11 +8,11 @@
   "numpy": "2.4.6",
   "scipy": "1.17.1",
   "pandas": "3.0.5",
-  "sklearn": "1.9.0",
-  "matplotlib": "3.11.1",
+  "sklearn": "1.9.1",
+  "matplotlib": "3.11.2",
   "blas": "see numpy.show_config"
  },
- "n_artefacts": 56,
+ "n_artefacts": 57,
  "artefacts": {
   "candidate_rule_ablation_ml_1m.json": {
    "sha256": "7ee0120e7a4fe56baf5e1127351d7b3bd15fc944b3644b380f141417aa13e09e",
@@ -85,6 +85,10 @@
   "e9_ridge_diagnostic.json": {
    "sha256": "5957cd4c730749ed134380c57149079dae474c3368c97c75aea375a541b5a783",
    "bytes": 8280
+  },
+  "fig2_ndcg_sampling.json": {
+   "sha256": "e0e6ceb85f9d39bd3a12d3f7287976326bf786b28b8eaa063c6a26df15e04544",
+   "bytes": 10405
   },
   "final_friedman.json": {
    "sha256": "0195a0aa4cb93c5c57eaebadb3da5ba5a106fff7b5fbd05a306b36026c3f7793",

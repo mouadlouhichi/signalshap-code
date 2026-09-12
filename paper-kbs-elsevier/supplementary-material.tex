@@ -1,0 +1,426 @@
+\documentclass[10pt]{article}
+
+\usepackage[a4paper,margin=24mm]{geometry}
+\usepackage{amsmath,amssymb,amsthm}
+\usepackage{booktabs,longtable,tabularx,array,multirow}
+\usepackage{float}
+\usepackage{microtype}
+\usepackage{xurl}
+\usepackage[hidelinks]{hyperref}
+
+\renewcommand{\thetable}{S\arabic{table}}
+\newcommand{\G}{\mathcal{G}}
+\newcommand{\LOO}{\mathrm{LOO}}
+\newcommand{\LOOr}{\mathrm{LOO}_{\mathrm{rank}}}
+\newcommand{\LOOe}{\mathrm{LOO}_{\mathrm{e2e}}}
+\newcommand{\esmsection}[2]{%
+  \section*{#1\texorpdfstring{\quad}{ }#2}%
+  \addcontentsline{toc}{section}{#1\texorpdfstring{\quad}{ }#2}}
+
+\newtheorem{property}{Property}
+\newtheorem{lemma}{Lemma}
+
+\title{Supplementary Material\\[4pt]
+\large for\\[3pt]
+\textit{SignalShap: Exact Ranking-Stage Source Attribution for Hybrid
+Recommenders}\\[5pt]
+\normalsize \textit{Knowledge-Based Systems}}
+\author{Mouad Louhichi, Redwane Nesmaoui, and Mohamed Lazaar\\[4pt]
+\small National Higher School of Computer Science and Systems Analysis
+(ENSIAS)\\
+\small Mohammed V University in Rabat, Rabat, Morocco\\[2pt]
+\small Corresponding author: \texttt{mouad\_louhichi@um5.ac.ma}}
+\date{}
+
+\begin{document}
+\maketitle
+
+\noindent
+This document supplies the formal results, implementation detail, robustness
+suite, provenance audit, repeat-event audit, estimand comparison, and negative
+fusion result cited from the main article. All captions are self-contained.
+The primary game is the five-source, fixed-candidate, baseline-centred NDCG@10
+game defined in the main article. Values are reported at the precision stored
+in the released artefacts; small differences from rounded main-text values are
+display rounding or the explicitly labelled legacy-versus-symmetric candidate
+rule distinction.
+
+\tableofcontents
+
+\esmsection{S1}{Formal results: redundancy, monotonicity, and approximate symmetry}
+
+Let $g_1$ and $g_2$ be \emph{exactly redundant} when, for every
+$S\subseteq\G\setminus\{g_1,g_2\}$,
+\[
+v(S\cup\{g_1\})=v(S\cup\{g_2\})=v(S\cup\{g_1,g_2\}).
+\]
+This definition says that either copy supplies the same capability and the
+second copy adds nothing once the first is present.
+
+\begin{property}[Corrected redundancy statement]
+Suppose $v(\varnothing)=0$, $v$ is monotone, $g_1$ and $g_2$ are exactly
+redundant, and $v(\{g_1\})>0$. Then
+\[
+\LOO(g_1)=\LOO(g_2)=0,
+\qquad
+\varphi_{g_1}=\varphi_{g_2}\geq \frac{v(\{g_1\})}{|\G|}>0.
+\]
+\end{property}
+
+\begin{proof}
+Take $S=\G\setminus\{g_1,g_2\}$ in the redundancy identity. It gives
+$v(\G)=v(\G\setminus\{g_1\})=v(\G\setminus\{g_2\})$, hence both LOO values
+are zero. Symmetry gives $\varphi_{g_1}=\varphi_{g_2}$. In the Shapley sum for
+$g_1$, every predecessor coalition containing $g_2$ has zero marginal by exact
+redundancy. Every remaining marginal is non-negative by monotonicity. The empty
+predecessor contributes
+$\frac{0!(n-1)!}{n!}[v(\{g_1\})-v(\varnothing)]
+=v(\{g_1\})/n$, which proves the bound.
+\end{proof}
+
+Monotonicity is necessary. The following three-player game satisfies exact
+redundancy and $v(\{g_1\})>0$ but allocates negative value to both copies:
+\[
+\begin{array}{c|rrrrrrrr}
+S & \varnothing & g_1 & g_2 & g_3 & g_1g_2 & g_1g_3 & g_2g_3 & g_1g_2g_3\\
+\hline
+v(S) & 0 & 1 & 1 & 5 & 1 & 0.5 & 0.5 & 0.5
+\end{array}
+\]
+Direct enumeration gives
+$\varphi_{g_1}=\varphi_{g_2}=-5/12$ and $\varphi_{g_3}=4/3$, while both LOO
+values for the copies are zero. The failure is caused by the non-monotone
+marginals obtained when $g_3$ is combined with a copy.
+
+\begin{lemma}[$\varepsilon$-symmetry]
+If
+\[
+\max_{S\subseteq\G\setminus\{g_1,g_2\}}
+\left|v(S\cup\{g_1\})-v(S\cup\{g_2\})\right|\leq\varepsilon,
+\]
+then $|\varphi_{g_1}-\varphi_{g_2}|\leq\varepsilon$.
+\end{lemma}
+
+\begin{proof}
+Pair the Shapley terms for $g_1$ and $g_2$ by a common coalition
+$S\subseteq\G\setminus\{g_1,g_2\}$. Their difference is
+\[
+\varphi_{g_1}-\varphi_{g_2}
+=\sum_S \frac{|S|!(n-|S|-2)!}{(n-1)!}
+\left[v(S\cup\{g_1\})-v(S\cup\{g_2\})\right].
+\]
+For each coalition size $k$, the total coefficient is $1/(n-1)$; summing over
+$k=0,\ldots,n-2$ gives total mass one. The triangle inequality therefore gives
+the stated bound.
+\end{proof}
+
+\begin{table}[H]
+\centering
+\small
+\caption{Six analytic games used to verify exact aggregation. Each row gives
+the closed-form Shapley vector and the maximum absolute error of the
+implementation. The harmful game verifies that a negative allocation is not
+silently clipped; the null-player and additive games exercise independent
+axioms.}
+\label{tab:analytic}
+\begin{tabular}{@{}llll@{}}
+\toprule
+Game & Players & Expected Shapley vector & Max. error \\
+\midrule
+Additive & $a,b,c$ & $(3,2,1)$ & $0$ \\
+Substitutes & $s_1,s_2,x$ & $(2,2,1)$ & $0$ \\
+Complements & $c_1,c_2,x$ & $(3,3,2)$ & $0$ \\
+Null player & $a,b,\mathrm{null}$ & $(3,2,0)$ & $0$ \\
+Harmful player & $a,\mathrm{bad}$ & $(5,-2)$ & $0$ \\
+Unanimity & $p,q,r$ & $(3,3,3)$ & $0$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\esmsection{S2}{Algorithm detail, Gram sufficient statistics, and cost}
+
+The implementation fits all five source scorers once, builds one candidate set
+$C_u$ per user, and forms the standardised matrix $Z_u$. For validation target
+$\mathbf y_u^{\mathrm{val}}$, the sufficient statistics are
+\[
+A=\sum_{u\in\mathcal U_{\mathrm{eval}}}|C_u|^{-1}Z_u^\top Z_u,
+\qquad
+c=\sum_{u\in\mathcal U_{\mathrm{eval}}}|C_u|^{-1}
+Z_u^\top\mathbf y_u^{\mathrm{val}}.
+\]
+For coalition $S$, the ridge head is obtained from the submatrix solve
+\[
+(A_{SS}+\lambda I)w^{(S)}=c_S.
+\]
+Thus the large user--candidate design is traversed once. Coalition fitting uses
+only small matrices of order at most five. At $\lambda=0$, the implementation
+uses the minimum-norm pseudoinverse and truncates singular values below
+$\varepsilon_{\mathrm{mach}}|S|\sigma_{\max}$; this is required for exact
+duplicate columns.
+
+With $n$ sources, Gram accumulation costs
+$O(\sum_u |C_u|n^2)$, the $2^n$ small solves cost
+$O(2^n n^3)$ in the loose worst case, and test scoring costs
+$O(2^n\sum_u |C_u|n)$. The exponential term is therefore attached to small
+matrix operations and rescoring, not repeated source fitting. Exact enumeration
+is practical here because $n=5$.
+
+\begin{table}[H]
+\centering
+\caption{Seed-42 wall-clock components in seconds. ``32-coalition game''
+includes coalition head fitting and value evaluation after source scores and
+candidates exist. Neural reference baselines and data loading are excluded so
+the columns isolate the cost of the declared game.}
+\label{tab:cost}
+\begin{tabular}{@{}lrrr@{}}
+\toprule
+Corpus & Source scorers & Candidates & 32-coalition game \\
+\midrule
+MovieLens-1M & $8.77$ & $7.87$ & $11.10$ \\
+Amazon-VG & $6.70$ & $9.37$ & $12.28$ \\
+Gowalla & $57.67$ & $554.02$ & $386.98$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\esmsection{S3}{Robustness, alternative values, interactions, and provenance}
+
+\subsection*{S3.1 Provenance and candidate-rule status}
+
+The source-symmetric rule truncates by descending sum of reciprocal per-source
+ranks and is the method of record. The legacy rule selected the best
+per-source rank and broke ties by source-list position; it is retained only for
+labelled diagnostics that predate the final ten-seed regeneration.
+
+\begin{table}[H]
+\centering
+\small
+\caption{Provenance of the evidence groups cited by the main article. Primary
+attribution and retirement inferences use the source-symmetric candidate rule.
+Legacy rows are single-seed sensitivity or verification diagnostics and are
+not used to estimate the ten-seed primary intervals.}
+\label{tab:provenance}
+\begin{tabularx}{\textwidth}{@{}>{\raggedright\arraybackslash}p{0.19\textwidth}
+  >{\raggedright\arraybackslash}X
+  >{\raggedright\arraybackslash}p{0.11\textwidth}
+  >{\centering\arraybackslash}p{0.10\textwidth}
+  >{\raggedright\arraybackslash}p{0.14\textwidth}@{}}
+\toprule
+Evidence group & Artefact or source & Rule & Seeds & Status \\
+\midrule
+Attribution, LOO, paired gaps & \path{final_seed_ci.json} & symmetric & 42--51 & primary \\
+Retirement agreement & \path{final_retirement_seeds.json} & symmetric & 42--51 & primary \\
+Sampling error (main Fig.~2) & \path{fig2_ndcg_sampling.json} & symmetric & 42 & verification \\
+Candidate-rule ablation & \path{candidate_rule_ablation_ml_1m.json} & both & 42 & sensitivity \\
+Duplicate injection & \path{e9_recovery_ml_1m.json} & legacy & 42 & constraint check \\
+$\lambda$, cap, pool, noise sweeps & \path{results_*.json}; \path{final_lambda_sweep.json} & legacy & 42 & sensitivity \\
+Semivalues and interactions & \path{e10_values_*.json}; interaction files & mixed, labelled & 42 or 42--51 & sensitivity \\
+Temporal refresh / validation miss & \path{protocol_sensitivity.json} & symmetric & 42--51 & sensitivity \\
+Repeat-event audit & \path{repeat_item_audit.json} & n/a & n/a & data audit \\
+Three estimands & \path{e11_estimands_*.json} & legacy, labelled & 42 & sensitivity \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\subsection*{S3.2 Ridge, candidate pools, caps, temporal state, and score noise}
+
+The ridge sweep used
+$\lambda\in\{10^{-5},10^{-3},10^{-1},1,10,10^3\}$. The MovieLens $cf$ flip
+and Gowalla $pop$ flip occur at every sampled value. Amazon-VG has no material
+flip through $\lambda=10$; at the extreme $10^3$ endpoint a $ct$ flip appears,
+which strengthens rather than creates either named primary result. The frozen
+$\lambda=1$ remains the declared analysis value.
+
+\begin{table}[H]
+\centering
+\small
+\caption{Robustness summary. ``Named material flip'' records the source whose
+Shapley and ranking-stage LOO signs disagree by more than $10^{-3}$ in the main
+analysis. Noise rows report the two largest Shapley values after adding
+source-scaled Gaussian score noise; the identity of the leading sources remains
+within the collaborative/sequential pair.}
+\label{tab:robustness}
+\small
+\begin{tabularx}{\textwidth}{@{}lcc>{\raggedright\arraybackslash}X@{}}
+\toprule
+Corpus / check & Setting & Diagnostic & Result \\
+\midrule
+MovieLens-1M & $\lambda:10^{-5}$ to $10^3$ & named flip & $cf$ throughout \\
+Amazon-VG & $\lambda:10^{-5}$ to $10$ & named flip & none throughout \\
+Gowalla & $\lambda:10^{-5}$ to $10^3$ & named flip & $pop$ throughout \\
+MovieLens-1M & $\sigma=0.1$ & $(\varphi_{cf},\varphi_{seq})$ & $(0.01659,0.02860)$ \\
+MovieLens-1M & $\sigma=0.5$ & $(\varphi_{cf},\varphi_{seq})$ & $(0.02268,0.02286)$ \\
+Amazon-VG & $\sigma=0.1$ & $(\varphi_{cf},\varphi_{seq})$ & $(0.01918,0.01855)$ \\
+Amazon-VG & $\sigma=0.5$ & $(\varphi_{cf},\varphi_{seq})$ & $(0.02329,0.01388)$ \\
+Gowalla & $\sigma=0.1$ & $(\varphi_{cf},\varphi_{ct})$ & $(0.00765,0.00655)$ \\
+Gowalla & $\sigma=0.5$ & $(\varphi_{cf},\varphi_{ct})$ & $(0.00746,0.00691)$ \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+The frozen two-step MovieLens game has $v(\G)=0.05169$ and test recall $0.748$.
+Refreshing the source state after validation gives $v(\G)=0.07026$ and recall
+$0.779$ at seed 42, with Kendall $\tau=1.00$ between source orderings. Across
+ten seeds the increase in $v(\G)$ is $31.7\%$ with interval
+$[30.2\%,33.1\%]$ and is positive on every run. The absolute level is therefore
+protocol-sensitive, while the allocation-versus-removal ordering contrast is
+preserved.
+
+\begin{table}[H]
+\centering
+\small
+\caption{Candidate-pool and cap sensitivity. Pool rows are MovieLens seed-42
+diagnostics at nominal cap 600; the final three rows are Amazon-VG cap sweeps.
+Recall is shown because it is the ceiling on every ranking metric and changes
+with the pool.}
+\label{tab:pools}
+\begin{tabular}{@{}llrrl@{}}
+\toprule
+Corpus & Pool / cap & Recall & $v(\G)$ & Top Shapley source \\
+\midrule
+MovieLens-1M & union of source top-$N$ & $0.748$ & $0.05169$ & $seq$ \\
+MovieLens-1M & popularity pool & $0.625$ & $0.05898$ & $seq$ \\
+MovieLens-1M & random pool & $0.178$ & $0.03064$ & $seq$ \\
+MovieLens-1M & oracle-included random pool & $1.000$ & $0.17754$ & $seq$ \\
+\midrule
+Amazon-VG & $N_{\max}=300$ & $0.431$ & $0.04017$ & $seq$ \\
+Amazon-VG & $N_{\max}=600$ & $0.589$ & $0.04130$ & $cf$ \\
+Amazon-VG & $N_{\max}=1\,200$ & $0.750$ & $0.04177$ & $cf$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection*{S3.3 Semivalues and Grabisch--Roubens interactions}
+
+The size-uniform semivalue is exactly Shapley because mass $1/n$ spread over
+the $\binom{n-1}{k}$ predecessor coalitions of each size produces the Shapley
+coefficient. It is therefore an implementation identity, not a comparator.
+Banzhaf and the binomial semivalues at $q=0.25$ and $q=0.75$ are distinct.
+
+\begin{table}[H]
+\centering
+\small
+\caption{Alternative-value and interaction summary. Kendall $\tau$ compares
+the induced source ordering with Shapley. Interaction entries are the two most
+negative Grabisch--Roubens pair indices; negative values denote substitution.
+MovieLens interactions are ten-seed means, while the other interaction rows
+are labelled single-seed diagnostics.}
+\label{tab:semivalues}
+\begin{tabular}{@{}lllll@{}}
+\toprule
+Corpus & Banzhaf $\tau$ & Binomial $\tau$ range & Most negative pair & Second \\
+\midrule
+MovieLens-1M & $1.00$ & $1.00$--$1.00$ & $cf$--$seq$: $-0.0542$ & $cf$--$pop$: $-0.0254$ \\
+Amazon-VG & $0.60$ & $0.80$--$0.80$ & $cf$--$seq$: $-0.0444$ & $ct$--$seq$: $-0.0077$ \\
+Gowalla & $0.80$ & $0.80$--$0.80$ & $ct$--$pop$: $-0.00825$ & $cf$--$seq$: $-0.00381$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\esmsection{S4}{Sampling-figure reconstruction audit}
+
+The revised sampling figure uses the seed-42 MovieLens ranking-stage,
+baseline-centred NDCG@10 game. The released exact Shapley, Banzhaf, two
+binomial semivalues, five singleton values, ten pair-interaction indices, five
+LOO values, grand value, and complete negative-marginal audit form 68 linear
+constraints on the 32 coalition values. The system has rank 32 and maximum
+constraint residual $8.4\times10^{-17}$. The recovered lattice reproduces 26
+raw and 7 material monotonicity violations.
+
+Permutation and KernelSHAP estimates use master seed 42, budgets
+$M\in\{50,100,500,2000\}$, and 20 repeats. Error is
+$\lVert\widehat\varphi-\varphi\rVert_\infty/|v(\G)|$. At $M=500$ the
+permutation mean and 95th percentile are $1.51\%$ and $3.27\%$; KernelSHAP
+gives $2.84\%$ and $4.73\%$. The reference lines are the $2.22\%$ ten-seed
+spread and $1.93\%$ materiality threshold. The executable reconstruction and
+all 32 recovered values are stored in
+\texttt{scripts/rebuild\_sampling\_figure.py} and
+\texttt{artefacts/fig2\_ndcg\_sampling.json}.
+
+\esmsection{S5}{Attribution-derived fusion: negative result}
+
+The exploratory fusion extension converted source attributions into
+user/segment-specific fusion weights and compared them with one global ridge
+head. This is not part of C1--C3 and is reported because the result is negative.
+The hierarchical bootstrap over seeds then users gives a mean NDCG@10
+difference of $0.000114$ with interval
+$[-0.0000414,0.0002885]$, which includes zero. A separate equivalence test with
+declared margin $0.002$ gives mean difference $0.0000286$, 90\% interval
+$[-0.000427,0.000485]$, and $p_{\mathrm{TOST}}=6.4\times10^{-13}$.
+Thus there is no resolvable improvement over the global head at the declared
+scale; the attribution method is not presented as a fusion method.
+
+\begin{table}[H]
+\centering
+\caption{Attribution-derived fusion versus the global head. The hierarchical
+bootstrap asks whether a gain is resolved; the two one-sided tests ask whether
+the difference is contained within the declared practical-equivalence
+margin. Both analyses support the negative-result wording in the main article.}
+\label{tab:fusion}
+\small
+\begin{tabularx}{\textwidth}{@{}lcc>{\raggedright\arraybackslash}X@{}}
+\toprule
+Analysis & Mean difference & Interval / margin & Conclusion \\
+\midrule
+Hierarchical bootstrap & $+0.000114$ & $[-0.0000414,+0.0002885]$ & gain unresolved \\
+TOST equivalence & $+0.0000286$ & 90\% CI $[-0.000427,+0.000485]$; margin $0.002$ & equivalent \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\clearpage
+\section*{Data and estimand audit tables}
+\addcontentsline{toc}{section}{Data and estimand audit tables}
+
+\begin{table}[H]
+\centering
+\small
+\caption{Repeat-event audit. ``Validation equals test'' counts users whose two
+held-out events name the same item. ``Test seen in train'' counts users whose
+test item is removed by the seen-item mask and therefore has zero payoff for
+every coalition. Gowalla's $49.904\%$ value gives the retrievability ceiling
+$\rho=0.501$.}
+\label{tab:repeat}
+\begin{tabular}{@{}lrrrrr@{}}
+\toprule
+Corpus & Users & Val.=test & Test seen train & Repeat events & Repeat-event \% \\
+\midrule
+MovieLens-1M & $6\,035$ & $0$ ($0.000\%$) & $0$ ($0.000\%$) & $0$ & $0.000$ \\
+Amazon-VG & $7\,120$ & $430$ ($6.039\%$) & $198$ ($2.781\%$) & $6\,188$ & $5.268$ \\
+Gowalla & $8\,865$ & $1\,260$ ($14.213\%$) & $4\,424$ ($49.904\%$) & $285\,643$ & $52.608$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[H]
+\centering
+\small
+\caption{Shapley values under three characteristic functions at seed 42.
+``Refit'' is the main fixed-candidate game with a coalition-specific head;
+``fixed'' masks a deployed grand-coalition head; ``end-to-end'' refreshes the
+candidate pool by coalition. MovieLens rank agreement is $1.00$ for
+refit--fixed and $0.80$ for comparisons with end-to-end. Amazon-VG agreement is
+$0.80$, $0.80$, and $1.00$, respectively.}
+\label{tab:estimands}
+\begin{tabular}{@{}llrrr@{}}
+\toprule
+Corpus & Source & Refit head & Fixed head & End-to-end \\
+\midrule
+\multirow{5}{*}{MovieLens-1M}
+ & $cf$ & $+0.01545$ & $+0.01867$ & $+0.01478$ \\
+ & $ct$ & $-0.00009$ & $-0.00104$ & $-0.00010$ \\
+ & $pop$ & $+0.00637$ & $+0.00528$ & $+0.00783$ \\
+ & $rec$ & $+0.00026$ & $-0.00079$ & $-0.00022$ \\
+ & $seq$ & $+0.02937$ & $+0.02924$ & $+0.02908$ \\
+\midrule
+\multirow{5}{*}{Amazon-VG}
+ & $cf$ & $+0.01926$ & $+0.02110$ & $+0.01962$ \\
+ & $ct$ & $+0.00187$ & $+0.00101$ & $+0.00133$ \\
+ & $pop$ & $+0.00157$ & $+0.00166$ & $+0.00291$ \\
+ & $rec$ & $-0.00047$ & $-0.00045$ & $+0.00026$ \\
+ & $seq$ & $+0.01909$ & $+0.01799$ & $+0.01718$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\end{document}

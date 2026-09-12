@@ -114,6 +114,12 @@ def main(tex_path: Path | None = None,
         # LaTeX kernel; reached when checking the standalone ESM, which uses
         # the `article` class rather than sn-jnl.
         "newpage", "tableofcontents", "maketitle", "today", "clearpage",
+        "mbox", "shortstack", "addcontentsline", "hline",
+        # elsarticle front matter, used by the KBS build. The class is
+        # redistributable and ships in paper-kbs-elsevier/, but the checker is
+        # pointed at sn-jnl.cls by default.
+        "address", "corref", "fnref", "cortext", "fntext", "journal",
+        "biboptions", "ead", "keyword",
     }
     defined |= set(re.findall(
         r"\\(?:newcommand|renewcommand|providecommand|DeclareMathOperator"
@@ -153,13 +159,22 @@ def main(tex_path: Path | None = None,
         only reliable way, and it matters: with the naive split two of the five
         rows in Table 1 were never checked and a 10-cell row passed.
         """
-        rows, cur, k = [], [], 0
+        rows, cur, k, depth = [], [], 0, 0
         while k < len(chunk):
-            if chunk[k] == "\\" and k + 1 < len(chunk):
-                if chunk[k + 1] == "\\":
+            ch = chunk[k]
+            if ch == "\\" and k + 1 < len(chunk):
+                # A `\\` inside braces is a line break WITHIN a cell, not a
+                # row terminator: `\shortstack[l]{Prop.\\Sec.~\ref{...}}` is
+                # one cell. Without the depth guard the row is cut in half and
+                # a valid nine-cell row is reported as a one-cell row.
+                if chunk[k + 1] == "\\" and depth == 0:
                     rows.append("".join(cur)); cur = []; k += 2; continue
                 cur.append(chunk[k:k + 2]); k += 2; continue
-            cur.append(chunk[k]); k += 1
+            if ch == "{":
+                depth += 1
+            elif ch == "}":
+                depth = max(0, depth - 1)
+            cur.append(ch); k += 1
         rows.append("".join(cur))
         return rows
 
