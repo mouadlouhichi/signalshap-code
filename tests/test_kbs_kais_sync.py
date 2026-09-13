@@ -495,3 +495,60 @@ def test_section_titles_are_distinguishable() -> None:
     starts = [t.lower()[:28] for t in titles]
     dupes = {t for t in starts if starts.count(t) > 1}
     assert not dupes, f"near-identical subsection titles: {dupes}"
+
+
+# --- reviewer round 3: Q1 (estimand-matched game) and Q3 (regime) ---------- #
+
+def _q1q3():
+    return json.loads((REPO / "artefacts" / "reviewer_q1_q3.json").read_text())
+
+
+def test_estimand_matched_shapley_still_fails() -> None:
+    """Q1: the reviewer asked whether Shapley recovers the retirement ordering
+    once the game matches the intervention. It does not, and the claim in the
+    text must track the artefact."""
+    q1 = _q1q3()["q1_estimand_matched_shapley"]
+    assert q1["ml_1m"]["games"]["end_to_end"][
+        "kendall_tau_vs_observed_loss"] == pytest.approx(0.4)
+    assert q1["amazon_video_games"]["games"]["end_to_end"][
+        "kendall_tau_vs_observed_loss"] == pytest.approx(0.8)
+    # The load-bearing claim: no Shapley variant nominates the right source,
+    # and ranking-stage LOO does on both corpora.
+    for corpus in q1.values():
+        for game in corpus["games"].values():
+            assert game["identifies_correctly"] is False
+        assert corpus["loo_rank"]["identifies_correctly"] is True
+    text = KBS.read_text()
+    assert "+0.40$ on MovieLens-1M" in text
+    assert "$+0.80$ on Amazon-VG" in text
+
+
+def test_regime_dependence_numbers_match() -> None:
+    """Q3: LOO_rank holds tau = +1.00 across the observed recall range."""
+    q3 = _q1q3()["q3_retrieval_sensitivity"]
+    expected = {"ml_1m": "11.9", "amazon_video_games": "8.2",
+                "gowalla_ts": "6.1"}
+    text = KBS.read_text()
+    for corpus, pct in expected.items():
+        got = f"{q3[corpus]['largest_drop_relative'] * 100:.1f}"
+        assert got == pct, f"{corpus}: artefact {got}%, prose {pct}%"
+        assert f"{pct}\\%" in text
+        assert q3[corpus]["kendall_tau_loo"] == pytest.approx(1.0)
+
+
+def test_construct_scope_is_stated_before_the_results() -> None:
+    """W2: the candidate set is built from all five sources, so the allocation
+    is not end-to-end credit. That has to be said where the construct is
+    defined, not only in the threats section."""
+    text = KBS.read_text()
+    scope = text.index("bounds what the word")
+    results = text.index(r"\section{Results}")
+    assert scope < results, "construct scope stated after the results"
+    assert "not end-to-end credit for source" in text
+    assert "systematically understated" in text
+
+
+def test_refit_interpretation_is_stated() -> None:
+    """W3: v(S) is the performance of a refitted coalition system."""
+    text = KBS.read_text()
+    assert "performance of the" in text and "refitted" in text

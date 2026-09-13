@@ -566,9 +566,22 @@ game. Writing $\Ueval = \{u : |\Cu| > 0\}$, users outside $\Ueval$ are excluded
 from every coalition mean and reported separately as candidate-construction
 failures.
 
-This is the construct's load-bearing choice. If each coalition retrieved its
-own pool, $v(S)$ and $v(S')$ would be NDCG values over different item sets and
-their difference would confound ranking quality with retrieval coverage. The
+This is the construct's load-bearing choice, and it bounds what the word
+\emph{attribution} can mean here. Because $\Cu$ is built from the retrieval
+lists of \emph{all five} sources and then frozen, $v(S)$ answers a conditional
+question: how well does coalition $S$ rank inside a candidate environment that
+already contains items surfaced by sources outside $S$? Two consequences follow
+and we state them before any result. First, a source whose main contribution is
+retrieval rather than ranking is systematically understated, because its
+retrieval work has already been done for every coalition. Second, $\varphi_g$
+is therefore not end-to-end credit for source $g$; it is credit for what $g$
+contributes to ranking within that environment. A reader who wants end-to-end
+credit should read the retirement losses of
+Section~\ref{sec:retirement}, not the allocation.
+
+If each coalition retrieved its own pool instead, $v(S)$ and $v(S')$ would be
+NDCG values over different item sets and their difference would confound
+ranking quality with retrieval coverage. The
 alternative of a grand-coalition-only pool is not neutral either, and we
 measured that cost rather than asserting it: under that design $\varphi_{ct}$
 changes sign on MovieLens-1M. Three source-blind pool rules (ESM~S3) leave both
@@ -598,8 +611,19 @@ v(S) \;=\; \frac{1}{|\Ueval|}\sum_{u\in\Ueval}
 \end{equation}
 with $v(\varnothing)=0$ by construction. The ridge penalty $\lambda$ is frozen
 before the study at a value selected on a MovieLens pilot; a sweep over eight
-orders of magnitude appears in ESM~S3. For cutoff $K=10$, the per-user
-baseline is the closed-form expectation
+orders of magnitude appears in ESM~S3.
+
+Refitting per coalition has an interpretive consequence worth naming. Because
+$w^{(S)}$ is refit for every $S$, $v(S)$ measures the performance of the
+\emph{refitted} coalition system, not the performance of the deployed
+grand-coalition head restricted to $S$. The allocation is therefore over what
+each source contributes when the fusion layer is allowed to adapt to its
+absence, which is the charitable reading of a source and the one an ablation
+study implicitly assumes. The fixed-head variant $v_{\mathrm{fixed}}$ of
+Section~\ref{sec:retirement} is the alternative reading, and the two agree on
+ordering at $\tau \ge 0.80$.
+
+For cutoff $K=10$, the per-user baseline is the closed-form expectation
 \begin{equation}
 b_u =
 \begin{cases}
@@ -1114,7 +1138,21 @@ grand-coalition head $w^{(\G)}$ fixed and merely masking it to $S$ gives
 $v_{\mathrm{fixed}}$; letting each coalition retrieve its own $C_u(S)$ and
 refit gives $v_{\mathrm{e2e}}$, under which coalition values are no longer
 comparable across a fixed item set, which is exactly the property the main game
-preserves. All three estimands are reported side by side in @@ESMTAB:tab:estimands@@; their
+preserves.
+
+An obvious objection is that Shapley is being scored on a game that does not
+match the intervention: the main game holds candidates fixed, whereas
+retirement changes retrieval. We therefore score the estimand-matched game as
+well. Even when the characteristic function is $v_{\mathrm{e2e}}$, so that the
+game and the intervention agree, Shapley does not recover the observed
+ordering: $\tau = +0.40$ on MovieLens-1M against $+0.20$ for the refitted head,
+and $+0.80$ on Amazon-VG against $+0.60$, while ranking-stage LOO reaches
+$+1.00$ on both. On neither corpus does any of the three Shapley variants
+nominate the source with the smallest observed loss, and ranking-stage LOO does
+so on both. Matching the game to the intervention moves the agreement in the
+expected direction and does not close the gap. The failure is therefore a
+property of allocation as an instrument, not an artefact of the fixed-candidate
+construct, which is the stronger form of the paper's claim. All three estimands are reported side by side in @@ESMTAB:tab:estimands@@; their
 orderings agree at $\tau \ge 0.80$ on both corpora where the comparison is
 available.
 
@@ -1291,6 +1329,18 @@ blocked replication preserves the contrast but not the named sources.
 \emph{Statistical.} Ten seeds describe training randomness on fixed datasets.
 Intervals and paired tests are conditional on treating seeds as exchangeable
 runs and are not population inference.
+\emph{Regime dependence.} A natural worry is that ranking-stage LOO tracks
+end-to-end retirement only where candidate recall is high enough that removal
+perturbs ranking rather than retrieval. The three corpora bear on this without
+a new run, because they span candidate recall $0.748$, $0.589$ and $0.450$,
+and because we record the recall left after each single-source retirement. The
+largest retrieval loss any single source causes falls from $11.9\%$ of recall
+on MovieLens-1M to $8.2\%$ on Amazon-VG and $6.1\%$ on Gowalla, while
+$\tau_{\LOOr}$ is $+1.00$ on all three. Over the range we can observe,
+predictive validity does not degrade with recall. We state the limit of that
+evidence: none of these corpora is retrieval-dominant by construction, so the
+boundary at which a fixed-candidate diagnostic must fail is not located here,
+only shown to lie outside the observed range.
 \emph{External.} Three corpora, five deliberately simple players, one
 subsample per corpus. Gowalla's magnitudes are halved by the retrievability
 ceiling, so only its orderings and signs are read. No causal or off-policy
