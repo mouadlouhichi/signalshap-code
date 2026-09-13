@@ -105,6 +105,48 @@ at 64 coalitions or a defensible error budget.
 
 **Not done.** This requires a new corpus and a full study run.
 
+## Round 3 (updated review)
+
+### #1. Ambiguity between the seed-42 τ and the ten-seed mean
+
+**You were right, and it was ambiguous rather than inconsistent.** The +1.00
+is seed 42; Table 7's 0.96 is the ten-seed mean (8/10 seeds at 1.00, two at
+0.80 on both ML-1M and Amazon-VG). Nothing in the paragraph said so. The text
+now opens with "All figures in the remainder of this paragraph are seed 42,
+the single seed for which the three estimands were computed; the ten-seed
+results of Table 7 are the primary evidence and are not affected."
+
+The ten-seed version of the estimand table cannot be produced without new
+compute: `v_fixed` and `v_e2e` were only ever computed at seed 42, and
+`v_e2e` costs 2^n retrieval passes per seed. We label the scope rather than
+extrapolate.
+
+### #2. Explicit definition of v_e2e
+
+Added as Eq. (9), alongside the three details you asked about: the baseline
+`b_u(S)` is Eq. (6) re-evaluated on `C_u(S)` and therefore moves with the
+coalition; the evaluated user population is held fixed at the main game's so
+all coalitions average over the same users; a user whose coalition-specific
+candidate set is empty contributes 0; and `v_e2e(∅) = 0` by the same
+convention. We also note why retirement losses are differenced on raw NDCG
+rather than on `v_e2e`.
+
+### #3. Support for "no Shapley variant nominates the right source"
+
+Added as Table 8: τ and top-1 for all three Shapley variants plus LOO, on both
+corpora, with the observed answer in the header. Seed 42, labelled as such.
+The text now says the identification result is the sharper one and does not
+depend on τ's coarseness at n = 5.
+
+### #4, #5. Retrieval-dominant test and ranking surrogate
+
+Still not done, for the reasons given above. Both need refits.
+
+### Minor. "Sequential" naming
+
+Taken. The abstract and introduction now say "short-term co-occurrence"; the
+source table already carried the symmetric-matrix caveat.
+
 ## Summary
 
 Four of the six weaknesses and two of the four questions are addressed in the

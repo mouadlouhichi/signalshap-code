@@ -126,7 +126,8 @@ of removing a source and the allocation of system value. Conflating them can
 produce opposite source-level conclusions.
 
 We formulate attribution in a five-source hybrid recommender as a cooperative
-game over collaborative, content, popularity, recency and sequential signals.
+game over collaborative, content, popularity, recency and short-term
+co-occurrence signals.
 The payoff is baseline-centred NDCG@10 on coalition-independent candidates,
 with coalition-specific ridge heads fit on validation data and evaluated on
 test data. Enumerating all 32 coalitions eliminates aggregation sampling error.
@@ -174,7 +175,8 @@ Cooperative game theory supplies the allocation rule. The Shapley
 value~\citep{shapley1953} is the unique allocation satisfying efficiency,
 symmetry, the null-player property and additivity, and it evaluates each player
 against every coalition. We define a five-player game over collaborative,
-content, popularity, recency and sequential sources. Its payoff is
+content, popularity, recency and short-term co-occurrence sources. Its payoff
+is
 baseline-centred NDCG@10 on a candidate set fixed across coalitions, so every
 $v(S)$ is evaluated over the same items. Five players give $2^5=32$ coalition
 values, which we enumerate exhaustively; the aggregation therefore introduces
@@ -1143,16 +1145,64 @@ preserves.
 An obvious objection is that Shapley is being scored on a game that does not
 match the intervention: the main game holds candidates fixed, whereas
 retirement changes retrieval. We therefore score the estimand-matched game as
-well. Even when the characteristic function is $v_{\mathrm{e2e}}$, so that the
-game and the intervention agree, Shapley does not recover the observed
-ordering: $\tau = +0.40$ on MovieLens-1M against $+0.20$ for the refitted head,
-and $+0.80$ on Amazon-VG against $+0.60$, while ranking-stage LOO reaches
-$+1.00$ on both. On neither corpus does any of the three Shapley variants
+well. Define it explicitly. For $S \neq \varnothing$ let $C_u(S)$ be the
+candidate set rebuilt by Equation~(\ref{eq:candidates}) from the sources in $S$
+alone, so a removed source no longer contributes retrieval, and let
+$w^{(S)}_{\mathrm{e2e}}$ be a head refit on that set. Then
+\begin{equation}
+v_{\mathrm{e2e}}(S) = \frac{1}{|\Ueval|}\sum_{u\in\Ueval}
+  \Bigl[\NDCG\bigl(\operatorname{rank}(Z^{(S)}_u(S)\,w^{(S)}_{\mathrm{e2e}}),\,
+  \mathbf y^{\mathrm{te}}_u\bigr) - b_u(S)\Bigr],
+\label{eq:e2e}
+\end{equation}
+with $v_{\mathrm{e2e}}(\varnothing)=0$ by the same convention as the main game.
+Three details matter for reproduction. The baseline $b_u(S)$ is
+Equation~(\ref{eq:bu}) re-evaluated on $C_u(S)$, so it moves with the
+coalition; $\Ueval$ is held at the population of the main game so that all
+coalitions average over the same users; and a user whose coalition-specific
+candidate set is empty contributes $0$. Because $b_u$ now varies by coalition,
+retirement losses are differenced on raw NDCG rather than on $v_{\mathrm{e2e}}$,
+which would add a baseline term unrelated to the observed change.
+
+All figures in the remainder of this paragraph are seed 42, the single seed for
+which the three estimands were computed; the ten-seed results of
+Table~\ref{tab:retire-seeds} are the primary evidence and are not affected.
+Even when the characteristic function is $v_{\mathrm{e2e}}$, so that game and
+intervention agree, Shapley does not recover the observed ordering
+(Table~\ref{tab:estimandmatch}): $\tau = +0.40$ on MovieLens-1M against
+$+0.20$ for the refitted head, and $+0.80$ on Amazon-VG against $+0.60$, where
+ranking-stage LOO reaches $+1.00$ on both at this seed. The identification
+result is sharper than the correlation and does not depend on the coarseness of
+$\tau$ at $n=5$: on neither corpus does any of the three Shapley variants
 nominate the source with the smallest observed loss, and ranking-stage LOO does
-so on both. Matching the game to the intervention moves the agreement in the
-expected direction and does not close the gap. The failure is therefore a
-property of allocation as an instrument, not an artefact of the fixed-candidate
-construct, which is the stronger form of the paper's claim. All three estimands are reported side by side in @@ESMTAB:tab:estimands@@; their
+so on both. Matching the game to the intervention moves agreement in the
+expected direction without closing the gap. The failure is therefore a property
+of allocation as an instrument, not an artefact of the fixed-candidate
+construct, which is the stronger form of the paper's claim.
+
+\begin{table}[tp]
+\caption{Estimand-matched comparison at seed 42, the single seed for which all
+three characteristic functions were computed. $\tau$ is rank agreement with the
+observed end-to-end retirement loss; ``top-1'' is the source each rule
+nominates as cheapest to retire, against the observed answer in the header.
+Matching the game to the intervention ($v_{\mathrm{e2e}}$) raises $\tau$ but
+never yields the right source.}
+\label{tab:estimandmatch}
+\small
+\begin{tabular*}{\textwidth}{@{\extracolsep{\fill}}lcccc@{}}
+\toprule
+& \multicolumn{2}{c}{MovieLens-1M (observed: $cf$)}
+& \multicolumn{2}{c}{Amazon-VG (observed: $ct$)} \\
+\cmidrule(lr){2-3}\cmidrule(l){4-5}
+Rule & $\tau$ & top-1 & $\tau$ & top-1 \\
+\midrule
+Shapley, refitted head $v$          & $+0.20$ & $ct$  & $+0.60$ & $rec$ \\
+Shapley, fixed head $v_{\mathrm{fixed}}$ & $+0.20$ & $ct$  & $+0.80$ & $rec$ \\
+Shapley, end-to-end $v_{\mathrm{e2e}}$   & $+0.40$ & $rec$ & $+0.80$ & $rec$ \\
+Ranking-stage LOO                   & $+1.00$ & $cf$\,\checkmark & $+1.00$ & $ct$\,\checkmark \\
+\bottomrule
+\end{tabular*}
+\end{table} All three estimands are reported side by side in @@ESMTAB:tab:estimands@@; their
 orderings agree at $\tau \ge 0.80$ on both corpora where the comparison is
 available.
 

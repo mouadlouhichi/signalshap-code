@@ -22,6 +22,7 @@ KAIS = REPO / "paper-kais" / "main.tex"
 KBS = REPO / "paper-kbs-elsevier" / "main.tex"
 KAIS_ESM = REPO / "paper-kais" / "Online-Resource-1.tex"
 KBS_ESM = REPO / "paper-kbs-elsevier" / "supplementary-material.tex"
+ART = REPO / "artefacts"
 
 
 def _kais_body(text: str) -> str:
@@ -552,3 +553,63 @@ def test_refit_interpretation_is_stated() -> None:
     """W3: v(S) is the performance of a refitted coalition system."""
     text = KBS.read_text()
     assert "performance of the" in text and "refitted" in text
+
+
+def test_estimand_match_table_matches_the_artefacts() -> None:
+    """Reviewer: the +1.00 for LOO is seed 42 while Table 7 reports a 0.96
+    ten-seed mean. Both are right, but the text was ambiguous. The comparison
+    table is seed-42 only and must say so, and every cell must come from the
+    artefacts."""
+    from scipy import stats
+
+    players = ("cf", "ct", "pop", "rec", "seq")
+    text = KBS.read_text()
+    table = re.search(r"\\label\{tab:estimandmatch\}(.*?)\\end\{tabular\*\}",
+                      text, re.S).group(1)
+
+    for corpus in ("ml_1m", "amazon_video_games"):
+        est = json.loads((ART / f"e11_estimands_{corpus}.json").read_text())
+        ret = json.loads((ART / f"e12_retirement_{corpus}.json").read_text())
+        observed = ret["true_retirement_loss"]
+        target = [observed[g] for g in players]
+        correct = min(players, key=lambda g: observed[g])
+        assert f"observed: ${correct}$" in text, corpus
+
+        for game in ("refit_head", "fixed_head", "end_to_end"):
+            phi = est[game]["shapley"]
+            tau, _ = stats.kendalltau([phi[g] for g in players], target)
+            assert f"${tau:+.2f}$" in table, f"{corpus}/{game} tau {tau:+.2f}"
+            pick = min(players, key=lambda g: phi[g])
+            assert f"${pick}$" in table, f"{corpus}/{game} pick {pick}"
+            # The load-bearing claim.
+            assert pick != correct, (
+                f"{corpus}/{game} now picks correctly; the text says none do")
+
+
+def test_seed_provenance_of_the_estimand_paragraph_is_explicit() -> None:
+    """The ambiguity the reviewer flagged: a seed-42 tau sitting beside a
+    ten-seed mean with nothing distinguishing them."""
+    text = KBS.read_text()
+    assert "seed 42, the single seed" in text
+    assert "are the primary evidence" in text
+
+
+def test_e2e_game_is_defined_not_only_described() -> None:
+    """Reviewer asked for v_e2e to be as explicit as Eq. (5), including how
+    the baseline and empty candidate sets are handled."""
+    text = KBS.read_text()
+    assert r"\label{eq:e2e}" in text
+    for detail in ("re-evaluated on $C_u(S)$", "contributes $0$",
+                   r"v_{\mathrm{e2e}}(\varnothing)=0"):
+        assert detail in text, detail
+
+
+def test_seq_is_not_called_sequential_before_its_caveat() -> None:
+    """Reviewer (minor): 'sequential' misleads; the signal is symmetric
+    co-occurrence with recency weighting. The abstract and introduction
+    reached the reader before the caveat in the source table."""
+    text = KBS.read_text()
+    head = text[:text.index(r"\label{tab:sources}")]
+    assert "and sequential signals" not in head
+    assert "and sequential sources" not in head
+    assert "short-term" in head

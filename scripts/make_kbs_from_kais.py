@@ -60,6 +60,8 @@ WIDE_FLOATS = {
     "tab:notation",
     # Five columns including a 0.30\textwidth prose column.
     "tab:rulecomparison",
+    # Five columns with a double header; natural width leaves the span empty.
+    "tab:estimandmatch",
 }
 NARROW_FLOATS = {"fig:scatter"}
 

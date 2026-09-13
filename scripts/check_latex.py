@@ -107,6 +107,8 @@ def main(tex_path: Path | None = None,
         "allowbreak",
         # amsmath, loaded by the preamble.
         "overset", "underset", "substack", "tfrac", "dfrac", "binom",
+        # amssymb, loaded by every build in this repo.
+        "checkmark",
         # \notag is amsmath (suppress an equation number inside aligned);
         # \extracolsep is a LaTeX kernel tabular primitive, used in the
         # \begin{tabular*}{\textwidth}{@{\extracolsep{\fill}}...} idiom.
