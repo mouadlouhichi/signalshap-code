@@ -27,7 +27,13 @@
 %%    and under the two-column 5p geometry that overfills the column. The
 %%    single-column preprint geometry sets the bullets as running text at a
 %%    readable measure.
-\documentclass[preprint,12pt]{elsarticle}
+%%
+%% 3. `times'. main.tex is \documentclass[final,5p,times,...], so without this
+%%    the Highlights page came out in Computer Modern while the manuscript is
+%%    in Times: two files in one submission that do not look like the same
+%%    paper. The option is what loads txfonts, so it has to be on the
+%%    \documentclass line here too.
+\documentclass[preprint,times,12pt]{elsarticle}
 
 \journal{Knowledge-Based Systems}
 

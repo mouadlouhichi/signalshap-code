@@ -903,7 +903,10 @@ def test_highlights_does_not_emit_an_article_title_page() -> None:
     # The highlights box is set to \textwidth, which overfills a 5p column.
     # Check the class options only: the file comment legitimately mentions 5p
     # when explaining why it is not used.
-    preamble = tex.read_text().split(r"\begin{document}")[0]
+    # Strip comments first: the file comment quotes main.tex's own
+    # \documentclass line, and an uncommented search finds that instead.
+    preamble = re.sub(
+        r"(?<!\\)%.*", "", tex.read_text().split(r"\begin{document}")[0])
     opts = re.search(r"\\documentclass\[([^\]]*)\]", preamble).group(1)
     assert "preprint" in opts, f"single-column geometry required, got: {opts}"
     assert "5p" not in opts, f"5p overfills the highlights box: {opts}"
@@ -922,3 +925,25 @@ def test_highlights_macros_all_resolve_in_the_shipped_class() -> None:
         assert (f"\\def\\{macro}" in cls
                 or f"newcommand{{\\{macro}}}" in cls
                 or f"newenvironment{{{macro}}}" in cls), macro
+
+
+def test_highlights_and_manuscript_use_the_same_typeface() -> None:
+    r"""main.tex is \documentclass[final,5p,times,...], where `times' is what
+    loads txfonts. highlights.tex is uploaded as a separate item of the same
+    submission, so if it omits the option it is set in Computer Modern and the
+    two files visibly do not belong to the same paper. The class only switches
+    fonts from the option, never from anything in the body."""
+    d = REPO / "paper-kbs-elsevier"
+
+    def options(name: str) -> set[str]:
+        preamble = (d / name).read_text().split(r"\begin{document}")[0]
+        preamble = re.sub(r"(?<!\\)%.*", "", preamble)
+        raw = re.search(r"\\documentclass\[([^\]]*)\]", preamble).group(1)
+        return {o.strip() for o in raw.split(",")}
+
+    main_opts, hl_opts = options("main.tex"), options("highlights.tex")
+    assert "times" in main_opts, (
+        "premise of this test changed: main.tex no longer asks for Times")
+    assert "times" in hl_opts, (
+        "highlights.tex would render in Computer Modern while the manuscript "
+        f"renders in Times; options are {sorted(hl_opts)}")
