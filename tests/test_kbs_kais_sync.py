@@ -662,3 +662,43 @@ def test_e2e_equation_notation_is_unambiguous() -> None:
     assert "Z^{(S)}_u(S)" not in text
     assert r"Write $Z_{u,S}$ for" in text
     assert r"\operatorname{rank}(Z_{u,S}" in text
+
+
+def test_source_label_terminology_is_consistent() -> None:
+    """Reviewer round 5, edit 1. `seq` is fine as a math symbol but the prose
+    and the table label must agree on the words. The Signal column said
+    'Co-occurrence' while the abstract and introduction said 'short-term
+    co-occurrence'."""
+    text = KBS.read_text()
+    assert "$seq$ & Short-term co-occurrence" in text
+    # And no bare word-form `seq` outside maths.
+    nomath = re.sub(r"\$[^$]*\$", " MATH ", re.sub(r"(?<!\\)%.*", "", text))
+    assert not re.search(r"\bseq\b", nomath), "bare 'seq' in prose"
+
+
+def test_observed_is_defined_where_it_is_used() -> None:
+    """Reviewer round 5, edit 2. 'Observed cheapest source' needed a one-line
+    definition: end-to-end, same seed and protocol, differenced on raw NDCG@10
+    rather than on the baseline-centred v."""
+    text = KBS.read_text()
+    caption = re.search(r"\\caption\{Estimand-matched comparison(.*?)\}\s*\n\\label",
+                        text, re.S).group(1)
+    for phrase in ("removed from retrieval and fusion",
+                   "candidates are rebuilt", "raw", "NDCG@10",
+                   "baseline therefore moves"):
+        assert phrase in caption, f"caption missing: {phrase}"
+
+
+def test_observed_definition_matches_the_artefact() -> None:
+    """The caption claims the loss differences raw utility, not centred v.
+    The artefact records both, so the claim is checkable."""
+    j = json.loads((ART / "e12_retirement_ml_1m.json").read_text())
+    raw = j["true_retirement_loss"]
+    centred = j["retirement_loss_centred_legacy"]
+    shift = j["baseline_shift_after_removal"]
+    # centred = raw + baseline shift, so they are genuinely different objects
+    # and the caption is distinguishing something real.
+    for g in raw:
+        assert centred[g] == pytest.approx(raw[g] + shift[g], abs=1e-9), g
+    assert any(abs(shift[g]) > 1e-6 for g in shift), (
+        "baseline shift is negligible; the caption's distinction would be moot")

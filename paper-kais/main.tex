@@ -519,7 +519,7 @@ $rec$ & Recency
         2^{-(t_{\max}-\ell_{u\kappa(i)})/(86400\cdot30)}$ for the user's most
         recent interaction $\ell$ in that cluster, else $0$. \\
 \addlinespace[2pt]
-$seq$ & Co-occurrence
+$seq$ & Short-term co-occurrence
       & PPMI--SVD item embeddings~\citep{levy2014neural} (item2vec-style),
         pairs at distance $\le 5$,
         $64$ components; user vector is a recency-weighted mean of the last
@@ -1190,7 +1190,12 @@ three characteristic functions were computed. $\tau$ is rank agreement with the
 observed end-to-end retirement loss; ``top-1'' is the source each rule
 nominates as cheapest to retire, against the observed answer in the header.
 Matching the game to the intervention ($v_{\mathrm{e2e}}$) raises $\tau$ but
-never yields the right source.}
+never yields the right source. Throughout, \emph{observed} means the
+end-to-end retirement loss measured under the same seed and protocol: the
+source is removed from retrieval and fusion alike, candidates are rebuilt from
+the survivors, the head is refit, and the loss is differenced on \emph{raw}
+NDCG@10 rather than on the baseline-centred $v$, because each coalition
+retrieves its own candidate set and the baseline therefore moves with it.}
 \label{tab:estimandmatch}
 \small
 \begin{tabular*}{\textwidth}{@{\extracolsep{\fill}}lcccc@{}}

@@ -184,6 +184,42 @@ S here, whereas in Eq. (5) only the columns do.
 Multi-seed `v_e2e`, a retrieval-dominant stress test, and a ranking-aware head
 all require refits. See the reasons under Q2/Q4 above; they are unchanged.
 
+## Round 5 (minor revision)
+
+### Edit 1. Terminology: `seq` versus co-occurrence
+
+**Already satisfied for the part you flagged, with one real gap that we
+fixed.** We checked every occurrence: `seq` appears in the manuscript only as
+the math symbol `$seq$`, which is the usage you explicitly permit. The
+orderings you cite (`seq > cf > pop > rec > ct`) are set in maths, as are the
+interaction pairs and the table rows. There is no bare word-form `seq` in the
+prose, and a test now enforces that.
+
+The genuine inconsistency was elsewhere: the Signal column of Table 2 read
+"Co-occurrence" while the abstract and introduction read "short-term
+co-occurrence". The column now reads "Short-term co-occurrence".
+
+### Edit 2. Definition of "observed" in Table 6
+
+Added to the caption. "Observed" means the end-to-end retirement loss under the
+same seed and protocol: the source is removed from retrieval and fusion alike,
+candidates are rebuilt from the survivors, the head is refit, and the loss is
+differenced on **raw** NDCG@10 rather than on the baseline-centred `v`. The
+last clause matters and is not pedantry: each coalition retrieves its own
+candidate set, so `|C_u|` and hence the expected-random baseline move with the
+coalition. Differencing `v` would add a baseline term unrelated to the observed
+change. The artefact stores both columns and their difference, and a test
+asserts the two are genuinely distinct so the caption is distinguishing
+something real rather than restating a definition.
+
+### Questions 1-3
+
+Unchanged from the previous rounds: multi-seed `v_e2e`, a ranking-aware head,
+and a retrieval-dominant configuration all require refitting, which we cannot
+do in the current environment. They remain stated as limitations. Of the three,
+we agree that multi-seed `v_e2e` on one corpus is the cheapest and would most
+directly retire the "isolated seed-42 effect" worry.
+
 ## Summary
 
 Four of the six weaknesses and two of the four questions are addressed in the
