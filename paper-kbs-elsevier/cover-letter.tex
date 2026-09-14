@@ -31,18 +31,29 @@ observed cost of retiring each source: Shapley, Banzhaf, two binomial
 semivalues, leave-one-in, exact forward selection, ranking-stage leave-one-out,
 and an uninformative control. Because all eight are linear functionals of a
 single enumerated coalition lattice, the comparison is exact rather than
-sampled. The result is that every coalition-averaging rule, whatever its
-weighting, agrees with the observed removal ordering at Kendall
-$\tau = +0.20$ and nominates the wrong source, while the two rules that
-condition on the grand coalition reach $+1.00$ and $+0.80$. The separation is
-therefore a property of averaging over coalitions, not an artefact of Shapley's
-particular weights.
+sampled. Every coalition-averaging rule nominates the wrong source, four of
+the five at Kendall $\tau = +0.20$ and the fifth at $+0.40$, while the two
+rules that condition on the grand coalition reach $+1.00$ and $+0.80$. The
+separation is therefore a property of averaging over coalitions, not an
+artefact of Shapley's particular weights.
+
+Two further results speak to robustness. First, exactness is load-bearing
+rather than presentational: estimating the same values by permutation sampling
+at 500 draws leaves a 95th-percentile error of $3.27\%$ of the grand-coalition
+value, above both the ten-seed spread and the materiality threshold used
+throughout, so a sampled estimator at a realistic budget could manufacture or
+erase the effects we report. Second, the finding is not an artefact of holding
+candidates fixed: when the characteristic function is rebuilt so that removing
+a source also removes its retrieval contribution, matching the game to the
+intervention, Shapley's agreement improves but still fails to identify the
+source that is cheapest to retire, whereas ranking-stage leave-one-out
+identifies it.
 
 The submission includes the main manuscript, a separate Highlights file, and
-self-contained electronic supplementary material. The supplement
-contains the formal proofs, analytic verification games, implementation and
-cost details, robustness and provenance tables, repeat-event audit, estimand
-comparison, and the negative fusion result cited in the main text. Code and
+self-contained supplementary material. The supplement contains the formal
+proofs, analytic verification games, implementation and cost details,
+robustness and provenance tables, the repeat-event audit, the estimand
+comparison, and a negative result on attribution-derived fusion. Code and
 derived artefacts are identified in the declarations and released under the
 tag \texttt{kbs-submission-v2}.
 

@@ -773,3 +773,65 @@ def test_materiality_gate_is_stated_as_absolute() -> None:
     assert r"The gate itself is" in text
     assert r"\emph{absolute}" in text
     assert "never as the test" in text
+
+
+# --- the cover letter must not drift from the manuscript ------------------- #
+
+def _letter() -> str:
+    return (REPO / "paper-kbs-elsevier" / "cover-letter.tex").read_text()
+
+
+def test_cover_letter_tau_claims_match_the_artefact() -> None:
+    """The letter summarises the rule comparison. It claimed every
+    coalition-averaging rule lands at tau = +0.20, which is false: the
+    binomial semivalue at q = 0.75 reaches +0.40. The same overstatement was
+    in the manuscript."""
+    rules = json.loads(
+        (ART / "attribution_baselines.json").read_text())["rules"]
+    averaging = ("shapley", "banzhaf", "binomial_q025", "binomial_q075",
+                 "leave_one_in")
+
+    at_020 = [k for k in averaging
+              if rules[k]["kendall_tau_vs_observed_loss"] == pytest.approx(0.2)]
+    assert len(at_020) == 4, at_020
+    assert rules["binomial_q075"]["kendall_tau_vs_observed_loss"] == pytest.approx(0.4)
+    # Every averaging rule still nominates the wrong source: that is the part
+    # of the claim that does hold without qualification.
+    for k in averaging:
+        assert rules[k]["identifies_smallest_loss_source"] is False, k
+
+    letter = _letter()
+    assert "four of" in letter and r"$+0.40$" in letter
+    assert "every coalition-averaging rule, whatever its" not in letter
+    # And the manuscript must carry the corrected wording too.
+    text = KBS.read_text()
+    assert "all but one of them land at" in text
+    assert r"lands at $\tau = +0.20$ and nominates the" not in text
+
+
+def test_cover_letter_uses_elsevier_terminology() -> None:
+    letter = _letter()
+    assert "Knowledge-Based Systems" in letter
+    assert "Knowledge and Information Systems" not in letter
+    assert "electronic supplementary" not in letter
+    assert "Online Resource" not in letter
+
+
+def test_cover_letter_tag_matches_the_declarations() -> None:
+    """A tag named in the letter but not in the paper, or vice versa, is the
+    kind of mismatch an editor notices."""
+    letter = _letter()
+    tags = set(re.findall(r"\\texttt\{(kbs-submission[^}]*)\}", letter))
+    assert tags, "no release tag named in the cover letter"
+    text = KBS.read_text()
+    for tag in tags:
+        assert tag in text, f"{tag} in letter but not in the manuscript"
+
+
+def test_cover_letter_headline_numbers_exist_in_the_paper() -> None:
+    """Anything quantitative in the letter must also appear in the manuscript,
+    so a reader checking one against the other finds agreement."""
+    letter = _letter()
+    text = KBS.read_text()
+    for number in re.findall(r"\$\+?([0-9]+\.[0-9]+)\\?%?\$", letter):
+        assert number in text, f"{number} in the letter but not in the paper"

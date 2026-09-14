@@ -1033,12 +1033,15 @@ Uniform split          & n/a     & yes & n/a   & uninformative control \\
 
 The ordering is the point. The two rules that track the removal outcome,
 ranking-stage LOO and forward selection, are the two that condition on the
-grand coalition or on a path towards it. Every rule that averages over all
-coalitions, whatever its weighting, lands at $\tau = +0.20$ and nominates the
-wrong source. The separation is therefore not an artefact of Shapley's
+grand coalition or on a path towards it. Every rule that averages over
+coalitions nominates the wrong source, and all but one of them land at
+$\tau = +0.20$; the exception is the binomial semivalue at $q = 0.75$, which
+reaches $+0.40$ and is also the coalition-averaging rule that weights large
+coalitions most heavily, so it sits closest to the grand-coalition contrast
+without reaching it. The separation is therefore not an artefact of Shapley's
 particular weights: it is a property of averaging over coalitions in which a
 substitutable source has no substitute present, and Banzhaf, the binomial
-semivalues and leave-one-in all inherit it. Notably, forward selection is
+semivalues and leave-one-in all inherit it, in degree as well as in kind. Notably, forward selection is
 efficient \emph{and} predictive here, which shows the two properties are not
 inherently in tension, though with $n = 5$ sources on one corpus we do not
 claim that this generalises.
