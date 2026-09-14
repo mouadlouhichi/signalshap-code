@@ -19,19 +19,22 @@ pdflatex cover-letter
 Then check: zero `??`, zero `(author?)`, 43 references resolved, and eyeball
 the two-column layout, especially the eight full-width tables.
 
-**2. Create and push the release tag.** Code availability names
-`kbs-submission-v2` at `github.com/mouadlouhichi/signalshap`. **That tag does
-not exist, and the public repository was last pushed on 21 August**, so it does
-not contain the code behind Figure 8. Editors do check this link.
+**2. Update the release tag.** Code availability names `kbs-submission` at
+`github.com/mouadlouhichi/signalshap`. That tag exists, but it points at commit
+`ea8ae5d` from **21 August**, which predates Figure 8 and Section 4.5. Editors
+do check this link.
 
 ```sh
-# push the current state to the public repo, then
-git tag -a kbs-submission-v2 -m "KBS submission v2"
-git push origin kbs-submission-v2
+# push the current state to the public repo, then move the tag onto it
+git push public HEAD:main
+git tag -f -a kbs-submission -m "KBS submission"
+git push --force-with-lease public kbs-submission
 ```
 
-Either do this, or change the Code-availability paragraph in `main.tex` to
-name a tag that exists.
+Moving a published tag is acceptable here because nothing cites the old one
+yet. If you would rather not move it, cut a new tag and change the
+Code-availability paragraph in `paper-kais/main.tex` to match, then
+regenerate.
 
 ## Upload list
 

@@ -52,7 +52,7 @@ is a layout parameter, not a result.
 - [ ] Compile `main.tex` and `supplementary-material.tex`. **No TeX in this
       sandbox, so neither PDF has been produced here.** The two-column recast
       has not been visually checked; the wide floats are the thing to look at.
-- [ ] Confirm the Code-availability tag `kbs-submission-v2` exists and the
+- [ ] Confirm the Code-availability tag `kbs-submission` exists and the
       commit in `MANIFEST.json` reproduces Figure 2.
 - [ ] **Do not submit this and the KAIS version at the same time.** They are
       the same manuscript. Pick one venue; withdraw before submitting to the

@@ -1033,3 +1033,22 @@ def test_author_names_agree_across_manuscript_and_metadata() -> None:
         assert block.group(1) == given, (
             f"CITATION.cff says {family}, {block.group(1)}; "
             f"the manuscript says {full}")
+
+
+def test_release_tag_is_named_consistently_everywhere() -> None:
+    """The manuscript, the cover letter and the submission notes all name the
+    release tag. They drifted once: the paper said `kbs-submission-v2` while
+    the only tag that exists on the public repository is `kbs-submission`, so
+    the Code-availability URL pointed at nothing. One spelling, everywhere."""
+    paths = [REPO / "paper-kbs-elsevier" / n for n in
+             ("main.tex", "cover-letter.tex", "README.md", "SUBMIT.md",
+              "PORTAL-ANSWERS.md")]
+    found: dict[str, set[str]] = {}
+    for p in paths:
+        tags = set(re.findall(r"kbs-submission[-a-z0-9]*", p.read_text()))
+        if tags:
+            found[p.name] = tags
+    assert "main.tex" in found, "the manuscript names no release tag"
+    everything = set().union(*found.values())
+    assert everything == {"kbs-submission"}, (
+        f"inconsistent release tag names across the bundle: {found}")

@@ -165,7 +165,7 @@ be filled in one pass:
 | # | Blocker | Why it matters |
 |---|---|---|
 | 1 | Public repo is 3 weeks stale and missing three artefacts | The data link in the article resolves to a state that cannot reproduce Figure 8 or Section 4.5 |
-| 2 | Tag `kbs-submission-v2` does not exist | Code availability names it. The public repo has `kbs-submission` (no `-v2`), pointing at the same stale commit |
+| 2 | Tag `kbs-submission` points at the stale commit | Code availability names this tag. It exists, but resolves to `ea8ae5d` (21 August), which predates Figure 8 and Section 4.5 |
 | 3 | KAIS not confirmed withdrawn | Decides the SSRN answer, and dual submission is an automatic reject at both venues |
 | 4 | Nothing has been compiled | No TeX in the development environment; every LaTeX check is static |
 
@@ -174,8 +174,8 @@ Blockers 1 and 2 are the same push:
 ```sh
 # from the signalshap-code checkout, against the public repo
 git push public HEAD:main
-git tag -a kbs-submission-v2 -m "KBS submission v2"
-git push public kbs-submission-v2
+git tag -f -a kbs-submission -m "KBS submission"
+git push --force-with-lease public kbs-submission
 ```
 
 Then re-verify that `artefacts/fig2_ndcg_sampling.json` is visible on the
