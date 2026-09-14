@@ -445,10 +445,25 @@ def main() -> int:
     for name in ("suggested-reviewers.md",):
         shutil.copyfile(KAIS_DIR / name, KBS_DIR / name)
 
+    # Ship only the figures the manuscript actually includes. The restructure
+    # moved Fig2 and Fig4-Fig7 into the supplement or dropped them, and
+    # copying the whole directory left five orphans in the submission bundle.
+    # Fig1 is kept even though Figure 1 renders as live TikZ, because it is
+    # the declared raster fallback under \tikzfigurefalse.
+    used = set(re.findall(r"\\includegraphics\[[^\]]*\]\{([^}]+)\}",
+                          out + esm))
+    used.add("Fig1.png")
     figdir = KBS_DIR / "figures"
     figdir.mkdir(exist_ok=True)
+    for stale in figdir.glob("*.png"):
+        if stale.name not in used:
+            stale.unlink()
     for fig in sorted((KAIS_DIR / "figures").glob("*.png")):
-        shutil.copyfile(fig, figdir / fig.name)
+        if fig.name in used:
+            shutil.copyfile(fig, figdir / fig.name)
+    missing = used - {f.name for f in figdir.glob("*.png")}
+    if missing:
+        raise SystemExit(f"figures referenced but not shipped: {sorted(missing)}")
 
     repro = KBS_DIR / "reproducibility"
     repro.mkdir(exist_ok=True)

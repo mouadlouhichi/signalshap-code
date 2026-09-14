@@ -835,3 +835,18 @@ def test_cover_letter_headline_numbers_exist_in_the_paper() -> None:
     text = KBS.read_text()
     for number in re.findall(r"\$\+?([0-9]+\.[0-9]+)\\?%?\$", letter):
         assert number in text, f"{number} in the letter but not in the paper"
+
+
+def test_bundle_ships_exactly_the_figures_the_paper_uses() -> None:
+    """The restructure moved Fig2 and Fig4-Fig7 out of the main text, but the
+    generator copied the whole figures directory, so five orphans were sitting
+    in the submission bundle. Ship what is used, and nothing else. Fig1 is the
+    exception: Figure 1 renders as live TikZ and Fig1.png is its declared
+    raster fallback under \\tikzfigurefalse."""
+    figdir = REPO / "paper-kbs-elsevier" / "figures"
+    shipped = {p.name for p in figdir.glob("*.png")}
+    used = set(re.findall(r"\\includegraphics\[[^\]]*\]\{([^}]+)\}",
+                          KBS.read_text() + KBS_ESM.read_text()))
+    used.add("Fig1.png")
+    assert used - shipped == set(), f"referenced but missing: {used - shipped}"
+    assert shipped - used == set(), f"shipped but unused: {shipped - used}"
