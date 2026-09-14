@@ -1,0 +1,74 @@
+{
+ "shapley": {
+  "cf": 0.015342608307283444,
+  "ct": -5.00490108442035e-05,
+  "pop": 0.0065095107238474885,
+  "rec": 0.0005874033815691911,
+  "seq": 0.029511075323393747
+ },
+ "banzhaf": {
+  "cf": 0.015576010083098772,
+  "ct": -0.00033523361771651606,
+  "pop": 0.006358735241241718,
+  "rec": 0.00035551753118763513,
+  "seq": 0.029718078596106673
+ },
+ "semivalue_binomial_q025": {
+  "cf": 0.025060423122315014,
+  "ct": -0.0004202039128608651,
+  "pop": 0.009075366951544367,
+  "rec": 0.0007834006787529065,
+  "seq": 0.035422762181321156
+ },
+ "semivalue_binomial_q075": {
+  "cf": 0.005744745019954244,
+  "ct": 0.0001807642275310103,
+  "pop": 0.0038715173946424304,
+  "rec": 0.000278713798989406,
+  "seq": 0.02370614074161752
+ },
+ "semivalue_size_uniform": {
+  "cf": 0.015342608307283444,
+  "ct": -5.00490108442035e-05,
+  "pop": 0.0065095107238474885,
+  "rec": 0.0005874033815691911,
+  "seq": 0.029511075323393747
+ },
+ "size_uniform_equals_shapley_max_abs_diff": 0.0,
+ "shapley_top": "seq",
+ "banzhaf_top": "seq",
+ "top_source_agrees": true,
+ "kendall_tau_shapley_banzhaf": 0.9999999999999999,
+ "kendall_tau_shapley_q025": 0.9999999999999999,
+ "kendall_tau_shapley_q075": 0.9999999999999999,
+ "top_source_all_values": [
+  "seq"
+ ],
+ "sums": {
+  "shapley": 0.05190054872524967,
+  "banzhaf": 0.051673107833918284,
+  "q025": 0.06992174902107258,
+  "q075": 0.03378188118273461
+ },
+ "note": "Banzhaf does not satisfy efficiency, so its values do not sum to v(G); only the induced ORDERING is comparable across values. The size-uniform semivalue is Shapley identically (see the diff key), so the distinct comparators are Banzhaf and the binomial semivalues at q = 0.25 and q = 0.75.",
+ "interactions": {
+  "cf": 0.034747596494536806,
+  "ct": 0.00019779492040964306,
+  "pop": 0.012625564858510227,
+  "rec": 0.0016453578438131954,
+  "seq": 0.04144473427984355,
+  "cf|ct": 0.002572304129760139,
+  "cf|pop": -0.02532072402370121,
+  "cf|rec": -0.00096837895333059,
+  "cf|seq": -0.05580008824353031,
+  "ct|pop": -0.002936825895781554,
+  "ct|rec": 0.0005459352397076022,
+  "ct|seq": 0.0010789675210110216,
+  "pop|rec": -0.0011574644704525955,
+  "pop|seq": 0.006127281576864646,
+  "rec|seq": -0.000826542997113891
+ },
+ "dataset": "ml_1m",
+ "candidate_rule": "legacy (best per-source rank); matches Tables 6-8",
+ "note_regeneration": "Regenerated after a reviewer showed the previous \"semivalue_uniform\" key equals Shapley identically (p_k = 1/n IS Shapley); the key is kept only as an implementation check. Distinct comparators are Banzhaf and binomial semivalues at q = 0.25 / 0.75. The companion artefact e10_values_ml_1m_symmetric_candidates.json repeats this under the source-symmetric candidate rule; orderings and signs are identical."
+}

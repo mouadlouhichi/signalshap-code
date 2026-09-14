@@ -1,0 +1,461 @@
+"""Guards against three reporting defects that recur across drafts.
+
+None is a modelling error; all three are the kind of thing a reviewer notices
+immediately and that quietly erodes trust in every other number.
+
+A. Basis mixing -- a single-seed point estimate printed beside a seed-based CI
+   with nothing distinguishing them.
+B. Stale hardcoded numerics -- a bound typed into prose that no longer matches
+   the artefact it claims to summarise.
+C. Rounding artefacts -- rounded per-source values whose sum differs from the
+   rounded total, which reads as a violated axiom but is only display precision.
+"""
+
+from __future__ import annotations
+
+import json
+import re
+from pathlib import Path
+
+import pytest
+
+ROOT = Path(__file__).resolve().parents[1]
+ART = ROOT / "artefacts"
+PAPER = ROOT / "paper" / "sn-article.tex"
+
+
+def _results():
+    return {p.stem.replace("results_", ""): json.loads(p.read_text())
+            for p in sorted(ART.glob("results_*.json"))}
+
+
+# --- A: basis labelling ---------------------------------------------------- #
+
+@pytest.mark.skipif(not (ART / "tables" / "T6_loo_vs_shapley.csv").exists(),
+                    reason="T6 not generated yet")
+def test_t6_labels_its_two_bases():
+    """Single-seed and seed-mean columns must be distinguishable by name."""
+    header = (ART / "tables" / "T6_loo_vs_shapley.csv").read_text().splitlines()[0]
+    assert "seed 42" in header, "single-seed columns must say so in T6"
+    assert "seed mean" in header, "seed-mean column must say so in T6"
+
+
+@pytest.mark.skipif(not (ART / "tables" / "T6_loo_vs_shapley.md").exists(),
+                    reason="T6 not generated yet")
+def test_t6_caption_warns_against_cross_basis_reading():
+    text = (ART / "tables" / "T6_loo_vs_shapley.md").read_text().lower()
+    assert "two bases" in text or "must not be compared" in text
+
+
+def test_single_seed_and_seed_mean_genuinely_differ():
+    """Sanity: if these ever coincide exactly, the CI is not being computed."""
+    for name, r in _results().items():
+        ci = r.get("multi_seed", {}).get("ci")
+        if not ci or next(iter(ci.values())).get("n_seeds", 0) < 2:
+            continue
+        phi = r["e1_source_share"]["shapley"]
+        assert any(abs(phi[g] - ci[g]["mean"]) > 1e-12 for g in phi), (
+            f"{name}: seed-42 and seed-mean identical across all sources -- "
+            "multi_seed is probably re-reporting a single seed"
+        )
+        return
+
+
+# --- B: no stale hardcoded numerics ---------------------------------------- #
+
+@pytest.mark.skipif(not PAPER.exists(), reason="paper.tex absent")
+def test_efficiency_bound_in_prose_matches_the_artefact():
+    """Any 10^-n efficiency bound in the text must not understate the artefact."""
+    res = _results()
+    if not res:
+        pytest.skip("no results")
+    worst = max(r["e1_source_share"]["efficiency"]["abs_error"] for r in res.values())
+    tex = PAPER.read_text()
+
+    claims = re.findall(r"\\le\s*([\d.]+)\s*\\times\s*10\^\{-(\d+)\}", tex)
+    for mant, exp in claims:
+        bound = float(mant) * 10 ** (-int(exp))
+        if bound >= 1e-25:  # only efficiency-scale claims
+            assert worst <= bound * 1.5, (
+                f"prose claims <= {bound:.1e} but artefact worst case is "
+                f"{worst:.1e} -- regenerate the text from T9"
+            )
+
+
+# --- C: rounding artefacts flagged, not hidden ----------------------------- #
+
+def test_rounding_artefacts_are_detected_and_disclosed():
+    """Where rounded phi do not sum to rounded v(G), T9 must say so."""
+    for name, r in _results().items():
+        e = r["e1_source_share"]["efficiency"]
+        phi = r["e1_source_share"]["shapley"]
+
+        # full precision must always hold
+        assert e["abs_error"] < 1e-12, f"{name}: efficiency genuinely violated"
+
+        rounded_sum = round(sum(round(v, 5) for v in phi.values()), 5)
+        if abs(rounded_sum - round(e["v_grand"], 5)) > 1e-12:
+            t9 = ART / "tables" / "T9_efficiency.csv"
+            assert t9.exists(), (
+                f"{name}: rounded sum {rounded_sum} != rounded v(G) "
+                f"{round(e['v_grand'], 5)} -- T9 must exist to disclose it"
+            )
+            assert "yes" in t9.read_text().lower().split("\n")[-2], (
+                f"{name}: rounding artefact present but not flagged in T9"
+            )
+
+
+def test_efficiency_is_structural_not_approximate():
+    """Efficiency holds regardless of fit noise; it is not a tuned quantity."""
+    for name, r in _results().items():
+        e = r["e1_source_share"]["efficiency"]
+        assert e["passes"], f"{name}: efficiency check failed"
+        assert e["abs_error"] < 1e-15, (
+            f"{name}: error {e['abs_error']:.1e} is too large to be float noise"
+        )
+
+
+# --------------------------------------------------------------------------- #
+# Artwork must be black-only (Springer greyscale reproduction, colourblind
+# safety, and the game-theoretic XAI convention).
+# --------------------------------------------------------------------------- #
+
+
+def test_architecture_figure_is_monochrome():
+    """Fig 1 is the schematic and must be black-only.
+
+    Data figures keep colour -- five sources across three corpora is more than
+    grey levels can carry -- but the architecture diagram follows the
+    game-theoretic XAI convention of a black-only schematic.
+    """
+    from pathlib import Path
+
+    np = pytest.importorskip("numpy")
+    Image = pytest.importorskip("PIL.Image", reason="Pillow not installed")
+
+    f = Path(__file__).resolve().parents[1] / "paper" / "figures" / "Fig1.png"
+    im = np.asarray(Image.open(f).convert("RGB")).astype(int)
+    coloured = ((im.max(axis=2) - im.min(axis=2)) > 12).mean()
+    assert coloured < 1e-4, f"Fig1 is {coloured:.2%} coloured; it must be black-only"
+
+
+def test_every_data_figure_actually_uses_colour():
+    """Fig 1 is black-only; the other six must NOT be.
+
+    Fig 5 (segments) was still greyscale after the palette change, because it
+    used its own local grey ramp rather than the shared palette. Four
+    overlapping segments per source are not separable by grey level at that
+    marker size.
+    """
+    from pathlib import Path
+
+    np = pytest.importorskip("numpy")
+    Image = pytest.importorskip("PIL.Image", reason="Pillow not installed")
+
+    figs = Path(__file__).resolve().parents[1] / "paper" / "figures"
+    for n in range(2, 8):
+        f = figs / f"Fig{n}.png"
+        if not f.exists():
+            continue
+        im = np.asarray(Image.open(f).convert("RGB")).astype(int)
+        coloured = ((im.max(axis=2) - im.min(axis=2)) > 12).mean()
+        assert coloured > 1e-3, f"Fig{n} is greyscale ({coloured:.4%})"
+
+
+def test_data_figures_stay_readable_without_colour():
+    """Colour may not be the ONLY channel: every source also gets a marker
+    and a hatch, so the data figures survive greyscale reproduction and
+    colour-vision deficiency."""
+    from signalshap.plots.assets import PALETTE, SOURCE_HATCH, SOURCE_MARK
+
+    assert set(PALETTE) == set(SOURCE_MARK) == set(SOURCE_HATCH)
+    assert len(set(SOURCE_MARK.values())) == len(SOURCE_MARK)
+    assert len(set(SOURCE_HATCH.values())) == len(SOURCE_HATCH)
+
+
+def test_palette_is_colourblind_safe():
+    """Okabe-Ito. Pinning the hexes stops a future edit reaching for red/green."""
+    from signalshap.plots.assets import PALETTE
+
+    okabe_ito = {"#0072B2", "#D55E00", "#009E73", "#CC79A7", "#E69F00",
+                 "#56B4E9", "#F0E442", "#999999", "#000000"}
+    for g, c in PALETTE.items():
+        assert c.upper() in okabe_ito, f"{g}={c} is outside the Okabe-Ito set"
+
+
+def test_display_names_cover_the_study_corpora():
+    """Raw loader ids leaked into figure legends and table rows once."""
+    from signalshap.plots.assets import DISPLAY
+
+    for corpus in ("ml_1m", "gowalla_ts", "amazon_video_games"):
+        assert corpus in DISPLAY, f"{corpus} would render as a raw identifier"
+        assert "_" not in DISPLAY[corpus]
+
+
+# --------------------------------------------------------------------------- #
+# Language and framing constraints the reviewers required.
+# --------------------------------------------------------------------------- #
+
+REVIEWER_BANNED = {
+    "build-or-retire": "contradicts the paper's own retirement result",
+    "pre-registered": "no external registration exists; use 'frozen'",
+    "misattribution": "assumes Shapley is correct; no ground truth exists",
+    "true loss": "one observed realisation, not a population quantity",
+    "true cost": "one observed realisation, not a population quantity",
+    "Shapley shares": "values are not normalised shares",
+    "what practitioners actually want": "unsupported claim about practitioners",
+    "only when components contribute independently": "LOO is valid under dependence",
+}
+
+
+def test_reviewer_banned_phrases_are_absent():
+    from pathlib import Path
+
+    tex = (Path(__file__).resolve().parents[1] / "paper" / "sn-article.tex").read_text()
+    flat = " ".join(tex.lower().split())
+    for phrase, why in REVIEWER_BANNED.items():
+        assert phrase.lower() not in flat, f"'{phrase}' present: {why}"
+
+
+def test_required_structural_sections_exist():
+    """Reviewer 1 asked for standalone Background and Discussion sections."""
+    from pathlib import Path
+
+    tex = (Path(__file__).resolve().parents[1] / "paper" / "sn-article.tex").read_text()
+    for label in ("sec:background", "sec:discussion", "sec:hyperparams",
+                  "sec:algorithm", "app:fusion"):
+        assert f"\\label{{{label}}}" in tex, f"missing section {label}"
+
+
+def test_appendix_is_labelled():
+    """Reviewer 1 found Appendix A rendered with no heading at all."""
+    from pathlib import Path
+
+    tex = (Path(__file__).resolve().parents[1] / "paper" / "sn-article.tex").read_text()
+    assert "\\appendix" in tex
+    i = tex.index("\\appendix")
+    assert "\\section{" in tex[i:i + 400], "no \\section follows \\appendix"
+
+
+def test_interaction_index_named_consistently():
+    """Must not cite Shapley-Taylor for a Grabisch-Roubens computation."""
+    from pathlib import Path
+
+    tex = (Path(__file__).resolve().parents[1] / "paper" / "sn-article.tex").read_text()
+    i = tex.index("\\label{eq:interaction}")
+    window = tex[max(0, i - 2500):i]
+    assert "grabisch1999interaction" in window, \
+        "the interaction equation must cite Grabisch-Roubens"
+
+
+# --------------------------------------------------------------------------- #
+# Preamble and float placement (found by the first real compile).
+# --------------------------------------------------------------------------- #
+
+
+def _tex_no_comments():
+    import re
+    from pathlib import Path
+
+    raw = (Path(__file__).resolve().parents[1] / "paper" / "sn-article.tex").read_text()
+    return "\n".join(re.sub(r"(?<!\\)%.*$", "", ln) for ln in raw.split("\n"))
+
+
+def test_every_package_the_manuscript_needs_is_loaded():
+    """sn-jnl.cls loads almost nothing; a missing \\usepackage fails the compile.
+
+    amsthm was the one that bit us: the class defines thmstyleone..four inside
+    \\@ifpackageloaded{amsthm}{...}{}, so it configures those styles but never
+    loads the package, and our \\theoremstyle call failed on the first compile.
+    """
+    tex = _tex_no_comments()
+    needed = {
+        "amsmath": r"\bigl",          # also \bigcup, \varepsilon
+        "amssymb": r"\varnothing",
+        "graphicx": r"\includegraphics",
+        "amsthm": r"\theoremstyle",
+        "algorithm": r"\begin{algorithm}",
+        "algpseudocode": r"\begin{algorithmic}",
+        "tikz": r"\begin{tikzpicture}",
+    }
+    for pkg, marker in needed.items():
+        if marker in tex:
+            assert f"\\usepackage{{{pkg}}}" in tex or f"\\usepackage[" in tex, \
+                f"{marker} used but {pkg} never loaded"
+            assert f"usepackage{{{pkg}}}" in tex, f"{pkg} not loaded"
+
+
+def test_amsthm_loads_before_the_theorem_styles():
+    tex = _tex_no_comments()
+    # The class defines thmstyleone..four only if amsthm is loaded; the paper
+    # now uses the standard styles, so match whichever appears first.
+    assert tex.index("usepackage{amsthm}") < tex.index("theoremstyle{")
+
+
+def test_no_float_is_top_only():
+    """[t] with no fallback stalls the float queue.
+
+    One float that cannot fit at the top of its page is deferred, LaTeX keeps
+    floats in order, so every later float is deferred too and the whole backlog
+    flushes at \\end{document}. That put all six data figures on pages 38-40 of
+    a 40-page article on the first compile.
+    """
+    import re
+
+    tex = _tex_no_comments()
+    bad = re.findall(r"\\begin\{(figure|table)\}\[t\]", tex)
+    assert not bad, f"{len(bad)} float(s) still [t]-only; use [tbp]"
+
+
+def test_float_parameters_are_loosened():
+    tex = _tex_no_comments()
+    for cmd in ("topfraction", "bottomfraction", "textfraction",
+                "floatpagefraction"):
+        assert cmd in tex, f"\\{cmd} not set; LaTeX defaults strand large floats"
+
+
+def test_no_em_dashes_in_rendered_text():
+    """House style: no em dashes. Colons, commas, parentheses or a full stop.
+
+    Only the rendered body is checked. ASCII rule lines inside LaTeX comments
+    (%% ------) are not typeset and are left alone.
+    """
+    import re
+    from pathlib import Path
+
+    raw = (Path(__file__).resolve().parents[1] / "paper" / "sn-article.tex").read_text()
+    body = "\n".join(l for l in raw.split("\n") if not re.match(r"\s*%", l))
+    assert "---" not in body, (
+        "em dash (---) in rendered text; use a colon, comma, parentheses "
+        "or a new sentence"
+    )
+    assert "\u2014" not in raw, "literal em dash character present"
+
+
+def test_en_dashes_are_only_ranges_and_compound_names():
+    """-- is fine for 0.94--1.00 and Grabisch--Roubens, not as punctuation."""
+    import re
+    from pathlib import Path
+
+    raw = (Path(__file__).resolve().parents[1] / "paper" / "sn-article.tex").read_text()
+    body = "\n".join(l for l in raw.split("\n") if not re.match(r"\s*%", l))
+    # Exclude the TikZ picture: there `--` is the path operator, not a dash.
+    i, j = body.find("\\begin{tikzpicture}"), body.find("\\end{tikzpicture}")
+    if i >= 0:
+        body = body[:i] + body[j:]
+    # A punctuation dash has whitespace on at least one side.
+    loose = re.findall(r"(?:\s--(?!-)|(?<!-)--\s)", body)
+    assert not loose, f"{len(loose)} en dash(es) used as punctuation: {loose[:3]}"
+
+
+def test_no_rebuttal_prose_in_rendered_text():
+    """The article is not a response letter.
+
+    A reviewer counted 27 'earlier version' and 10 'reviewer' mentions and said
+    the manuscript read partly like a rebuttal. Self-corrections that carry
+    scientific content are kept, but phrased as statements about the method
+    rather than as revision history. LaTeX comments are exempt: they are not
+    typeset.
+    """
+    import re
+    from pathlib import Path
+
+    tex = Path(__file__).resolve().parents[1] / "paper" / "sn-article.tex"
+    if not tex.exists():
+        import pytest
+        pytest.skip("paper absent")
+    body = "\n".join(l for l in tex.read_text().split("\n")
+                     if not l.lstrip().startswith("%"))
+    for phrase in ("earlier version", "A reviewer", "a reviewer",
+                   "the reviewer", "previous version of this manuscript"):
+        assert phrase not in body, f"rebuttal prose in rendered text: {phrase!r}"
+
+
+def test_ppmi_is_not_described_as_shifted():
+    """k_s = 1 means log k_s = 0, so the model is plain PPMI-SVD."""
+    from pathlib import Path
+
+    tex = Path(__file__).resolve().parents[1] / "paper" / "sn-article.tex"
+    if not tex.exists():
+        import pytest
+        pytest.skip("paper absent")
+    body = tex.read_text()
+    assert "shifted-PPMI" not in body
+    assert "shifted PPMI" not in body
+
+
+def test_global_timeblock_numbers_match_the_artefact():
+    """The blocked replication weakens the paper, so its numbers must be exact."""
+    import json
+    from pathlib import Path
+
+    root = Path(__file__).resolve().parents[1]
+    art = root / "artefacts" / "global_timeblock.json"
+    tex = root / "paper" / "sn-article.tex"
+    if not (art.exists() and tex.exists()):
+        import pytest
+        pytest.skip("artefact or paper absent")
+    r = json.loads(art.read_text())["ml_1m"]
+    body = tex.read_text()
+
+    # The property the whole experiment exists to establish.
+    assert r["train_events_after_any_test_event"] == 0
+
+    assert f"{r['users_retained']}" in body.replace("\\,", "")
+    assert f"{r['candidate_recall']:.3f}" in body
+    assert f"{100*r['user_coverage']:.1f}" in body
+    # The paper must not claim the per-source result replicates.
+    assert "do \\emph{not} claim" in body or "do \\emph{not} reproduce" in body
+
+
+def test_manifest_covers_every_artefact_and_matches_hashes():
+    """The reproducibility claim must be checkable, not just asserted.
+
+    The manuscript previously had to say the public snapshot 'does not
+    reproduce the present tables'. It now points at a hashed manifest instead,
+    so the manifest has to be complete and correct.
+    """
+    import hashlib
+    import json
+    from pathlib import Path
+
+    root = Path(__file__).resolve().parents[1]
+    man_p = root / "artefacts" / "MANIFEST.json"
+    if not man_p.exists():
+        import pytest
+        pytest.skip("manifest absent")
+    man = json.loads(man_p.read_text())
+
+    on_disk = {str(p.relative_to(root / "artefacts"))
+               for p in (root / "artefacts").rglob("*.json")
+               if p.name != "MANIFEST.json"}
+    assert set(man["artefacts"]) == on_disk, "manifest and artefacts/ disagree"
+
+    # Spot-check the hashes actually verify.
+    for name in sorted(on_disk)[:5]:
+        p = root / "artefacts" / name
+        got = hashlib.sha256(p.read_bytes()).hexdigest()
+        assert got == man["artefacts"][name]["sha256"], name
+
+    for key in ("git_commit", "environment", "n_artefacts"):
+        assert key in man
+    assert "blas" in man["environment"], "BLAS backend must be recorded"
+
+
+def test_paired_gap_intervals_cover_all_corpora():
+    """Table 7's uncertainty belongs on the paired gap, for every cell."""
+    import json
+    from pathlib import Path
+
+    root = Path(__file__).resolve().parents[1]
+    p = root / "artefacts" / "paired_gap_intervals.json"
+    if not p.exists():
+        import pytest
+        pytest.skip("artefact absent")
+    d = json.loads(p.read_text())
+    for c in ("ml_1m", "amazon_video_games", "gowalla_ts"):
+        assert c in d, c
+        for g in ("cf", "ct", "pop", "rec", "seq"):
+            cell = d[c][g]
+            assert {"mean", "lo", "hi", "n_positive"} <= set(cell)
+            assert cell["lo"] <= cell["mean"] <= cell["hi"]

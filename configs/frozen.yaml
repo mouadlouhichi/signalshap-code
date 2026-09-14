@@ -1,0 +1,66 @@
+n_max:
+  ml_1m: 600
+  lastfm_2k: 500
+  amazon_book: 1000
+  gowalla: 2500
+  yelp2018: 5000
+  amazon_book_lgcn: 20000
+  gowalla_ts: 11623
+  amazon_video_games: 600
+recall_ceiling_exempt:
+- amazon_video_games
+- gowalla_ts
+ridge_lambda: 1.0
+v0_seed: 42
+seeds:
+- 42
+- 43
+- 44
+- 45
+- 46
+recall_gate: 0.6
+max_growth_iters: 10
+k_ndcg: 10
+_note: "PRE-REGISTERED, spec \xA72.2/\xA72.4/\xA72.5. Frozen end of Week 1. lambda\
+  \ is NEVER tuned per coalition; n_max changes after E1 begins must be recorded in\
+  \ the artefact with date and reason.\n\nAMENDMENT 2026-08-05 (spec 2.2/2.4 traceability).\
+  \ Added n_max for gowalla_ts (2500) and amazon_video_games (600). Reason: neither\
+  \ corpus had an entry -- the config listed `gowalla` while the loader registers\
+  \ `gowalla_ts`, and amazon_video_games was never added -- so both silently took\
+  \ the old 200 fallback and FAILED the recall gate (0.132 and 0.349 against a 0.60\
+  \ threshold). 200 was an unintended fallback, not a chosen value; these are the\
+  \ first registered values for these corpora, not a retuning of an existing one.\
+  \ gowalla_ts=2500 carries over the value already pre-registered for the untimestamped\
+  \ `gowalla` split. amazon_video_games=600 matches ml_1m, whose catalogue is nearly\
+  \ identical in size (3,533 vs 3,516 items). Both were fixed BEFORE re-running and\
+  \ are not adjusted afterwards; if the gate is still unmet, spec 2.2 rung 2 applies\
+  \ and the ceiling is reported.\n\nAMENDMENT 2 2026-08-05 (spec 2.2 fallback ladder).\
+  \ At the values set in amendment 1 the gate was still unmet: gowalla_ts 0.355, amazon_video_games\
+  \ 0.588. The ladder is applied per corpus, and the two corpora take DIFFERENT rungs.\n\
+  \  gowalla_ts -> RUNG 1 (raise N_max), 2500 -> 11623. Justification is a rule that\
+  \ predates the recall numbers: N_max as a fraction of catalogue was 16.98% for ml_1m\
+  \ but only 3.65% for gowalla_ts, because 2500 was inherited from the untimestamped\
+  \ `gowalla` split whose catalogue is 39k, not 68k. 11623 is ml_1m's ratio applied\
+  \ to gowalla_ts's 68,443 items -- NOT a value chosen to clear the gate. A log fit\
+  \ to the two observed points puts the recall-0.60 crossing at N=40,093 (58.6% of\
+  \ catalogue), so 11623 is expected to reach only ~0.49 and the gate will likely\
+  \ STILL fail. It is raised because 3.65% was indefensibly inconsistent, not because\
+  \ it will pass.\n  amazon_video_games -> RUNG 2 (accept and report the ceiling).\
+  \ It stays at 600. The same catalogue-fraction rule gives 597 for its 3,516 items,\
+  \ so 600 is already the principled value; the log fit puts the 0.60 crossing at\
+  \ N=634. Raising 600 -> 800 would clear the gate, and that is precisely why it must\
+  \ not be done: a pre-registered parameter moved by 6% of a threshold, after seeing\
+  \ the threshold, is selection on the outcome the parameter gates. Under rung 2 the\
+  \ corpus is retained for the relative LOO-vs-Shapley contrast (C3) and excluded\
+  \ from absolute-NDCG comparison, with the ceiling disclosed in the manuscript.\n\
+  \nAMENDMENT 3 2026-08-05 (spec 2.2 rung 1 exhausted for gowalla_ts). The rung-1\
+  \ raise to 11623 was run: recall 0.450, still short of 0.60. The E5 sweep measured\
+  \ the curve at the as-loaded corpus size (8,865 users x 82,134 items): N=5,811 ->\
+  \ 0.4175, N=11,623 -> 0.4504, N=23,246 -> 0.4710. Doubling N_max buys +0.021. A\
+  \ log fit gives recall 0.522 at N=82,134, i.e. ranking the ENTIRE catalogue, and\
+  \ puts the 0.60 crossing at N=623,823 -- 7.6x more items than exist. The gate is\
+  \ therefore UNREACHABLE at any N_max: the binding constraint is the coverage of\
+  \ the five base scorers' top-lists, not the size of the pool. Rung 1 is exhausted\
+  \ as arithmetic, not as budget, so gowalla_ts moves to RUNG 2 alongside amazon_video_games.\
+  \ N_max stays at 11623 (the catalogue-fraction value from amendment 2); it is NOT\
+  \ lowered back, because the measured curve is itself the evidence for the ceiling."

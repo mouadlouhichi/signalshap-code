@@ -1,0 +1,13 @@
+Dataset,Method,NDCG@10,Recall@20,MRR@10
+ml_1m,Uniform fusion,0.0517,0.1768,0.0358
+ml_1m,Globally-tuned fusion,0.0636,0.2109,0.0438
+ml_1m,Popularity (full-catalog ref.),0.0183,0.0729,0.0119
+ml_1m,SignalShap-Fuse,0.0635,0.2106,0.0438
+amazon_video_games,Uniform fusion,0.0435,0.1305,0.0322
+amazon_video_games,Globally-tuned fusion,0.0493,0.1372,0.0363
+amazon_video_games,Popularity (full-catalog ref.),0.0061,0.0351,0.0040
+amazon_video_games,SignalShap-Fuse,0.0498,0.1376,0.0367
+gowalla_ts,Uniform fusion,0.0165,0.0525,0.0113
+gowalla_ts,Globally-tuned fusion,0.0172,0.0537,0.0119
+gowalla_ts,Popularity (full-catalog ref.),0.0034,0.0124,0.0021
+gowalla_ts,SignalShap-Fuse,0.0173,0.0536,0.0119

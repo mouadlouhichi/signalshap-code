@@ -1,0 +1,11 @@
+{
+  "dataset": "amazon_video_games",
+  "n_interactions": 117468,
+  "n_unique_timestamps": 114443,
+  "unique_fraction": 0.9742483059216127,
+  "span_days": 8360.034780092592,
+  "median_user_span_days": 1203.0499247685186,
+  "looks_like_positional_index": false,
+  "temporally_valid": true,
+  "note": "temporally_valid must be True before rec/seq/pop-decay attributions are interpreted. A positional index passes a naive check but carries no temporal information."
+}

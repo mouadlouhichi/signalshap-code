@@ -1,0 +1,108 @@
+{
+  "ml_1m": {
+    "dataset": "ml_1m",
+    "seed": 42,
+    "split": "global time block",
+    "t_val_cutoff": 977938862.0,
+    "t_test_cutoff": 990923273.0,
+    "users_retained": 526,
+    "users_original": 6038,
+    "user_coverage": 0.08711493872143093,
+    "train_events": 82968,
+    "train_events_after_any_test_event": 0,
+    "candidate_recall": 0.46387832699619774,
+    "shapley": {
+      "cf": 0.009118276297700147,
+      "ct": 8.28320021881977e-05,
+      "pop": 0.0007062499592250422,
+      "rec": -0.0015268806093342551,
+      "seq": 0.0011100506858295217
+    },
+    "loo": {
+      "cf": 0.0079337476510032,
+      "ct": -0.00014242229494670043,
+      "pop": -0.0008498219754716554,
+      "rec": -0.000808251918114275,
+      "seq": -0.0002764497057748845
+    },
+    "gap": {
+      "cf": 0.0011845286466969467,
+      "ct": 0.00022525429713489813,
+      "pop": 0.0015560719346966977,
+      "rec": -0.0007186286912199801,
+      "seq": 0.0013865003916044062
+    },
+    "v_grand": 0.009490528335608652,
+    "ordering": [
+      "cf",
+      "seq",
+      "pop",
+      "ct",
+      "rec"
+    ],
+    "material_flips": [
+      "pop",
+      "seq"
+    ],
+    "retirement": {
+      "dataset": "ml_1m",
+      "v_full_e2e": 0.009490528335608652,
+      "utility_full_e2e": 0.013003292842875939,
+      "recall_full": 0.46387832699619774,
+      "true_retirement_loss": {
+        "cf": 0.007850432535339983,
+        "ct": -0.0005117614397683497,
+        "pop": -0.002152763263393885,
+        "rec": -0.0007124956375271219,
+        "seq": 0.0001930307192560144
+      },
+      "retirement_loss_centred_legacy": {
+        "cf": 0.007375345532307933,
+        "ct": -0.00019503677108031504,
+        "pop": -0.0024982810837808327,
+        "rec": -0.00048215042393582284,
+        "seq": -5.1711070184737654e-05
+      },
+      "baseline_shift_after_removal": {
+        "cf": -0.00047508700303205195,
+        "ct": 0.00031672466868803463,
+        "pop": -0.00034551782038694636,
+        "rec": 0.00023034521359129772,
+        "seq": -0.0002447417894407538
+      },
+      "baseline_contamination_note": "true_retirement_loss now differences RAW utility. The legacy column differences baseline-centred v and equals the raw loss plus baseline_shift_after_removal, which is non-zero because retiring a source changes |C_u| and hence the expected-random baseline. Only the raw difference is the observed removal cost.",
+      "recall_after_removal": {
+        "cf": 0.4011406844106464,
+        "ct": 0.5057034220532319,
+        "pop": 0.41825095057034223,
+        "rec": 0.49429657794676807,
+        "seq": 0.43155893536121676
+      },
+      "shapley": {
+        "cf": 0.009118276297700147,
+        "ct": 8.28320021881977e-05,
+        "pop": 0.0007062499592250422,
+        "rec": -0.0015268806093342551,
+        "seq": 0.0011100506858295217
+      },
+      "loo": {
+        "cf": 0.0079337476510032,
+        "ct": -0.00014242229494670043,
+        "pop": -0.0008498219754716554,
+        "rec": -0.000808251918114275,
+        "seq": -0.0002764497057748845
+      },
+      "kendall_tau_shapley_vs_truth": 0.6,
+      "kendall_tau_loo_vs_truth": 0.7999999999999999,
+      "cheapest_to_retire_true": "pop",
+      "cheapest_by_shapley": "rec",
+      "cheapest_by_loo": "pop",
+      "shapley_picks_correctly": false,
+      "loo_picks_correctly": true,
+      "note": "True loss is measured END-TO-END: the retired source is removed from retrieval as well as fusion. Attribution methods are scored by rank agreement with that loss, which is the operational question the paper's motivation raises.",
+      "tau_advantage_loo_minus_shapley": 0.19999999999999996,
+      "blocked_split": true
+    },
+    "note": "Single global cutoff at the 0.90/0.95 timestamp quantiles, so no training event postdates any evaluated event. Coverage falls because users inactive after the cutoff drop out, and the survivors skew heavy and late-active; this is a robustness replication of the ordering and the LOO-versus-Shapley contrast, not a replacement for the main numbers."
+  }
+}

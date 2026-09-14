@@ -1,0 +1,16 @@
+{
+  "dataset": "amazon_book_lgcn",
+  "changed": "5000 -> 20000",
+  "date": "2026-08-04",
+  "trigger": "E0-a recall 0.529 < 0.60 gate on the real LightGCN Amazon-Book split",
+  "ladder_rung": "1 (raise N_max) -- spec \u00a72.2. No corpus filter, so the C3 density ordering is untouched.",
+  "sweep_at_2500_users": {
+    "5000": 0.418,
+    "10000": 0.529,
+    "20000": 0.637,
+    "40000": 0.769
+  },
+  "chosen": 20000,
+  "chosen_recall": 0.637,
+  "caveat": "N_max=20000 is ~24% of the 84k catalogue, far larger than the other corpora. This weakens the fixed-candidate framing for this corpus specifically and must be disclosed: the game is closer to full-catalogue ranking here than elsewhere. Sweep measured at 2,500 users for memory reasons; recall is scale-stable but the exact figure should be re-measured at the final run scale."
+}

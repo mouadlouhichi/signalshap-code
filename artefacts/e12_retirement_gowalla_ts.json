@@ -1,0 +1,57 @@
+{
+  "dataset": "gowalla_ts",
+  "v_full_e2e": 0.016902686841494208,
+  "utility_full_e2e": 0.017078832417791297,
+  "recall_full": 0.45042301184433164,
+  "true_retirement_loss": {
+    "cf": 0.0072786144550831215,
+    "ct": 0.005238106274993439,
+    "pop": -0.0011534431684533976,
+    "rec": 0.00012956378386344905,
+    "seq": 0.0005646961129384676
+  },
+  "retirement_loss_centred_legacy": {
+    "cf": 0.007278047307192096,
+    "ct": 0.005227279529686107,
+    "pop": -0.0011524687524040247,
+    "rec": 0.00012906088979711128,
+    "seq": 0.0005622971215727135
+  },
+  "baseline_shift_after_removal": {
+    "cf": -5.671478910380761e-07,
+    "ct": -1.0826745307341852e-05,
+    "pop": 9.744160493711373e-07,
+    "rec": -5.028940663389108e-07,
+    "seq": -2.3989913657515344e-06
+  },
+  "baseline_contamination_note": "true_retirement_loss now differences RAW utility. The legacy column differences baseline-centred v and equals the raw loss plus baseline_shift_after_removal, which is non-zero because retiring a source changes |C_u| and hence the expected-random baseline. Only the raw difference is the observed removal cost.",
+  "recall_after_removal": {
+    "cf": 0.4490693739424704,
+    "ct": 0.42289904117315286,
+    "pop": 0.4527918781725888,
+    "rec": 0.44929498025944725,
+    "seq": 0.4444444444444444
+  },
+  "shapley": {
+    "cf": 0.007105564790575359,
+    "ct": 0.006738856585098587,
+    "pop": 0.0005519988570616448,
+    "rec": 0.00037723239321774154,
+    "seq": 0.002129034215540876
+  },
+  "loo": {
+    "cf": 0.007289762416887311,
+    "ct": 0.005283121983282188,
+    "pop": -0.0015084462856590729,
+    "rec": 1.1674111971376328e-05,
+    "seq": 0.0007008824554026981
+  },
+  "kendall_tau_shapley_vs_truth": 0.7999999999999999,
+  "kendall_tau_loo_vs_truth": 0.9999999999999999,
+  "cheapest_to_retire_true": "pop",
+  "cheapest_by_shapley": "rec",
+  "cheapest_by_loo": "pop",
+  "shapley_picks_correctly": false,
+  "loo_picks_correctly": true,
+  "note": "True loss is measured END-TO-END: the retired source is removed from retrieval as well as fusion. Attribution methods are scored by rank agreement with that loss, which is the operational question the paper's motivation raises."
+}

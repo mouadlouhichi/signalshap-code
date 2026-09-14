@@ -1,0 +1,17 @@
+{
+  "dataset": "ml_1m",
+  "changed": "200 -> 600",
+  "date": "2026-08-02",
+  "trigger": "E0-a candidate recall 0.461 < 0.60 gate on REAL MovieLens-1M",
+  "ladder_rung": "1 (raise N_max) -- spec \u00a72.2; no corpus filter, ordering untouched",
+  "recall_sweep": {
+    "200": 0.461,
+    "400": 0.646,
+    "600": 0.747,
+    "1000": 0.856,
+    "2000": 0.964
+  },
+  "chosen": 600,
+  "chosen_recall": 0.747,
+  "rationale": "smallest swept value with comfortable margin over the gate; rungs 2-4 not needed, so C3 density ordering is unaffected"
+}

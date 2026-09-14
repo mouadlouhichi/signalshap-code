@@ -1,0 +1,137 @@
+{
+  "dataset": "yelp2018",
+  "injected_source": "cf",
+  "baseline_shapley": {
+    "cf": 0.0096300657487823,
+    "ct": 1.3083193206777844e-05,
+    "pop": 0.0022934938764442637,
+    "rec": 1.3083193206777844e-05,
+    "seq": 0.00512603120909065
+  },
+  "baseline_loo": {
+    "cf": 0.0005203832675851269,
+    "ct": 0.0,
+    "pop": 8.366580754575609e-06,
+    "rec": 0.0,
+    "seq": 0.00027477415794393764
+  },
+  "conditions": {
+    "eta=0.0": {
+      "eta": 0.0,
+      "shapley": {
+        "cf": 0.006175164424557825,
+        "ct": 1.0902661005648202e-05,
+        "pop": 0.001363231151054891,
+        "rec": 1.0902661005648202e-05,
+        "seq": 0.003340391898548933,
+        "cf_dup": 0.006175164424557825
+      },
+      "loo": {
+        "cf": 0.0,
+        "ct": 0.0,
+        "pop": 8.366580754575609e-06,
+        "rec": 0.0,
+        "seq": 0.00027477415794393764,
+        "cf_dup": 0.0
+      },
+      "phi_original": 0.006175164424557825,
+      "phi_duplicate": 0.006175164424557825,
+      "pair_sum": 0.01235032884911565,
+      "baseline_phi_original": 0.0096300657487823,
+      "conservation_ratio": 1.2824760672768325,
+      "symmetry_abs_error": 0.0,
+      "symmetry_rel_error": 0.0,
+      "loo_original": 0.0,
+      "loo_duplicate": 0.0,
+      "loo_collapse_ratio": 0.0
+    },
+    "eta=0.01": {
+      "eta": 0.01,
+      "shapley": {
+        "cf": 0.006179645234760019,
+        "ct": 1.0902661005648202e-05,
+        "pop": 0.0013493895292761636,
+        "rec": 1.0902661005648202e-05,
+        "seq": 0.0033250668872224476,
+        "cf_dup": 0.0061724119952364775
+      },
+      "loo": {
+        "cf": 2.5089158503129733e-05,
+        "ct": 0.0,
+        "pop": -3.7414768234121654e-05,
+        "rec": 0.0,
+        "seq": 0.00023029090104704358,
+        "cf_dup": -2.743825222436755e-05
+      },
+      "phi_original": 0.006179645234760019,
+      "phi_duplicate": 0.0061724119952364775,
+      "pair_sum": 0.012352057229996497,
+      "baseline_phi_original": 0.0096300657487823,
+      "conservation_ratio": 1.2826555448552766,
+      "symmetry_abs_error": 7.233239523541345e-06,
+      "symmetry_rel_error": 0.000585589864818283,
+      "loo_original": 2.5089158503129733e-05,
+      "loo_duplicate": -2.743825222436755e-05,
+      "loo_collapse_ratio": 0.048212846311445866
+    },
+    "eta=0.1": {
+      "eta": 0.1,
+      "shapley": {
+        "cf": 0.006105350073271374,
+        "ct": 1.0902661005648202e-05,
+        "pop": 0.0013533363289616872,
+        "rec": 1.0902661005648202e-05,
+        "seq": 0.0033075323568793015,
+        "cf_dup": 0.00623629361310746
+      },
+      "loo": {
+        "cf": -0.0001607153195920044,
+        "ct": 0.0,
+        "pop": -4.750602819421704e-05,
+        "rec": 0.0,
+        "seq": 0.00017622273321231743,
+        "cf_dup": -5.143952649964978e-05
+      },
+      "phi_original": 0.006105350073271374,
+      "phi_duplicate": 0.00623629361310746,
+      "pair_sum": 0.012341643686378835,
+      "baseline_phi_original": 0.0096300657487823,
+      "conservation_ratio": 1.2815741873765927,
+      "symmetry_abs_error": 0.0001309435398360861,
+      "symmetry_rel_error": 0.01060989469179095,
+      "loo_original": -0.0001607153195920044,
+      "loo_duplicate": -5.143952649964978e-05,
+      "loo_collapse_ratio": -0.3088402906146743
+    },
+    "eta=0.5": {
+      "eta": 0.5,
+      "shapley": {
+        "cf": 0.006083340399928831,
+        "ct": 1.0902661005648202e-05,
+        "pop": 0.001322039097390806,
+        "rec": 1.0902661005648202e-05,
+        "seq": 0.0033220162421829804,
+        "cf_dup": 0.006273495624581871
+      },
+      "loo": {
+        "cf": -0.0002841669242239428,
+        "ct": 0.0,
+        "pop": -0.00016877374190983965,
+        "rec": 0.0,
+        "seq": 0.00011596485119005212,
+        "cf_dup": -5.3060534634986195e-05
+      },
+      "phi_original": 0.006083340399928831,
+      "phi_duplicate": 0.006273495624581871,
+      "pair_sum": 0.012356836024510702,
+      "baseline_phi_original": 0.0096300657487823,
+      "conservation_ratio": 1.2831517818113751,
+      "symmetry_abs_error": 0.0001901552246530401,
+      "symmetry_rel_error": 0.01538866618249632,
+      "loo_original": -0.0002841669242239428,
+      "loo_duplicate": -5.3060534634986195e-05,
+      "loo_collapse_ratio": -0.5460723699719214
+    }
+  },
+  "design": "A duplicate of the named source is injected into the player set on REAL data, with the candidate set held fixed. Ground truth follows by construction: symmetry requires equal credit for the pair, and efficiency requires their sum to approximate the pre-injection value of the original source. LOO must collapse for both."
+}

@@ -1,0 +1,686 @@
+{
+  "ml_1m": {
+    "temporal": {
+      "dataset": "ml_1m",
+      "seed": 42,
+      "corpus_shape": [
+        6038,
+        3533
+      ],
+      "frozen_two_step": {
+        "shapley": {
+          "cf": 0.015381831033907892,
+          "ct": 2.4768641547751004e-05,
+          "pop": 0.006478655122434057,
+          "rec": 0.0005308012954656567,
+          "seq": 0.029272592566372845
+        },
+        "v_grand": 0.0516886486597282,
+        "test_recall": 0.748135874067937
+      },
+      "refreshed_one_step": {
+        "shapley": {
+          "cf": 0.01889137813215117,
+          "ct": -2.034604002119881e-05,
+          "pop": 0.00696966038108289,
+          "rec": 0.0005104759031902721,
+          "seq": 0.04391175817194923
+        },
+        "v_grand": 0.07026292654835235,
+        "test_recall": 0.7791217895608947
+      },
+      "kendall_tau": 0.9999999999999999,
+      "max_abs_delta_phi": 0.014639165605576383,
+      "sign_agreement": false,
+      "top_frozen": "seq",
+      "top_refreshed": "seq",
+      "v_grand_direction": "refreshed higher",
+      "note": "Refreshed fits the head in the validation state (history = train) and scores coalitions in the test state (history = train + val, so the consumed validation item is masked and seq/rec/pop see it). v(G) is NOT ordered a priori between the two protocols: the refreshed state moves the source scores and the candidate set as well as removing the consumed item. This reports the observed direction only."
+    },
+    "validation_miss": {
+      "dataset": "ml_1m",
+      "seed": 42,
+      "validation_recall": 0.7985086992543496,
+      "users_scored": 6035,
+      "users_with_positive": 4819,
+      "users_negatives_only": 1216,
+      "shapley_retaining_misses": {
+        "cf": 0.015381831033907892,
+        "ct": 2.4768641547751004e-05,
+        "pop": 0.006478655122434057,
+        "rec": 0.0005308012954656567,
+        "seq": 0.029272592566372845
+      },
+      "shapley_dropping_misses": {
+        "cf": 0.01539774138391278,
+        "ct": 6.917503487945836e-07,
+        "pop": 0.006471345959521445,
+        "rec": 0.000527277033351101,
+        "seq": 0.029235562664858737
+      },
+      "kendall_tau": 0.9999999999999999,
+      "max_abs_delta_phi": 3.7029901514107344e-05,
+      "sign_agreement": true,
+      "note": "Users whose validation positive is outside C_u contribute a PSD block to A but nothing to c, which can rotate as well as shrink the ridge solution. The main study retains them; this measures what dropping them does."
+    },
+    "temporal_seeds": {
+      "dataset": "ml_1m",
+      "seeds": [
+        42,
+        43,
+        44,
+        45,
+        46,
+        47,
+        48,
+        49,
+        50,
+        51
+      ],
+      "n_seeds": 10,
+      "per_seed": {
+        "42": {
+          "dataset": "ml_1m",
+          "seed": 42,
+          "corpus_shape": [
+            6038,
+            3533
+          ],
+          "frozen_two_step": {
+            "shapley": {
+              "cf": 0.015381831033907892,
+              "ct": 2.4768641547751004e-05,
+              "pop": 0.006478655122434057,
+              "rec": 0.0005308012954656567,
+              "seq": 0.029272592566372845
+            },
+            "v_grand": 0.0516886486597282,
+            "test_recall": 0.748135874067937
+          },
+          "refreshed_one_step": {
+            "shapley": {
+              "cf": 0.01889137813215117,
+              "ct": -2.034604002119881e-05,
+              "pop": 0.00696966038108289,
+              "rec": 0.0005104759031902721,
+              "seq": 0.04391175817194923
+            },
+            "v_grand": 0.07026292654835235,
+            "test_recall": 0.7791217895608947
+          },
+          "kendall_tau": 0.9999999999999999,
+          "max_abs_delta_phi": 0.014639165605576383,
+          "sign_agreement": false,
+          "top_frozen": "seq",
+          "top_refreshed": "seq",
+          "v_grand_direction": "refreshed higher",
+          "note": "Refreshed fits the head in the validation state (history = train) and scores coalitions in the test state (history = train + val, so the consumed validation item is masked and seq/rec/pop see it). v(G) is NOT ordered a priori between the two protocols: the refreshed state moves the source scores and the candidate set as well as removing the consumed item. This reports the observed direction only."
+        },
+        "43": {
+          "dataset": "ml_1m",
+          "seed": 43,
+          "corpus_shape": [
+            6038,
+            3533
+          ],
+          "frozen_two_step": {
+            "shapley": {
+              "cf": 0.01621582039595308,
+              "ct": -0.00010215617756835119,
+              "pop": 0.006494547856476279,
+              "rec": 0.00013102163050110046,
+              "seq": 0.02986046125828005
+            },
+            "v_grand": 0.052599694963642155,
+            "test_recall": 0.7484672742336371
+          },
+          "refreshed_one_step": {
+            "shapley": {
+              "cf": 0.017558443109508753,
+              "ct": -0.0002552658287255574,
+              "pop": 0.0070091259539294655,
+              "rec": 0.0003234390635262721,
+              "seq": 0.044160430913937856
+            },
+            "v_grand": 0.06879617321217678,
+            "test_recall": 0.7809444904722452
+          },
+          "kendall_tau": 0.9999999999999999,
+          "max_abs_delta_phi": 0.014299969655657805,
+          "sign_agreement": true,
+          "top_frozen": "seq",
+          "top_refreshed": "seq",
+          "v_grand_direction": "refreshed higher",
+          "note": "Refreshed fits the head in the validation state (history = train) and scores coalitions in the test state (history = train + val, so the consumed validation item is masked and seq/rec/pop see it). v(G) is NOT ordered a priori between the two protocols: the refreshed state moves the source scores and the candidate set as well as removing the consumed item. This reports the observed direction only."
+        },
+        "44": {
+          "dataset": "ml_1m",
+          "seed": 44,
+          "corpus_shape": [
+            6038,
+            3533
+          ],
+          "frozen_two_step": {
+            "shapley": {
+              "cf": 0.01575032837027369,
+              "ct": -1.4405855789403205e-05,
+              "pop": 0.0065385293842350305,
+              "rec": 0.000465093753010138,
+              "seq": 0.03031608697261611
+            },
+            "v_grand": 0.05305563262434556,
+            "test_recall": 0.7458160729080364
+          },
+          "refreshed_one_step": {
+            "shapley": {
+              "cf": 0.017415842338121778,
+              "ct": -0.00038027408795945965,
+              "pop": 0.006919903691443603,
+              "rec": 0.000410605961245722,
+              "seq": 0.04385883008605448
+            },
+            "v_grand": 0.06822490798890611,
+            "test_recall": 0.7797845898922949
+          },
+          "kendall_tau": 0.9999999999999999,
+          "max_abs_delta_phi": 0.013542743113438366,
+          "sign_agreement": true,
+          "top_frozen": "seq",
+          "top_refreshed": "seq",
+          "v_grand_direction": "refreshed higher",
+          "note": "Refreshed fits the head in the validation state (history = train) and scores coalitions in the test state (history = train + val, so the consumed validation item is masked and seq/rec/pop see it). v(G) is NOT ordered a priori between the two protocols: the refreshed state moves the source scores and the candidate set as well as removing the consumed item. This reports the observed direction only."
+        },
+        "45": {
+          "dataset": "ml_1m",
+          "seed": 45,
+          "corpus_shape": [
+            6038,
+            3533
+          ],
+          "frozen_two_step": {
+            "shapley": {
+              "cf": 0.016169613067540514,
+              "ct": -0.0001012327838516131,
+              "pop": 0.006526652010242008,
+              "rec": 0.000473394069478555,
+              "seq": 0.030226978367632194
+            },
+            "v_grand": 0.05329540473104165,
+            "test_recall": 0.7497928748964374
+          },
+          "refreshed_one_step": {
+            "shapley": {
+              "cf": 0.01759943101119069,
+              "ct": -0.00020906431918046224,
+              "pop": 0.006972688161286529,
+              "rec": 0.00042794498241805796,
+              "seq": 0.0439926187289629
+            },
+            "v_grand": 0.06878361856467771,
+            "test_recall": 0.7814415907207953
+          },
+          "kendall_tau": 0.9999999999999999,
+          "max_abs_delta_phi": 0.013765640361330708,
+          "sign_agreement": true,
+          "top_frozen": "seq",
+          "top_refreshed": "seq",
+          "v_grand_direction": "refreshed higher",
+          "note": "Refreshed fits the head in the validation state (history = train) and scores coalitions in the test state (history = train + val, so the consumed validation item is masked and seq/rec/pop see it). v(G) is NOT ordered a priori between the two protocols: the refreshed state moves the source scores and the candidate set as well as removing the consumed item. This reports the observed direction only."
+        },
+        "46": {
+          "dataset": "ml_1m",
+          "seed": 46,
+          "corpus_shape": [
+            6038,
+            3533
+          ],
+          "frozen_two_step": {
+            "shapley": {
+              "cf": 0.015293338578368332,
+              "ct": -0.00032083317582285017,
+              "pop": 0.006331722419547406,
+              "rec": 0.0002996665838782538,
+              "seq": 0.02967910447227897
+            },
+            "v_grand": 0.051282998878250115,
+            "test_recall": 0.7451532725766363
+          },
+          "refreshed_one_step": {
+            "shapley": {
+              "cf": 0.018106511011905278,
+              "ct": -0.0003568392184330593,
+              "pop": 0.006936913360074,
+              "rec": 0.0003417672174313534,
+              "seq": 0.04358139898188432
+            },
+            "v_grand": 0.06860975135286189,
+            "test_recall": 0.7809444904722452
+          },
+          "kendall_tau": 0.9999999999999999,
+          "max_abs_delta_phi": 0.013902294509605347,
+          "sign_agreement": true,
+          "top_frozen": "seq",
+          "top_refreshed": "seq",
+          "v_grand_direction": "refreshed higher",
+          "note": "Refreshed fits the head in the validation state (history = train) and scores coalitions in the test state (history = train + val, so the consumed validation item is masked and seq/rec/pop see it). v(G) is NOT ordered a priori between the two protocols: the refreshed state moves the source scores and the candidate set as well as removing the consumed item. This reports the observed direction only."
+        },
+        "47": {
+          "dataset": "ml_1m",
+          "seed": 47,
+          "corpus_shape": [
+            6038,
+            3533
+          ],
+          "frozen_two_step": {
+            "shapley": {
+              "cf": 0.015248286467486416,
+              "ct": -0.00031801105735719217,
+              "pop": 0.0063381975398762586,
+              "rec": 0.0003988572686142014,
+              "seq": 0.02989158522702109
+            },
+            "v_grand": 0.05155891544564077,
+            "test_recall": 0.7473073736536868
+          },
+          "refreshed_one_step": {
+            "shapley": {
+              "cf": 0.017792105623970024,
+              "ct": -0.00014020116361798682,
+              "pop": 0.006808890347382748,
+              "rec": 0.0003968259317269448,
+              "seq": 0.04348772343101795
+            },
+            "v_grand": 0.06834534417047967,
+            "test_recall": 0.7789560894780447
+          },
+          "kendall_tau": 0.9999999999999999,
+          "max_abs_delta_phi": 0.013596138203996858,
+          "sign_agreement": true,
+          "top_frozen": "seq",
+          "top_refreshed": "seq",
+          "v_grand_direction": "refreshed higher",
+          "note": "Refreshed fits the head in the validation state (history = train) and scores coalitions in the test state (history = train + val, so the consumed validation item is masked and seq/rec/pop see it). v(G) is NOT ordered a priori between the two protocols: the refreshed state moves the source scores and the candidate set as well as removing the consumed item. This reports the observed direction only."
+        },
+        "48": {
+          "dataset": "ml_1m",
+          "seed": 48,
+          "corpus_shape": [
+            6038,
+            3533
+          ],
+          "frozen_two_step": {
+            "shapley": {
+              "cf": 0.01591657990251407,
+              "ct": -0.00016785597188815303,
+              "pop": 0.006420047899004968,
+              "rec": 0.00017101117919563106,
+              "seq": 0.03043503117528946
+            },
+            "v_grand": 0.052774814184115976,
+            "test_recall": 0.7492957746478873
+          },
+          "refreshed_one_step": {
+            "shapley": {
+              "cf": 0.01698854926204917,
+              "ct": -7.839945165424381e-05,
+              "pop": 0.0070306713345359645,
+              "rec": 0.0003151282823243834,
+              "seq": 0.04370848332487066
+            },
+            "v_grand": 0.06796443275212592,
+            "test_recall": 0.7816072908036454
+          },
+          "kendall_tau": 0.9999999999999999,
+          "max_abs_delta_phi": 0.013273452149581196,
+          "sign_agreement": true,
+          "top_frozen": "seq",
+          "top_refreshed": "seq",
+          "v_grand_direction": "refreshed higher",
+          "note": "Refreshed fits the head in the validation state (history = train) and scores coalitions in the test state (history = train + val, so the consumed validation item is masked and seq/rec/pop see it). v(G) is NOT ordered a priori between the two protocols: the refreshed state moves the source scores and the candidate set as well as removing the consumed item. This reports the observed direction only."
+        },
+        "49": {
+          "dataset": "ml_1m",
+          "seed": 49,
+          "corpus_shape": [
+            6038,
+            3533
+          ],
+          "frozen_two_step": {
+            "shapley": {
+              "cf": 0.016195331808334615,
+              "ct": -0.0001833107451762742,
+              "pop": 0.006437377907578903,
+              "rec": 0.0002134442104280449,
+              "seq": 0.030388238709893593
+            },
+            "v_grand": 0.05305108189105888,
+            "test_recall": 0.7476387738193869
+          },
+          "refreshed_one_step": {
+            "shapley": {
+              "cf": 0.01821983699567806,
+              "ct": -2.414740563101391e-05,
+              "pop": 0.007286874701308152,
+              "rec": 0.0003293895364896014,
+              "seq": 0.044522647016637926
+            },
+            "v_grand": 0.07033460084448272,
+            "test_recall": 0.7812758906379453
+          },
+          "kendall_tau": 0.9999999999999999,
+          "max_abs_delta_phi": 0.014134408306744332,
+          "sign_agreement": true,
+          "top_frozen": "seq",
+          "top_refreshed": "seq",
+          "v_grand_direction": "refreshed higher",
+          "note": "Refreshed fits the head in the validation state (history = train) and scores coalitions in the test state (history = train + val, so the consumed validation item is masked and seq/rec/pop see it). v(G) is NOT ordered a priori between the two protocols: the refreshed state moves the source scores and the candidate set as well as removing the consumed item. This reports the observed direction only."
+        },
+        "50": {
+          "dataset": "ml_1m",
+          "seed": 50,
+          "corpus_shape": [
+            6038,
+            3533
+          ],
+          "frozen_two_step": {
+            "shapley": {
+              "cf": 0.01511062393712236,
+              "ct": -0.0002538537626846743,
+              "pop": 0.006330261221123911,
+              "rec": 0.00025486205143081454,
+              "seq": 0.02927272987380615
+            },
+            "v_grand": 0.050714623320798555,
+            "test_recall": 0.7453189726594863
+          },
+          "refreshed_one_step": {
+            "shapley": {
+              "cf": 0.017273265526078545,
+              "ct": -0.00021721369428466146,
+              "pop": 0.006996648231673729,
+              "rec": 0.00019245971515629895,
+              "seq": 0.04361726797335361
+            },
+            "v_grand": 0.06786242775197751,
+            "test_recall": 0.7776304888152444
+          },
+          "kendall_tau": 0.9999999999999999,
+          "max_abs_delta_phi": 0.014344538099547458,
+          "sign_agreement": true,
+          "top_frozen": "seq",
+          "top_refreshed": "seq",
+          "v_grand_direction": "refreshed higher",
+          "note": "Refreshed fits the head in the validation state (history = train) and scores coalitions in the test state (history = train + val, so the consumed validation item is masked and seq/rec/pop see it). v(G) is NOT ordered a priori between the two protocols: the refreshed state moves the source scores and the candidate set as well as removing the consumed item. This reports the observed direction only."
+        },
+        "51": {
+          "dataset": "ml_1m",
+          "seed": 51,
+          "corpus_shape": [
+            6038,
+            3533
+          ],
+          "frozen_two_step": {
+            "shapley": {
+              "cf": 0.01601206215661384,
+              "ct": -0.00016366120523585986,
+              "pop": 0.006435268096254111,
+              "rec": 0.00022155872008893928,
+              "seq": 0.030005334541181046
+            },
+            "v_grand": 0.052510562308902074,
+            "test_recall": 0.7463131731565866
+          },
+          "refreshed_one_step": {
+            "shapley": {
+              "cf": 0.017324543884365082,
+              "ct": 8.885131085082802e-05,
+              "pop": 0.007051516344514348,
+              "rec": 0.0005043285571385834,
+              "seq": 0.04380927095303843
+            },
+            "v_grand": 0.06877851104990727,
+            "test_recall": 0.7789560894780447
+          },
+          "kendall_tau": 0.9999999999999999,
+          "max_abs_delta_phi": 0.013803936411857384,
+          "sign_agreement": false,
+          "top_frozen": "seq",
+          "top_refreshed": "seq",
+          "v_grand_direction": "refreshed higher",
+          "note": "Refreshed fits the head in the validation state (history = train) and scores coalitions in the test state (history = train + val, so the consumed validation item is masked and seq/rec/pop see it). v(G) is NOT ordered a priori between the two protocols: the refreshed state moves the source scores and the candidate set as well as removing the consumed item. This reports the observed direction only."
+        }
+      },
+      "v_grand_frozen": {
+        "mean": 0.052253237700752395,
+        "sd": 0.0008777710068046378
+      },
+      "v_grand_refreshed": {
+        "mean": 0.06879626942359479,
+        "sd": 0.0008593674078273384
+      },
+      "relative_change_v_grand": {
+        "mean": 0.3168771666401125,
+        "ci": {
+          "mean": 0.3168771666401125,
+          "lo": 0.3022522216689976,
+          "hi": 0.33154193780054936
+        },
+        "n_positive": 10,
+        "n_negative": 0
+      },
+      "kendall_tau": {
+        "values": [
+          0.9999999999999999,
+          0.9999999999999999,
+          0.9999999999999999,
+          0.9999999999999999,
+          0.9999999999999999,
+          0.9999999999999999,
+          0.9999999999999999,
+          0.9999999999999999,
+          0.9999999999999999,
+          0.9999999999999999
+        ],
+        "mean": 0.9999999999999998,
+        "n_unit": 10
+      },
+      "top_source_frozen": [
+        "seq"
+      ],
+      "top_source_refreshed": [
+        "seq"
+      ],
+      "n_seeds_top_source_changes": 0,
+      "sign_agreement_all_seeds": false,
+      "per_source_delta": {
+        "cf": {
+          "mean": 0.001987609117690373,
+          "sd": 0.0007791943273947223,
+          "ci": {
+            "mean": 0.001987609117690373,
+            "lo": 0.0015541669854080916,
+            "hi": 0.002470155284497215
+          },
+          "n_positive": 10,
+          "n_negative": 0,
+          "sign_stable": true
+        },
+        "ct": {
+          "mean": 7.652195169804933e-07,
+          "sd": 0.00018327651966978427,
+          "ci": {
+            "mean": 7.652195169804933e-07,
+            "lo": -0.00010776801681953985,
+            "hi": 0.00010263687712327173
+          },
+          "n_positive": 5,
+          "n_negative": 5,
+          "sign_stable": false
+        },
+        "pop": {
+          "mean": 0.0005651633050458499,
+          "sd": 0.00013429772330178537,
+          "ci": {
+            "mean": 0.0005651633050458499,
+            "lo": 0.0004924413135620253,
+            "hi": 0.0006498559866586082
+          },
+          "n_positive": 10,
+          "n_negative": 0,
+          "sign_stable": true
+        },
+        "rec": {
+          "mean": 5.9265438855615425e-05,
+          "sd": 0.00011887934438100524,
+          "ci": {
+            "mean": 5.9265438855615425e-05,
+            "lo": -5.633230835870929e-06,
+            "hi": 0.00013260493284856446
+          },
+          "n_positive": 5,
+          "n_negative": 5,
+          "sign_stable": false
+        },
+        "seq": {
+          "mean": 0.013930228641733582,
+          "sd": 0.0004202615401943121,
+          "ci": {
+            "mean": 0.013930228641733582,
+            "lo": 0.013686886847469626,
+            "hi": 0.014184490635384094
+          },
+          "n_positive": 10,
+          "n_negative": 0,
+          "sign_stable": true
+        }
+      },
+      "note": "Ten-seed version of the frozen-versus-refreshed protocol contrast. Paired by seed: both protocols share the corpus, split and scorer seed, so the difference is the protocol. Percentile bootstrap over seeds; no direction is assumed a priori, because the refreshed state moves the source scores, the candidate set and the baseline as well as removing the consumed validation item."
+    }
+  },
+  "amazon_video_games": {
+    "temporal": {
+      "dataset": "amazon_video_games",
+      "seed": 42,
+      "frozen_two_step": {
+        "shapley": {
+          "cf": 0.01925088226901339,
+          "ct": 0.0018660855230795224,
+          "pop": 0.0015707097942888484,
+          "rec": -0.00048459907605341996,
+          "seq": 0.019099828942856452
+        },
+        "v_grand": 0.04130290745318479,
+        "test_recall": 0.5889044943820225
+      },
+      "refreshed_one_step": {
+        "shapley": {
+          "cf": 0.020338985609975088,
+          "ct": 0.002033372690078616,
+          "pop": 0.0020064402336430263,
+          "rec": -0.0005348850556919168,
+          "seq": 0.025180854495360165
+        },
+        "v_grand": 0.049024767973364976,
+        "test_recall": 0.6035112359550562
+      },
+      "kendall_tau": 0.7999999999999999,
+      "max_abs_delta_phi": 0.006081025552503713,
+      "sign_agreement": true,
+      "top_frozen": "cf",
+      "top_refreshed": "seq",
+      "v_grand_direction": "refreshed higher",
+      "note": "Refreshed fits the head in the validation state (history = train) and scores coalitions in the test state (history = train + val, so the consumed validation item is masked and seq/rec/pop see it). v(G) is NOT ordered a priori between the two protocols: the refreshed state moves the source scores and the candidate set as well as removing the consumed item. This reports the observed direction only."
+    },
+    "validation_miss": {
+      "dataset": "amazon_video_games",
+      "seed": 42,
+      "validation_recall": 0.6481741573033708,
+      "users_scored": 7120,
+      "users_with_positive": 4615,
+      "users_negatives_only": 2505,
+      "shapley_retaining_misses": {
+        "cf": 0.01925088226901339,
+        "ct": 0.0018660855230795224,
+        "pop": 0.0015707097942888484,
+        "rec": -0.00048459907605341996,
+        "seq": 0.019099828942856452
+      },
+      "shapley_dropping_misses": {
+        "cf": 0.01904471052945649,
+        "ct": 0.0018929616868592091,
+        "pop": 0.0015950828315289703,
+        "rec": -0.0004944532765343198,
+        "seq": 0.01917641506742743
+      },
+      "kendall_tau": 0.7999999999999999,
+      "max_abs_delta_phi": 0.00020617173955689988,
+      "sign_agreement": true,
+      "note": "Users whose validation positive is outside C_u contribute a PSD block to A but nothing to c, which can rotate as well as shrink the ridge solution. The main study retains them; this measures what dropping them does."
+    }
+  },
+  "gowalla_ts": {
+    "temporal": {
+      "dataset": "gowalla_ts",
+      "seed": 42,
+      "corpus_shape": [
+        8865,
+        82134
+      ],
+      "frozen_two_step": {
+        "shapley": {
+          "cf": 0.007105564790575359,
+          "ct": 0.006738856585098587,
+          "pop": 0.0005519988570616448,
+          "rec": 0.00037723239321774154,
+          "seq": 0.002129034215540876
+        },
+        "v_grand": 0.016902686841494208,
+        "test_recall": 0.45042301184433164
+      },
+      "refreshed_one_step": {
+        "shapley": {
+          "cf": 0.007134451546159576,
+          "ct": 0.0065673247155675135,
+          "pop": 0.0013631141826899835,
+          "rec": 0.0002649981586378918,
+          "seq": 0.002195288153914251
+        },
+        "v_grand": 0.017525176756969213,
+        "test_recall": 0.4488437676254935
+      },
+      "kendall_tau": 0.9999999999999999,
+      "max_abs_delta_phi": 0.0008111153256283387,
+      "sign_agreement": true,
+      "top_frozen": "cf",
+      "top_refreshed": "cf",
+      "v_grand_direction": "refreshed higher",
+      "note": "Refreshed fits the head in the validation state (history = train) and scores coalitions in the test state (history = train + val, so the consumed validation item is masked and seq/rec/pop see it). v(G) is NOT ordered a priori between the two protocols: the refreshed state moves the source scores and the candidate set as well as removing the consumed item. This reports the observed direction only."
+    },
+    "validation_miss": {
+      "dataset": "gowalla_ts",
+      "seed": 42,
+      "validation_recall": 0.46159052453468696,
+      "users_scored": 8865,
+      "users_with_positive": 4092,
+      "users_negatives_only": 4773,
+      "shapley_retaining_misses": {
+        "cf": 0.007105564790575359,
+        "ct": 0.006738856585098587,
+        "pop": 0.0005519988570616448,
+        "rec": 0.00037723239321774154,
+        "seq": 0.002129034215540876
+      },
+      "shapley_dropping_misses": {
+        "cf": 0.0071346841071967815,
+        "ct": 0.0068273776278769144,
+        "pop": 0.0006169688755518735,
+        "rec": 0.000342182514143495,
+        "seq": 0.0023131157160077294
+      },
+      "kendall_tau": 0.9999999999999999,
+      "max_abs_delta_phi": 0.0001840815004668533,
+      "sign_agreement": true,
+      "note": "Users whose validation positive is outside C_u contribute a PSD block to A but nothing to c, which can rotate as well as shrink the ridge solution. The main study retains them; this measures what dropping them does."
+    }
+  }
+}

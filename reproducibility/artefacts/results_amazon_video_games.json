@@ -1,0 +1,1214 @@
+{
+  "dataset": "amazon_video_games",
+  "seed": 42,
+  "synthetic": false,
+  "dataset_stats": {
+    "users": 7120,
+    "items": 3516,
+    "interactions": 117468,
+    "density": 0.004692353414886682,
+    "train": 103228,
+    "valid": 7120,
+    "test": 7120,
+    "synthetic": false,
+    "no_timestamps": false
+  },
+  "player_audit": {
+    "cf": {
+      "flat_user_fraction": 0.0002808988764044944,
+      "all_zero": false,
+      "n_users_checked": 7120,
+      "degenerate": false
+    },
+    "ct": {
+      "flat_user_fraction": 0.0,
+      "all_zero": false,
+      "n_users_checked": 7120,
+      "degenerate": false
+    },
+    "pop": {
+      "flat_user_fraction": 0.0,
+      "all_zero": false,
+      "n_users_checked": 7120,
+      "degenerate": false
+    },
+    "rec": {
+      "flat_user_fraction": 0.8948033707865168,
+      "all_zero": false,
+      "n_users_checked": 7120,
+      "degenerate": false
+    },
+    "seq": {
+      "flat_user_fraction": 0.0,
+      "all_zero": false,
+      "n_users_checked": 7120,
+      "degenerate": false
+    },
+    "degenerate_players": []
+  },
+  "timings_sec": {
+    "load": 52.101804971694946,
+    "scorers": 6.7011940479278564,
+    "candidates": 9.372119188308716,
+    "game_32_coalitions": 12.278159856796265,
+    "baseline_lightgcn": 10.383173942565918,
+    "baseline_sasrec": 25.617497205734253
+  },
+  "e0a_candidates": {
+    "dataset": "amazon_video_games",
+    "n_max": 600,
+    "candidate_rule": "symmetric_reciprocal_rank",
+    "candidate_recall": 0.5889044943820225,
+    "validation_recall": 0.6481741573033708,
+    "users_scored": 7120,
+    "users_with_positive": 4615,
+    "users_negatives_only": 2505,
+    "recall_gate": 0.6,
+    "gate_passes": false,
+    "ceiling_exempt": true,
+    "reportable": true,
+    "reporting_restriction": "RUNG 2 (spec \u00a72.2): recall gate unmet at the pre-registered N_max=600; recall=0.589 < 0.6. Retained for the RELATIVE LOO-vs-Shapley contrast only. EXCLUDED from absolute-NDCG comparison against neural baselines. The ceiling must be stated wherever this corpus is reported.",
+    "abs_size_mean": 599.9988764044944,
+    "abs_size_std": 0.050267558333185476,
+    "abs_size_min": 597,
+    "abs_size_max": 600,
+    "n_eval_users": 7120,
+    "note": "Candidate recall is the CEILING on every ranking metric: a test item outside C_u contributes zero to NDCG@10 by construction."
+  },
+  "e0b_monotonicity": {
+    "pairs_checked": 80,
+    "violations": 14,
+    "violations_by_magnitude": {
+      "gt_0": 14,
+      "gt_0.0001": 8,
+      "gt_0.001": 4,
+      "gt_0.01": 0
+    },
+    "violations_material": 4,
+    "material_threshold": 0.001,
+    "max_magnitude": 0.003265547909193047,
+    "median_magnitude": 0.0001140867332201645,
+    "sources_involved": [
+      "ct",
+      "pop",
+      "rec"
+    ],
+    "detail": [
+      {
+        "S": [],
+        "g": "pop",
+        "delta": -0.003265547909193047
+      },
+      {
+        "S": [],
+        "g": "rec",
+        "delta": -0.0027298286848911925
+      },
+      {
+        "S": [
+          "cf"
+        ],
+        "g": "rec",
+        "delta": -4.429480070845121e-05
+      },
+      {
+        "S": [
+          "rec"
+        ],
+        "g": "pop",
+        "delta": -0.00045482757100139036
+      },
+      {
+        "S": [
+          "cf",
+          "ct"
+        ],
+        "g": "rec",
+        "delta": -9.499843124742557e-05
+      },
+      {
+        "S": [
+          "cf",
+          "seq"
+        ],
+        "g": "ct",
+        "delta": -7.821733621723309e-05
+      },
+      {
+        "S": [
+          "cf",
+          "seq"
+        ],
+        "g": "rec",
+        "delta": -7.016047894412014e-05
+      },
+      {
+        "S": [
+          "ct",
+          "seq"
+        ],
+        "g": "rec",
+        "delta": -1.874915523197157e-05
+      },
+      {
+        "S": [
+          "pop",
+          "seq"
+        ],
+        "g": "ct",
+        "delta": -0.0017033889777595262
+      },
+      {
+        "S": [
+          "cf",
+          "ct",
+          "seq"
+        ],
+        "g": "rec",
+        "delta": -0.0001140867332201645
+      },
+      {
+        "S": [
+          "cf",
+          "pop",
+          "seq"
+        ],
+        "g": "ct",
+        "delta": -0.00010599956209572658
+      },
+      {
+        "S": [
+          "cf",
+          "rec",
+          "seq"
+        ],
+        "g": "ct",
+        "delta": -0.00012214359049327744
+      },
+      {
+        "S": [
+          "ct",
+          "pop",
+          "seq"
+        ],
+        "g": "rec",
+        "delta": -3.1855644918581116e-05
+      },
+      {
+        "S": [
+          "pop",
+          "rec",
+          "seq"
+        ],
+        "g": "ct",
+        "delta": -0.0018182882782045856
+      }
+    ],
+    "property2_applicable": false,
+    "stability_note": "Report violations_material (|delta| > 1e-3) alongside the raw count. The raw count is sensitive to floating-point ordering; the material count is not, and it is what the Property 2 argument actually depends on.",
+    "dataset": "amazon_video_games",
+    "note": "Property 2 and Lemma 1(ii) apply only where this passes. Where it fails, negative phi_g are SUBSTANTIVE findings, not numerical error. The coalition-conditional ridge refit (spec \u00a72.4) is the likely cause."
+  },
+  "gate_warning": "CANDIDATE RECALL GATE FAILED (0.589 < 0.6). Spec \u00a72.2 requires the four-rung fallback ladder: raise N_max -> report ceiling -> k-core under the density invariant -> substitute Gowalla. Downstream numbers are reported but must not be interpreted as final.",
+  "e1_source_share": {
+    "dataset": "amazon_video_games",
+    "shapley": {
+      "cf": 0.01925088226901339,
+      "ct": 0.0018660855230795224,
+      "pop": 0.0015707097942888484,
+      "rec": -0.00048459907605341996,
+      "seq": 0.019099828942856452
+    },
+    "efficiency": {
+      "sum_phi": 0.04130290745318479,
+      "v_grand": 0.04130290745318479,
+      "abs_error": 0.0,
+      "passes": true
+    },
+    "v_grand": 0.04130290745318479,
+    "v0": 0.004459551758778822,
+    "v_empty": 0.0,
+    "n_coalitions": 32,
+    "note": "EXACT GIVEN THE FITTED v: the 32-coalition aggregation has no sampling error, but v(S) is estimated, so phi carries estimation error -- see seed CIs. Efficiency holds exactly regardless of fit noise because it is structural."
+  },
+  "e2_loo_vs_shapley": {
+    "dataset": "amazon_video_games",
+    "shapley": {
+      "cf": 0.01925088226901339,
+      "ct": 0.0018660855230795224,
+      "pop": 0.0015707097942888484,
+      "rec": -0.00048459907605341996,
+      "seq": 0.019099828942856452
+    },
+    "loo": {
+      "cf": 0.008443767714845667,
+      "ct": 2.0893950037056963e-05,
+      "pop": 0.0030810964743071684,
+      "rec": 0.00017345348743177252,
+      "seq": 0.007616041125345176
+    },
+    "gap": {
+      "cf": 0.010807114554167722,
+      "ct": 0.0018451915730424654,
+      "pop": -0.00151038668001832,
+      "rec": -0.0006580525634851924,
+      "seq": 0.011483787817511276
+    },
+    "forward": {
+      "cf": 0.031983902291254286,
+      "seq": 0.006430212757060731,
+      "pop": 0.002821338479533725,
+      "rec": 4.6559975298988976e-05,
+      "ct": 2.0893950037056963e-05
+    },
+    "permutation_importance": {
+      "cf": 0.01911227647590118,
+      "ct": 0.0015923365999136949,
+      "pop": 0.001923985212421862,
+      "rec": -0.0006010340358057823,
+      "seq": 0.01927534320075383
+    },
+    "mc_shapley_50": {
+      "cf": 0.02009789495932643,
+      "ct": 0.001741441291854047,
+      "pop": 0.0019610178337280734,
+      "rec": -0.0004254559101543033,
+      "seq": 0.017928009278430544
+    },
+    "kendall_tau": {
+      "cf|ct": 0.08514335751533508,
+      "cf|pop": -0.08467193692922592,
+      "cf|rec": -0.10339514911174774,
+      "cf|seq": 0.2666502892971039,
+      "ct|pop": -0.19966758787631989,
+      "ct|rec": 0.16450649499893188,
+      "ct|seq": 0.13453948497772217,
+      "pop|rec": -0.22108741104602814,
+      "pop|seq": -0.21103589236736298,
+      "rec|seq": 0.05927472189068794
+    },
+    "pair_gap": {
+      "cf|ct": 0.012652306127210187,
+      "cf|pop": 0.012317501234186042,
+      "cf|rec": 0.011465167117652914,
+      "cf|seq": 0.022290902371678998,
+      "ct|pop": 0.0033555782530607856,
+      "ct|rec": 0.002503244136527658,
+      "ct|seq": 0.013328979390553742,
+      "pop|rec": 0.0021684392435035124,
+      "pop|seq": 0.012994174497529596,
+      "rec|seq": 0.012141840380996468
+    },
+    "redundancy_gap_correlation": 0.506430661070601,
+    "permutation_tests": {
+      "cf": {
+        "observed": 0.010807114554167717,
+        "p_value": 9.999000099990002e-05,
+        "n_shuffles": 10000
+      },
+      "ct": {
+        "observed": 0.001845191573042463,
+        "p_value": 9.999000099990002e-05,
+        "n_shuffles": 10000
+      },
+      "pop": {
+        "observed": -0.0015103866800183182,
+        "p_value": 0.00029997000299970003,
+        "n_shuffles": 10000
+      },
+      "rec": {
+        "observed": -0.0006580525634851917,
+        "p_value": 9.999000099990002e-05,
+        "n_shuffles": 10000
+      },
+      "seq": {
+        "observed": 0.011483787817511271,
+        "p_value": 9.999000099990002e-05,
+        "n_shuffles": 10000
+      }
+    },
+    "preregistered_pairs": [
+      "pop|cf",
+      "rec|ct"
+    ],
+    "note": "pop-cf and rec-ct overlap is PRE-REGISTERED (spec \u00a74), not discovered: ALS on implicit feedback chases popularity, and rec is defined over content clusters. RQ2 tests whether Shapley recovers known structure."
+  },
+  "e3_segments": {
+    "dataset": "amazon_video_games",
+    "profiles": {
+      "cold_stable": {
+        "cf": 0.015335647325438004,
+        "ct": 0.0024936150198786133,
+        "pop": 0.003777698784457044,
+        "rec": -0.00034203708863293184,
+        "seq": 0.018639994176586995,
+        "n_users": 1987
+      },
+      "cold_recency": {
+        "cf": 0.029816204161282004,
+        "ct": 0.001895370538602167,
+        "pop": -4.8548873424686665e-05,
+        "rec": -0.0005941515747846709,
+        "seq": 0.020735520661769882,
+        "n_users": 1881
+      },
+      "heavy_stable": {
+        "cf": 0.012198643416014671,
+        "ct": 0.0009134352342785234,
+        "pop": 0.0022535287387946937,
+        "rec": -0.0005433334419568903,
+        "seq": 0.017256359567542262,
+        "n_users": 1763
+      },
+      "heavy_recency": {
+        "cf": 0.0194787522833611,
+        "ct": 0.0021196357143610906,
+        "pop": -0.00013733007720803146,
+        "rec": -0.00046690514173723685,
+        "seq": 0.01982984376218495,
+        "n_users": 1489
+      }
+    },
+    "heterogeneity_summary": {
+      "n_tests": 30,
+      "n_significant_uncorrected": 7,
+      "expected_by_chance": 1.5,
+      "exceeds_chance": true,
+      "note": "If n_significant is at or near the chance rate, there is NO segment heterogeneity to exploit and C5 cannot work by construction -- C4 and C5 stand or fall together."
+    },
+    "segment_sizes": {
+      "cold_stable": 1987,
+      "cold_recency": 1881,
+      "heavy_stable": 1763,
+      "heavy_recency": 1489
+    },
+    "permutation_tests": {
+      "cf:cold_stable_vs_cold_recency": {
+        "observed": -0.014480556835844,
+        "p_value": 0.0008999100089991,
+        "n_shuffles": 10000
+      },
+      "cf:cold_stable_vs_heavy_stable": {
+        "observed": 0.003137003909423333,
+        "p_value": 0.44425557444255576,
+        "n_shuffles": 10000
+      },
+      "cf:cold_stable_vs_heavy_recency": {
+        "observed": -0.004143104957923097,
+        "p_value": 0.3478652134786521,
+        "n_shuffles": 10000
+      },
+      "cf:cold_recency_vs_heavy_stable": {
+        "observed": 0.01761756074526733,
+        "p_value": 9.999000099990002e-05,
+        "n_shuffles": 10000
+      },
+      "cf:cold_recency_vs_heavy_recency": {
+        "observed": 0.010337451877920904,
+        "p_value": 0.033896610338966106,
+        "n_shuffles": 10000
+      },
+      "cf:heavy_stable_vs_heavy_recency": {
+        "observed": -0.0072801088673464295,
+        "p_value": 0.102989701029897,
+        "n_shuffles": 10000
+      },
+      "ct:cold_stable_vs_cold_recency": {
+        "observed": 0.0005982444812764464,
+        "p_value": 0.5647435256474352,
+        "n_shuffles": 10000
+      },
+      "ct:cold_stable_vs_heavy_stable": {
+        "observed": 0.0015801797856000899,
+        "p_value": 0.08439156084391561,
+        "n_shuffles": 10000
+      },
+      "ct:cold_stable_vs_heavy_recency": {
+        "observed": 0.0003739793055175227,
+        "p_value": 0.7208279172082792,
+        "n_shuffles": 10000
+      },
+      "ct:cold_recency_vs_heavy_stable": {
+        "observed": 0.0009819353043236435,
+        "p_value": 0.2655734426557344,
+        "n_shuffles": 10000
+      },
+      "ct:cold_recency_vs_heavy_recency": {
+        "observed": -0.00022426517575892366,
+        "p_value": 0.8217178282171783,
+        "n_shuffles": 10000
+      },
+      "ct:heavy_stable_vs_heavy_recency": {
+        "observed": -0.0012062004800825672,
+        "p_value": 0.17328267173282672,
+        "n_shuffles": 10000
+      },
+      "pop:cold_stable_vs_cold_recency": {
+        "observed": 0.0038262476578817305,
+        "p_value": 0.0020997900209979003,
+        "n_shuffles": 10000
+      },
+      "pop:cold_stable_vs_heavy_stable": {
+        "observed": 0.0015241700456623502,
+        "p_value": 0.19518048195180482,
+        "n_shuffles": 10000
+      },
+      "pop:cold_stable_vs_heavy_recency": {
+        "observed": 0.003915028861665075,
+        "p_value": 0.001999800019998,
+        "n_shuffles": 10000
+      },
+      "pop:cold_recency_vs_heavy_stable": {
+        "observed": -0.0023020776122193803,
+        "p_value": 0.043195680431956804,
+        "n_shuffles": 10000
+      },
+      "pop:cold_recency_vs_heavy_recency": {
+        "observed": 8.878120378334479e-05,
+        "p_value": 0.9417058294170583,
+        "n_shuffles": 10000
+      },
+      "pop:heavy_stable_vs_heavy_recency": {
+        "observed": 0.002390858816002725,
+        "p_value": 0.0334966503349665,
+        "n_shuffles": 10000
+      },
+      "rec:cold_stable_vs_cold_recency": {
+        "observed": 0.0002521144861517391,
+        "p_value": 0.36666333366663334,
+        "n_shuffles": 10000
+      },
+      "rec:cold_stable_vs_heavy_stable": {
+        "observed": 0.00020129635332395842,
+        "p_value": 0.45015498450154984,
+        "n_shuffles": 10000
+      },
+      "rec:cold_stable_vs_heavy_recency": {
+        "observed": 0.000124868053104305,
+        "p_value": 0.6844315568443156,
+        "n_shuffles": 10000
+      },
+      "rec:cold_recency_vs_heavy_stable": {
+        "observed": -5.0818132827780676e-05,
+        "p_value": 0.8482151784821518,
+        "n_shuffles": 10000
+      },
+      "rec:cold_recency_vs_heavy_recency": {
+        "observed": -0.0001272464330474341,
+        "p_value": 0.676032396760324,
+        "n_shuffles": 10000
+      },
+      "rec:heavy_stable_vs_heavy_recency": {
+        "observed": -7.642830021965341e-05,
+        "p_value": 0.7914208579142086,
+        "n_shuffles": 10000
+      },
+      "seq:cold_stable_vs_cold_recency": {
+        "observed": -0.0020955264851828873,
+        "p_value": 0.4296570342965703,
+        "n_shuffles": 10000
+      },
+      "seq:cold_stable_vs_heavy_stable": {
+        "observed": 0.001383634609044733,
+        "p_value": 0.6015398460153984,
+        "n_shuffles": 10000
+      },
+      "seq:cold_stable_vs_heavy_recency": {
+        "observed": -0.0011898495855979553,
+        "p_value": 0.6733326667333267,
+        "n_shuffles": 10000
+      },
+      "seq:cold_recency_vs_heavy_stable": {
+        "observed": 0.00347916109422762,
+        "p_value": 0.1917808219178082,
+        "n_shuffles": 10000
+      },
+      "seq:cold_recency_vs_heavy_recency": {
+        "observed": 0.0009056768995849319,
+        "p_value": 0.7575242475752425,
+        "n_shuffles": 10000
+      },
+      "seq:heavy_stable_vs_heavy_recency": {
+        "observed": -0.0025734841946426883,
+        "p_value": 0.37066293370662934,
+        "n_shuffles": 10000
+      }
+    }
+  },
+  "e4_signalshap_fuse": {
+    "dataset": "amazon_video_games",
+    "candidate_set_ndcg": {
+      "uniform": 0.04438523912924734,
+      "global": 0.05033613512360213,
+      "signalshap_fuse": 0.05047618354194409
+    },
+    "full_catalog": {
+      "signalshap_fuse": {
+        "ndcg_at_10": 0.049783460905047996,
+        "recall_at_20": 0.13764044943820225,
+        "mrr_at_10": 0.036746477617264135,
+        "n_users": 7120
+      },
+      "global": {
+        "ndcg_at_10": 0.04928762762040947,
+        "recall_at_20": 0.1372191011235955,
+        "mrr_at_10": 0.03634630818619582,
+        "n_users": 7120
+      },
+      "uniform": {
+        "ndcg_at_10": 0.043518306512914814,
+        "recall_at_20": 0.13047752808988763,
+        "mrr_at_10": 0.0322025481540931,
+        "n_users": 7120
+      },
+      "popularity_reference": {
+        "ndcg_at_10": 0.006093258503425685,
+        "recall_at_20": 0.0351123595505618,
+        "mrr_at_10": 0.003983079186730872,
+        "n_users": 7120
+      },
+      "lightgcn": {
+        "ndcg_at_10": 0.03484345300874542,
+        "recall_at_20": 0.09845505617977528,
+        "mrr_at_10": 0.02554981496343856,
+        "n_users": 7120
+      },
+      "sasrec": {
+        "ndcg_at_10": 0.014801903023861418,
+        "recall_at_20": 0.050702247191011234,
+        "mrr_at_10": 0.01058799268771179,
+        "n_users": 7120
+      }
+    },
+    "per_user": {
+      "signalshap_fuse": "[0.35620719 0.         0.         ... 0.         0.         0.        ]",
+      "global": "[0.35620719 0.         0.         ... 0.         0.         0.        ]",
+      "uniform": "[0. 0. 0. ... 0. 0. 0.]",
+      "popularity_reference": "[0. 0. 0. ... 0. 0. 0.]",
+      "lightgcn": "[0. 0. 0. ... 0. 0. 0.]",
+      "sasrec": "[0. 0. 0. ... 0. 0. 0.]"
+    },
+    "weights": {
+      "uniform": [
+        0.2,
+        0.2,
+        0.2,
+        0.2,
+        0.2
+      ],
+      "global": [
+        0.3159563450439239,
+        0.15224224131694733,
+        0.5705469101185471,
+        0.1130766102681389,
+        1.3006455344147145
+      ],
+      "segment_cold_stable": [
+        0.27452025603179314,
+        0.08534589705731753,
+        0.5514144825431,
+        0.16098825871272057,
+        1.2737193869852212
+      ],
+      "segment_cold_recency": [
+        0.3374532739261455,
+        0.1543368881897184,
+        0.5538579949209932,
+        0.09799395909526115,
+        1.3115927955545514
+      ],
+      "segment_heavy_stable": [
+        0.30271461418895207,
+        0.1321434995194395,
+        0.6074376737966877,
+        0.12779447122789722,
+        1.3317951597130901
+      ],
+      "segment_heavy_recency": [
+        0.33781793766792995,
+        0.24487246221425607,
+        0.5098102931304349,
+        0.003903779235605514,
+        1.28343540557802
+      ]
+    },
+    "wilcoxon": {
+      "uniform": {
+        "statistic": 52804.5,
+        "p_value": 1.708889491935496e-10,
+        "d_z": 0.07719748835579493,
+        "n": 7120,
+        "n_ties": 6566,
+        "mean_diff": 0.006265154392133175
+      },
+      "global": {
+        "statistic": 7293.0,
+        "p_value": 0.018969410289349037,
+        "d_z": 0.018717857042468172,
+        "n": 7120,
+        "n_ties": 6930,
+        "mean_diff": 0.0004958332846385287
+      },
+      "popularity_reference": {
+        "statistic": 15720.0,
+        "p_value": 1.7708303181228644e-91,
+        "d_z": 0.25049014814259934,
+        "n": 7120,
+        "n_ties": 6408,
+        "mean_diff": 0.043690202401622316
+      },
+      "lightgcn": {
+        "statistic": 98054.5,
+        "p_value": 2.2383743693757276e-15,
+        "d_z": 0.09705332721825079,
+        "n": 7120,
+        "n_ties": 6355,
+        "mean_diff": 0.014940007896302577
+      },
+      "sasrec": {
+        "statistic": 45919.5,
+        "p_value": 9.112085214354813e-59,
+        "d_z": 0.19893950194471813,
+        "n": 7120,
+        "n_ties": 6365,
+        "mean_diff": 0.03498155788118658
+      }
+    },
+    "holm_bonferroni": {
+      "corrected": {
+        "popularity_reference": 8.854151590614322e-91,
+        "sasrec": 3.644834085741925e-58,
+        "lightgcn": 6.715123108127182e-15,
+        "uniform": 3.417778983870992e-10,
+        "global": 0.018969410289349037
+      },
+      "family_size": 5,
+      "family_composition": [
+        "uniform",
+        "global",
+        "popularity_reference",
+        "lightgcn",
+        "sasrec"
+      ],
+      "raw": {
+        "uniform": 1.708889491935496e-10,
+        "global": 0.018969410289349037,
+        "popularity_reference": 1.7708303181228644e-91,
+        "lightgcn": 2.2383743693757276e-15,
+        "sasrec": 9.112085214354813e-59
+      }
+    },
+    "selection": {
+      "head": "pairwise",
+      "alpha": 1.0,
+      "validation_ndcg": {
+        "ridge|alpha=0.0": 0.05775490234419335,
+        "ridge|alpha=0.25": 0.05790234998069538,
+        "ridge|alpha=0.5": 0.0577750524604119,
+        "ridge|alpha=0.75": 0.05778221042066323,
+        "ridge|alpha=1.0": 0.05793689314508273,
+        "pairwise|alpha=0.0": 0.06492090456124142,
+        "pairwise|alpha=0.25": 0.06512424372788797,
+        "pairwise|alpha=0.5": 0.06488779511888476,
+        "pairwise|alpha=0.75": 0.0651680989169367,
+        "pairwise|alpha=1.0": 0.06559013371416758
+      },
+      "best_validation_ndcg": 0.06559013371416758,
+      "note": "selected by cross-validation WITHIN the validation fold; test never used"
+    },
+    "note": "T5 is FULL-CATALOG for every method; SignalShap-Fuse scores items outside C_u as -inf so its recall ceiling is visible. v(S) itself remains fixed-candidate by definition of the game."
+  },
+  "e5_robustness": {
+    "dataset": "amazon_video_games",
+    "candidate_size": {
+      "n_max_300": {
+        "n_max": 300,
+        "candidate_recall": 0.4306179775280899,
+        "shapley": {
+          "cf": 0.018627470229011386,
+          "ct": 0.00145581722264042,
+          "pop": 0.0012843543683796416,
+          "rec": -0.000554916565856208,
+          "seq": 0.019361208458971404
+        },
+        "v_grand": 0.04017393371314664
+      },
+      "n_max_600": {
+        "n_max": 600,
+        "candidate_recall": 0.5889044943820225,
+        "shapley": {
+          "cf": 0.01925088226901339,
+          "ct": 0.0018660855230795224,
+          "pop": 0.0015707097942888484,
+          "rec": -0.00048459907605341996,
+          "seq": 0.019099828942856452
+        },
+        "v_grand": 0.04130290745318479
+      },
+      "n_max_1200": {
+        "n_max": 1200,
+        "candidate_recall": 0.7498595505617978,
+        "shapley": {
+          "cf": 0.01921698717095321,
+          "ct": 0.0016954013976595607,
+          "pop": 0.003205086557853172,
+          "rec": -0.0004054350725990472,
+          "seq": 0.018055719429841296
+        },
+        "v_grand": 0.041767759483708186
+      }
+    },
+    "candidate_size_note": "Recall is reported PER CELL because changing |C_u| moves the ceiling and hence the level of v; without it the cells are not comparable.",
+    "lambda_sensitivity": {
+      "lambda_0.1": {
+        "cf": 0.019251704183344747,
+        "ct": 0.0018690567495976726,
+        "pop": 0.0015717408431771746,
+        "rec": -0.00048197702586829494,
+        "seq": 0.019092382702933494
+      },
+      "lambda_1.0": {
+        "cf": 0.01925088226901339,
+        "ct": 0.0018660855230795224,
+        "pop": 0.0015707097942888484,
+        "rec": -0.00048459907605341996,
+        "seq": 0.019099828942856452
+      },
+      "lambda_10.0": {
+        "cf": 0.019261222410191566,
+        "ct": 0.0018670414992529734,
+        "pop": 0.001566757804259086,
+        "rec": -0.00048312170858781607,
+        "seq": 0.01909100744806898
+      }
+    },
+    "lambda_note": "SENSITIVITY ONLY, never selection. lambda is frozen (spec \u00a72.4); per-coalition tuning would be optimistic bias growing with |S|.",
+    "monotone_rescaling": {
+      "identity": {
+        "cf": 0.01925088226901339,
+        "ct": 0.0018660855230795224,
+        "pop": 0.0015707097942888484,
+        "rec": -0.00048459907605341996,
+        "seq": 0.019099828942856452
+      },
+      "log1p": {
+        "cf": 0.019151523511285715,
+        "ct": 0.0020131503960960787,
+        "pop": 0.0013437666779372683,
+        "rec": -0.0005358053849327922,
+        "seq": 0.018148262410641252
+      },
+      "rank": {
+        "cf": 0.013876388596182879,
+        "ct": 9.301186955264147e-05,
+        "pop": 0.0021903580157036236,
+        "rec": -0.0036378739643088747,
+        "seq": 0.014470811650067902
+      }
+    },
+    "rescaling_note": "Remark 1: invariance is AFFINE only. log1p/rank are nonlinear, so drift here is expected and is the empirical content of the remark.",
+    "noise_injection": {
+      "sigma_0.0": {
+        "cf": 0.019255201911410728,
+        "ct": 0.0018704051654768604,
+        "pop": 0.0015577508670968352,
+        "rec": -0.00048459907605342007,
+        "seq": 0.019104148585253788
+      },
+      "sigma_0.1": {
+        "cf": 0.019180215785680042,
+        "ct": 0.0021765391526730347,
+        "pop": 0.0014149837137718778,
+        "rec": -0.00015192825790086886,
+        "seq": 0.01855058428173029
+      },
+      "sigma_0.5": {
+        "cf": 0.023289788430594247,
+        "ct": 0.0016871080839967053,
+        "pop": 0.0015712148390403604,
+        "rec": -1.1917774753691899e-05,
+        "seq": 0.013878300063024769
+      }
+    }
+  },
+  "e6_ablation": {
+    "dataset": "amazon_video_games",
+    "full": {
+      "cf": 0.01925088226901339,
+      "ct": 0.0018660855230795224,
+      "pop": 0.0015707097942888484,
+      "rec": -0.00048459907605341996,
+      "seq": 0.019099828942856452
+    },
+    "dropped": {
+      "cf": {
+        "ct": 0.0028837244572288744,
+        "pop": 0.0013377151775328478,
+        "rec": -0.0006278071578256426,
+        "seq": 0.029265507261403045
+      },
+      "ct": {
+        "cf": 0.02026852120316274,
+        "pop": 0.0008058632131151967,
+        "rec": -0.0006458672355496687,
+        "seq": 0.020853496322419465
+      },
+      "pop": {
+        "cf": 0.019017887652257384,
+        "ct": 0.0011012389419058704,
+        "rec": -0.0006998810379069487,
+        "seq": 0.01880256542262131
+      },
+      "rec": {
+        "cf": 0.019107674187241165,
+        "ct": 0.0017048173635832733,
+        "pop": 0.0013554278324353194,
+        "seq": 0.018961534582493257
+      },
+      "seq": {
+        "cf": 0.029416560587559978,
+        "ct": 0.0036197529026425358,
+        "pop": 0.0012734462740537095,
+        "rec": -0.0006228934364166118
+      }
+    }
+  },
+  "e7_actionability": {
+    "dataset": "amazon_video_games",
+    "lowest_shapley_source": "rec",
+    "shapley_value": -0.00048459907605341996,
+    "v_full": 0.04130290745318479,
+    "v_without": 0.041129453965753016,
+    "delta": 0.00017345348743177252,
+    "wilcoxon": {
+      "statistic": 369.0,
+      "p_value": 0.2089162585546982,
+      "d_z": 0.011377461545868864,
+      "n": 7120,
+      "n_ties": 7077,
+      "mean_diff": 0.00017345348743177738
+    },
+    "interpretation": "Disabling 'rec' saves one scorer at deployment; the NDCG delta is 0.00017 (p=0.2089)."
+  },
+  "e8_appendix_b": {
+    "dataset": "amazon_video_games",
+    "union_candidates": {
+      "shapley": {
+        "cf": 0.01925088226901339,
+        "ct": 0.0018660855230795224,
+        "pop": 0.0015707097942888484,
+        "rec": -0.00048459907605341996,
+        "seq": 0.019099828942856452
+      },
+      "v_grand": 0.04130290745318479,
+      "recall": 0.5889044943820225
+    },
+    "regenerated_candidates": {
+      "shapley": {
+        "cf": 0.01896684257293155,
+        "ct": 0.0012650137660280313,
+        "pop": 0.0028549006137861396,
+        "rec": -0.0005943659573612274,
+        "seq": 0.018267722082025102
+      },
+      "v_grand": 0.0407601130774096,
+      "recall": 0.6293539325842696
+    },
+    "v_grand_inflation": -0.000542794375775188,
+    "note": "E8-a quantifies the bias avoided by \u00a72.1. The rejected v1.0 design draws candidates from the grand-coalition scorer, inflating v(G) relative to every v(S) for proper subsets S."
+  },
+  "e10_alternative_values": {
+    "shapley": {
+      "cf": 0.01925088226901339,
+      "ct": 0.0018660855230795224,
+      "pop": 0.0015707097942888484,
+      "rec": -0.00048459907605341996,
+      "seq": 0.019099828942856452
+    },
+    "banzhaf": {
+      "cf": 0.018736107849809492,
+      "ct": 0.0021354147432959517,
+      "pop": 0.0023688794979691407,
+      "rec": -0.00012110286690087635,
+      "seq": 0.01880415030267418
+    },
+    "semivalue_binomial_q025": {
+      "cf": 0.025801055675553183,
+      "ct": 0.003347430721512105,
+      "pop": 0.0009640374931466336,
+      "rec": -0.0008125052207908457,
+      "seq": 0.025825824527756745
+    },
+    "semivalue_binomial_q075": {
+      "cf": 0.012472457448534043,
+      "ct": 0.0005485407304175558,
+      "pop": 0.0026056027429336107,
+      "rec": 5.419096892267921e-05,
+      "seq": 0.012255129833527424
+    },
+    "semivalue_size_uniform": {
+      "cf": 0.01925088226901339,
+      "ct": 0.0018660855230795224,
+      "pop": 0.0015707097942888484,
+      "rec": -0.00048459907605341996,
+      "seq": 0.019099828942856452
+    },
+    "size_uniform_equals_shapley_max_abs_diff": 0.0,
+    "shapley_top": "cf",
+    "banzhaf_top": "seq",
+    "top_source_agrees": false,
+    "kendall_tau_shapley_banzhaf": 0.6,
+    "kendall_tau_shapley_q025": 0.7999999999999999,
+    "kendall_tau_shapley_q075": 0.7999999999999999,
+    "top_source_all_values": [
+      "cf",
+      "seq"
+    ],
+    "sums": {
+      "shapley": 0.04130290745318479,
+      "banzhaf": 0.041923449526847886,
+      "q025": 0.05512584319717782,
+      "q075": 0.027935921724335313
+    },
+    "note": "Banzhaf does not satisfy efficiency, so its values do not sum to v(G); only the induced ORDERING is comparable across values. The size-uniform semivalue is Shapley identically (see the diff key), so the distinct comparators are Banzhaf and the binomial semivalues at q = 0.25 and q = 0.75.",
+    "interactions": {
+      "cf": 0.031983902291254286,
+      "ct": 0.0025007680065138632,
+      "pop": -0.003265547909193047,
+      "rec": -0.0027298286848911925,
+      "seq": 0.0316331391123544,
+      "cf|ct": -0.0055566061903792085,
+      "cf|pop": 0.0015942910849820117,
+      "cf|rec": 0.0013107791052047496,
+      "cf|seq": -0.044428733152624786,
+      "ct|pop": 0.006786853372644869,
+      "ct|rec": 0.0014983054567288072,
+      "ct|seq": -0.007688300751948079,
+      "pop|rec": 0.0016133930807657512,
+      "pop|seq": 0.0026987512286077995,
+      "rec|seq": 0.0013840867019466244
+    },
+    "dataset": "amazon_video_games"
+  },
+  "e13_synthetic_ground_truth": {
+    "additivity": {
+      "games": [
+        "additive",
+        "unanimity"
+      ],
+      "phi_v1": {
+        "p": 3.0,
+        "q": 2.0,
+        "r": 1.0
+      },
+      "phi_v2": {
+        "p": 3.0,
+        "q": 3.0,
+        "r": 3.0
+      },
+      "phi_sum": {
+        "p": 6.0,
+        "q": 5.0,
+        "r": 3.9999999999999996
+      },
+      "expected_sum": {
+        "p": 6.0,
+        "q": 5.0,
+        "r": 4.0
+      },
+      "max_abs_error": 4.440892098500626e-16,
+      "passes": true,
+      "note": "Additivity: phi(v1+v2) must equal phi(v1)+phi(v2). Checked both against the summed empirical values and against the closed form."
+    },
+    "additive": {
+      "players": [
+        "a",
+        "b",
+        "c"
+      ],
+      "expected": {
+        "a": "3",
+        "b": "2",
+        "c": "1"
+      },
+      "computed": {
+        "a": 3.0,
+        "b": 2.0,
+        "c": 1.0
+      },
+      "max_abs_error": 0.0,
+      "passes": true,
+      "efficiency_error": 0.0
+    },
+    "substitutes": {
+      "players": [
+        "s1",
+        "s2",
+        "x"
+      ],
+      "expected": {
+        "s1": "2",
+        "s2": "2",
+        "x": "1"
+      },
+      "computed": {
+        "s1": 2.0,
+        "s2": 2.0,
+        "x": 1.0
+      },
+      "max_abs_error": 0.0,
+      "passes": true,
+      "efficiency_error": 0.0
+    },
+    "complements": {
+      "players": [
+        "c1",
+        "c2",
+        "x"
+      ],
+      "expected": {
+        "c1": "3",
+        "c2": "3",
+        "x": "2"
+      },
+      "computed": {
+        "c1": 3.0,
+        "c2": 3.0,
+        "x": 2.0
+      },
+      "max_abs_error": 0.0,
+      "passes": true,
+      "efficiency_error": 0.0
+    },
+    "null_player": {
+      "players": [
+        "a",
+        "b",
+        "null"
+      ],
+      "expected": {
+        "a": "3",
+        "b": "2",
+        "null": "0"
+      },
+      "computed": {
+        "a": 3.0,
+        "b": 2.0,
+        "null": 0.0
+      },
+      "max_abs_error": 0.0,
+      "passes": true,
+      "efficiency_error": 0.0
+    },
+    "harmful": {
+      "players": [
+        "a",
+        "bad"
+      ],
+      "expected": {
+        "a": "5",
+        "bad": "-2"
+      },
+      "computed": {
+        "a": 5.0,
+        "bad": -2.0
+      },
+      "max_abs_error": 0.0,
+      "passes": true,
+      "efficiency_error": 0.0
+    },
+    "unanimity": {
+      "players": [
+        "p",
+        "q",
+        "r"
+      ],
+      "expected": {
+        "p": "3",
+        "q": "3",
+        "r": "3"
+      },
+      "computed": {
+        "p": 3.0,
+        "q": 3.0,
+        "r": 3.0
+      },
+      "max_abs_error": 0.0,
+      "passes": true,
+      "efficiency_error": 0.0
+    },
+    "_summary": {
+      "n_games": 6,
+      "all_pass": true,
+      "worst_error": 4.440892098500626e-16
+    }
+  },
+  "multi_seed": {
+    "dataset": "amazon_video_games",
+    "seeds": [
+      42,
+      43,
+      44
+    ],
+    "per_seed": {
+      "42": {
+        "cf": 0.01925088226901339,
+        "ct": 0.0018660855230795224,
+        "pop": 0.0015707097942888484,
+        "rec": -0.00048459907605341996,
+        "seq": 0.019099828942856452
+      },
+      "43": {
+        "cf": 0.020431695352507096,
+        "ct": 0.002031887688713875,
+        "pop": 0.0017299844258707835,
+        "rec": -0.0004678468989624345,
+        "seq": 0.01873732196483259
+      },
+      "44": {
+        "cf": 0.019275660604926945,
+        "ct": 0.001540313097742095,
+        "pop": 0.0017102870414152835,
+        "rec": -0.0005383839988584633,
+        "seq": 0.01898592937471664
+      }
+    },
+    "ci": {
+      "cf": {
+        "mean": 0.019652746075482477,
+        "std": 0.000674703619091779,
+        "lo": 0.018889247055915003,
+        "hi": 0.02041624509504995,
+        "n_seeds": 3
+      },
+      "ct": {
+        "mean": 0.0018127621031784975,
+        "std": 0.00025008785447263123,
+        "lo": 0.0015297610545808714,
+        "hi": 0.0020957631517761234,
+        "n_seeds": 3
+      },
+      "pop": {
+        "mean": 0.0016703270871916386,
+        "std": 8.683144892581915e-05,
+        "lo": 0.0015720680527852027,
+        "hi": 0.0017685861215980744,
+        "n_seeds": 3
+      },
+      "rec": {
+        "mean": -0.0004969433246247726,
+        "std": 3.685316770684839e-05,
+        "lo": -0.0005386466097650097,
+        "hi": -0.0004552400394845355,
+        "n_seeds": 3
+      },
+      "seq": {
+        "mean": 0.018941026760801893,
+        "std": 0.000185378021435338,
+        "lo": 0.01873125178166993,
+        "hi": 0.019150801739933856,
+        "n_seeds": 3
+      }
+    }
+  }
+}

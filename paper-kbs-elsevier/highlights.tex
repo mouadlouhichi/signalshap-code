@@ -1,0 +1,61 @@
+%% Highlights for Knowledge-Based Systems (Elsevier).
+%%
+%% GENERATED FILE -- do not edit by hand.
+%%   Generator: scripts/make_kbs_from_kais.py
+%%   The bullet text is shared with highlights.txt, so the two cannot disagree.
+%%
+%% Standalone: compiles on Overleaf with a single pdflatex pass.
+%%
+%%     pdflatex highlights
+%%
+%% Produces ONE page: Elsevier's "Highlights" heading, the article title, the
+%% author line, and the bullets. Nothing else.
+%%
+%% Two details are load-bearing, and getting them wrong produces a wrong-style
+%% file that still compiles.
+%%
+%% 1. `\elsarticleprelims' is called directly and `\maketitle' is never run.
+%%    Under 5p the class redefines \maketitle as
+%%        \elsarticleprelims ... \twocolumn[\finalMaketitle]
+%%    so letting it run emits the highlights page AND then a full two-column
+%%    article title page with an empty body. `\elsarticleprelims' on its own
+%%    unboxes the highlights, issues \clearpage and stops, which is what a
+%%    separate Highlights item should be. For the same reason there is no
+%%    `frontmatter' environment here: elsarticle defines it as {}{\maketitle}.
+%%
+%% 2. `preprint' rather than `5p'. The highlights box is set to \textwidth,
+%%    and under the two-column 5p geometry that overfills the column. The
+%%    single-column preprint geometry sets the bullets as running text at a
+%%    readable measure.
+%%
+%% 3. `times'. main.tex is \documentclass[final,5p,times,...], so without this
+%%    the Highlights page came out in Computer Modern while the manuscript is
+%%    in Times: two files in one submission that do not look like the same
+%%    paper. The option is what loads txfonts, so it has to be on the
+%%    \documentclass line here too.
+\documentclass[preprint,times,12pt]{elsarticle}
+
+\journal{Knowledge-Based Systems}
+
+\begin{document}
+
+\title{SignalShap: Exact Ranking-Stage Source Attribution for Hybrid
+Recommenders}
+
+\author[ensias]{Mouad Louhichi}
+\author[ensias]{Redwane Nesmaoui}
+\author[ensias]{Mohamed Lazaar}
+\address[ensias]{National Higher School of Computer Science and Systems
+Analysis (ENSIAS), Mohammed V University in Rabat, Rabat, Morocco}
+
+\begin{highlights}
+\item Exact Shapley attribution is computed over all 32 source coalitions.
+\item Shapley and ranking-stage LOO disagree on two of three corpora.
+\item Ranking-stage LOO better predicts observed source-retirement cost.
+\item Fixed candidates separate ranking attribution from retrieval effects.
+\item The method allocates source credit without prescribing source retirement.
+\end{highlights}
+
+\elsarticleprelims
+
+\end{document}

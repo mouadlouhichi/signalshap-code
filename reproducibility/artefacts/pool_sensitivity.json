@@ -1,0 +1,520 @@
+{
+  "ml_1m": {
+    "dataset": "ml_1m",
+    "seed": 42,
+    "n_max": 600,
+    "pools": {
+      "union_of_top_n": {
+        "shapley": {
+          "cf": 0.015381831033907892,
+          "ct": 2.4768641547751004e-05,
+          "pop": 0.006478655122434057,
+          "rec": 0.0005308012954656567,
+          "seq": 0.029272592566372845
+        },
+        "loo": {
+          "cf": -0.00479510433723835,
+          "ct": 0.0011459055332502799,
+          "pop": 0.0011961774628881094,
+          "rec": 0.0003315205530342452,
+          "seq": 0.016724012570953704
+        },
+        "gap": {
+          "cf": 0.020176935371146242,
+          "ct": -0.0011211368917025289,
+          "pop": 0.005282477659545947,
+          "rec": 0.00019928074243141152,
+          "seq": 0.01254857999541914
+        },
+        "v_grand": 0.0516886486597282,
+        "candidate_recall": 0.748135874067937,
+        "mean_pool_size": 599.998509440212,
+        "ordering": [
+          "seq",
+          "cf",
+          "pop",
+          "rec",
+          "ct"
+        ],
+        "material_flips": [
+          "cf"
+        ]
+      },
+      "popularity": {
+        "shapley": {
+          "cf": 0.018244514447323307,
+          "ct": 0.0002219516196888456,
+          "pop": 0.00655116188652239,
+          "rec": -0.00014496624710750948,
+          "seq": 0.03410935323555951
+        },
+        "loo": {
+          "cf": 0.002324932290994869,
+          "ct": 0.0,
+          "pop": 0.0008599204326982038,
+          "rec": -3.66712074211864e-05,
+          "seq": 0.02281150233314569
+        },
+        "gap": {
+          "cf": 0.015919582156328438,
+          "ct": 0.0002219516196888456,
+          "pop": 0.005691241453824186,
+          "rec": -0.00010829503968632308,
+          "seq": 0.011297850902413822
+        },
+        "v_grand": 0.05898201494198655,
+        "candidate_recall": 0.6250207125103563,
+        "mean_pool_size": 600.0,
+        "ordering": [
+          "seq",
+          "cf",
+          "pop",
+          "ct",
+          "rec"
+        ],
+        "material_flips": []
+      },
+      "random": {
+        "shapley": {
+          "cf": 0.01012570897689164,
+          "ct": 0.00016919259928096155,
+          "pop": 0.0051164130626934696,
+          "rec": 3.272331955565514e-05,
+          "seq": 0.015196627728005544
+        },
+        "loo": {
+          "cf": -0.0011770295428139774,
+          "ct": -1.2190800495595622e-05,
+          "pop": 8.837222273925735e-05,
+          "rec": 1.8610241435155356e-05,
+          "seq": 0.006702074357652788
+        },
+        "gap": {
+          "cf": 0.011302738519705617,
+          "ct": 0.00018138339977655718,
+          "pop": 0.005028040839954212,
+          "rec": 1.4113078120499787e-05,
+          "seq": 0.008494553370352756
+        },
+        "v_grand": 0.030640665686427267,
+        "candidate_recall": 0.17796188898094448,
+        "mean_pool_size": 600.0,
+        "ordering": [
+          "seq",
+          "cf",
+          "pop",
+          "ct",
+          "rec"
+        ],
+        "material_flips": [
+          "cf"
+        ]
+      },
+      "random_oracle": {
+        "shapley": {
+          "cf": 0.06365842874454644,
+          "ct": 0.0008307910445987278,
+          "pop": 0.029385862535060193,
+          "rec": -0.00025935702194086855,
+          "seq": 0.08392574473809467
+        },
+        "loo": {
+          "cf": -0.002160682301030281,
+          "ct": 0.00015569908731236093,
+          "pop": -0.0003852702596299773,
+          "rec": -0.0001544450874666481,
+          "seq": 0.03473456070714989
+        },
+        "gap": {
+          "cf": 0.06581911104557672,
+          "ct": 0.0006750919572863669,
+          "pop": 0.02977113279469017,
+          "rec": -0.00010491193447422046,
+          "seq": 0.04919118403094477
+        },
+        "v_grand": 0.17754147004035914,
+        "candidate_recall": 1.0,
+        "mean_pool_size": 600.0,
+        "ordering": [
+          "seq",
+          "cf",
+          "pop",
+          "ct",
+          "rec"
+        ],
+        "material_flips": [
+          "cf",
+          "pop"
+        ]
+      }
+    },
+    "agreement": {
+      "popularity": {
+        "kendall_tau_vs_union": 0.7999999999999999,
+        "same_top_source": true,
+        "sign_agreement": false,
+        "same_material_flips": false,
+        "recall_ratio": 0.8354374307862681
+      },
+      "random": {
+        "kendall_tau_vs_union": 0.7999999999999999,
+        "same_top_source": true,
+        "sign_agreement": true,
+        "same_material_flips": true,
+        "recall_ratio": 0.2378737541528239
+      },
+      "random_oracle": {
+        "kendall_tau_vs_union": 0.7999999999999999,
+        "same_top_source": true,
+        "sign_agreement": false,
+        "same_material_flips": false,
+        "recall_ratio": 1.336655592469546
+      }
+    },
+    "note": "Neutral-pool sensitivity. The main pool is coalition-independent but still built BY the players; these rules consult no source score. Compare ORDERINGS and SIGNS only: each rule gives a different |C_u|, hence a different expected-random baseline and a different recall ceiling, so absolute values are not comparable across pools. The popularity rule is neutral with respect to four of the five players but correlated with `pop`; `random` is strictly neutral but nearly all users lose a retrievable target, so `random_oracle` restores the target while keeping the distractors source-blind."
+  },
+  "amazon_video_games": {
+    "dataset": "amazon_video_games",
+    "seed": 42,
+    "n_max": 600,
+    "pools": {
+      "union_of_top_n": {
+        "shapley": {
+          "cf": 0.01925088226901339,
+          "ct": 0.0018660855230795224,
+          "pop": 0.0015707097942888484,
+          "rec": -0.00048459907605341996,
+          "seq": 0.019099828942856452
+        },
+        "loo": {
+          "cf": 0.008443767714845667,
+          "ct": 2.0893950037056963e-05,
+          "pop": 0.0030810964743071684,
+          "rec": 0.00017345348743177252,
+          "seq": 0.007616041125345176
+        },
+        "gap": {
+          "cf": 0.010807114554167722,
+          "ct": 0.0018451915730424654,
+          "pop": -0.00151038668001832,
+          "rec": -0.0006580525634851924,
+          "seq": 0.011483787817511276
+        },
+        "v_grand": 0.04130290745318479,
+        "candidate_recall": 0.5889044943820225,
+        "mean_pool_size": 599.9988764044944,
+        "ordering": [
+          "cf",
+          "seq",
+          "ct",
+          "pop",
+          "rec"
+        ],
+        "material_flips": []
+      },
+      "popularity": {
+        "shapley": {
+          "cf": 0.017425473408475757,
+          "ct": 0.0031195271058182096,
+          "pop": 0.0033901593719265085,
+          "rec": -0.00020465752974744338,
+          "seq": 0.01727191343626847
+        },
+        "loo": {
+          "cf": 0.005941552479414511,
+          "ct": -0.00032134839982690677,
+          "pop": 0.0013111493647608788,
+          "rec": -0.00010818798873536706,
+          "seq": 0.005107894224780092
+        },
+        "gap": {
+          "cf": 0.011483920929061246,
+          "ct": 0.0034408755056451164,
+          "pop": 0.0020790100071656297,
+          "rec": -9.646954101207633e-05,
+          "seq": 0.012164019211488377
+        },
+        "v_grand": 0.041002415792741505,
+        "candidate_recall": 0.42134831460674155,
+        "mean_pool_size": 600.0,
+        "ordering": [
+          "cf",
+          "seq",
+          "pop",
+          "ct",
+          "rec"
+        ],
+        "material_flips": [
+          "ct"
+        ]
+      },
+      "random": {
+        "shapley": {
+          "cf": 0.008888352672443848,
+          "ct": 0.0015534773415911596,
+          "pop": 0.0023322101168587826,
+          "rec": -0.00012861817684150067,
+          "seq": 0.007917938805184124
+        },
+        "loo": {
+          "cf": 0.0026244216430036903,
+          "ct": -0.00037487674222788647,
+          "pop": 0.0006612774227947663,
+          "rec": -2.7050501332361726e-05,
+          "seq": 0.0018216007909310009
+        },
+        "gap": {
+          "cf": 0.006263931029440157,
+          "ct": 0.001928354083819046,
+          "pop": 0.0016709326940640163,
+          "rec": -0.00010156767550913894,
+          "seq": 0.006096338014253123
+        },
+        "v_grand": 0.020563360759236413,
+        "candidate_recall": 0.17064606741573032,
+        "mean_pool_size": 600.0,
+        "ordering": [
+          "cf",
+          "seq",
+          "pop",
+          "ct",
+          "rec"
+        ],
+        "material_flips": [
+          "ct"
+        ]
+      },
+      "random_oracle": {
+        "shapley": {
+          "cf": 0.044022121903938366,
+          "ct": 0.0105703258031065,
+          "pop": 0.014448348847879587,
+          "rec": -0.0006855672663432921,
+          "seq": 0.05062533501015336
+        },
+        "loo": {
+          "cf": 0.003601945680185431,
+          "ct": 0.00041374931229498646,
+          "pop": 0.005837603203128247,
+          "rec": 0.00010815059559383944,
+          "seq": 0.013584498659830566
+        },
+        "gap": {
+          "cf": 0.040420176223752935,
+          "ct": 0.010156576490811513,
+          "pop": 0.00861074564475134,
+          "rec": -0.0007937178619371316,
+          "seq": 0.03704083635032279
+        },
+        "v_grand": 0.1189805642987345,
+        "candidate_recall": 0.9721910112359551,
+        "mean_pool_size": 600.0,
+        "ordering": [
+          "seq",
+          "cf",
+          "pop",
+          "ct",
+          "rec"
+        ],
+        "material_flips": []
+      }
+    },
+    "agreement": {
+      "popularity": {
+        "kendall_tau_vs_union": 0.7999999999999999,
+        "same_top_source": true,
+        "sign_agreement": true,
+        "same_material_flips": false,
+        "recall_ratio": 0.7154781779155734
+      },
+      "random": {
+        "kendall_tau_vs_union": 0.7999999999999999,
+        "same_top_source": true,
+        "sign_agreement": true,
+        "same_material_flips": false,
+        "recall_ratio": 0.28976866205580726
+      },
+      "random_oracle": {
+        "kendall_tau_vs_union": 0.6,
+        "same_top_source": false,
+        "sign_agreement": true,
+        "same_material_flips": true,
+        "recall_ratio": 1.6508466491772
+      }
+    },
+    "note": "Neutral-pool sensitivity. The main pool is coalition-independent but still built BY the players; these rules consult no source score. Compare ORDERINGS and SIGNS only: each rule gives a different |C_u|, hence a different expected-random baseline and a different recall ceiling, so absolute values are not comparable across pools. The popularity rule is neutral with respect to four of the five players but correlated with `pop`; `random` is strictly neutral but nearly all users lose a retrievable target, so `random_oracle` restores the target while keeping the distractors source-blind."
+  },
+  "gowalla_ts": {
+    "dataset": "gowalla_ts",
+    "seed": 42,
+    "n_max": 11623,
+    "pools": {
+      "union_of_top_n": {
+        "shapley": {
+          "cf": 0.007105564790575359,
+          "ct": 0.006738856585098587,
+          "pop": 0.0005519988570616448,
+          "rec": 0.00037723239321774154,
+          "seq": 0.002129034215540876
+        },
+        "loo": {
+          "cf": 0.007289762416887311,
+          "ct": 0.005283121983282188,
+          "pop": -0.0015084462856590729,
+          "rec": 1.1674111971376328e-05,
+          "seq": 0.0007008824554026981
+        },
+        "gap": {
+          "cf": -0.00018419762631195248,
+          "ct": 0.001455734601816399,
+          "pop": 0.0020604451427207178,
+          "rec": 0.0003655582812463652,
+          "seq": 0.001428151760138178
+        },
+        "v_grand": 0.016902686841494208,
+        "candidate_recall": 0.45042301184433164,
+        "mean_pool_size": 11619.292949802595,
+        "ordering": [
+          "cf",
+          "ct",
+          "seq",
+          "pop",
+          "rec"
+        ],
+        "material_flips": [
+          "pop"
+        ]
+      },
+      "popularity": {
+        "shapley": {
+          "cf": 0.007310316633815133,
+          "ct": 0.001920272416767028,
+          "pop": 0.001122519154901625,
+          "rec": 0.0006263352545954456,
+          "seq": 0.0016464208943135948
+        },
+        "loo": {
+          "cf": 0.006547560984085472,
+          "ct": 0.0011696302510497535,
+          "pop": -9.2960507142607e-05,
+          "rec": 2.607791548088663e-05,
+          "seq": 0.00018788450850523546
+        },
+        "gap": {
+          "cf": 0.0007627556497296611,
+          "ct": 0.0007506421657172745,
+          "pop": 0.001215479662044232,
+          "rec": 0.000600257339114559,
+          "seq": 0.0014585363858083593
+        },
+        "v_grand": 0.012625864354392826,
+        "candidate_recall": 0.15736040609137056,
+        "mean_pool_size": 11623.0,
+        "ordering": [
+          "cf",
+          "ct",
+          "seq",
+          "pop",
+          "rec"
+        ],
+        "material_flips": [
+          "pop"
+        ]
+      },
+      "random": {
+        "shapley": {
+          "cf": 0.002188169982116525,
+          "ct": 0.0034798555664178055,
+          "pop": 0.00037749667190993216,
+          "rec": 0.00031417750627510133,
+          "seq": 0.000903213757223185
+        },
+        "loo": {
+          "cf": 0.0017074955849741879,
+          "ct": 0.00281721179210537,
+          "pop": -5.808127290752793e-05,
+          "rec": -1.573168048411757e-05,
+          "seq": 8.410357444230219e-05
+        },
+        "gap": {
+          "cf": 0.0004806743971423372,
+          "ct": 0.0006626437743124354,
+          "pop": 0.0004355779448174601,
+          "rec": 0.0003299091867592189,
+          "seq": 0.0008191101827808828
+        },
+        "v_grand": 0.0072629134839425485,
+        "candidate_recall": 0.0694867456288776,
+        "mean_pool_size": 11623.0,
+        "ordering": [
+          "ct",
+          "cf",
+          "seq",
+          "pop",
+          "rec"
+        ],
+        "material_flips": []
+      },
+      "random_oracle": {
+        "shapley": {
+          "cf": 0.02030309246136659,
+          "ct": 0.027693162619267984,
+          "pop": 0.003355003415570711,
+          "rec": 0.0019067437577374466,
+          "seq": 0.00735189990580434
+        },
+        "loo": {
+          "cf": 0.01637016736261126,
+          "ct": 0.022966828080187962,
+          "pop": 6.890125009494097e-05,
+          "rec": -0.00037500385820526255,
+          "seq": 0.0018632519804526598
+        },
+        "gap": {
+          "cf": 0.003932925098755331,
+          "ct": 0.004726334539080022,
+          "pop": 0.00328610216547577,
+          "rec": 0.002281747615942709,
+          "seq": 0.00548864792535168
+        },
+        "v_grand": 0.06060990215974707,
+        "candidate_recall": 0.5009588268471518,
+        "mean_pool_size": 11623.0,
+        "ordering": [
+          "ct",
+          "cf",
+          "seq",
+          "pop",
+          "rec"
+        ],
+        "material_flips": [
+          "rec"
+        ]
+      }
+    },
+    "agreement": {
+      "popularity": {
+        "kendall_tau_vs_union": 0.9999999999999999,
+        "same_top_source": true,
+        "sign_agreement": true,
+        "same_material_flips": true,
+        "recall_ratio": 0.34936138241923365
+      },
+      "random": {
+        "kendall_tau_vs_union": 0.7999999999999999,
+        "same_top_source": false,
+        "sign_agreement": true,
+        "same_material_flips": false,
+        "recall_ratio": 0.15426997245179064
+      },
+      "random_oracle": {
+        "kendall_tau_vs_union": 0.7999999999999999,
+        "same_top_source": false,
+        "sign_agreement": true,
+        "same_material_flips": false,
+        "recall_ratio": 1.1121963436013023
+      }
+    },
+    "note": "Neutral-pool sensitivity. The main pool is coalition-independent but still built BY the players; these rules consult no source score. Compare ORDERINGS and SIGNS only: each rule gives a different |C_u|, hence a different expected-random baseline and a different recall ceiling, so absolute values are not comparable across pools. The popularity rule is neutral with respect to four of the five players but correlated with `pop`; `random` is strictly neutral but nearly all users lose a retrievable target, so `random_oracle` restores the target while keeping the distractors source-blind."
+  }
+}

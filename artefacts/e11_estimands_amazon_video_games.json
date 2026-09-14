@@ -1,0 +1,85 @@
+{
+  "dataset": "amazon_video_games",
+  "refit_head": {
+    "shapley": {
+      "cf": 0.019255655329244892,
+      "ct": 0.0018668297526919075,
+      "pop": 0.0015652220256262759,
+      "rec": -0.0004699682891195694,
+      "seq": 0.019088359336523652
+    },
+    "v_grand": 0.04130609815496715
+  },
+  "fixed_head": {
+    "shapley": {
+      "cf": 0.021095257319549296,
+      "ct": 0.0010091270952010119,
+      "pop": 0.00166318780433312,
+      "rec": -0.00045198605200341273,
+      "seq": 0.01799051198788713
+    },
+    "v_grand": 0.04130609815496715
+  },
+  "end_to_end": {
+    "shapley": {
+      "cf": 0.019622060155893226,
+      "ct": 0.0013337374782373648,
+      "pop": 0.0029060965859394644,
+      "rec": 0.00026480420234112855,
+      "seq": 0.017179399732555965
+    },
+    "v_grand": 0.04130609815496715,
+    "coalition_recall": {
+      "empty": 0.0,
+      "cf": 0.5106741573033707,
+      "ct": 0.38047752808988766,
+      "pop": 0.40730337078651685,
+      "rec": 0.2851123595505618,
+      "seq": 0.5889044943820225,
+      "cf,ct": 0.5199438202247191,
+      "cf,pop": 0.5610955056179775,
+      "cf,rec": 0.5058988764044944,
+      "cf,seq": 0.589747191011236,
+      "ct,pop": 0.4580056179775281,
+      "ct,rec": 0.38469101123595506,
+      "ct,seq": 0.5585674157303371,
+      "pop,rec": 0.38932584269662923,
+      "pop,seq": 0.6067415730337079,
+      "rec,seq": 0.5425561797752809,
+      "cf,ct,pop": 0.557443820224719,
+      "cf,ct,rec": 0.5134831460674157,
+      "cf,ct,seq": 0.5790730337078651,
+      "cf,pop,rec": 0.5432584269662921,
+      "cf,pop,seq": 0.6153089887640449,
+      "cf,rec,seq": 0.5709269662921348,
+      "ct,pop,rec": 0.44199438202247193,
+      "ct,pop,seq": 0.5862359550561798,
+      "ct,rec,seq": 0.5339887640449438,
+      "pop,rec,seq": 0.5719101123595506,
+      "cf,ct,pop,rec": 0.5407303370786517,
+      "cf,ct,pop,seq": 0.6018258426966292,
+      "cf,ct,rec,seq": 0.563623595505618,
+      "cf,pop,rec,seq": 0.5946629213483146,
+      "ct,pop,rec,seq": 0.5632022471910112,
+      "cf,ct,pop,rec,seq": 0.5884831460674157
+    }
+  },
+  "agreement": {
+    "refit_vs_fixed": {
+      "kendall_tau": 0.7999999999999999,
+      "top_source_a": "cf",
+      "top_source_b": "cf"
+    },
+    "refit_vs_e2e": {
+      "kendall_tau": 0.7999999999999999,
+      "top_source_a": "cf",
+      "top_source_b": "cf"
+    },
+    "fixed_vs_e2e": {
+      "kendall_tau": 0.9999999999999999,
+      "top_source_a": "cf",
+      "top_source_b": "cf"
+    }
+  },
+  "note": "refit_head mixes source value with the value of re-optimising the fusion; fixed_head isolates the deployed contribution; end_to_end is the only one that includes retrieval and therefore the only one that speaks to a retirement decision."
+}

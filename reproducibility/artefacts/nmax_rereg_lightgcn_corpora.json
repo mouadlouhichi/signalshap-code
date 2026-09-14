@@ -1,0 +1,23 @@
+{
+  "date": "2026-08-02",
+  "ladder_rung": "1 (raise N_max) -- spec \u00a72.2; no corpus filter applied",
+  "sweeps": {
+    "gowalla": {
+      "1000": 0.465,
+      "2500": 0.621,
+      "5000": 0.717
+    },
+    "yelp2018": {
+      "1000": 0.39,
+      "2500": 0.58,
+      "5000": 0.716
+    }
+  },
+  "chosen": {
+    "gowalla": 2500,
+    "yelp2018": 5000,
+    "amazon_book_lgcn": 5000
+  },
+  "user_subsample": 3000,
+  "subsample_reason": "3 GB RAM ceiling in the execution environment; five dense score matrices at 12k users x 41k items need ~10 GB. Seeded and disclosed; not a statistical choice."
+}

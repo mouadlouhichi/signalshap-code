@@ -1,0 +1,56 @@
+{
+  "ml_1m": {
+    "dataset": "ml_1m",
+    "n_train_events": 563206,
+    "global_t_max_in_train": 1046454443.0,
+    "test_events_before_global_t_max": 0.99983429991715,
+    "valid_events_before_global_t_max": 0.99983429991715,
+    "future_train_fraction_vs_test": {
+      "mean": 0.44158422613917964,
+      "median": 0.4361104107555672,
+      "p90": 0.8794295515317664,
+      "max": 0.9991566140985714
+    },
+    "future_train_fraction_vs_valid": {
+      "mean": 0.44737205925241214,
+      "median": 0.4398834529461689
+    },
+    "note": "Non-zero values mean the split is chronological PER USER but not globally time-blocked: pooled training events postdate some users' held-out events and are visible to ALS, PPMI and the decayed popularity counts. This is standard for leave-last-out recommender evaluation and is reported, not repaired; a globally blocked replication needs one cutoff date and discards much of the corpus."
+  },
+  "amazon_video_games": {
+    "dataset": "amazon_video_games",
+    "n_train_events": 103228,
+    "global_t_max_in_train": 1687969603.0,
+    "test_events_before_global_t_max": 0.9998595505617978,
+    "valid_events_before_global_t_max": 0.9998595505617978,
+    "future_train_fraction_vs_test": {
+      "mean": 0.27102578621643897,
+      "median": 0.1813558336885341,
+      "p90": 0.6844083000736235,
+      "max": 0.9987890882318751
+    },
+    "future_train_fraction_vs_valid": {
+      "mean": 0.321026658345027,
+      "median": 0.2516613709458674
+    },
+    "note": "Non-zero values mean the split is chronological PER USER but not globally time-blocked: pooled training events postdate some users' held-out events and are visible to ALS, PPMI and the decayed popularity counts. This is standard for leave-last-out recommender evaluation and is reported, not repaired; a globally blocked replication needs one cutoff date and discards much of the corpus."
+  },
+  "gowalla_ts": {
+    "dataset": "gowalla_ts",
+    "n_train_events": 3195601,
+    "global_t_max_in_train": 1287791472.0,
+    "test_events_before_global_t_max": 0.9996791544776824,
+    "valid_events_before_global_t_max": 0.9999622534679626,
+    "future_train_fraction_vs_test": {
+      "mean": 0.19417019382761683,
+      "median": 0.057013375574735396,
+      "p90": 0.6144832224047995,
+      "max": 0.9995925649040666
+    },
+    "future_train_fraction_vs_valid": {
+      "mean": 0.23305918279868,
+      "median": 0.10924517798060521
+    },
+    "note": "Non-zero values mean the split is chronological PER USER but not globally time-blocked: pooled training events postdate some users' held-out events and are visible to ALS, PPMI and the decayed popularity counts. This is standard for leave-last-out recommender evaluation and is reported, not repaired; a globally blocked replication needs one cutoff date and discards much of the corpus."
+  }
+}

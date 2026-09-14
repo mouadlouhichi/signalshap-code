@@ -1,0 +1,19 @@
+**T7 — SignalShap-Fuse vs baselines. Holm–Bonferroni family size $m=5$, composition = {uniform, global, popularity_reference, lightgcn, sasrec}. Declaring the COMPOSITION and not merely the size prevents the family looking chosen after the fact.**
+
+| Dataset            | Baseline             |   Mean ΔNDCG@10 |   Wilcoxon $W$ |   raw $p$ |   Holm $p$ |   Cohen's $d_z$ |
+|:-------------------|:---------------------|----------------:|---------------:|----------:|-----------:|----------------:|
+| ml_1m              | uniform              |         0.01182 |       109576   |    0      |     0      |           0.097 |
+| ml_1m              | global               |        -9e-05   |          805.5 |    0.2295 |     0.2295 |          -0.007 |
+| ml_1m              | popularity_reference |         0.04519 |        77167.5 |    0      |     0      |           0.232 |
+| ml_1m              | lightgcn             |         0.02952 |       128066   |    0      |     0      |           0.157 |
+| ml_1m              | sasrec               |         0.04636 |        63890   |    0      |     0      |           0.243 |
+| amazon_video_games | uniform              |         0.00627 |        52804.5 |    0      |     0      |           0.077 |
+| amazon_video_games | global               |         0.0005  |         7293   |    0.019  |     0.019  |           0.019 |
+| amazon_video_games | popularity_reference |         0.04369 |        15720   |    0      |     0      |           0.25  |
+| amazon_video_games | lightgcn             |         0.01494 |        98054.5 |    0      |     0      |           0.097 |
+| amazon_video_games | sasrec               |         0.03498 |        45919.5 |    0      |     0      |           0.199 |
+| gowalla_ts         | uniform              |         0.00079 |        11217.5 |    0.0146 |     0.0293 |           0.018 |
+| gowalla_ts         | global               |         9e-05   |          521.5 |    0.4946 |     0.4946 |           0.007 |
+| gowalla_ts         | popularity_reference |         0.01387 |         5783   |    0      |     0      |           0.142 |
+| gowalla_ts         | lightgcn             |         0.00412 |        27313   |    0.0001 |     0.0002 |           0.043 |
+| gowalla_ts         | sasrec               |         0.01411 |         6363   |    0      |     0      |           0.137 |

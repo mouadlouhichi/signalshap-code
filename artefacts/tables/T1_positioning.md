@@ -1,0 +1,9 @@
+**T1 — Positioning: SignalShap attributes at the architectural-source level, which is a different game from feature-level XAI.**
+
+| Method            | Unit of attribution   | Granularity       | Closes the loop?       | Shapley computation        |
+|:------------------|:----------------------|:------------------|:-----------------------|:---------------------------|
+| SHAP / LIME / IG  | input features        | per-prediction    | no                     | sampled or exact-small     |
+| Ablation / LOO    | components            | global            | no                     | exact but redundancy-blind |
+| LightGCN / SASRec | n/a (models)          | n/a               | no                     | n/a                        |
+| DyHuCoG           | hybrid components     | global            | partial                | Monte-Carlo                |
+| SignalShap (ours) | architectural sources | global + per-user | yes (segment-adaptive) | exact, 32 coalitions       |

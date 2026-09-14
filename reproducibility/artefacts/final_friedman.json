@@ -1,0 +1,36 @@
+{
+  "methods": [
+    "global",
+    "lightgcn",
+    "popularity_reference",
+    "sasrec",
+    "signalshap_fuse",
+    "uniform"
+  ],
+  "n_blocks": 3,
+  "mean_ranks": {
+    "global": 2.0,
+    "lightgcn": 4.0,
+    "popularity_reference": 5.333333333333333,
+    "sasrec": 5.666666666666667,
+    "signalshap_fuse": 1.0,
+    "uniform": 3.0
+  },
+  "friedman_statistic": 14.61904761904762,
+  "friedman_p": 0.012120355961506481,
+  "critical_difference": 4.353446910208048,
+  "alpha": 0.05,
+  "note": "Rank 1 is best. Two methods are separable only if their mean ranks differ by more than the critical difference. With few blocks the CD is wide, which is a property of the design, not a failure.",
+  "separable_pairs": [
+    [
+      "sasrec",
+      "signalshap_fuse"
+    ]
+  ],
+  "blocks": [
+    "ml_1m",
+    "amazon_video_games",
+    "gowalla_ts"
+  ],
+  "caveat": "One block per corpus. With three blocks the Nemenyi critical difference is very wide; treat non-separation as low power, not as evidence of equivalence. LightGCN and SASRec received smaller tuning budgets and are contextual references."
+}

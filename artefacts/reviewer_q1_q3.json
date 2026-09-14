@@ -1,0 +1,174 @@
+{
+ "note": "Derived entirely from released artefacts; no model is refitted. Q1 uses the three characteristic functions in e11_estimands_*; Q3 uses the recall-after-removal fields in e12_retirement_*.",
+ "q1_estimand_matched_shapley": {
+  "ml_1m": {
+   "observed_smallest_loss_source": "cf",
+   "games": {
+    "refit_head": {
+     "shapley": {
+      "cf": 0.015451832278226767,
+      "ct": -8.521263825022287e-05,
+      "pop": 0.006369379596653198,
+      "rec": 0.00026062983437342643,
+      "seq": 0.029367143172692914
+     },
+     "kendall_tau_vs_observed_loss": 0.19999999999999998,
+     "p_value": 0.8166666666666667,
+     "predicted_smallest": "ct",
+     "identifies_correctly": false
+    },
+    "fixed_head": {
+     "shapley": {
+      "cf": 0.018670107213631874,
+      "ct": -0.001039901681862511,
+      "pop": 0.005282468251542422,
+      "rec": -0.0007894141585634702,
+      "seq": 0.029240512618947764
+     },
+     "kendall_tau_vs_observed_loss": 0.19999999999999998,
+     "p_value": 0.8166666666666667,
+     "predicted_smallest": "ct",
+     "identifies_correctly": false
+    },
+    "end_to_end": {
+     "shapley": {
+      "cf": 0.014777545288494672,
+      "ct": -0.00010180834005650516,
+      "pop": 0.007833677416049728,
+      "rec": -0.00022477314962237216,
+      "seq": 0.029079131028830554
+     },
+     "kendall_tau_vs_observed_loss": 0.39999999999999997,
+     "p_value": 0.48333333333333334,
+     "predicted_smallest": "rec",
+     "identifies_correctly": false
+    }
+   },
+   "loo_rank": {
+    "kendall_tau_vs_observed_loss": 0.9999999999999999,
+    "predicted_smallest": "cf",
+    "identifies_correctly": true
+   }
+  },
+  "amazon_video_games": {
+   "observed_smallest_loss_source": "ct",
+   "games": {
+    "refit_head": {
+     "shapley": {
+      "cf": 0.019255655329244892,
+      "ct": 0.0018668297526919075,
+      "pop": 0.0015652220256262759,
+      "rec": -0.0004699682891195694,
+      "seq": 0.019088359336523652
+     },
+     "kendall_tau_vs_observed_loss": 0.6,
+     "p_value": 0.23333333333333334,
+     "predicted_smallest": "rec",
+     "identifies_correctly": false
+    },
+    "fixed_head": {
+     "shapley": {
+      "cf": 0.021095257319549296,
+      "ct": 0.0010091270952010119,
+      "pop": 0.00166318780433312,
+      "rec": -0.00045198605200341273,
+      "seq": 0.01799051198788713
+     },
+     "kendall_tau_vs_observed_loss": 0.7999999999999999,
+     "p_value": 0.08333333333333333,
+     "predicted_smallest": "rec",
+     "identifies_correctly": false
+    },
+    "end_to_end": {
+     "shapley": {
+      "cf": 0.019622060155893226,
+      "ct": 0.0013337374782373648,
+      "pop": 0.0029060965859394644,
+      "rec": 0.00026480420234112855,
+      "seq": 0.017179399732555965
+     },
+     "kendall_tau_vs_observed_loss": 0.7999999999999999,
+     "p_value": 0.08333333333333333,
+     "predicted_smallest": "rec",
+     "identifies_correctly": false
+    }
+   },
+   "loo_rank": {
+    "kendall_tau_vs_observed_loss": 0.9999999999999999,
+    "predicted_smallest": "ct",
+    "identifies_correctly": true
+   }
+  }
+ },
+ "q3_retrieval_sensitivity": {
+  "ml_1m": {
+   "recall_full": 0.748135874067937,
+   "recall_after_removal": {
+    "cf": 0.6908036454018227,
+    "ct": 0.7845898922949461,
+    "pop": 0.72013256006628,
+    "rec": 0.7824357912178956,
+    "seq": 0.6593206296603148
+   },
+   "recall_drop": {
+    "cf": 0.057332228666114315,
+    "ct": -0.03645401822700911,
+    "pop": 0.02800331400165701,
+    "rec": -0.034299917149958614,
+    "seq": 0.08881524440762223
+   },
+   "largest_drop_source": "seq",
+   "largest_drop_absolute": 0.08881524440762223,
+   "largest_drop_relative": 0.11871539313399782,
+   "kendall_tau_loo": 0.9999999999999999,
+   "kendall_tau_shapley": 0.19999999999999998,
+   "loo_picks_correctly": true
+  },
+  "amazon_video_games": {
+   "recall_full": 0.5889044943820225,
+   "recall_after_removal": {
+    "cf": 0.563061797752809,
+    "ct": 0.5948033707865169,
+    "pop": 0.5634831460674158,
+    "rec": 0.6014044943820225,
+    "seq": 0.5408707865168539
+   },
+   "recall_drop": {
+    "cf": 0.02584269662921357,
+    "ct": -0.00589887640449438,
+    "pop": 0.02542134831460674,
+    "rec": -0.012499999999999956,
+    "seq": 0.048033707865168584
+   },
+   "largest_drop_source": "seq",
+   "largest_drop_absolute": 0.048033707865168584,
+   "largest_drop_relative": 0.08156451228237546,
+   "kendall_tau_loo": 0.9999999999999999,
+   "kendall_tau_shapley": 0.6,
+   "loo_picks_correctly": true
+  },
+  "gowalla_ts": {
+   "recall_full": 0.45042301184433164,
+   "recall_after_removal": {
+    "cf": 0.4490693739424704,
+    "ct": 0.42289904117315286,
+    "pop": 0.4527918781725888,
+    "rec": 0.44929498025944725,
+    "seq": 0.4444444444444444
+   },
+   "recall_drop": {
+    "cf": 0.001353637901861271,
+    "ct": 0.027523970671178788,
+    "pop": -0.0023688663282571687,
+    "rec": 0.0011280315848843925,
+    "seq": 0.005978567399887225
+   },
+   "largest_drop_source": "ct",
+   "largest_drop_absolute": 0.027523970671178788,
+   "largest_drop_relative": 0.06110693713999498,
+   "kendall_tau_loo": 0.9999999999999999,
+   "kendall_tau_shapley": 0.7999999999999999,
+   "loo_picks_correctly": true
+  }
+ }
+}
