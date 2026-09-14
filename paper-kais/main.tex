@@ -186,7 +186,7 @@ material rather than merely convenient.
 Material sign disagreement appears on two of the three timestamped corpora.
 On MovieLens-1M, collaborative filtering receives the second-largest Shapley
 allocation even though its ranking-stage removal improves the metric. Its two
-strongest substitutive interactions are with the sequential and popularity
+strongest substitutive interactions are with the co-occurrence and popularity
 signals (Section~\ref{sec:attribution}; ESM~S3), providing a concrete mechanism
 for the disagreement. When we remove
 each source from both retrieval and ranking, ranking-stage LOO tracks the
@@ -1111,7 +1111,7 @@ absorb its role, and ablation observes only that single contrast. Exact
 enumeration averages the source's contribution over all $16$ coalitions in
 which it can appear, including those where nothing covers for it, and so
 recovers value the overlap conceals. On MovieLens-1M the collaborative signal
-overlaps the sequential and popularity signals; on Gowalla it is the popularity
+overlaps the co-occurrence and popularity signals; on Gowalla it is the popularity
 signal that is covered, by a geographic content signal essentially tied with
 $cf$ at the top of the ranking ($0.00678$ against $0.00711$, an ordering that
 resampling reverses).
@@ -1147,11 +1147,15 @@ match the intervention: the main game holds candidates fixed, whereas
 retirement changes retrieval. We therefore score the estimand-matched game as
 well. Define it explicitly. For $S \neq \varnothing$ let $C_u(S)$ be the
 candidate set rebuilt by Equation~(\ref{eq:candidates}) from the sources in $S$
-alone, so a removed source no longer contributes retrieval, and let
-$w^{(S)}_{\mathrm{e2e}}$ be a head refit on that set. Then
+alone, so a removed source no longer contributes retrieval. Write $Z_{u,S}$ for
+the standardised score matrix of user $u$ whose rows are the items of $C_u(S)$
+and whose columns are the sources in $S$, and let $w^{(S)}_{\mathrm{e2e}}$ be a
+head refit on it. Both the row set and the column set now depend on $S$, which
+is the difference from Equation~(\ref{eq:game}), where only the columns do.
+Then
 \begin{equation}
 v_{\mathrm{e2e}}(S) = \frac{1}{|\Ueval|}\sum_{u\in\Ueval}
-  \Bigl[\NDCG\bigl(\operatorname{rank}(Z^{(S)}_u(S)\,w^{(S)}_{\mathrm{e2e}}),\,
+  \Bigl[\NDCG\bigl(\operatorname{rank}(Z_{u,S}\,w^{(S)}_{\mathrm{e2e}}),\,
   \mathbf y^{\mathrm{te}}_u\bigr) - b_u(S)\Bigr],
 \label{eq:e2e}
 \end{equation}
@@ -1385,9 +1389,12 @@ perturbs ranking rather than retrieval. The three corpora bear on this without
 a new run, because they span candidate recall $0.748$, $0.589$ and $0.450$,
 and because we record the recall left after each single-source retirement. The
 largest retrieval loss any single source causes falls from $11.9\%$ of recall
-on MovieLens-1M to $8.2\%$ on Amazon-VG and $6.1\%$ on Gowalla, while
-$\tau_{\LOOr}$ is $+1.00$ on all three. Over the range we can observe,
-predictive validity does not degrade with recall. We state the limit of that
+on MovieLens-1M to $8.2\%$ on Amazon-VG and $6.1\%$ on Gowalla. Both the
+retrieval drops and the agreement figures in this paragraph are seed 42, the
+seed at which the per-source retirement diagnostics were recorded; at that seed
+$\tau_{\LOOr}$ is $+1.00$ on all three corpora, and the ten-seed means of
+Table~\ref{tab:retire-seeds} are $0.96$, $0.96$ and $1.00$. Over the range we
+can observe, predictive validity does not degrade with recall. We state the limit of that
 evidence: none of these corpora is retrieval-dominant by construction, so the
 boundary at which a fixed-candidate diagnostic must fail is not located here,
 only shown to lie outside the observed range.

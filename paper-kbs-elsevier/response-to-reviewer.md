@@ -147,6 +147,43 @@ Still not done, for the reasons given above. Both need refits.
 Taken. The abstract and introduction now say "short-term co-occurrence"; the
 source table already carried the symmetric-matrix caveat.
 
+## Round 4 (required edits)
+
+### Edit 1. Inconsistency in the regime-dependence paragraph
+
+**You were right to flag it, and the fix is not the one you suggested.** We
+checked the provenance: every figure in that paragraph is seed 42, including
+the retrieval drops, which come from the same per-source retirement artefact as
+the tau. So the paragraph was internally consistent but unlabelled, sitting
+beside a table of ten-seed means. It is the same ambiguity you caught in
+Section 5.2 last round, which we fixed there and missed here.
+
+Writing "0.96--1.00" would have introduced a real error, because it would pair
+ten-seed taus with seed-42 recall drops. The paragraph now states that its
+figures are seed 42, gives the seed-42 tau of +1.00, and quotes the ten-seed
+means 0.96, 0.96 and 1.00 next to them.
+
+### Edit 2. Terminology consistency
+
+Fixed. Two remaining uses described our own source and are now
+"co-occurrence". Three uses remain deliberately: two name the topic of cited
+papers ("sequential explainable recommendation", a router "selecting among
+sequential encoders") and one is the SASRec contrast that defines the caveat.
+Changing those would make them wrong. A test now enforces exactly this split.
+
+### Edit 3. Notation for Eq. (9)
+
+Adopted your suggestion. `Z^{(S)}_u(S)` carried the coalition twice; it is now
+`Z_{u,S}`, defined as the standardised score matrix whose rows are the items of
+`C_u(S)` and whose columns are the sources in `S`. We also added the sentence
+that makes the contrast explicit: both the row set and the column set depend on
+S here, whereas in Eq. (5) only the columns do.
+
+### Suggestions not taken
+
+Multi-seed `v_e2e`, a retrieval-dominant stress test, and a ranking-aware head
+all require refits. See the reasons under Q2/Q4 above; they are unchanged.
+
 ## Summary
 
 Four of the six weaknesses and two of the four questions are addressed in the

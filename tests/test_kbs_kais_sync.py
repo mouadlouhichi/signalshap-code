@@ -613,3 +613,52 @@ def test_seq_is_not_called_sequential_before_its_caveat() -> None:
     assert "and sequential signals" not in head
     assert "and sequential sources" not in head
     assert "short-term" in head
+
+
+def test_regime_paragraph_labels_its_seed_and_the_ten_seed_means() -> None:
+    """Reviewer round 4, required edit 1. The regime-dependence paragraph put
+    a seed-42 tau of +1.00 next to a table of ten-seed means (0.96/0.96/1.00)
+    with nothing distinguishing them. Both are correct; the text was silent.
+    Note the reviewer's own suggested fix (write 0.96-1.00) would have been
+    wrong: it would mix ten-seed taus with seed-42 recall drops."""
+    text = KBS.read_text()
+    para = text[text.index("Regime dependence"):]
+    para = para[:para.index(r"\emph{External.}")]
+    assert "seed 42" in para, "regime paragraph does not name its seed"
+
+    seeds = json.loads((ART / "final_retirement_seeds.json").read_text())
+    means = [round(seeds[c]["tau_loo"]["mean"], 2)
+             for c in ("ml_1m", "amazon_video_games", "gowalla_ts")]
+    assert means == [0.96, 0.96, 1.00], means
+    assert "$0.96$, $0.96$ and $1.00$" in para, (
+        "ten-seed means not quoted alongside the seed-42 figure")
+
+    # And the seed-42 figure it quotes must be real.
+    for corpus in ("ml_1m", "amazon_video_games", "gowalla_ts"):
+        j = json.loads((ART / f"e12_retirement_{corpus}.json").read_text())
+        assert j["kendall_tau_loo_vs_truth"] == pytest.approx(1.0)
+
+
+def test_sequential_only_describes_cited_work_or_the_caveat() -> None:
+    """Reviewer round 4, required edit 2. Our own source is short-term
+    co-occurrence. The word 'sequential' may remain only where it names a
+    cited paper's topic or the SASRec contrast that defines the caveat."""
+    text = KBS.read_text()
+    allowed = (
+        "sequential explainable recommendation",   # cited TKDE paper
+        "among sequential",                        # cited ICDM router
+        "not a sequential model in the SASRec",    # the caveat itself
+    )
+    for m in re.finditer(r"[^.]*sequential[^.]*\.", text):
+        sentence = " ".join(m.group(0).split())
+        assert any(a in sentence for a in allowed), (
+            f"'sequential' used for our own source: {sentence[:110]}")
+
+
+def test_e2e_equation_notation_is_unambiguous() -> None:
+    """Reviewer round 4, required edit 3. `Z^{(S)}_u(S)` carried the coalition
+    twice and was hard to parse."""
+    text = KBS.read_text()
+    assert "Z^{(S)}_u(S)" not in text
+    assert r"Write $Z_{u,S}$ for" in text
+    assert r"\operatorname{rank}(Z_{u,S}" in text
