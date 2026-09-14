@@ -850,3 +850,32 @@ def test_bundle_ships_exactly_the_figures_the_paper_uses() -> None:
     used.add("Fig1.png")
     assert used - shipped == set(), f"referenced but missing: {used - shipped}"
     assert shipped - used == set(), f"shipped but unused: {shipped - used}"
+
+
+def test_highlights_tex_and_txt_cannot_disagree() -> None:
+    """Elsevier wants Highlights as a separate item. We ship a compilable .tex
+    that uses elsarticle's own `highlights' environment, plus a plain-text
+    version for portals that paste into a form field. Both come from one list
+    in the generator, and this pins that they agree."""
+    d = REPO / "paper-kbs-elsevier"
+    txt = [l[2:] for l in (d / "highlights.txt").read_text().strip().splitlines()
+           if l.strip()]
+    tex = re.findall(r"\\item (.+)", (d / "highlights.tex").read_text())
+    assert txt == tex, "highlights.txt and highlights.tex have drifted"
+    assert 3 <= len(txt) <= 5, f"{len(txt)} bullets; Elsevier allows 3 to 5"
+    for bullet in txt:
+        assert len(bullet) <= 85, f"{len(bullet)} chars: {bullet}"
+
+
+def test_highlights_tex_is_standalone_and_uses_the_elsevier_style() -> None:
+    """It must compile on its own, and it must use the class environment
+    rather than a hand-rolled itemize, so the PDF carries the Elsevier
+    Highlights heading."""
+    tex = (REPO / "paper-kbs-elsevier" / "highlights.tex").read_text()
+    assert r"\documentclass" in tex and r"\end{document}" in tex
+    assert r"\begin{highlights}" in tex
+    # The environment only exists in elsarticle, so the class must be that one.
+    assert "{elsarticle}" in tex
+    cls = (REPO / "paper-kbs-elsevier" / "elsarticle.cls").read_text()
+    assert r"\newenvironment{highlights}" in cls, (
+        "the shipped class does not define the highlights environment")

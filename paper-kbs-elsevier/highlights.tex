@@ -1,0 +1,46 @@
+%% Highlights for Knowledge-Based Systems (Elsevier).
+%%
+%% GENERATED FILE -- do not edit by hand.
+%%   Generator: scripts/make_kbs_from_kais.py
+%%   The bullet text is shared with highlights.txt, so the two cannot disagree.
+%%
+%% Standalone: compiles on Overleaf with a single pdflatex pass.
+%%
+%%     pdflatex highlights
+%%
+%% It uses the `highlights' environment from elsarticle.cls, so the output
+%% carries Elsevier's Highlights heading, the article title and the author
+%% line rather than a bare list. There is no explicit \maketitle because
+%% elsarticle defines frontmatter as {}{\maketitle}, and \maketitle begins with
+%% \elsarticleprelims, which is what emits the highlights page. Closing the
+%% frontmatter is therefore sufficient.
+\documentclass[final,5p,times,twocolumn]{elsarticle}
+
+\journal{Knowledge-Based Systems}
+
+\begin{document}
+
+\begin{frontmatter}
+
+\title{SignalShap: Exact Ranking-Stage Source Attribution for Hybrid
+Recommenders}
+
+\author[ensias]{Mouad Louhichi\corref{cor1}}
+\ead{mouad_louhichi@um5.ac.ma}
+\author[ensias]{Redwane Nesmaoui}
+\author[ensias]{Mohamed Lazaar}
+\cortext[cor1]{Corresponding author.}
+\address[ensias]{National Higher School of Computer Science and Systems
+Analysis (ENSIAS), Mohammed V University in Rabat, Rabat, Morocco}
+
+\begin{highlights}
+\item Exact Shapley attribution is computed over all 32 source coalitions.
+\item Shapley and ranking-stage LOO disagree on two of three corpora.
+\item Ranking-stage LOO better predicts observed source-retirement cost.
+\item Fixed candidates separate ranking attribution from retrieval effects.
+\item The method allocates source credit without prescribing source retirement.
+\end{highlights}
+
+\end{frontmatter}
+
+\end{document}

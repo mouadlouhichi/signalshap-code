@@ -294,12 +294,62 @@ ESM_RETITLE = [
      r"\normalsize \textit{Knowledge-Based Systems}}"),
 ]
 
-HIGHLIGHTS = """\
-- Exact Shapley attribution is computed over all 32 source coalitions.
-- Shapley and ranking-stage LOO disagree on two of three corpora.
-- Ranking-stage LOO better predicts observed source-retirement cost.
-- Fixed candidates separate ranking attribution from retrieval effects.
-- The method allocates source credit without prescribing source retirement.
+#: One list, two renderings. Elsevier wants Highlights as a separate item of
+#: 3-5 bullets, each at most 85 characters. We ship both a plain-text version
+#: (some portals paste it into a form field) and a compilable .tex that uses
+#: elsarticle's own `highlights' environment, so the PDF carries Elsevier's
+#: Highlights heading, title and author line rather than a bare list.
+HIGHLIGHT_BULLETS = [
+    "Exact Shapley attribution is computed over all 32 source coalitions.",
+    "Shapley and ranking-stage LOO disagree on two of three corpora.",
+    "Ranking-stage LOO better predicts observed source-retirement cost.",
+    "Fixed candidates separate ranking attribution from retrieval effects.",
+    "The method allocates source credit without prescribing source retirement.",
+]
+
+HIGHLIGHTS = "".join("- %s\n" % b for b in HIGHLIGHT_BULLETS)
+
+HIGHLIGHTS_TEX = r"""%% Highlights for Knowledge-Based Systems (Elsevier).
+%%
+%% GENERATED FILE -- do not edit by hand.
+%%   Generator: scripts/make_kbs_from_kais.py
+%%   The bullet text is shared with highlights.txt, so the two cannot disagree.
+%%
+%% Standalone: compiles on Overleaf with a single pdflatex pass.
+%%
+%%     pdflatex highlights
+%%
+%% It uses the `highlights' environment from elsarticle.cls, so the output
+%% carries Elsevier's Highlights heading, the article title and the author
+%% line rather than a bare list. There is no explicit \maketitle because
+%% elsarticle defines frontmatter as {}{\maketitle}, and \maketitle begins with
+%% \elsarticleprelims, which is what emits the highlights page. Closing the
+%% frontmatter is therefore sufficient.
+\documentclass[final,5p,times,twocolumn]{elsarticle}
+
+\journal{Knowledge-Based Systems}
+
+\begin{document}
+
+\begin{frontmatter}
+
+\title{SignalShap: Exact Ranking-Stage Source Attribution for Hybrid
+Recommenders}
+
+\author[ensias]{Mouad Louhichi\corref{cor1}}
+\ead{mouad_louhichi@um5.ac.ma}
+\author[ensias]{Redwane Nesmaoui}
+\author[ensias]{Mohamed Lazaar}
+\cortext[cor1]{Corresponding author.}
+\address[ensias]{National Higher School of Computer Science and Systems
+Analysis (ENSIAS), Mohammed V University in Rabat, Rabat, Morocco}
+
+\begin{highlights}
+%(BULLETS)s\end{highlights}
+
+\end{frontmatter}
+
+\end{document}
 """
 
 
@@ -437,6 +487,9 @@ def main() -> int:
     # KBS wants Highlights as a separate item, max five bullets of <= 85
     # characters each.
     (KBS_DIR / "highlights.txt").write_text(HIGHLIGHTS, encoding="utf-8")
+    bullets = "".join("\\item %s\n" % b for b in HIGHLIGHT_BULLETS)
+    (KBS_DIR / "highlights.tex").write_text(
+        HIGHLIGHTS_TEX.replace("%(BULLETS)s", bullets), encoding="utf-8")
     over = [b for b in HIGHLIGHTS.strip().splitlines() if len(b) > 85]
     if over:
         raise SystemExit(f"highlight over 85 characters: {over}")
@@ -476,7 +529,8 @@ def main() -> int:
     print(f"  abstract {len(abstract.split())} words")
     print(f"wrote {(KBS_DIR / 'supplementary-material.tex').relative_to(REPO)}"
           f"  ({n_retitle} retitle substitutions)")
-    print(f"wrote {(KBS_DIR / 'highlights.txt').relative_to(REPO)}")
+    print(f"wrote {(KBS_DIR / 'highlights.txt').relative_to(REPO)}"
+          f" and highlights.tex ({len(HIGHLIGHT_BULLETS)} bullets)")
     return 0
 
 

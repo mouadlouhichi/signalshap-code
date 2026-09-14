@@ -12,6 +12,7 @@ TeX, so every check on this package is static. Run:
 cd paper-kbs-elsevier
 pdflatex main && bibtex main && pdflatex main && pdflatex main
 pdflatex supplementary-material && pdflatex supplementary-material
+pdflatex highlights
 pdflatex cover-letter
 ```
 
@@ -44,12 +45,25 @@ name a tag that exists.
 | 6 | Figure | `figures/Fig3.png` |
 | 7 | Figure | `figures/Fig8.png` |
 | 8 | Manuscript PDF | `main.pdf` (you generate) |
-| 9 | **Highlights** | `highlights.txt` |
+| 9 | **Highlights** | `highlights.pdf` (you generate from `highlights.tex`) |
 | 10 | **Supplementary material** | `supplementary-material.pdf` (you generate) |
 | 11 | Cover letter | `cover-letter.pdf` (you generate) |
 
 Upload the supplement as a PDF, not as `.tex`. Keep `main.tex` and the figures
 as editable sources; Elsevier requires them.
+
+### Highlights
+
+`highlights.tex` is standalone and compiles on Overleaf with a single
+`pdflatex` pass. It uses the `highlights` environment that `elsarticle.cls`
+provides, so the output is a proper Elsevier Highlights page with the heading,
+title and author line, not a bare list. Put `highlights.tex` and
+`elsarticle.cls` in the same Overleaf project, or add it to the main project
+and set it as the compile target.
+
+`highlights.txt` is the same five bullets as plain text, for portals that ask
+you to paste them into a form field. Upload the PDF; keep the text file to
+hand.
 
 **Do not upload:** `README.md`, `response-to-reviewer.md`, `SUBMIT.md`,
 `suggested-reviewers.md` (that one goes into the portal form, not as a file),
@@ -89,7 +103,7 @@ the raster fallback.
 | Springer leftovers (ESM, Online Resource, sn-jnl) | 0 |
 | Em dashes, banned phrases | 0 |
 | References cited | 43 |
-| Highlights | 5 bullets, longest 75 characters |
+| Highlights | 5 bullets, longest 73 characters; `.tex` and `.txt` agree |
 | Cover letter | 450 words |
 | Figures shipped vs referenced | 3 and 3, no orphans |
 
