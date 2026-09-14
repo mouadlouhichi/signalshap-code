@@ -1008,3 +1008,28 @@ def test_keywords_agree_across_submissions() -> None:
     block = re.sub(r"(?<!\\)%.*", "", block)
     got = [" ".join(k.split()) for k in block.split(r"\sep") if k.strip()]
     assert got == want, f"{got} != {want}"
+
+
+def test_author_names_agree_across_manuscript_and_metadata() -> None:
+    """.zenodo.json and CITATION.cff drive the archive record and the data-set
+    citation the portal asks for. They named the second author 'Rachid'; the
+    manuscript, the spec and the CRediT statement all say 'Redwane'. A
+    mismatched name on a DOI landing page is visible to the editor and is
+    awkward to correct after minting."""
+    main = (REPO / "paper-kbs-elsevier" / "main.tex").read_text()
+    authors = re.findall(r"\\author\[[^\]]*\]\{([^\\{}]+)", main)
+    surnames = {a.split()[-1] for a in authors}
+    assert surnames, "no authors parsed out of main.tex"
+
+    zenodo = json.loads((REPO / ".zenodo.json").read_text())
+    cff = (REPO / "CITATION.cff").read_text()
+    for full in authors:
+        given, family = full.split()[0], full.split()[-1]
+        assert any(c["name"] == f"{family}, {given}" for c in zenodo["creators"]), (
+            f"{full} is not in .zenodo.json creators")
+        block = re.search(
+            rf"family-names:\s*{family}\s*\n\s*given-names:\s*(\S+)", cff)
+        assert block, f"{family} has no CITATION.cff entry"
+        assert block.group(1) == given, (
+            f"CITATION.cff says {family}, {block.group(1)}; "
+            f"the manuscript says {full}")
