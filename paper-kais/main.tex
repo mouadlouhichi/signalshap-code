@@ -124,30 +124,31 @@ Analysis (ENSIAS)}, \orgname{Mohammed V University in Rabat},
 \abstract{Ablation and Shapley attribution answer different questions: the cost
 of removing a source and the allocation of system value. Conflating them can
 produce opposite source-level conclusions.
-
 We formulate attribution in a five-source hybrid recommender as a cooperative
 game over collaborative, content, popularity, recency and short-term
 co-occurrence signals.
-The payoff is baseline-centred NDCG@10 on coalition-independent candidates,
-with coalition-specific ridge heads fit on validation data and evaluated on
-test data. Enumerating all 32 coalitions eliminates aggregation sampling error.
-At 500 draws, the 95th-percentile permutation error is 3.27\% of the
-grand-coalition value, exceeding the 2.22\% ten-seed spread and 1.93\%
-materiality threshold.
+The payoff is baseline-centred normalised discounted cumulative gain at rank
+ten (NDCG@10) on coalition-independent candidates, with coalition-specific
+ridge heads fit on validation data and evaluated on test data. Enumerating all
+32 coalitions eliminates aggregation sampling error: at 500 sampled
+permutations the 95th-percentile error is 3.27\% of the grand-coalition value,
+exceeding both the 2.22\% ten-seed spread and the 1.93\% materiality
+threshold, so approximate aggregation would not resolve the effects we report.
 
 On two of three timestamped corpora, Shapley and ranking-stage leave-one-out
 (LOO) disagree in sign by a material margin. Across ten seeds per corpus,
 ranking-stage LOO matches observed end-to-end removal-loss orderings more
-closely (mean Kendall $\tau$: LOO $0.96$--$1.00$; Shapley
-$0.20$--$0.80$) and identifies the source with the smallest observed removal
-loss on 90--100\% of fits versus 0--50\%. MovieLens-1M clears a declared
-$0.60$ recall gate; Amazon-VG clears it only in an $N_{\max}=1\,200$
-sensitivity with unchanged signs and orderings; Gowalla is a relative stress
-test ($\rho=0.501$). We claim credit allocation under a declared ranking-stage
-game, not retirement guidance.}
+closely (mean Kendall rank correlation 0.96 to 1.00 for LOO against 0.20 to
+0.80 for Shapley) and identifies the source with the smallest observed removal
+loss on 90 to 100\% of fits against 0 to 50\%. MovieLens-1M clears a declared
+candidate-recall gate of 0.60; Amazon Video Games clears it only under a
+raised candidate cap, with signs and orderings unchanged; Gowalla is a
+relative stress test whose recall is bounded above by 0.501 by construction.
+We claim credit allocation under a declared ranking-stage game, not retirement
+guidance.}
 
-\keywords{hybrid recommender systems, Shapley value, leave-one-out ablation,
-source attribution, two-stage ranking}
+\keywords{hybrid recommender systems, Shapley value, cooperative game theory,
+leave-one-out ablation, source attribution, two-stage ranking}
 
 \maketitle
 

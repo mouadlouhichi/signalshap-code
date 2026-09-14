@@ -137,9 +137,12 @@ Analysis (ENSIAS), Mohammed V University in Rabat, Rabat, Morocco}
 %(ABSTRACT)s
 \end{abstract}
 
+%% KBS allows 1-7 keywords and asks that they avoid "and"/"of". Six here,
+%% kept in the same order as the KAIS \keywords{} list so the two submissions
+%% index identically; test_keywords_agree_across_submissions pins that.
 \begin{keyword}
-hybrid recommender systems \sep Shapley value \sep leave-one-out ablation
-\sep source attribution \sep two-stage ranking
+hybrid recommender systems \sep Shapley value \sep cooperative game theory
+\sep leave-one-out ablation \sep source attribution \sep two-stage ranking
 \end{keyword}
 
 \end{frontmatter}

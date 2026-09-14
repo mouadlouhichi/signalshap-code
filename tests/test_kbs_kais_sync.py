@@ -947,3 +947,64 @@ def test_highlights_and_manuscript_use_the_same_typeface() -> None:
     assert "times" in hl_opts, (
         "highlights.tex would render in Computer Modern while the manuscript "
         f"renders in Times; options are {sorted(hl_opts)}")
+
+
+def _abstract(name: str) -> str:
+    t = (REPO / "paper-kbs-elsevier" / name).read_text()
+    return t.split(r"\begin{abstract}")[1].split(r"\end{abstract}")[0]
+
+
+def test_abstract_stands_alone_without_latex_math() -> None:
+    r"""KBS: 'Abstracts must be able to stand alone, as abstracts are often
+    presented separately from the article.' Editorial Manager takes the
+    abstract as a plain-text form field, so any $...$ reaches the reader as
+    literal dollar signs and backslashed macros. The earlier version pasted as
+    `mean Kendall $\tau$: LOO $0.96$--$1.00$`."""
+    ab = _abstract("main.tex")
+    assert "$" not in ab, "math mode does not survive the plain-text field"
+    macros = set(re.findall(r"\\([a-zA-Z]+)", ab)) - {"%"}
+    assert not macros, f"macros will not render in a plain-text field: {macros}"
+
+
+def test_abstract_defines_its_abbreviations_at_first_mention() -> None:
+    """KBS: 'Avoid non-standard or uncommon abbreviations. If any are
+    essential, ensure they are defined within your abstract at first
+    mention.' NDCG and LOO both carry the paper's headline numbers."""
+    ab = " ".join(_abstract("main.tex").split())
+    for abbrev, expansion in (
+            ("NDCG", "normalised discounted cumulative gain"),
+            ("LOO", "leave-one-out")):
+        assert abbrev in ab, f"{abbrev} vanished from the abstract"
+        assert ab.index(expansion) < ab.index(abbrev), (
+            f"{abbrev} is used before it is expanded")
+
+
+def test_abstract_within_the_kbs_word_limit() -> None:
+    """KBS caps the abstract at 250 words."""
+    n = len(re.sub(r"\\[a-zA-Z]+", " ", _abstract("main.tex")).split())
+    assert n <= 250, f"abstract is {n} words; KBS caps it at 250"
+
+
+def test_keywords_follow_the_kbs_rules() -> None:
+    """KBS allows 1 to 7 keywords and asks that they avoid 'and' / 'of'."""
+    t = (REPO / "paper-kbs-elsevier" / "main.tex").read_text()
+    block = t.split(r"\begin{keyword}")[1].split(r"\end{keyword}")[0]
+    block = re.sub(r"(?<!\\)%.*", "", block)
+    kws = [" ".join(k.split()) for k in block.split(r"\sep") if k.strip()]
+    assert 1 <= len(kws) <= 7, f"{len(kws)} keywords; KBS allows 1-7"
+    for k in kws:
+        words = k.lower().split()
+        assert "and" not in words and "of" not in words, k
+
+
+def test_keywords_agree_across_submissions() -> None:
+    """Two venues, one set of index terms. The KAIS file is the source."""
+    kais = (REPO / "paper-kais" / "main.tex").read_text()
+    block = re.search(r"\\keywords\{(.*?)\}", kais, re.S).group(1)
+    want = [" ".join(k.split()) for k in block.split(",") if k.strip()]
+
+    t = (REPO / "paper-kbs-elsevier" / "main.tex").read_text()
+    block = t.split(r"\begin{keyword}")[1].split(r"\end{keyword}")[0]
+    block = re.sub(r"(?<!\\)%.*", "", block)
+    got = [" ".join(k.split()) for k in block.split(r"\sep") if k.strip()]
+    assert got == want, f"{got} != {want}"
