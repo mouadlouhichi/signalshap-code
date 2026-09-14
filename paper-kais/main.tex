@@ -808,9 +808,10 @@ often the phenomenon occurs across hybrid recommenders in general would require
 a sample of systems, which we do not have. Proportions carry Wilson intervals
 rather than bare point estimates. A gap is called \emph{material} when it
 exceeds $10^{-3}$ in absolute value, the same threshold applied to monotonicity
-violations, and this threshold was fixed before the comparisons were run. We
-report gaps in absolute units and as a percentage of $v(\G)$, and the two are
-related by the scale of the grand coalition: on MovieLens-1M the absolute
+violations, and this threshold was fixed before the comparisons were run. The gate itself is
+\emph{absolute}: a gap qualifies on the $10^{-3}$ comparison alone, and the
+percentages below are reported for interpretability, never as the test. The two
+are related by the scale of the grand coalition: on MovieLens-1M the absolute
 threshold $10^{-3}$ is $1.93\%$ of the seed-42 $v(\G) = 0.0517$ and $1.91\%$ of
 the ten-seed $v(\G) = 0.0522$. Percentages quoted against a ten-seed mean, such
 as the $38.8\%$ and $12.2\%$ flip magnitudes of Section~\ref{sec:attribution},
@@ -1125,7 +1126,9 @@ signal that is covered, by a geographic content signal essentially tied with
 $cf$ at the top of the ranking ($0.00678$ against $0.00711$, an ordering that
 resampling reverses).
 
-The per-corpus orderings are
+The per-corpus orderings, written with the symbols of
+Table~\ref{tab:sources} (collaborative $cf$, content $ct$, popularity $pop$,
+recency $rec$, short-term co-occurrence $seq$), are
 $seq \succ cf \succ pop \succ rec \succ ct$ (MovieLens-1M),
 $cf \succ seq \succ ct \succ pop \succ rec$ (Amazon-VG) and
 $cf \succ ct \succ seq \succ pop \succ rec$ (Gowalla, whose leading pair is
@@ -1323,7 +1326,8 @@ population inference over hybrid recommenders.
 The result is consistent with the theory rather than a contradiction of it.
 Removing $cf$ improves end-to-end NDCG@10 by $0.00468$ while dropping candidate
 recall from $0.748$ to $0.691$: the collaborative signal is substantially
-substitutive with $seq$ and $pop$, the two most negative interaction pairs, so
+substitutive with co-occurrence ($seq$) and popularity ($pop$), the two most
+negative interaction pairs, so
 inside the grand coalition its scores add noise the others already cover.
 Shapley averages over coalitions in which $cf$ has no substitute and therefore
 assigns the capability positive value \emph{under the declared game}. We say

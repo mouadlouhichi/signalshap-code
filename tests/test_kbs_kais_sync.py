@@ -752,3 +752,24 @@ def test_prose_names_the_source_consistently() -> None:
     for m in re.finditer(r"[^.]*sequential[^.]*\.", nomath):
         sentence = " ".join(m.group(0).split())
         assert any(a in sentence for a in allowed), sentence[:110]
+
+
+def test_source_symbols_are_glossed_in_running_text() -> None:
+    """Reviewer round 7, editorial 1. `seq` is fine as a symbol, but a reader
+    meeting it in running text should not have to page back to Table 2. The
+    first occurrence inside each results subsection is a table row label, where
+    expanding the name would break the column, so the gloss sits on the first
+    genuine prose use and on the orderings sentence."""
+    text = KBS.read_text()
+    assert "substitutive with co-occurrence ($seq$) and popularity ($pop$)" in text
+    assert "short-term co-occurrence $seq$), are" in text
+
+
+def test_materiality_gate_is_stated_as_absolute() -> None:
+    """Reviewer round 7, editorial 2. Readers could take the percentage for
+    the test. The gate is the absolute 1e-3 comparison; percentages are
+    interpretive only."""
+    text = KBS.read_text()
+    assert r"The gate itself is" in text
+    assert r"\emph{absolute}" in text
+    assert "never as the test" in text

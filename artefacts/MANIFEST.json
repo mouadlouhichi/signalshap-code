@@ -1,6 +1,6 @@
 {
- "git_commit": "c8d8421f1432bd9167b283f55bba9305c81b20ed",
- "git_describe": "c8d8421-dirty",
+ "git_commit": "52cc999f101671cebdd5b961f7d0f195d6dec617",
+ "git_describe": "52cc999-dirty",
  "environment": {
   "python": "3.11.2",
   "platform": "Linux-6.1.158+-x86_64-with-glibc2.36",

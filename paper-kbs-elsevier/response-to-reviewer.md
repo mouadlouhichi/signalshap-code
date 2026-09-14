@@ -255,6 +255,34 @@ configuration all require refitting. Of the three we agree multi-seed `v_e2e`
 on MovieLens-1M is the cheapest and the most directly responsive, and we would
 run it first.
 
+## Round 7 (editorial)
+
+### Editorial 1. Gloss `seq` on first use in the results
+
+Done, with one adjustment to your suggestion. The first `$seq$` inside each
+results subsection is a **table row label**, where writing "co-occurrence
+(seq)" would widen the column and break the alignment. The gloss therefore
+sits on the first genuine running-text use, which is the mechanism sentence:
+"substitutive with co-occurrence ($seq$) and popularity ($pop$)". We also
+prefixed the orderings sentence with the full symbol key, since that is the
+other place a reader meets a string of bare symbols.
+
+### Editorial 2. Materiality gate is absolute
+
+Done, in the words you suggested: "The gate itself is \emph{absolute}: a gap
+qualifies on the $10^{-3}$ comparison alone, and the percentages below are
+reported for interpretability, never as the test."
+
+### Questions 1-3
+
+Unchanged, and unchanged in priority. Multi-seed $v_{e2e}$ on MovieLens-1M
+remains the single most valuable outstanding run: three seeds at $2^5$
+retrieval passes each on the smallest corpus, and it directly retires the
+"seed-42 may be idiosyncratic" reading of Table 6. The ranking-aware head is
+the most expensive, because the current head is solved from Gram sufficient
+statistics reused across all 32 coalitions, whereas a pairwise or listwise loss
+needs a per-coalition optimiser over the full feature matrix.
+
 ## Summary
 
 Four of the six weaknesses and two of the four questions are addressed in the
