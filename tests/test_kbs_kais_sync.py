@@ -879,3 +879,46 @@ def test_highlights_tex_is_standalone_and_uses_the_elsevier_style() -> None:
     cls = (REPO / "paper-kbs-elsevier" / "elsarticle.cls").read_text()
     assert r"\newenvironment{highlights}" in cls, (
         "the shipped class does not define the highlights environment")
+
+
+def test_highlights_does_not_emit_an_article_title_page() -> None:
+    r"""The first version used `5p` and closed a `frontmatter` environment.
+    Both compile, and both are wrong: under 5p the class redefines \maketitle
+    as `\elsarticleprelims ... \twocolumn[\finalMaketitle]`, and frontmatter is
+    `{}{\maketitle}`, so the output was the highlights page followed by a full
+    two-column article title page with an empty body. Calling
+    \elsarticleprelims directly emits the highlights page and stops."""
+    d = REPO / "paper-kbs-elsevier"
+    tex = d / "highlights.tex"
+    body = re.sub(r"(?<!\\)%.*", "", tex.read_text())
+    body = body[body.index(r"\begin{document}"):]
+
+    assert r"\maketitle" not in body, r"\maketitle re-emits a title page"
+    assert r"\begin{frontmatter}" not in body, (
+        r"frontmatter is {}{\maketitle}, so it re-emits a title page")
+    assert r"\elsarticleprelims" in body, "nothing emits the highlights page"
+    assert body.index(r"\elsarticleprelims") > body.index(r"\end{highlights}"), (
+        "the highlights box must be filled before it is unboxed")
+
+    # The highlights box is set to \textwidth, which overfills a 5p column.
+    # Check the class options only: the file comment legitimately mentions 5p
+    # when explaining why it is not used.
+    preamble = tex.read_text().split(r"\begin{document}")[0]
+    opts = re.search(r"\\documentclass\[([^\]]*)\]", preamble).group(1)
+    assert "preprint" in opts, f"single-column geometry required, got: {opts}"
+    assert "5p" not in opts, f"5p overfills the highlights box: {opts}"
+
+
+def test_highlights_macros_all_resolve_in_the_shipped_class() -> None:
+    """It is uploaded as its own item, so it must compile against
+    elsarticle.cls alone with no extra packages."""
+    d = REPO / "paper-kbs-elsevier"
+    cls = (d / "elsarticle.cls").read_text()
+    body = re.sub(r"(?<!\\)%.*", "", (d / "highlights.tex").read_text())
+    body = body[body.index(r"\begin{document}"):]
+    kernel = {"documentclass", "begin", "end", "item", "journal", "title",
+              "author", "address", "textsuperscript"}
+    for macro in sorted(set(re.findall(r"\\([a-zA-Z@]+)", body)) - kernel):
+        assert (f"\\def\\{macro}" in cls
+                or f"newcommand{{\\{macro}}}" in cls
+                or f"newenvironment{{{macro}}}" in cls), macro
