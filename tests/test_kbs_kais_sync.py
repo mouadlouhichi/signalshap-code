@@ -702,3 +702,53 @@ def test_observed_definition_matches_the_artefact() -> None:
         assert centred[g] == pytest.approx(raw[g] + shift[g], abs=1e-9), g
     assert any(abs(shift[g]) > 1e-6 for g in shift), (
         "baseline shift is negligible; the caption's distinction would be moot")
+
+
+def test_materiality_percentages_state_their_denominator() -> None:
+    """Reviewer round 6, edit 2. The paper quotes 1e-3 both absolutely and as a
+    percentage of v(G), but v(G) differs between the seed-42 sampling study
+    (0.051689) and the ten-seed attribution results (0.05225). 1.93% and 1.91%
+    are both correct against their own denominator; the text must say which."""
+    text = KBS.read_text()
+    sampling = json.loads((ART / "fig2_ndcg_sampling.json").read_text())["sampling"]
+    v42 = sampling["v_grand"]
+    v10 = 0.05225
+
+    # The two percentages must be arithmetically right.
+    assert f"{1e-3 / v42 * 100:.2f}" == "1.93", v42
+    assert f"{1e-3 / v10 * 100:.2f}" == "1.91", v10
+    # And the values they are quoted against must round as printed.
+    assert f"{v42:.4f}" == "0.0517"
+    assert f"{v10:.4f}" == "0.0522"
+
+    for phrase in (r"$1.93\%$ of the seed-42", r"$1.91\%$ of",
+                   r"seed-42 $v(\G) = 0.0517$",
+                   r"ten-seed $v(\G) = 0.0522$",
+                   "use the ten-seed denominator"):
+        assert phrase in text, f"missing: {phrase}"
+    # Guard the rounding itself: 0.05225 prints as 0.0522, not 0.0523.
+    assert r"$v(\G) = 0.0523$" not in text
+
+
+def test_flip_ratios_use_the_ten_seed_denominator() -> None:
+    """The 38.8% and 12.2% figures the text attributes to the ten-seed basis
+    must actually be computed that way."""
+    ci = json.loads((ART / "final_seed_ci.json").read_text())
+    cf = ci["ml_1m"]["gap_ci"]["cf"]["mean"]
+    pop = ci["gowalla_ts"]["gap_ci"]["pop"]["mean"]
+    assert f"{cf / 0.05225 * 100:.1f}" == "38.8"
+    assert f"{pop / 0.01705 * 100:.1f}" == "12.2"
+
+
+def test_prose_names_the_source_consistently() -> None:
+    """Reviewer round 6, edit 1: standardise on co-occurrence in prose."""
+    text = re.sub(r"(?<!\\)%.*", "", KBS.read_text())
+    nomath = re.sub(r"\$[^$]*\$", " M ", text)
+    assert not re.search(r"\bseq\b", nomath), "bare 'seq' in prose"
+    # Every sentence that still says "sequential" must be about cited work or
+    # the SASRec caveat, never about our own source.
+    allowed = ("sequential explainable recommendation", "among sequential",
+               "not a sequential model in the SASRec")
+    for m in re.finditer(r"[^.]*sequential[^.]*\.", nomath):
+        sentence = " ".join(m.group(0).split())
+        assert any(a in sentence for a in allowed), sentence[:110]

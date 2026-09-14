@@ -823,7 +823,16 @@ often the phenomenon occurs across hybrid recommenders in general would require
 a sample of systems, which we do not have. Proportions carry Wilson intervals
 rather than bare point estimates. A gap is called \emph{material} when it
 exceeds $10^{-3}$ in absolute value, the same threshold applied to monotonicity
-violations, and this threshold was fixed before the comparisons were run.
+violations, and this threshold was fixed before the comparisons were run. We
+report gaps in absolute units and as a percentage of $v(\G)$, and the two are
+related by the scale of the grand coalition: on MovieLens-1M the absolute
+threshold $10^{-3}$ is $1.93\%$ of the seed-42 $v(\G) = 0.0517$ and $1.91\%$ of
+the ten-seed $v(\G) = 0.0522$. Percentages quoted against a ten-seed mean, such
+as the $38.8\%$ and $12.2\%$ flip magnitudes of Section~\ref{sec:attribution},
+use the ten-seed denominator; percentages quoted in the seed-42 sampling study
+of Section~\ref{sec:verification} use the seed-42 one. The difference is
+immaterial at two significant figures but we state the basis rather than let a
+reader infer it.
 
 \subsection{Preconditions declared before the results}\label{sec:preconditions}
 

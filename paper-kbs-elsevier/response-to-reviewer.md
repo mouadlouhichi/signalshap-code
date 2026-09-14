@@ -220,6 +220,41 @@ do in the current environment. They remain stated as limitations. Of the three,
 we agree that multi-seed `v_e2e` on one corpus is the cheapest and would most
 directly retire the "isolated seed-42 effect" worry.
 
+## Round 6 (minor revision)
+
+### Edit 1. Standardise prose on "co-occurrence"
+
+Already satisfied, and we re-verified it mechanically rather than by eye. With
+maths stripped, there is no bare word-form `seq` anywhere in the prose: every
+occurrence is the symbol `$seq$`, including the orderings and the interaction
+pairs, which is the usage you permit. Every prose mention of the source reads
+"co-occurrence", with "short-term" as the qualifier where it is first named in
+the abstract, the introduction and the source table. Three uses of
+"sequential" remain and are deliberate: two name the topic of cited papers and
+one is the SASRec contrast that defines the caveat. A test enforces exactly
+this split.
+
+### Edit 2. Materiality threshold in absolute and relative terms
+
+Added at the point where the threshold is declared. The clarification is
+slightly more than you asked for, because checking it surfaced a real
+subtlety: **the two percentages in the paper use different denominators.** The
+seed-42 sampling study divides by v(G) = 0.0517, giving 1.93%; the ten-seed
+attribution results divide by v(G) = 0.0522, giving 1.91%. Both are correct
+against their own basis and the difference is immaterial at two significant
+figures, but nothing said which was which. The text now states both, names
+which sections use which denominator, and says why the gap exists.
+
+Writing that sentence also caught an arithmetic slip of our own: 0.05225 rounds
+to 0.0522, not 0.0523. Corrected, and a test now pins the rounding.
+
+### Questions 1-3
+
+Unchanged. Multi-seed `v_e2e`, a ranking-aware head and a retrieval-dominant
+configuration all require refitting. Of the three we agree multi-seed `v_e2e`
+on MovieLens-1M is the cheapest and the most directly responsive, and we would
+run it first.
+
 ## Summary
 
 Four of the six weaknesses and two of the four questions are addressed in the
